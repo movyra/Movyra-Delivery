@@ -29,7 +29,7 @@ pub async fn ws_handler(
 }
 
 /// Core logic for maintaining the live WebSocket connection and streaming Redis Pub/Sub data.
-async fn handle_tracking_stream(mut socket: WebSocket, tracking_id: String) {
+async fn handle_tracking_stream(mut socket: WebSocket, _tracking_id: String) {
     let _redis_url = env::var("REDIS_URL").expect("CRITICAL: REDIS_URL must be set in .env");
 
     /* ====================================================================================
@@ -42,7 +42,7 @@ async fn handle_tracking_stream(mut socket: WebSocket, tracking_id: String) {
     
     // 2. Convert connection into a PubSub subscriber targeting the specific order
     let mut pubsub = con.into_pubsub();
-    let channel_name = format!("tracking:{}", tracking_id);
+    let channel_name = format!("tracking:{}", _tracking_id);
     pubsub.subscribe(&channel_name).await.unwrap();
     
     // 3. Attach a stream listener
