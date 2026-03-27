@@ -163,7 +163,7 @@ pub async fn get_history(
         LIMIT 50
     "#;
 
-    let orders = sqlx::query_as::<_, Booking>(query)
+    let orders = sqlx::query_as::<sqlx::Postgres, Booking>(query)
         .bind(user_id)
         .fetch_all(&state.db_pool)
         .await
