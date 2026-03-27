@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 
 /**
@@ -23,6 +23,59 @@ export const auth = getAuth(app);
 
 // Initialize Firebase Cloud Messaging
 export const messaging = getMessaging(app);
+
+/**
+ * Initializes the Invisible reCAPTCHA required for Phone Auth.
+ * @param {string} containerId - The HTML element ID to attach the recaptcha to.
+ */
+export const setupRecaptcha = (containerId) => {
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: 'invisible',
+      callback: (response) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        console.log("reCAPTCHA verified successfully");
+      },
+      'expired-callback': () => {
+        // Response expired. Ask user to solve reCAPTCHA again.
+        console.warn("reCAPTCHA expired");
+      }
+    });
+  }
+  return window.recaptchaVerifier;
+};
+
+/**
+ * Sends the OTP to the provided phone number.
+ * @param {string} phoneNumber - Formatted phone number (e.g., +919876543210).
+ * @param {object} appVerifier - The RecaptchaVerifier instance.
+ * @returns {Promise<object>} confirmationResult - Used to confirm the OTP later.
+ */
+export const sendPhoneOTP = async (phoneNumber, appVerifier) => {
+  try {
+    const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+    return confirmationResult;
+  } catch (error) {
+    console.error('Error sending OTP:', error);
+    throw error;
+  }
+};
+
+/**
+ * Verifies the OTP entered by the user.
+ * @param {object} confirmationResult - The result object from sendPhoneOTP.
+ * @param {string} otpCode - The 4 or 6 digit code entered by the user.
+ * @returns {Promise<object>} userCredential - The authenticated user credentials.
+ */
+export const verifyOTP = async (confirmationResult, otpCode) => {
+  try {
+    const result = await confirmationResult.confirm(otpCode);
+    return result;
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    throw error;
+  }
+};
 
 /**
  * Requests Notification Permissions from the user device
