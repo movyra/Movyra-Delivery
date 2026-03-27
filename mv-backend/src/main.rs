@@ -8,6 +8,7 @@ use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::time::Duration;
 use tower_http::cors::{Any, CorsLayer};
 
 // Declare modules based on the architecture blueprint
@@ -33,9 +34,15 @@ async fn main() {
 
     println!("Establishing connection to the PostgreSQL database...");
     
-    // Create a robust connection pool suitable for production workloads
+    // Create a hardened connection pool suitable for aggressive Supabase poolers
     let pool = PgPoolOptions::new()
         .max_connections(50)
+        // Give the pooler 30s to respond before panicking (Fixes Status 101 on cold starts)
+        .acquire_timeout(Duration::from_secs(30))
+        // Close idle connections after 10 minutes to prevent "Tenant not found" pooler expiration
+        .idle_timeout(Duration::from_secs(600))
+        // Max lifetime of 30 minutes for any single connection
+        .max_lifetime(Duration::from_secs(1800))
         .connect(&database_url)
         .await
         .expect("CRITICAL: Failed to connect to the PostgreSQL database. Verify your DATABASE_URL.");
