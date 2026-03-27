@@ -1,7 +1,10 @@
--- Enable UUID extension if not present
+-- Movyra Delivery System - Initial Schema
+-- Target: PostgreSQL (Supabase)
+
+-- Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- User Management Table
+-- Users Table: Matches Firebase Auth UID
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     firebase_uid VARCHAR(255) UNIQUE NOT NULL,
@@ -11,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Delivery Bookings Table
+-- Bookings Table: Core Delivery Logic
 CREATE TABLE IF NOT EXISTS bookings (
     id VARCHAR(50) PRIMARY KEY,
     user_id VARCHAR(255) NOT NULL,
@@ -32,6 +35,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Index for performance
+-- High-performance Indices
 CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id);
 CREATE INDEX IF NOT EXISTS idx_bookings_tracking_id ON bookings(tracking_id);
+CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON users(firebase_uid);
