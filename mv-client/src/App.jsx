@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 // Layouts
 import MobileAppLayout from './components/MobileAppLayout';
+
+// Onboarding
+import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 
 // Public Pages
 import LandingPage from './pages/LandingPage';
@@ -20,6 +23,26 @@ import OrderHistory from './pages/order-history';
 import ProfileSettings from './pages/profile-settings';
 
 function App() {
+  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    // Check if user has launched the app before
+    const hasOnboarded = localStorage.getItem('has_seen_onboarding');
+    if (hasOnboarded) {
+      setShowOnboarding(false);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Prevent hydration flash while checking localStorage
+  if (!isLoaded) return <div className="min-h-screen bg-[#000000]"></div>;
+
+  // Intercept first-time users and force the 5-slide Onboarding flow
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
