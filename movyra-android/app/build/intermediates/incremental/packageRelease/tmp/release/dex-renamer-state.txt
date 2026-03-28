@@ -1,0 +1,4 @@
+#Sat Mar 28 17:55:56 UTC 2026
+base.0=/workspaces/Movyra-Delivery/movyra-android/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
+renamed.0=classes.dex
+path.0=classes.dex
