@@ -1,5 +1,5 @@
-use axum::extract::State;
-use axum::{extract::{Path, State}, Extension, Json};
+use axum::extract::{Path, State};
+use axum::{Extension, Json};
 use serde_json::Value;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -105,7 +105,6 @@ pub async fn calculate_pricing(
 // ============================================================================
 // SECTION 4: Atomic Booking & Audit Engine
 // POST /api/v1/bookings
-// FIXED: Explicit type annotations to resolve E0282.
 // ============================================================================
 pub async fn create_booking(
     State(state): State<AppState>,
@@ -190,7 +189,7 @@ pub async fn create_booking(
 }
 
 // ============================================================================
-// SECTION 5: NEW - Booking Cancellation Engine
+// SECTION 5: Booking Cancellation Engine
 // POST /api/v1/bookings/cancel/:id
 // ============================================================================
 pub async fn cancel_booking(
@@ -199,7 +198,6 @@ pub async fn cancel_booking(
     Path(booking_id): Path<String>,
 ) -> Result<Json<ApiResponse<String>>, AppError> {
     
-    // Only allow cancellation of PENDING orders
     let result = sqlx::query(
         "UPDATE bookings SET status = 'CANCELLED' WHERE id = $1 AND user_id = $2 AND status = 'PENDING'"
     )
@@ -216,7 +214,7 @@ pub async fn cancel_booking(
 }
 
 // ============================================================================
-// SECTION 6: NEW - Tracking Intelligence Engine
+// SECTION 6: Tracking Intelligence Engine
 // GET /api/v1/bookings/track/:tracking_id
 // ============================================================================
 pub async fn get_booking_by_tracking(
