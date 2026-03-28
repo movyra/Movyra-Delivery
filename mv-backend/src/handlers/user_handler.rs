@@ -4,10 +4,10 @@ use axum::{
     response::IntoResponse,
     Extension, Json,
 };
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, PgPool};
+use serde::Serialize;
+use sqlx::FromRow;
 use crate::middleware::auth_guard::AuthenticatedUser;
+use crate::AppState;
 
 // ============================================================================
 // SECTION 1: Data Transfer Objects (DTO) & Schema Definitions
@@ -30,7 +30,8 @@ pub struct UserRow {
     pub phone_number: String,
     pub name: Option<String>,
     pub wallet_balance: f64,
-    pub created_at: DateTime<Utc>,
+    // Converted to String to remove Chrono dependencies and simplify JSON serialization
+    pub created_at: Option<String>, 
 }
 
 // ============================================================================
@@ -39,7 +40,7 @@ pub struct UserRow {
 // ============================================================================
 
 pub async fn sync_user(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>, // Resolved E0277 by mapping to the correct global state
     Extension(auth_user): Extension<AuthenticatedUser>,
     headers: HeaderMap,
 ) -> Result<impl IntoResponse, (StatusCode, String)> {
@@ -57,24 +58,24 @@ pub async fn sync_user(
 
     // ========================================================================
     // SECTION 3: First-Time Welcome Bonus Engine & User Upsert
+    // Explicit runtime queries resolving E0282 type inference errors.
     // ========================================================================
     
     // 1. Check if the user already exists in PostgreSQL using their Firebase UID
-    let existing_user = sqlx::query_as!(
-        UserRow,
-        r#"
-        SELECT id, phone_number, name, wallet_balance::FLOAT8 as "wallet_balance!", created_at 
+    let query_str = r#"
+        SELECT id, phone_number, name, wallet_balance::FLOAT8, created_at::TEXT 
         FROM users 
         WHERE id = $1
-        "#,
-        auth_user.uid
-    )
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| {
-        tracing::error!("Database query failed: {:?}", e);
-        (StatusCode::INTERNAL_SERVER_ERROR, "Failed to query user database".to_string())
-    })?;
+    "#;
+
+    let existing_user = sqlx::query_as::<sqlx::Postgres, UserRow>(query_str)
+        .bind(&auth_user.uid)
+        .fetch_optional(&state.db_pool)
+        .await
+        .map_err(|e| {
+            tracing::error!("Database query failed: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to query user database".to_string())
+        })?;
 
     let is_new_user;
     let final_user;
@@ -88,22 +89,21 @@ pub async fn sync_user(
         is_new_user = true;
         
         // Execute real INSERT provisioning a 50.00 INR welcome bonus to their wallet
-        final_user = sqlx::query_as!(
-            UserRow,
-            r#"
+        let insert_str = r#"
             INSERT INTO users (id, phone_number, wallet_balance) 
             VALUES ($1, $2, 50.00) 
-            RETURNING id, phone_number, name, wallet_balance::FLOAT8 as "wallet_balance!", created_at
-            "#,
-            auth_user.uid,
-            auth_user.phone_number
-        )
-        .fetch_one(&pool)
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to provision new user: {:?}", e);
-            (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create user account".to_string())
-        })?;
+            RETURNING id, phone_number, name, wallet_balance::FLOAT8, created_at::TEXT
+        "#;
+
+        final_user = sqlx::query_as::<sqlx::Postgres, UserRow>(insert_str)
+            .bind(&auth_user.uid)
+            .bind(&auth_user.phone_number)
+            .fetch_one(&state.db_pool)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to provision new user: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create user account".to_string())
+            })?;
     }
 
     // ========================================================================
@@ -112,21 +112,21 @@ pub async fn sync_user(
     
     // Fire-and-forget update to keep the user's last login and timezone accurate
     // for exact delivery ETA calculations and push notifications later.
-    let _ = sqlx::query!(
-        r#"
+    let update_str = r#"
         UPDATE users 
         SET last_login = NOW(), 
             last_known_timezone = $1, 
             last_known_platform = $2 
         WHERE id = $3
-        "#,
-        timezone,
-        platform,
-        final_user.id
-    )
-    .execute(&pool)
-    .await
-    .map_err(|e| tracing::warn!("Failed to update telemetry for {}: {:?}", final_user.id, e));
+    "#;
+
+    let _ = sqlx::query(update_str)
+        .bind(timezone)
+        .bind(platform)
+        .bind(&final_user.id)
+        .execute(&state.db_pool)
+        .await
+        .map_err(|e| tracing::warn!("Failed to update telemetry for {}: {:?}", final_user.id, e));
 
     // ========================================================================
     // SECTION 5: Secure Response Formatting
