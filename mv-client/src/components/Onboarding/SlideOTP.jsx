@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Send, ShieldCheck, RefreshCw } from 'lucide-react';
-import { sendOTP, generateOTP } from '../../services/emailService';
+// 1 & 2: Updated import path to emailAuth and imported function to sendOTPEmail
+import { sendOTPEmail, generateOTP } from '../../services/emailAuth';
 import { useOnboardingStore } from '../../store/useOnboardingStore';
 
 const SlideOTP = ({ onNext }) => {
@@ -20,7 +21,8 @@ const SlideOTP = ({ onNext }) => {
     const newOtp = generateOTP();
     setGeneratedOtp(newOtp);
     try {
-      await sendOTP(email, newOtp);
+      // 3: Changed function call to match the imported sendOTPEmail from emailAuth.js
+      await sendOTPEmail(email, newOtp);
       setStoreEmail(email);
       setStep('verify');
     } catch (err) {
