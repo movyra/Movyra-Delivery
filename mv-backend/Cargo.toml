@@ -2,9 +2,12 @@
 name = "mv-backend"
 version = "0.1.0"
 edition = "2024"
+authors = ["Movyra Engineering"]
+description = "Core Logistics & Routing API for Movyra Delivery"
 
 [dependencies]
 axum = { version = "0.8.8", features = ["ws"] }
+# Cryptographic JWT Decoding & Public Key Fetching (Firebase Auth)
 jsonwebtoken = "9.3.0"
 reqwest = { version = "0.13.2", features = ["json"] }
 serde = { version = "1.0.228", features = ["derive"] }
@@ -18,3 +21,37 @@ dotenvy = "0.15.7"
 # Features: tokio-comp for async, tokio-native-tls-comp for secure Upstash connection
 redis = { version = "0.27.6", features = ["tokio-comp", "tokio-native-tls-comp"] }
 futures-util = "0.3.31"
+
+# ============================================================================
+# NEW SECTION 1: Production Release Optimizations (For Render.com)
+# ============================================================================
+[profile.release]
+opt-level = 3          # Maximum optimization for execution speed
+lto = "fat"            # Fat Link Time Optimization for peak performance across crates
+codegen-units = 1      # Slower compile time, but significantly faster binary
+panic = "abort"        # Abort on panic to save binary size (no stack unwinding)
+strip = "debuginfo"    # Strip debug symbols to reduce memory footprint on Render
+
+# ============================================================================
+# NEW SECTION 2: Development Profile (Fast Iteration)
+# ============================================================================
+[profile.dev]
+opt-level = 0          # Zero optimization for instantaneous local compilation
+debug = true           # Full debug symbols for tracking Firebase JWT failures
+split-debuginfo = "unpacked" # Faster linking on macOS/Linux environments
+
+# ============================================================================
+# NEW SECTION 3: Feature Flags Engine
+# ============================================================================
+[features]
+default = []
+# Allows toggling strict Firebase validation off during local unit testing
+disable-auth-checks = []
+
+# ============================================================================
+# NEW SECTION 4: Strict Global Linter Engine (Security & Concurrency)
+# ============================================================================
+[lints.clippy]
+unwrap_used = "warn"        # Prevent production crashes from unchecked Firebase token unwraps
+expect_used = "warn"        # Enforce proper Axum Error handling returning HTTP 401/500
+await_holding_lock = "deny" # Prevent deadlocks when accessing PostgreSQL connections
