@@ -5,7 +5,6 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::fmt;
 
 // ============================================================================
 // SECTION 1: Core Handler Exports
@@ -13,7 +12,6 @@ use std::fmt;
 // ============================================================================
 pub mod user_handler;
 pub mod booking_handler;
-// pub mod auth_handler; // (Uncomment if you maintain a separate auth handler alongside user_handler)
 
 // ============================================================================
 // SECTION 2: Global Error Handling Engine
