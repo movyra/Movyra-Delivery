@@ -1,2 +1,0 @@
-import React from 'react'; import { Zap } from 'lucide-react';
-export default function Slide5() { return (<div className="w-full h-full flex flex-col items-center justify-center px-8 text-center"><Zap size={80} className="text-movyraMint mb-12 animate-pulse" /><h1 className="text-5xl font-bold mb-4">Let's <span className="text-movyraMint">Move.</span></h1><p className="text-textGray">Experience advanced logistics.</p></div>); }

@@ -1,2 +1,0 @@
-import React from 'react'; import { Network } from 'lucide-react';
-export default function Slide1() { return (<div className="w-full h-full flex flex-col items-center justify-center px-8 text-center"><Network size={80} className="text-movyraMint mb-12" /><h1 className="text-4xl font-bold mb-4">The Movyra <span className="text-movyraMint">Network</span></h1><p className="text-textGray">Connect to your city's fastest engine.</p></div>); }

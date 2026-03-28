@@ -1,2 +1,0 @@
-import React from 'react'; import { ShieldCheck } from 'lucide-react';
-export default function Slide4() { return (<div className="w-full h-full flex flex-col items-center justify-center px-8 text-center"><ShieldCheck size={80} className="text-movyraMint mb-12" /><h1 className="text-4xl font-bold mb-4">Zero-Trust Security</h1><p className="text-textGray">OTP Verified for total safety.</p></div>); }
