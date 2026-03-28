@@ -4,58 +4,39 @@ import TrackingHeader from '../../components/Tracking/TrackingHeader';
 import TelemetryHud from '../../components/Tracking/TelemetryHud';
 import DriverBottomCard from '../../components/Tracking/DriverBottomCard';
 import MapLibreWrapper from '../../components/Map/MapLibreWrapper';
-import useBookingStore from '../../store/useBookingStore';
+import { ShieldCheck, Share2 } from 'lucide-react';
 
 export default function LiveTracking() {
   const [searchParams] = useSearchParams();
-  const trackingId = searchParams.get('id') || 'MV-ACTIVE-1';
-  const activeOrder = useBookingStore(state => state.activeOrder);
+  const id = searchParams.get('id');
+  const [tel, setTel] = useState({ speed: 60, dir: "Turn left", dist: "2.4 mi", coords: [73.8567, 18.5204] });
 
-  // Real state for Telemetry injected by WebSocket or API
-  const [telemetry, setTelemetry] = useState({
-    speed: 60,
-    direction: "Turn left",
-    distance: "2.4 mi",
-    driverCoords: [73.8567, 18.5204], // Pune default
-    routeCoords: [
-      [73.8567, 18.5204],
-      [73.8600, 18.5250],
-      [73.8650, 18.5300]
-    ]
-  });
-
-  // Real Implementation: In a real app, you would open a WebSocket here
-  // listening to the Driver's App GPS broadcasts to update the `telemetry` state.
+  useEffect(() => {
+    // Real WebSocket stub for driver tracking
+    const ws = new WebSocket(`wss://localhost:8080/ws/tracking/${id}`);
+    ws.onmessage = (event) => { const data = JSON.parse(event.data); setTel(data); };
+    return () => ws.close();
+  }, [id]);
 
   return (
-    <div className="relative w-full h-screen bg-surfaceBlack overflow-hidden font-sans">
-      {/* 1. Optimized Dark Mode Map Engine */}
-      <MapLibreWrapper 
-        initialCenter={telemetry.driverCoords}
-        routeData={telemetry.routeCoords}
-        driverLocation={telemetry.driverCoords}
-      />
+    <div className="relative w-full h-screen bg-surfaceBlack overflow-hidden">
+      {/* Sec 1: Map Engine */}
+      <MapLibreWrapper initialCenter={tel.coords} driverLocation={tel.coords} routeData={[tel.coords, [73.86, 18.53]]} />
+      
+      {/* Sec 2: Header */}
+      <TrackingHeader trackingId={id} />
+      
+      {/* Sec 3: Telemetry HUD */}
+      <TelemetryHud speed={tel.speed} direction={tel.dir} distance={tel.dist} />
 
-      {/* 2. Top Header Navigation */}
-      <TrackingHeader trackingId={trackingId} />
-
-      {/* 3. Real-time Telemetry Overlay */}
-      <TelemetryHud 
-        speed={telemetry.speed}
-        direction={telemetry.direction}
-        distance={telemetry.distance}
-      />
-
-      {/* 4. Driver Information Bottom Sheet */}
-      <DriverBottomCard 
-        driver={{
-          name: "Ramesh Kumar",
-          vehiclePlate: "MH 14 AB 9090",
-          vehicleModel: "Tata Ace Delivery",
-          phone: "+919876543210"
-        }}
-        currentLocation="Viman Nagar Rd, Pune, Maharashtra"
-      />
+      {/* Sec 4: Action FABs (New Section) */}
+      <div className="absolute top-[350px] right-6 flex flex-col gap-4 z-40">
+        <button className="w-12 h-12 bg-surfaceBlack/80 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center text-white"><Share2 size={20}/></button>
+        <button className="w-12 h-12 bg-surfaceBlack/80 backdrop-blur-md rounded-full border border-white/10 flex items-center justify-center text-movyraMint"><ShieldCheck size={20}/></button>
+      </div>
+      
+      {/* Sec 5: Driver Card */}
+      <DriverBottomCard driver={{name: "Kretya Driver", vehiclePlate: "MH12 AB 1234"}} currentLocation="Jl Bendungan Raya" />
     </div>
   );
 }
