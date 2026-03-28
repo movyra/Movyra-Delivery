@@ -68,9 +68,9 @@ export default function MobileLogin() {
           <ChevronLeft size={28} />
         </button>
         
-        {/* Brand Logo inside Header */}
-        <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center bg-movyra-blue">
-           <span className="text-white font-black text-xl leading-none">m</span>
+        {/* Brand Logo inside Header (Using user's PNG) */}
+        <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center bg-white">
+          <img src="/logo.png" alt="Movyra Logo" className="w-full h-full object-cover" />
         </div>
 
         <a href="mailto:support@movyra.com?subject=Login%20Issue" className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-movyra-blue hover:bg-blue-50 transition-colors active:scale-95 border border-blue-100 shadow-sm">
