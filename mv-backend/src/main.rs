@@ -1,82 +1,122 @@
 use axum::{
-    routing::{get},
+    routing::{get, post},
     Router,
-    Extension,
+    middleware as axum_middleware,
 };
 use dotenvy::dotenv;
 use sqlx::postgres::PgPoolOptions;
 use std::env;
 use std::net::SocketAddr;
-use std::sync::Arc;
 use std::time::Duration;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::{
+    cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer},
+    trace::TraceLayer,
+    catch_panic::CatchPanicLayer,
+    limit::RequestBodyLimitLayer,
+};
+use axum::http::{HeaderValue, Method};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Declare modules based on the architecture blueprint
 pub mod handlers;
+pub mod middleware;
 pub mod models;
 pub mod ws;
-
-/// Shared Application State
-/// This struct holds the PostgreSQL connection pool and is shared across all Axum handlers.
-#[derive(Clone)]
-pub struct AppState {
-    pub db_pool: sqlx::PgPool,
-}
 
 #[tokio::main]
 async fn main() {
     // 1. Load environment variables from the .env file
     dotenv().ok();
 
+    // ========================================================================
+    // NEW SECTION 1: Structured Telemetry & Logging Engine
+    // Initializes formatting and log levels defined in the RUST_LOG env var.
+    // ========================================================================
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            env::var("RUST_LOG").unwrap_or_else(|_| "info,mv_backend=debug".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    tracing::info!("Initializing Movyra Backend Engine...");
+
     // 2. Initialize connection to PostgreSQL (Supabase)
     let database_url = env::var("DATABASE_URL")
         .expect("CRITICAL: DATABASE_URL environment variable must be set in .env");
-
-    println!("Establishing connection to the PostgreSQL database...");
     
-    // Create a hardened connection pool suitable for aggressive Supabase poolers
+    // Parse connection limits dynamically from .env for easy scaling
+    let max_conns = env::var("DATABASE_MAX_CONNECTIONS").unwrap_or_else(|_| "20".into()).parse().unwrap_or(20);
+    let acquire_timeout = env::var("DATABASE_ACQUIRE_TIMEOUT_SEC").unwrap_or_else(|_| "10".into()).parse().unwrap_or(10);
+
     let pool = PgPoolOptions::new()
-        .max_connections(50)
-        // Give the pooler 30s to respond before panicking (Fixes Status 101 on cold starts)
-        .acquire_timeout(Duration::from_secs(30))
-        // Close idle connections after 10 minutes to prevent "Tenant not found" pooler expiration
+        .max_connections(max_conns)
+        .acquire_timeout(Duration::from_secs(acquire_timeout))
         .idle_timeout(Duration::from_secs(600))
-        // Max lifetime of 30 minutes for any single connection
         .max_lifetime(Duration::from_secs(1800))
         .connect(&database_url)
         .await
         .expect("CRITICAL: Failed to connect to the PostgreSQL database. Verify your DATABASE_URL.");
 
-    println!("Database connection pool established successfully.");
+    tracing::info!("Database connection pool established successfully.");
 
-    // Wrap the state in an Arc to safely share it across asynchronous threads
-    let shared_state = Arc::new(AppState { db_pool: pool });
+    // ========================================================================
+    // NEW SECTION 2: Hardened CORS Engine
+    // Strictly blocks unauthorized domains from accessing the Axum API.
+    // ========================================================================
+    let allowed_origins_str = env::var("ALLOWED_ORIGINS")
+        .unwrap_or_else(|_| "http://localhost:5173".to_string());
+        
+    let origins: Vec<HeaderValue> = allowed_origins_str
+        .split(',')
+        .map(|s| s.trim().parse::<HeaderValue>().expect("Invalid CORS origin in .env"))
+        .collect();
 
-    // 3. Configure Global CORS
-    // Essential for allowing the Vite React frontend to communicate with this API
     let cors = CorsLayer::new()
-        .allow_origin(Any) // In production, replace `Any` with your actual frontend domains
-        .allow_methods(Any)
-        .allow_headers(Any);
+        .allow_origin(AllowOrigin::list(origins))
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE, Method::OPTIONS])
+        .allow_headers(tower_http::cors::Any); // Allows Firebase Authorization headers
 
-    // 4. Build the Axum Router
+    // ========================================================================
+    // NEW SECTION 3: Protected API Pipeline
+    // Groups routes that strictly require a mathematically verified Firebase JWT.
+    // ========================================================================
+    let protected_routes = Router::new()
+        // The real PostgreSQL Sync Endpoint
+        .route("/auth/sync", post(handlers::user_handler::sync_user))
+        // Placeholder for future logic
+        // .route("/bookings", post(handlers::booking_handler::create_booking))
+        // .route("/bookings/history", get(handlers::booking_handler::get_history))
+        
+        // This line strictly enforces the JWT cryptographic check on all routes above
+        .route_layer(axum_middleware::from_fn(middleware::auth_guard::require_auth));
+
+    // Public Routes (No auth required)
+    let public_routes = Router::new()
+        .route("/health", get(|| async { "Movyra API System: ONLINE and operating optimally." }));
+        // .route("/pricing", post(handlers::booking_handler::calculate_pricing));
+
+    // Merge API routes under the /api namespace
+    let api_router = Router::new()
+        .merge(public_routes)
+        .merge(protected_routes);
+
+    // ========================================================================
+    // NEW SECTION 4: Global Security & Reliability Guardrails
+    // ========================================================================
     let app = Router::new()
-        // Core Health Check
-        .route("/api/health", get(|| async { "Movyra API System: ONLINE and operating optimally." }))
-        
-        // ---- API Endpoints ----
-        // Uncomment these as the handler logic files are populated in the next steps
-        // .route("/api/auth/verify", post(handlers::auth_handler::verify_token))
-        // .route("/api/bookings", post(handlers::booking_handler::create_booking))
-        // .route("/api/bookings/history", get(handlers::booking_handler::get_history))
-        // .route("/api/pricing", post(handlers::booking_handler::calculate_pricing))
-        
-        // ---- WebSockets ----
+        .nest("/api", api_router)
+        // Attach WebSockets
         // .route("/ws/tracking/:tracking_id", get(ws::tracking::ws_handler))
         
-        // Attach middleware
+        // Attach Global Layers
         .layer(cors)
-        .layer(Extension(shared_state));
+        .layer(TraceLayer::new_for_http())                 // Automatic HTTP request telemetry
+        .layer(CatchPanicLayer::new())                     // Prevent thread panics from crashing the server
+        .layer(RequestBodyLimitLayer::new(2 * 1024 * 1024))// 2MB payload cap against memory-exhaustion DDoS
+        
+        // Inject the PostgreSQL pool cleanly into the Axum state
+        .with_state(pool);
 
     // 5. Bind TCP Listener and Serve
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
@@ -85,7 +125,7 @@ async fn main() {
         .parse()
         .expect("CRITICAL: Invalid HOST or PORT configuration in environment variables");
 
-    println!("Movyra Backend Server running securely on {}", addr);
+    tracing::info!("Movyra Backend Server running securely on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
