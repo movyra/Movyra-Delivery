@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Delete, HelpCircle, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, HelpCircle, ShieldCheck, AlertCircle, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { setupRecaptcha, sendPhoneOTP } from '../../services/firebaseAuth';
+import MovyraButton from '../../components/UI/MovyraButton';
+
+// ============================================================================
+// PAGE: MOBILE LOGIN (LIGHT THEME)
+// Features a native numeric keyboard trigger, real Firebase reCAPTCHA,
+// and graceful error handling for missing billing configurations.
+// ============================================================================
 
 export default function MobileLogin() {
   const navigate = useNavigate(); 
@@ -19,11 +27,11 @@ export default function MobileLogin() {
     };
   }, []);
 
-  const type = (k) => {
-    if (k === 'del') {
-      setPhone(p => p.slice(0, -1));
-    } else if (phone.length < 10) {
-      setPhone(p => p + k);
+  // Handle native keyboard input (Strip non-numeric characters)
+  const handlePhoneChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ''); // Keep only numbers
+    if (val.length <= 10) {
+      setPhone(val);
     }
     if (error) setError(''); // Clear errors when user types
   };
@@ -51,10 +59,16 @@ export default function MobileLogin() {
 
     } catch (err) {
       console.error("Firebase SMS Error:", err);
-      // Catch real Firebase errors (e.g., rate limits, invalid formats)
-      setError(err.message || 'Failed to send SMS. Please verify your number.');
       
-      // Reset reCAPTCHA so the user can try again
+      // GRACEFUL ERROR HANDLING: Specifically intercept the billing error
+      if (err.code === 'auth/billing-not-enabled' || (err.message && err.message.includes('billing-not-enabled'))) {
+        setError('SMS delivery is currently disabled by the provider (Billing missing). Please contact Movyra Support.');
+      } else {
+        // Catch other real Firebase errors (e.g., rate limits, invalid formats)
+        setError(err.message || 'Failed to send SMS. Please verify your number.');
+      }
+      
+      // Reset reCAPTCHA so the user can try again without refreshing
       if (window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
         window.recaptchaVerifier = null;
@@ -65,88 +79,123 @@ export default function MobileLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-surfaceBlack text-white flex flex-col font-sans relative">
+    <div className="min-h-screen bg-movyra-surface text-gray-800 flex flex-col font-sans relative">
       {/* Hidden Firebase Recaptcha Container (Required for free SMS) */}
       <div id="recaptcha-container" className="absolute top-0 left-0"></div>
 
-      {/* NEW SECTION 1: Help & Support Header */}
-      <div className="px-6 pt-14 pb-4 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="p-2 -ml-2 hover:bg-surfaceDark rounded-full transition-colors active:scale-95">
-          <ChevronLeft size={28} className="text-white" />
+      {/* SECTION 1: Nav & Help Header */}
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="px-6 pt-14 pb-4 flex items-center justify-between"
+      >
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-movyra-blue hover:bg-blue-50 rounded-full transition-colors active:scale-95">
+          <ChevronLeft size={28} />
         </button>
-        <a href="mailto:support@movyra.com?subject=Login%20Issue" className="flex items-center gap-2 px-4 py-2 bg-surfaceDark rounded-full text-textGray hover:text-white transition-colors active:scale-95 border border-white/5">
+        
+        {/* Brand Logo inside Header */}
+        <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-100 shadow-sm">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        </div>
+
+        <a href="mailto:support@movyra.com?subject=Login%20Issue" className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-movyra-blue hover:bg-blue-50 transition-colors active:scale-95 border border-blue-100 shadow-sm">
           <HelpCircle size={16} />
           <span className="text-sm font-bold tracking-wide">Help</span>
         </a>
-      </div>
+      </motion.div>
 
-      <div className="px-8 flex-1 flex flex-col">
-        <h1 className="text-4xl font-bold mb-3 tracking-tight">Welcome <br/>back.</h1>
-        <p className="text-textGray text-lg">Enter your phone number to receive a secure OTP.</p>
+      <div className="px-8 flex-1 flex flex-col pt-8">
+        {/* SECTION 2: Hero Greeting */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+        >
+          <h1 className="text-4xl font-black mb-3 tracking-tight text-gray-900">Welcome <br/>back.</h1>
+          <p className="text-gray-500 text-lg font-medium">Enter your phone number to receive a secure OTP.</p>
+        </motion.div>
         
-        <div className="flex items-center gap-4 mt-8 mb-4">
-          <div className="bg-surfaceDarker px-5 py-4 rounded-2xl border border-white/5 font-bold text-xl text-textGray">
+        {/* SECTION 3: Native Input Field */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="flex items-center gap-3 mt-10 mb-6"
+        >
+          {/* Country Code Pill */}
+          <div className="bg-white px-5 py-5 rounded-2xl border-2 border-gray-100 font-bold text-xl text-gray-400 shadow-sm">
             +91
           </div>
-          <div className={`flex-1 bg-surfaceDarker px-5 py-4 rounded-2xl border transition-all duration-300 ${phone.length === 10 ? 'border-movyraMint shadow-mintGlow' : 'border-white/5'}`}>
-            <span className={`text-2xl font-bold tracking-widest ${phone.length > 0 ? 'text-white' : 'text-white/20'}`}>
-              {phone || '0000000000'}
-            </span>
+          
+          {/* Native Phone Input Container */}
+          <div className={`flex-1 bg-white px-5 py-5 rounded-2xl border-2 transition-all duration-300 shadow-sm ${phone.length === 10 ? 'border-movyra-blue shadow-lg shadow-movyra-blue/20' : 'border-gray-100 focus-within:border-blue-300'}`}>
+            <input
+              type="tel"
+              inputMode="numeric"
+              maxLength="10"
+              value={phone}
+              onChange={handlePhoneChange}
+              placeholder="Mobile Number"
+              className="w-full text-2xl font-black tracking-widest text-gray-800 placeholder:text-gray-300 focus:outline-none bg-transparent"
+              autoFocus
+            />
           </div>
-        </div>
+        </motion.div>
 
-        {/* NEW SECTION 2: Real-time Error Engine */}
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-start gap-3 mb-4 animate-in fade-in slide-in-from-top-2">
-            <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-200 font-medium leading-snug">{error}</p>
-          </div>
-        )}
-
-        {/* NEW SECTION 3: Security Trust Badge */}
-        <div className="flex items-center gap-2 mt-4 opacity-60">
-          <ShieldCheck size={16} className="text-movyraMint" />
-          <p className="text-xs text-textGray">
-            Secured by Firebase & reCAPTCHA Enterprise.
-          </p>
-        </div>
+        {/* SECTION 4: Real-time Error Engine */}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0, scale: 0.95 }}
+              animate={{ opacity: 1, height: 'auto', scale: 1 }}
+              exit={{ opacity: 0, height: 0, scale: 0.95 }}
+              className="bg-red-50 border-2 border-red-100 rounded-2xl p-4 flex items-start gap-3 mb-6"
+            >
+              <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600 font-bold leading-snug">{error}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="bg-surfaceDark rounded-t-[40px] px-6 pt-8 pb-8 border-t border-white/5 shadow-[0_-20px_40px_rgba(0,0,0,0.5)]">
-        {/* Custom Numpad */}
-        <div className="grid grid-cols-3 gap-y-6 gap-x-4 mb-10 text-3xl font-medium text-center">
-          {[1,2,3,4,5,6,7,8,9].map(n => (
-            <button key={n} onClick={() => type(n.toString())} className="py-2 active:scale-90 active:text-movyraMint transition-all">{n}</button>
-          ))}
-          <div className="col-start-2">
-            <button onClick={() => type('0')} className="w-full py-2 active:scale-90 active:text-movyraMint transition-all">0</button>
-          </div>
-          <div className="col-start-3 flex justify-center items-center">
-            <button onClick={() => type('del')} className="py-2 active:scale-90 active:text-movyraMint transition-all text-textGray"><Delete size={32}/></button>
-          </div>
-        </div>
-
-        {/* Action Button with Loading State */}
-        <button 
-          onClick={handleSend} 
-          disabled={phone.length !== 10 || isLoading} 
-          className="w-full bg-movyraMint text-surfaceBlack py-4 rounded-pill font-bold text-lg flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-50 disabled:shadow-none shadow-mintGlow active:scale-[0.98]"
+      {/* SECTION 5: Footer Actions & Trust Badges */}
+      <motion.div 
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-white rounded-t-[40px] px-6 pt-10 pb-safe border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]"
+      >
+        
+        {/* Action Button leveraging the new MovyraButton Design System */}
+        <MovyraButton 
+          variant="solid"
+          onClick={handleSend}
+          disabled={phone.length !== 10 || isLoading}
+          className="mb-6"
         >
           {isLoading ? (
             <>
-              <Loader2 size={24} className="animate-spin text-surfaceBlack" />
+              <Loader2 size={24} className="animate-spin text-white" />
               <span>Verifying Network...</span>
             </>
           ) : (
             'Send Code'
           )}
-        </button>
+        </MovyraButton>
+
+        {/* Security Trust Badge */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <ShieldCheck size={18} className="text-movyra-blue" />
+          <p className="text-xs text-gray-400 font-bold">
+            Secured by Firebase & reCAPTCHA.
+          </p>
+        </div>
 
         {/* Terms of Service Consent */}
-        <p className="text-[10px] text-textGray text-center mt-6 px-4">
-          By continuing, you agree to Movyra's <a href="#" className="text-white underline">Terms of Service</a> and <a href="#" className="text-white underline">Privacy Policy</a>.
+        <p className="text-[10px] text-gray-400 text-center px-4 pb-4">
+          By continuing, you agree to Movyra's <a href="#" className="text-movyra-blue font-bold">Terms of Service</a> and <a href="#" className="text-movyra-blue font-bold">Privacy Policy</a>.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
