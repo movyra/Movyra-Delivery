@@ -1,62 +1,75 @@
-use axum::{Json, Extension, http::StatusCode};
+use axum::{extract::State, Extension, Json};
 use serde_json::Value;
-use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::AppState;
+use crate::middleware::auth_guard::AuthenticatedUser;
+use crate::handlers::{AppError, ApiResponse};
 use crate::models::booking::{
     PricingRequest, PricingResponse, VehicleOption, 
     CreateBookingRequest, CreateBookingResponse, OrderHistoryResponse, Booking
 };
 
-/// Helper to generate a unique tracking ID without external crates
+// ============================================================================
+// SECTION 1: Logistics Utility Engine
+// Generates collision-resistant tracking IDs and strict 6-digit delivery OTPs.
+// ============================================================================
 fn generate_tracking_id() -> String {
-    let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_millis();
-    format!("TRK-{}", time)
+    let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+    // Creates a pseudo-randomized string (e.g., TRK-16952403...)
+    format!("TRK-{:x}", time)
 }
 
-/// Helper to generate a 4-digit OTP
-fn generate_otp() -> String {
+fn generate_delivery_otp() -> String {
     let nanos = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos();
-    let otp = (nanos % 9000) + 1000; 
+    // Enforces a strict 6-digit delivery confirmation pin (100000 - 999999)
+    let otp = (nanos % 900000) + 100000; 
     otp.to_string()
 }
 
-/// POST /api/pricing
-/// Connects to OSRM (Open Source Routing Machine) to calculate real distance and durations,
-/// then applies business logic to generate vehicle pricing.
-pub async fn calculate_pricing(Json(payload): Json<PricingRequest>) -> Result<Json<PricingResponse>, (StatusCode, String)> {
-    let osrm_url = std::env::var("OSRM_BASE_URL").unwrap_or_else(|_| "http://router.project-osrm.org".to_string());
+// ============================================================================
+// SECTION 2: Pricing & Routing Engine (OSRM)
+// POST /api/pricing
+// Connects to OSRM using the globally reused HTTP client to calculate real 
+// distance/duration, then dynamically generates vehicle tier pricing.
+// ============================================================================
+pub async fn calculate_pricing(
+    State(state): State<AppState>,
+    Json(payload): Json<PricingRequest>,
+) -> Result<Json<ApiResponse<PricingResponse>>, AppError> {
     
-    // Construct real OSRM driving route request
+    let osrm_url = std::env::var("OSRM_BASE_URL")
+        .unwrap_or_else(|_| "http://router.project-osrm.org".to_string());
+    
     let request_url = format!(
         "{}/route/v1/driving/{},{};{},{}?overview=false", 
         osrm_url, payload.pickup.lng, payload.pickup.lat, payload.dropoff.lng, payload.dropoff.lat
     );
 
-    let client = reqwest::Client::new();
-    let res = client.get(&request_url)
+    // Reuse the global connection pool from AppState to prevent socket exhaustion
+    let res = state.http_client.get(&request_url)
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Routing Engine Error: {}", e)))?;
+        .map_err(|e| AppError::Internal(format!("Routing Engine Timeout: {}", e)))?;
     
     let osrm_data: Value = res.json().await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to parse routing data".to_string()))?;
+        .map_err(|_| AppError::Internal("Failed to parse OSMR routing payload".into()))?;
     
-    // Extract meters and seconds, fallback to defaults if route cannot be found
+    // Extract geometry, applying fallbacks if the route is physically impossible
     let distance_meters = osrm_data["routes"][0]["distance"].as_f64().unwrap_or(5000.0);
     let duration_seconds = osrm_data["routes"][0]["duration"].as_f64().unwrap_or(600.0);
 
     let distance_km = distance_meters / 1000.0;
     let duration_mins = (duration_seconds / 60.0) as i32;
 
-    // Real dynamic pricing logic based on distance and vehicle tier
+    // Real dynamic pricing algorithm based on distance coefficients
     let vehicles = vec![
         VehicleOption {
             id: "veh_bike".to_string(),
             name: "Movyra Bike".to_string(),
             r#type: "bike".to_string(),
             capacity_desc: "Up to 5kg".to_string(),
-            price: 20.0 + (distance_km * 8.0),
+            price: (20.0 + (distance_km * 8.0)).round(), // Base ₹20 + ₹8/km
             eta_mins: duration_mins + 2,
         },
         VehicleOption {
@@ -64,7 +77,7 @@ pub async fn calculate_pricing(Json(payload): Json<PricingRequest>) -> Result<Js
             name: "Movyra Tempo".to_string(),
             r#type: "tempo".to_string(),
             capacity_desc: "Up to 500kg".to_string(),
-            price: 50.0 + (distance_km * 15.0),
+            price: (50.0 + (distance_km * 15.0)).round(), // Base ₹50 + ₹15/km
             eta_mins: duration_mins + 8,
         },
         VehicleOption {
@@ -72,30 +85,33 @@ pub async fn calculate_pricing(Json(payload): Json<PricingRequest>) -> Result<Js
             name: "Movyra Truck".to_string(),
             r#type: "truck".to_string(),
             capacity_desc: "Up to 2000kg".to_string(),
-            price: 150.0 + (distance_km * 25.0),
+            price: (150.0 + (distance_km * 25.0)).round(), // Base ₹150 + ₹25/km
             eta_mins: duration_mins + 15,
         }
     ];
 
-    Ok(Json(PricingResponse {
+    Ok(Json(ApiResponse::success(PricingResponse {
         distance_km,
         duration_mins,
         vehicles,
-    }))
+    })))
 }
 
-/// POST /api/bookings
-/// Creates a real database record for the new delivery order.
+// ============================================================================
+// SECTION 3: Atomic Booking & Transactional Wallet Engine
+// POST /api/bookings
+// Deducts funds from the user's wallet and inserts the shipment atomically.
+// ============================================================================
 pub async fn create_booking(
-    Extension(state): Extension<Arc<AppState>>,
+    State(state): State<AppState>,
+    Extension(auth_user): Extension<AuthenticatedUser>,
     Json(payload): Json<CreateBookingRequest>,
-) -> Result<Json<CreateBookingResponse>, (StatusCode, String)> {
+) -> Result<Json<ApiResponse<CreateBookingResponse>>, AppError> {
     
     let booking_id = format!("BKG-{}", generate_tracking_id());
     let tracking_id = generate_tracking_id();
-    let otp = generate_otp();
+    let otp = generate_delivery_otp();
 
-    // Map the incoming vehicle ID to a display name for the database
     let vehicle_name = match payload.vehicle_id.as_str() {
         "veh_bike" => "Movyra Bike",
         "veh_tempo" => "Movyra Tempo",
@@ -103,11 +119,34 @@ pub async fn create_booking(
         _ => "Standard Vehicle",
     };
 
-    // Note: In a fully authenticated flow, user_id is extracted from the JWT Claims.
-    // For structural integrity, we apply a placeholder user_id that will match the Firebase UID.
-    let user_id = "USER_UID_PLACEHOLDER"; 
+    // Begin a strict ACID database transaction
+    let mut tx = state.db_pool.begin().await
+        .map_err(|_| AppError::Database("Failed to initiate secure transaction".into()))?;
 
-    // Insert into PostgreSQL via SQLx
+    // 1. Verify Wallet Balance
+    let current_balance: f64 = sqlx::query_scalar!(
+        "SELECT wallet_balance::FLOAT8 FROM users WHERE id = $1 FOR UPDATE",
+        auth_user.uid
+    )
+    .fetch_one(&mut *tx)
+    .await
+    .map_err(|_| AppError::NotFound("User account not found or locked".into()))?;
+
+    if current_balance < payload.agreed_price {
+        return Err(AppError::BadRequest("Insufficient Movyra Wallet balance for this delivery.".into()));
+    }
+
+    // 2. Deduct Funds from User Wallet
+    sqlx::query!(
+        "UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2",
+        payload.agreed_price,
+        auth_user.uid
+    )
+    .execute(&mut *tx)
+    .await
+    .map_err(|_| AppError::Database("Failed to process wallet deduction".into()))?;
+
+    // 3. Insert the Booking Record (Using strict type bindings to resolve E0282)
     let insert_query = r#"
         INSERT INTO bookings (
             id, user_id, pickup_address, pickup_lat, pickup_lng, 
@@ -119,9 +158,9 @@ pub async fn create_booking(
         )
     "#;
 
-    sqlx::query(insert_query)
+    sqlx::query::<sqlx::Postgres>(insert_query)
         .bind(&booking_id)
-        .bind(user_id)
+        .bind(&auth_user.uid)
         .bind(&payload.pickup_address)
         .bind(payload.pickup_lat)
         .bind(payload.pickup_lng)
@@ -129,33 +168,39 @@ pub async fn create_booking(
         .bind(payload.dropoff_lat)
         .bind(payload.dropoff_lng)
         .bind(&payload.parcel_type_id)
-        .bind("Parcel".to_string()) // Map actual parcel name based on ID in production
+        .bind("Parcel".to_string()) 
         .bind(&payload.vehicle_id)
         .bind(vehicle_name)
         .bind(payload.agreed_price)
         .bind(&tracking_id)
         .bind(&otp)
-        .execute(&state.db_pool)
+        .execute(&mut *tx)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Database Insertion Failed: {}", e)))?;
+        .map_err(|e| AppError::Database(format!("Failed to register shipment: {}", e)))?;
 
-    Ok(Json(CreateBookingResponse {
+    // Commit the transaction permanently to PostgreSQL
+    tx.commit().await
+        .map_err(|_| AppError::Database("Failed to finalize transaction".into()))?;
+
+    Ok(Json(ApiResponse::success(CreateBookingResponse {
         booking_id,
         tracking_id,
         otp,
         status: "PENDING".to_string(),
-    }))
+    })))
 }
 
-/// GET /api/bookings/history
-/// Retrieves actual delivery history from the PostgreSQL database.
+// ============================================================================
+// SECTION 4: History & Data Retrieval Engine
+// GET /api/bookings/history
+// Retrieves actual delivery history locked exclusively to the authenticated user.
+// ============================================================================
 pub async fn get_history(
-    Extension(state): Extension<Arc<AppState>>,
-) -> Result<Json<OrderHistoryResponse>, (StatusCode, String)> {
+    State(state): State<AppState>,
+    Extension(auth_user): Extension<AuthenticatedUser>,
+) -> Result<Json<ApiResponse<OrderHistoryResponse>>, AppError> {
     
-    let user_id = "USER_UID_PLACEHOLDER"; 
-
-    // Fetch from database, ordered by newest first
+    // Explicitly enforce Postgres type mapping to permanently resolve E0282
     let query = r#"
         SELECT * FROM bookings 
         WHERE user_id = $1 
@@ -164,10 +209,10 @@ pub async fn get_history(
     "#;
 
     let orders = sqlx::query_as::<sqlx::Postgres, Booking>(query)
-        .bind(user_id)
+        .bind(&auth_user.uid)
         .fetch_all(&state.db_pool)
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to fetch history: {}", e)))?;
+        .map_err(|e| AppError::Database(format!("Failed to fetch delivery history: {}", e)))?;
 
-    Ok(Json(OrderHistoryResponse { orders }))
+    Ok(Json(ApiResponse::success(OrderHistoryResponse { orders })))
 }
