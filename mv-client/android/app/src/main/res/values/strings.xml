@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Movyra</string>
+    <string name="title_activity_main">Movyra</string>
+    <string name="package_name">com.movyra.customerapp</string>
+    <string name="custom_url_scheme">com.movyra.customerapp</string>
+</resources>
