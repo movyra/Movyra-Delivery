@@ -1,5 +1,5 @@
 import React from 'react';
-import { BatteryMedium, CornerUpLeft, SteeringWheel } from 'lucide-react';
+import { BatteryMedium, CornerUpLeft, Compass } from 'lucide-react';
 
 export default function TelemetryHud({ speed = 0, direction = "Turn left", distance = "0.0 mi", battery = 85 }) {
   return (
@@ -18,8 +18,9 @@ export default function TelemetryHud({ speed = 0, direction = "Turn left", dista
           <span className="text-xs font-bold text-textGray uppercase tracking-widest">mph</span>
         </div>
 
+        {/* Updated Icon: Replaced SteeringWheel with Compass for valid resolution */}
         <div className="w-10 h-10 bg-movyraMint/10 rounded-full flex items-center justify-center border border-movyraMint/30 shadow-mintGlow">
-          <SteeringWheel size={20} className="text-movyraMint" />
+          <Compass size={20} className="text-movyraMint" />
         </div>
       </div>
 
