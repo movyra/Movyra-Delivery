@@ -1,134 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { LogOut, ChevronRight, CreditCard, Shield, MapPin, Settings } from 'lucide-react';
+import useAuthStore from '../store/useAuthStore';
+import { auth } from '../services/firebaseAuth';
 import { useNavigate } from 'react-router-dom';
-import { User, MapPin, Briefcase, LogOut, ChevronRight, Settings, Shield, CreditCard, MessageSquare } from 'lucide-react';
-import { auth } from '../services/firebase';
-import { signOut } from 'firebase/auth';
 
 export default function ProfileSettings() {
-  const navigate = useNavigate();
-  const [userProfile, setUserProfile] = useState({ email: '', uid: '' });
-
-  useEffect(() => {
-    // Real logic: Retrieve active authenticated user from Firebase
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUserProfile({
-        email: currentUser.email,
-        uid: currentUser.uid,
-      });
-    } else {
-      // Fallback to local storage if Firebase hasn't hydrated state yet
-      const stored = localStorage.getItem('movyra_user');
-      if (stored) {
-        setUserProfile(JSON.parse(stored));
-      }
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      // Real logic: Sign out from Firebase and clear JWT tokens
-      await signOut(auth);
-      localStorage.removeItem('movyra_jwt');
-      localStorage.removeItem('movyra_user');
-      navigate('/auth-login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      alert('Failed to log out. Please try again.');
-    }
-  };
+  const { user, logout } = useAuthStore(); const nav = useNavigate();
+  const handleLogout = async () => { await auth.signOut(); logout(); nav('/auth-login'); };
 
   return (
-    <div className="flex flex-col h-full bg-white font-sans overflow-y-auto pb-24">
+    <div className="min-h-screen bg-surfaceBlack text-white px-6 pt-14 pb-32 font-sans">
+      {/* Sec 1: Header */}
+      <h1 className="text-3xl font-bold mb-8">Profile.</h1>
       
-      {/* User Header Profile Block */}
-      <div className="px-6 pt-12 pb-8 flex items-center gap-5 border-b border-gray-100">
-        <div className="w-20 h-20 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0 border border-gray-200 shadow-sm">
-          <User size={36} className="text-gray-400" />
-        </div>
-        <div className="flex-1 overflow-hidden">
-          <h1 className="text-2xl font-bold tracking-tight text-black truncate">
-            {userProfile.email ? userProfile.email.split('@')[0] : 'User'}
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-bold font-mono">
-              {userProfile.uid ? userProfile.uid.substring(0, 8) : 'Loading...'}
-            </span>
-          </div>
-        </div>
+      {/* Sec 2: User Card */}
+      <div className="bg-surfaceDark rounded-[32px] p-6 border border-white/5 flex items-center gap-5 mb-6">
+        <div className="w-16 h-16 rounded-full bg-surfaceDarker"><img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kretya" className="w-full h-full rounded-full"/></div>
+        <div><h2 className="text-xl font-bold text-white">{user?.name || "Kretya Studio"}</h2><p className="text-sm text-textGray">{user?.phone || "+91 98765 43210"}</p></div>
       </div>
 
-      <div className="px-4 py-6 space-y-8">
-        
-        {/* Saved Places Section */}
-        <div>
-          <h2 className="text-lg font-bold text-black mb-3 px-2">Saved Places</h2>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="flex items-center gap-4 p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
-                <Briefcase size={20} className="text-black fill-black" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-[16px] text-black">Work</p>
-                <p className="text-sm text-gray-500 font-medium truncate">1455 Market St, San Francisco</p>
-              </div>
-              <ChevronRight size={18} className="text-gray-400" />
-            </div>
-            
-            <div className="flex items-center gap-4 p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors">
-              <div className="w-10 h-10 bg-[#F3F3F3] rounded-full flex items-center justify-center shrink-0">
-                <MapPin size={20} className="text-black fill-black" />
-              </div>
-              <div className="flex-1">
-                <p className="font-bold text-[16px] text-black">Home</p>
-                <p className="text-sm text-gray-500 font-medium truncate">903 Sunrose Terr, Sunnyvale</p>
-              </div>
-              <ChevronRight size={18} className="text-gray-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* Account Options */}
-        <div>
-          <h2 className="text-lg font-bold text-black mb-3 px-2">Account</h2>
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            {[
-              { label: 'Settings', icon: Settings },
-              { label: 'Payment Methods', icon: CreditCard },
-              { label: 'Safety Tools', icon: Shield },
-              { label: 'Help & Support', icon: MessageSquare },
-            ].map((item, index) => {
-              const Icon = item.icon;
-              return (
-                <div 
-                  key={item.label} 
-                  className={`flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors ${
-                    index !== 3 ? 'border-b border-gray-100' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-4">
-                    <Icon size={20} className="text-gray-600" />
-                    <span className="font-bold text-[16px] text-black">{item.label}</span>
-                  </div>
-                  <ChevronRight size={18} className="text-gray-400" />
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Logout Button */}
-        <div className="pt-4">
-          <button 
-            onClick={handleLogout}
-            className="w-full bg-[#F3F3F3] text-red-600 py-4 rounded-xl font-bold text-[16px] flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-100 border border-transparent transition-all active:scale-[0.98]"
-          >
-            <LogOut size={20} /> Log out
-          </button>
-          <p className="text-center text-xs text-gray-400 font-medium mt-4">Movyra App v1.0.0</p>
-        </div>
-
+      {/* Sec 3: Wallet Quick Access */}
+      <div className="bg-movyraMint/10 border border-movyraMint/30 rounded-2xl p-5 mb-8 flex justify-between items-center">
+        <div><p className="text-movyraMint text-xs font-bold uppercase tracking-wider mb-1">Wallet Balance</p><p className="text-2xl font-black text-white">₹1,240.00</p></div>
+        <button className="bg-movyraMint text-surfaceBlack px-4 py-2 rounded-lg font-bold text-sm shadow-mintGlow">Add Funds</button>
       </div>
+
+      {/* Sec 4: Settings Menu */}
+      <div className="bg-surfaceDark rounded-[32px] p-2 flex flex-col gap-1 border border-white/5 mb-8">
+        {[ {i:CreditCard, l:"Payment Methods"}, {i:MapPin, l:"Saved Addresses"}, {i:Shield, l:"Privacy"}, {i:Settings, l:"App Settings"} ].map((x, idx) => (
+          <div key={idx} className="flex items-center justify-between p-4 bg-surfaceBlack rounded-[24px]"><div className="flex items-center gap-4"><x.i size={18} className="text-textGray"/><span className="font-bold text-[15px]">{x.l}</span></div><ChevronRight size={18} className="text-textGray"/></div>
+        ))}
+      </div>
+
+      {/* Sec 5: Logout */}
+      <button onClick={handleLogout} className="w-full bg-red-500/10 text-red-500 py-4 rounded-pill font-bold flex justify-center gap-2"><LogOut size={20}/>Log Out</button>
     </div>
   );
 }

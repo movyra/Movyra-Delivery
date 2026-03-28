@@ -1,34 +1,17 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import BottomNavMobile from './BottomNavMobile';
+import React, { useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
+import BottomNavBar from './Navigation/BottomNavBar';
+import useAuthStore from '../store/useAuthStore';
 
-/**
- * MobileAppLayout
- * Wraps all authenticated routes. Enforces a mobile-device width on desktop screens,
- * manages safe-area padding, and anchors the bottom navigation bar.
- */
 export default function MobileAppLayout() {
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
+  useEffect(() => { if (!isAuthenticated) navigate('/auth-login', { replace: true }); }, [isAuthenticated, navigate]);
+  if (!isAuthenticated) return null;
   return (
-    <div className="min-h-screen bg-gray-100 flex justify-center items-center font-sans">
-      {/* Mobile Constraint Container 
-        On desktop: Looks like an iOS device screen (rounded, shadowed, fixed width)
-        On mobile: Takes full width/height
-      */}
-      <div className="w-full h-screen sm:h-[90vh] sm:max-w-[420px] bg-white sm:rounded-[40px] sm:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] overflow-hidden flex flex-col relative sm:border-[8px] sm:border-gray-900 ring-1 ring-gray-200">
-        
-        {/* Safe Area Top for iOS (Notch padding simulation on desktop) */}
-        <div className="hidden sm:block h-6 w-full bg-white shrink-0 relative">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-5 bg-gray-900 rounded-b-3xl"></div>
-        </div>
-
-        {/* Dynamic Content Area (Injected via React Router) */}
-        <main className="flex-1 overflow-y-auto bg-white relative hide-scrollbar pb-safe-bottom">
-          <Outlet />
-        </main>
-
-        {/* Fixed Bottom Navigation */}
-        <BottomNavMobile />
-      </div>
+    <div className="relative min-h-screen bg-surfaceBlack w-full overflow-hidden">
+      <main className="w-full h-full overflow-y-auto pb-[100px] pt-safe"><Outlet /></main>
+      <BottomNavBar />
     </div>
   );
 }
