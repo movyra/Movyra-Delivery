@@ -54,7 +54,7 @@ export default {
       },
 
       // SECTION 6: Animation Keyframes (Real Logic)
-      // Powers the "decrypting" and "loading" UI states
+      // Powers the network telemetry, GPS location UI, and loading states
       keyframes: {
         'fade-in-up': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
@@ -63,11 +63,23 @@ export default {
         'pulse-soft': {
           '0%, 100%': { opacity: '1' },
           '50%': { opacity: '0.7' }
+        },
+        // Real-time GPS Location & Signal Ping Keyframes
+        'ping': {
+          '0%': { transform: 'scale(1)', opacity: '1' },
+          '75%, 100%': { transform: 'scale(2.5)', opacity: '0' }
+        },
+        // Real-time Network Telemetry Pulse Keyframes
+        'pulse': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '.4' }
         }
       },
       animation: {
         'fade-in-up': 'fade-in-up 0.3s ease-out forwards',
-        'pulse-soft': 'pulse-soft 2s infinite ease-in-out'
+        'pulse-soft': 'pulse-soft 2s infinite ease-in-out',
+        'ping': 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
+        'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
       }
     },
   },
