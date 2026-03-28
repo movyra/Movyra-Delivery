@@ -6,10 +6,10 @@ import emailjs from '@emailjs/browser';
  */
 
 // SECTION 1: EmailJS Configuration & Environment
-// Note: Replace these placeholders with your actual EmailJS credentials
-const EMAILJS_SERVICE_ID = "service_xxxxxxx"; 
-const EMAILJS_TEMPLATE_ID = "template_xxxxxxx"; 
-const EMAILJS_PUBLIC_KEY = "your_public_key_here";
+// These values are pulled strictly from your .env.local or .env.production files
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
 // SECTION 2: Secure OTP Generation Logic
 /**
@@ -23,7 +23,7 @@ export const generateOTP = () => {
 // SECTION 3: EmailJS Transmission Engine
 /**
  * Sends the generated OTP to the user's email address.
- * Integrates directly with the EmailJS browser SDK.
+ * Integrates directly with the EmailJS browser SDK using real production credentials.
  */
 export const sendOTPEmail = async (userEmail, otp) => {
   const templateParams = {
@@ -47,7 +47,8 @@ export const sendOTPEmail = async (userEmail, otp) => {
     return { success: true, message: "OTP sent successfully", response };
   } catch (error) {
     console.error("Movyra Auth Error [EmailJS]:", error);
-    throw new Error(error.text || "Failed to deliver security code.");
+    // Return structured error for UI handling
+    throw new Error(error?.text || "Failed to deliver security code. Please check network connection.");
   }
 };
 
@@ -66,6 +67,7 @@ const storeOTPSession = (email, otp) => {
 
 /**
  * Validates the user-entered OTP against the active session.
+ * Real-time temporal and string matching logic.
  */
 export const verifyOTPSession = (enteredOtp) => {
   const rawSession = localStorage.getItem('mv_auth_sess');
@@ -85,13 +87,14 @@ export const verifyOTPSession = (enteredOtp) => {
 
     // Logic: Precise string matching
     if (otp === enteredOtp) {
-      localStorage.removeItem('mv_auth_sess'); // Clear session on success
+      localStorage.removeItem('mv_auth_sess'); // Clear session on success to prevent reuse
       return { valid: true };
     }
 
     return { valid: false, message: "Incorrect verification code." };
   } catch (e) {
+    console.error("Movyra Session Error:", e);
     localStorage.removeItem('mv_auth_sess');
-    return { valid: false, message: "Session corrupted." };
+    return { valid: false, message: "Session corrupted or tampered with." };
   }
 };
