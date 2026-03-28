@@ -110,16 +110,12 @@ async fn main() {
     // ========================================================================
     let protected_routes = Router::new()
         .route("/auth/sync", post(handlers::user_handler::sync_user))
-        // Placeholder for future logic
-        // .route("/bookings", post(handlers::booking_handler::create_booking))
-        // .route("/bookings/history", get(handlers::booking_handler::get_history))
         .route_layer(axum_middleware::from_fn(middleware::auth_guard::require_auth))
-        .with_state(app_state.clone()); // FIX INJECTED HERE
+        .with_state(app_state.clone());
 
     let public_routes = Router::new()
         .route("/health", get(health_check))
-        // .route("/pricing", post(handlers::booking_handler::calculate_pricing))
-        .with_state(app_state.clone()); // FIX INJECTED HERE
+        .with_state(app_state.clone());
 
     // ========================================================================
     // NEW SECTION 3: API Versioning Pipeline
@@ -131,6 +127,11 @@ async fn main() {
 
     // Global Security & Reliability Guardrails
     let app = Router::new()
+        // ====================================================================
+        // NEW SECTION 5: Root Index Route
+        // Resolves the 404 at the base URL (https://movyra-backend.onrender.com/)
+        // ====================================================================
+        .route("/", get(index_handler))
         .nest("/api/v1", v1_router)
         // ====================================================================
         // NEW SECTION 4: Global 404 JSON Fallback Handler
@@ -140,7 +141,6 @@ async fn main() {
         .layer(TraceLayer::new_for_http())
         .layer(CatchPanicLayer::new())
         .layer(RequestBodyLimitLayer::new(2 * 1024 * 1024));
-        // GLOBAL .with_state(app_state) REMOVED
 
     // Bind TCP Listener and Serve
     let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
@@ -164,12 +164,24 @@ async fn main() {
 // HANDLERS
 // ----------------------------------------------------------------------------
 
+/// Root Index Handler: Provides a "System Online" message for the base URL.
+async fn index_handler() -> impl IntoResponse {
+    let body = json!({
+        "status": "online",
+        "message": "Movyra Backend Engine is operational.",
+        "version": "1.0.0",
+        "api_root": "/api/v1",
+        "timestamp": chrono::Utc::now().to_rfc3339()
+    });
+    (StatusCode::OK, Json(body))
+}
+
 async fn global_404_handler() -> impl IntoResponse {
     let body = json!({
         "status": "error",
         "error": {
             "code": 404,
-            "message": "The requested API endpoint does not exist."
+            "message": "The requested API endpoint does not exist. Please use /api/v1 prefixes for logistics operations."
         }
     });
     (StatusCode::NOT_FOUND, Json(body))
