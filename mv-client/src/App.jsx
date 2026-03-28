@@ -18,6 +18,9 @@ import OrderHistory from './pages/order-history';
 import ProfileSettings from './pages/profile-settings';
 import BottomNavBar from './components/Navigation/BottomNavBar';
 
+// Real-Time Global Store Injection
+import { useOnboardingStore } from './store/useOnboardingStore';
+
 // ============================================================================
 // MAIN VIEWPORT CONTROLLER
 // Handles dynamic routing, page transitions, and Bottom NavBar visibility
@@ -108,31 +111,26 @@ const MainViewport = () => {
 
 // ============================================================================
 // ROOT APPLICATION INJECTION
-// Manages the first-time Onboarding Interceptor before loading the App
+// Manages the strict Onboarding Guard based on Zustand Global State
 // ============================================================================
 export default function App() {
-  const [showOnboarding, setShowOnboarding] = useState(true);
-  
-  // SECTION 6: Local Storage Onboarding Interceptor
-  useEffect(() => { 
-    // Secure reader for the local storage flag to prevent repetitive app tours
-    if (localStorage.getItem('has_seen_onboarding') === 'true') {
-      setShowOnboarding(false);
-    }
-  }, []);
+  // SECTION 6: Zustand Global State Interceptor
+  // Pulls the real-time completion status from the persisted store
+  const hasCompletedOnboarding = useOnboardingStore(state => state.hasCompletedOnboarding);
 
   const handleOnboardingComplete = () => {
-    // Real logic to permanently bypass onboarding on subsequent application loads
-    localStorage.setItem('has_seen_onboarding', 'true');
-    setShowOnboarding(false);
+    // Write directly to the Zustand store, which persists automatically to localStorage.
+    // This unlocks the main application routing.
+    useOnboardingStore.setState({ hasCompletedOnboarding: true });
   };
 
-  // Intercept the render cycle if the user is completely new
-  if (showOnboarding) {
+  // STRICT GUARD: Intercept the render cycle if the user has not completed the real-time flow.
+  // This locks the user into the Onboarding component regardless of their URL path.
+  if (!hasCompletedOnboarding) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
   
-  // Initialize the core application and router
+  // Initialize the core application and router ONLY when the global state allows
   return (
     <BrowserRouter>
       <MainViewport />
