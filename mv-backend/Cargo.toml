@@ -14,7 +14,14 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio-native-tls"] }
 tokio = { version = "1.50.0", features = ["full"] }
-tower-http = { version = "0.6.8", features = ["cors"] }
+
+# UPDATED: Tower HTTP now includes trace, catch-panic, and limit for robust middleware
+tower-http = { version = "0.6.8", features = ["cors", "trace", "catch-panic", "limit"] }
+
+# NEW: Structured Telemetry & Logging Engine
+tracing = "0.1.41"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter", "fmt"] }
+
 dotenvy = "0.15.7"
 
 # Required for Upstash Redis TLS (rediss://) and WebSocket streaming
@@ -55,3 +62,37 @@ disable-auth-checks = []
 unwrap_used = "warn"        # Prevent production crashes from unchecked Firebase token unwraps
 expect_used = "warn"        # Enforce proper Axum Error handling returning HTTP 401/500
 await_holding_lock = "deny" # Prevent deadlocks when accessing PostgreSQL connections
+
+# ============================================================================
+# NEW SECTION 5: Explicit Binary Target Engine
+# Strictly defines the entry point for the Axum server to prevent compilation ambiguity.
+# ============================================================================
+[[bin]]
+name = "mv-backend"
+path = "src/main.rs"
+
+# ============================================================================
+# NEW SECTION 6: Dependency Optimization Engine
+# Forces all downloaded third-party crates to compile at maximum speed,
+# even during local development, saving CPU cycles on cold starts.
+# ============================================================================
+[profile.dev.package."*"]
+opt-level = 3
+
+# ============================================================================
+# NEW SECTION 7: Automated Testing Profile Engine
+# Optimizes the test runner for CI/CD pipelines (like GitHub Actions).
+# ============================================================================
+[profile.test]
+opt-level = 1
+debug = true
+lto = "off"
+
+# ============================================================================
+# NEW SECTION 8: Core Rust Compiler Linter Engine
+# Enforces strict code hygiene at the compiler level before Clippy even runs.
+# ============================================================================
+[lints.rust]
+unsafe_code = "forbid"      # Strictly forbid memory-unsafe code in the backend
+unused_must_use = "deny"    # Force developers to handle database Result types
+rust_2018_idioms = "deny"   # Enforce modern Rust idioms
