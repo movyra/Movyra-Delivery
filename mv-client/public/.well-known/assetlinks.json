@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.bongo.movyra",
+      "sha256_cert_fingerprints": [
+        "A5:52:A1:8F:E5:0E:FB:33:BC:00:74:8C:C0:D6:DC:CB:B0:68:36:07:64:F6:B4:63:E1:6C:E4:C8:CE:7B:A7:8D"
+      ]
+    }
+  }
+]
