@@ -1,7 +1,14 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword 
+} from 'firebase/auth';
 
-// Real Firebase Configuration pulled securely from Vite environment variables
+// ============================================================================
+// SECTION 1: Firebase Configuration & Initialization
+// Real Firebase Configuration pulled securely from Vite environment variables.
+// ============================================================================
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -14,42 +21,66 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-/**
- * Initializes the Invisible reCAPTCHA required for Phone Auth.
- * This proves to Google that a human is requesting the SMS.
- * @param {string} containerId - The HTML element ID to attach the recaptcha to.
- */
-export const setupRecaptcha = (containerId) => {
-  if (!window.recaptchaVerifier) {
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: 'invisible',
-      callback: (response) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-        console.log("reCAPTCHA verified successfully");
-      },
-      'expired-callback': () => {
-        // Response expired. Clear to allow re-solving.
-        console.warn("reCAPTCHA expired");
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = null;
-      }
-    });
-  }
-  return window.recaptchaVerifier;
+// ============================================================================
+// SECTION 2: Deterministic Hidden Password Engine
+// Generates a complex, repeatable password based on the user's email.
+// This allows a "passwordless" OTP experience on Firebase's 100% free tier.
+// ============================================================================
+const generateHiddenPassword = (email) => {
+  // Combine a static salt with email properties to ensure Firebase accepts it
+  // as a strong password, while keeping it consistently reproducible per user.
+  const sanitizedEmail = email.trim().toLowerCase();
+  return `Movyra!_${sanitizedEmail.length}_${sanitizedEmail.substring(0, 4)}@2026_Secure_Bongo`;
 };
 
-/**
- * Sends the OTP to the provided phone number.
- * @param {string} phone - Formatted phone number (e.g., +919876543210).
- * @param {object} verifier - The RecaptchaVerifier instance.
- * @returns {Promise<object>} confirmationResult - Used to confirm the OTP later.
- */
-export const sendPhoneOTP = async (phone, verifier) => {
+// ============================================================================
+// SECTION 3: Free Tier Account Creation
+// Registers a brand new user using their email and the auto-generated password.
+// ============================================================================
+export const registerUserWithEmail = async (email) => {
   try {
-    const confirmationResult = await signInWithPhoneNumber(auth, phone, verifier);
-    return confirmationResult;
+    const hiddenPassword = generateHiddenPassword(email);
+    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), hiddenPassword);
+    return userCredential.user;
   } catch (error) {
-    console.error("Error sending OTP:", error);
+    console.error("Movyra Auth Error [Registration]:", error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// SECTION 4: Free Tier Account Authentication
+// Logs in an existing user securely using their email and hidden password.
+// ============================================================================
+export const loginUserWithEmail = async (email) => {
+  try {
+    const hiddenPassword = generateHiddenPassword(email);
+    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), hiddenPassword);
+    return userCredential.user;
+  } catch (error) {
+    console.error("Movyra Auth Error [Login]:", error);
+    throw error;
+  }
+};
+
+// ============================================================================
+// SECTION 5: Master Authentication Controller
+// Seamlessly attempts to log the user in. If the account doesn't exist,
+// it automatically creates it. This is triggered AFTER successful OTP verification.
+// ============================================================================
+export const authenticateSeamlessly = async (email) => {
+  try {
+    // Attempt Login First
+    const user = await loginUserWithEmail(email);
+    return { user, isNewUser: false };
+  } catch (error) {
+    // If user does not exist (invalid-credential is the modern Firebase error for this)
+    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+      console.log("User not found in system. Creating new free-tier account...");
+      const newUser = await registerUserWithEmail(email);
+      return { user: newUser, isNewUser: true };
+    }
+    // Throw any other genuine errors (e.g., network failure, account disabled)
     throw error;
   }
 };
