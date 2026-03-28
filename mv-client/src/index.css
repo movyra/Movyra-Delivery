@@ -1,5 +1,36 @@
-@tailwind base; @tailwind components; @tailwind utilities;
-:root { color-scheme: dark; background-color: #000000; }
-body { margin: 0; font-family: "Inter", sans-serif; background-color: #000000; color: #FFFFFF; overscroll-behavior-y: none; -webkit-tap-highlight-color: transparent; }
-::-webkit-scrollbar { display: none; } * { -ms-overflow-style: none; scrollbar-width: none; }
-.pb-safe { padding-bottom: env(safe-area-inset-bottom); } .pt-safe { padding-top: env(safe-area-inset-top); }
+@tailwind base; 
+@tailwind components; 
+@tailwind utilities;
+
+:root { 
+  color-scheme: light; 
+  background-color: #F8FAFF; /* movyra-surface */
+}
+
+body { 
+  margin: 0; 
+  font-family: "Satoshi", "Inter", sans-serif; 
+  background-color: #F8FAFF; /* movyra-surface */
+  color: #1A1C1E; /* Dark text for light background */
+  overscroll-behavior-y: none; 
+  -webkit-tap-highlight-color: transparent; 
+  -webkit-user-select: none; /* Disables text selection highlighting */
+  user-select: none; /* Disables text selection highlighting */
+}
+
+::-webkit-scrollbar { 
+  display: none; 
+} 
+
+* { 
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}
+
+.pb-safe { 
+  padding-bottom: env(safe-area-inset-bottom); 
+} 
+
+.pt-safe { 
+  padding-top: env(safe-area-inset-top); 
+}
