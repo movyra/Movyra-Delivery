@@ -4,8 +4,11 @@ import { ChevronLeft, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2, ArrowRigh
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Real Firebase Imports for Authentication and Database
-import { getAuth, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+
+// Centralized Firebase Auth Instance
+import { auth } from '../../services/firebaseAuth';
 
 // ============================================================================
 // PAGE: SET PASSWORD (STARK MINIMALIST UI)
@@ -50,10 +53,10 @@ export default function SetPassword() {
     setIsLoading(true);
 
     try {
-      const auth = getAuth();
+      // Initialize Firestore cleanly using the default app initialized in firebaseAuth.js
       const db = getFirestore();
 
-      // 1. Create the user in Firebase Authentication
+      // 1. Create the user in Firebase Authentication using centralized auth instance
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
