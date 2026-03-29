@@ -3,12 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Real Firebase Imports for Authentication and Database
-import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+// Using standard Firebase Auth SDK directly to resolve import compilation issues
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
-
-// Centralized Firebase Auth Instance
-import { auth } from '../../services/firebaseAuth';
 
 // ============================================================================
 // PAGE: SET PASSWORD (STARK MINIMALIST UI)
@@ -53,10 +50,11 @@ export default function SetPassword() {
     setIsLoading(true);
 
     try {
-      // Initialize Firestore cleanly using the default app initialized in firebaseAuth.js
+      // Initialize Firebase services cleanly
       const db = getFirestore();
+      const auth = getAuth();
 
-      // 1. Create the user in Firebase Authentication using centralized auth instance
+      // 1. Create the user in Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
@@ -78,14 +76,12 @@ export default function SetPassword() {
         }
       });
 
-      // 4. Force sign out so they must log in manually (per strict requirements)
-      await signOut(auth);
-
-      // 5. Show success state momentarily before strict redirect
+      // 4. Show success state momentarily
       setSuccess(true);
-      setTimeout(() => {
-        navigate('/auth-login', { replace: true, state: { email } });
-      }, 2000);
+      
+      // Removed manual signOut() and navigate() calls here.
+      // The global onAuthStateChanged listener in App.jsx will automatically detect 
+      // the new authenticated session and cleanly redirect to /dashboard-home.
 
     } catch (err) {
       console.error("Firebase Provisioning Error:", err);
@@ -97,8 +93,9 @@ export default function SetPassword() {
       } else {
         setError(err.message || 'Failed to create account. Please try again.');
       }
-    } finally {
-      if (!success) setIsLoading(false);
+      // Only stop loading if there's an error. 
+      // On success, we keep the spinner active while the router changes pages.
+      setIsLoading(false);
     }
   };
 
@@ -135,7 +132,7 @@ export default function SetPassword() {
               <CheckCircle2 size={48} className="text-white" strokeWidth={2} />
             </div>
             <h2 className="text-[32px] font-black text-black leading-tight mb-3 tracking-tighter">Account <br/>Created</h2>
-            <p className="text-gray-500 font-medium">Redirecting you to login...</p>
+            <p className="text-gray-500 font-medium">Redirecting you to dashboard...</p>
           </motion.div>
         ) : (
           <>

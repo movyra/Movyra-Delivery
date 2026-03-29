@@ -70,12 +70,11 @@ export default function MobileSignup() {
     
     try {
       await signInWithPopup(auth, provider);
-      // If successful, the global RequireAuthGuard in App.jsx will instantly unlock the dashboard
-      navigate('/dashboard-home');
+      // Navigation removed to prevent double-navigation conflicts.
+      // If successful, the global RequireGuestGuard in App.jsx will instantly redirect to the dashboard.
     } catch (err) {
       console.error("Google Auth Error:", err);
       setError('Google Sign-In failed or was cancelled.');
-    } finally {
       setIsGoogleLoading(false);
     }
   };

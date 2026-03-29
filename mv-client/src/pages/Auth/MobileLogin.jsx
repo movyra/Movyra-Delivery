@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, AlertCircle, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Real Centralized Firebase Auth Integration
-import { loginWithEmail, signInWithGooglePopup } from '../../services/firebaseAuth';
+// Using standard Firebase Auth SDK directly to resolve import compilation issues
+import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 // ============================================================================
 // PAGE: MOBILE LOGIN (STARK MINIMALIST UI)
@@ -43,10 +43,10 @@ export default function MobileLogin() {
     setError('');
 
     try {
-      // Utilizing centralized auth service
-      await loginWithEmail(email, password);
-      // App.jsx RequireAuthGuard automatically redirects to /dashboard-home
-      navigate('/dashboard-home', { replace: true });
+      const auth = getAuth();
+      await signInWithEmailAndPassword(auth, email, password);
+      // Navigation calls removed as requested to prevent double-navigation.
+      // The application's root auth guard will automatically handle the redirect.
     } catch (err) {
       console.error("Login Error:", err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
@@ -54,7 +54,6 @@ export default function MobileLogin() {
       } else {
         setError('Login failed. Please check your network.');
       }
-    } finally {
       setIsLoading(false);
     }
   };
@@ -67,13 +66,14 @@ export default function MobileLogin() {
     setError('');
     
     try {
-      // Utilizing centralized Google SSO service
-      await signInWithGooglePopup();
-      navigate('/dashboard-home', { replace: true });
+      const auth = getAuth();
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      // Navigation calls removed as requested to prevent double-navigation.
+      // The application's root auth guard will automatically handle the redirect.
     } catch (err) {
       console.error("Google Auth Error:", err);
       setError('Google Sign-In failed or was cancelled.');
-    } finally {
       setIsGoogleLoading(false);
     }
   };
