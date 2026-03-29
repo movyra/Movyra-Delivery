@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Package, Send, ArrowRight, Plus, MoreHorizontal, History } from 'lucide-react';
 
-// Real Firebase Auth Integration
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+// Real Firebase Auth Integration (Using pre-initialized instance to prevent race conditions)
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../services/firebaseAuth';
 
 // ============================================================================
 // PAGE: MOBILE HOME DASHBOARD (STARK MINIMALIST UI)
@@ -24,7 +25,7 @@ export default function MobileHome() {
   const [accountBalance, setAccountBalance] = useState('0.00');
 
   useEffect(() => {
-    const auth = getAuth();
+    // Utilize the safely pre-initialized auth instance from our services layer
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Extract first name or default to 'User'

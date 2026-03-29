@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+
+// Real Pre-Initialized Firebase Auth Instance
+import { auth } from './services/firebaseAuth';
 
 // SECTION 1: Master Dependencies & Component Injections
 import MobileAppLayout from './components/MobileAppLayout';
@@ -26,13 +29,14 @@ import { useOnboardingStore } from './store/useOnboardingStore';
 // ============================================================================
 // SECTION 7: ENTERPRISE FIREBASE AUTHENTICATION GUARD
 // Real-time listener checking Firebase backend for active session tokens
+// Uses the pre-initialized auth instance to prevent initialization race conditions.
 // ============================================================================
 const RequireAuthGuard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   useEffect(() => {
     try {
-      const auth = getAuth();
+      // Directly use the pre-initialized auth instance imported from services
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setIsAuthenticated(!!user);
       });
@@ -46,11 +50,14 @@ const RequireAuthGuard = () => {
   // Real loading state while verifying token with Firebase servers
   if (isAuthenticated === null) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-movyra-surface h-full min-h-screen z-[300] relative">
+      <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
+        <div className="w-12 h-12 rounded-md overflow-hidden bg-black flex items-center justify-center mb-6 shadow-md">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        </div>
         <motion.div 
           animate={{ rotate: 360 }} 
           transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
-          className="w-12 h-12 border-4 border-movyra-blue border-t-transparent rounded-full shadow-lg shadow-movyra-blue/20" 
+          className="w-8 h-8 border-4 border-black border-t-transparent rounded-full shadow-sm" 
         />
       </div>
     );
@@ -73,8 +80,8 @@ const MainViewport = () => {
     // Core Hub Screens that require the navigation dock
     if (path === '/' || path === '/dashboard-home') return 'home';
     if (path === '/tracking-active') return 'tracking';
-    if (path === '/order-history') return 'shipments';
-    if (path === '/profile-settings') return 'settings';
+    if (path === '/order-history') return 'history';
+    if (path === '/profile-settings') return 'profile';
     
     // Return null to completely unmount the nav bar on Auth/Booking/Detail flows
     return null; 
@@ -83,7 +90,7 @@ const MainViewport = () => {
   const activeTab = getActiveTab();
 
   return (
-    <div className="flex flex-col h-screen bg-movyra-surface overflow-hidden font-sans relative">
+    <div className="flex flex-col h-screen bg-white overflow-hidden font-sans relative">
       
       {/* SECTION 3: Animated Viewport Controller */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-0">
@@ -102,7 +109,7 @@ const MainViewport = () => {
               <Route path="/auth-login" element={<MobileLogin />} />
               <Route path="/auth-signup" element={<MobileSignup />} />
               <Route path="/auth/otp" element={<OTPVerification />} />
-              <Route path="/auth/set-password" element={<SetPassword />} /> {/* NEW ROUTE */}
+              <Route path="/auth/set-password" element={<SetPassword />} />
               
               {/* Protected / Main Application Node - WRAPPED IN FIREBASE GUARD */}
               <Route element={<RequireAuthGuard />}>
