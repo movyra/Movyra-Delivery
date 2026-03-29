@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, ShieldCheck, AlertCircle, Loader2, RefreshCcw, MailCheck } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Loader2, RefreshCcw, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { verifyOTPSession, generateOTP, sendOTPEmail } from '../../services/emailAuth';
-import MovyraButton from '../../components/UI/MovyraButton';
 
 // ============================================================================
-// PAGE: OTP VERIFICATION (SIGNUP FLOW CONNECTION)
-// Validates the 4-digit EmailJS code locally. Upon success, strictly routes
-// the user to the Set Password screen to finalize account creation.
+// PAGE: OTP VERIFICATION (STARK MINIMALIST UI)
+// High-contrast, raw numeric entry interface matching the Uber-inspired 
+// design language. Features flat gray inputs and massive display typography.
 // ============================================================================
 
 export default function OTPVerification() {
@@ -101,7 +100,6 @@ export default function OTPVerification() {
       }
 
       // 2. OTP Valid -> Push user strictly to the new Set Password page
-      // Passes the verified email and name securely in the router state
       navigate('/auth/set-password', { 
         state: { email, name },
         replace: true 
@@ -116,70 +114,47 @@ export default function OTPVerification() {
   };
 
   return (
-    <div className="min-h-screen bg-movyra-surface text-gray-800 flex flex-col font-sans relative overflow-hidden">
+    // Root: Pure White Background
+    <div className="min-h-screen bg-white text-black flex flex-col font-sans relative overflow-hidden">
       
-      {/* SECTION 4: Secure Header Navigation */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-6 pt-14 pb-4 flex items-center justify-between"
-      >
-        <div className="flex items-center">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-movyra-blue hover:bg-blue-50 rounded-full transition-colors active:scale-95">
-            <ChevronLeft size={28} />
-          </button>
-          <span className="ml-2 font-bold tracking-widest text-sm uppercase text-gray-400">Verification</span>
-        </div>
+      {/* SECTION 4: Top Navigation & Logo */}
+      <div className="pt-12 px-6 pb-2 flex items-center justify-between z-50">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors active:scale-95"
+        >
+          <ChevronLeft size={28} strokeWidth={2.5} />
+        </button>
         
-        {/* Brand Logo inside Header */}
-        <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-100 shadow-sm flex items-center justify-center bg-white">
-          <img src="/logo.png" alt="Movyra Logo" className="w-full h-full object-cover" />
+        {/* Real Brand Logo */}
+        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
         </div>
-      </motion.div>
+      </div>
 
-      <div className="px-8 mt-4 flex-1 flex flex-col">
-        {/* SECTION 5: Hero Identity */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          className="w-16 h-16 bg-white border border-gray-100 rounded-2xl flex items-center justify-center mb-8 shadow-sm"
-        >
-          <MailCheck size={32} className="text-movyra-blue" />
-        </motion.div>
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-8 pt-8 pb-8">
         
+        {/* SECTION 5: Massive Display Typography */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="mb-12"
         >
-          <h1 className="text-4xl font-black mb-3 tracking-tight text-gray-900">Enter code.</h1>
-          <p className="text-gray-500 text-lg mb-8 leading-relaxed">
-            Sent securely to <br/><span className="text-movyra-blue font-bold">{email}</span>
+          <h1 className="text-[44px] font-black text-black leading-[1.05] tracking-tighter mb-4">
+            Enter <br/>code.
+          </h1>
+          <p className="text-[16px] text-gray-500 font-medium leading-relaxed">
+            Sent securely to <span className="text-black font-bold">{email}</span>
           </p>
         </motion.div>
 
-        {/* SECTION 6: Real-Time Exception Catcher */}
-        <AnimatePresence>
-          {error && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0, scale: 0.95 }}
-              animate={{ opacity: 1, height: 'auto', scale: 1 }}
-              exit={{ opacity: 0, height: 0, scale: 0.95 }}
-              className="bg-red-50 border-2 border-red-100 rounded-2xl p-4 flex items-start gap-3 mb-6"
-            >
-              <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-600 font-bold">{error}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* SECTION 7: 4-Digit Array Input Engine */}
+        {/* SECTION 6: Flat Minimalist 4-Digit Array Engine */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="flex gap-4 mb-8 justify-center" 
+          transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
+          className="flex gap-4 mb-8 justify-between" 
           onPaste={handlePaste}
         >
           {code.map((digit, index) => (
@@ -192,10 +167,10 @@ export default function OTPVerification() {
               value={digit}
               onChange={(e) => handleChange(index, e.target.value)}
               onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`w-16 h-20 text-center text-3xl font-black rounded-2xl bg-white outline-none transition-all duration-300 shadow-sm ${
+              className={`w-[72px] h-[88px] text-center text-[32px] font-black rounded-2xl outline-none transition-all duration-200 border-2 ${
                 digit 
-                  ? 'border-2 border-movyra-blue text-gray-900 shadow-lg shadow-movyra-blue/20' 
-                  : 'border-2 border-gray-100 text-gray-400 focus:border-blue-300'
+                  ? 'border-black bg-white text-black' 
+                  : 'border-transparent bg-[#F6F6F6] text-gray-400 focus:border-black focus:bg-white'
               }`}
             />
           ))}
@@ -205,53 +180,61 @@ export default function OTPVerification() {
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="flex justify-center mb-10"
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="flex mb-10"
         >
-          <p className="text-gray-500 font-bold text-sm flex items-center gap-2">
+          <p className="text-gray-500 font-bold text-[15px] flex items-center gap-2">
             Didn't receive it? 
             {timeLeft > 0 ? (
-              <span className="text-gray-900">0:{timeLeft.toString().padStart(2, '0')}</span>
+              <span className="text-black">0:{timeLeft.toString().padStart(2, '0')}</span>
             ) : (
-              <button onClick={handleResend} className="text-movyra-blue flex items-center gap-1 active:scale-95 transition-transform">
-                <RefreshCcw size={16} /> Resend
+              <button onClick={handleResend} className="text-black flex items-center gap-1.5 active:scale-95 transition-transform underline decoration-2 underline-offset-4">
+                <RefreshCcw size={16} strokeWidth={2.5} /> Resend
               </button>
             )}
           </p>
         </motion.div>
-      </div>
 
-      {/* SECTION 8: Footer Actions & Trust Badges */}
-      <motion.div 
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="bg-white rounded-t-[40px] px-6 pt-10 pb-safe border-t border-gray-100 shadow-[0_-10px_40px_rgba(0,0,0,0.03)]"
-      >
-        <MovyraButton 
-          variant="solid"
-          onClick={verifyOTP}
-          disabled={isVerifying || code.join('').length !== 4}
-          className="mb-6"
-        >
-          {isVerifying ? (
-            <>
-              <Loader2 size={24} className="animate-spin text-white" />
-              <span>Verifying...</span>
-            </>
-          ) : (
-            'Verify & Continue'
+        {/* Real-Time Exception Catcher */}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-gray-100 border-l-4 border-black rounded-r-xl p-4 flex items-start gap-3 mb-8"
+            >
+              <AlertCircle size={20} className="text-black flex-shrink-0 mt-0.5" />
+              <p className="text-[14px] text-black font-bold leading-snug">{error}</p>
+            </motion.div>
           )}
-        </MovyraButton>
+        </AnimatePresence>
 
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <ShieldCheck size={18} className="text-movyra-blue" />
-          <p className="text-xs text-gray-400 font-bold">
-            256-bit Secure Authentication
-          </p>
-        </div>
-      </motion.div>
+        {/* SECTION 7: Stark Action Area */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+          className="mt-auto space-y-4 pb-4"
+        >
+          {/* Stark Black Primary Pill Button */}
+          <button 
+            onClick={verifyOTP}
+            disabled={isVerifying || code.join('').length !== 4}
+            className="w-full flex items-center justify-between px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] disabled:opacity-50"
+          >
+            <span className="flex-1 text-center pl-6">
+              {isVerifying ? 'Verifying...' : 'Verify & Continue'}
+            </span>
+            {isVerifying ? (
+              <Loader2 size={24} className="animate-spin text-white" />
+            ) : (
+              <ArrowRight size={24} className="text-white" />
+            )}
+          </button>
+        </motion.div>
 
+      </div>
     </div>
   );
 }
