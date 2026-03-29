@@ -12,7 +12,7 @@ import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import MobileLogin from './pages/Auth/MobileLogin';
 import MobileSignup from './pages/Auth/MobileSignup';
 import OTPVerification from './pages/Auth/OTPVerification';
-import SetPassword from './pages/Auth/SetPassword'; // NEW INJECTION
+import SetPassword from './pages/Auth/SetPassword'; 
 import MobileHome from './pages/Dashboard/MobileHome';
 import SetLocation from './pages/Booking/SetLocation';
 import SelectVehicle from './pages/Booking/SelectVehicle';
@@ -27,63 +27,67 @@ import BottomNavBar from './components/Navigation/BottomNavBar';
 import { useOnboardingStore } from './store/useOnboardingStore';
 
 // ============================================================================
-// SECTION 7: ENTERPRISE FIREBASE AUTHENTICATION GUARD
-// Real-time listener checking Firebase backend for active session tokens
-// Uses the pre-initialized auth instance to prevent initialization race conditions.
+// SHARED LOADING STATE (Used during Firebase Auth resolution)
 // ============================================================================
-const RequireAuthGuard = () => {
+const GlobalLoadingScreen = () => (
+  <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
+    <div className="w-12 h-12 rounded-md overflow-hidden bg-black flex items-center justify-center mb-6 shadow-md">
+      <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+    </div>
+    <motion.div 
+      animate={{ rotate: 360 }} 
+      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
+      className="w-8 h-8 border-4 border-black border-t-transparent rounded-full shadow-sm" 
+    />
+  </div>
+);
+
+// ============================================================================
+// SECTION 7A: ENTERPRISE FIREBASE AUTHENTICATION GUARD (PROTECTED ROUTES)
+// Strictly locks out unauthenticated users from the main application.
+// ============================================================================
+const RequireAuthGuard = ({ isAuthenticated }) => {
+  if (isAuthenticated === null) return <GlobalLoadingScreen />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/auth-login" replace />;
+};
+
+// ============================================================================
+// SECTION 7B: REVERSE AUTHENTICATION GUARD (GUEST ROUTES)
+// Strictly prevents authenticated users from accessing login/signup screens.
+// ============================================================================
+const RequireGuestGuard = ({ isAuthenticated }) => {
+  if (isAuthenticated === null) return <GlobalLoadingScreen />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/dashboard-home" replace />;
+};
+
+// ============================================================================
+// MAIN VIEWPORT CONTROLLER
+// Handles global auth state, routing, and Bottom NavBar visibility
+// ============================================================================
+const MainViewport = () => {
+  const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
+  // LIFTOUT: Global Auth State resolved BEFORE routing is evaluated
   useEffect(() => {
     try {
-      // Directly use the pre-initialized auth instance imported from services
       const unsubscribe = onAuthStateChanged(auth, (user) => {
         setIsAuthenticated(!!user);
       });
       return () => unsubscribe();
     } catch (error) {
       console.error("Firebase Auth Init Error:", error);
-      setIsAuthenticated(false); // Failsafe lockout
+      setIsAuthenticated(false);
     }
   }, []);
-
-  // Real loading state while verifying token with Firebase servers
-  if (isAuthenticated === null) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
-        <div className="w-12 h-12 rounded-md overflow-hidden bg-black flex items-center justify-center mb-6 shadow-md">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-        </div>
-        <motion.div 
-          animate={{ rotate: 360 }} 
-          transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
-          className="w-8 h-8 border-4 border-black border-t-transparent rounded-full shadow-sm" 
-        />
-      </div>
-    );
-  }
-
-  // Strictly lock out unauthenticated users and push to the login node
-  return isAuthenticated ? <Outlet /> : <Navigate to="/auth-login" replace />;
-};
-
-// ============================================================================
-// MAIN VIEWPORT CONTROLLER
-// Handles dynamic routing, page transitions, and Bottom NavBar visibility
-// ============================================================================
-const MainViewport = () => {
-  const location = useLocation();
   
   // SECTION 2: Dynamic Navigation Visibility Engine
   const getActiveTab = () => {
     const path = location.pathname;
-    // Core Hub Screens that require the navigation dock
     if (path === '/' || path === '/dashboard-home') return 'home';
     if (path === '/tracking-active') return 'tracking';
     if (path === '/order-history') return 'history';
     if (path === '/profile-settings') return 'profile';
-    
-    // Return null to completely unmount the nav bar on Auth/Booking/Detail flows
     return null; 
   };
 
@@ -105,14 +109,17 @@ const MainViewport = () => {
           >
             {/* SECTION 4: Core Routing Matrix */}
             <Routes location={location}>
-              {/* Authentication Node */}
-              <Route path="/auth-login" element={<MobileLogin />} />
-              <Route path="/auth-signup" element={<MobileSignup />} />
-              <Route path="/auth/otp" element={<OTPVerification />} />
-              <Route path="/auth/set-password" element={<SetPassword />} />
               
-              {/* Protected / Main Application Node - WRAPPED IN FIREBASE GUARD */}
-              <Route element={<RequireAuthGuard />}>
+              {/* GUEST NODE: Locked if user is already logged in */}
+              <Route element={<RequireGuestGuard isAuthenticated={isAuthenticated} />}>
+                <Route path="/auth-login" element={<MobileLogin />} />
+                <Route path="/auth-signup" element={<MobileSignup />} />
+                <Route path="/auth/otp" element={<OTPVerification />} />
+                <Route path="/auth/set-password" element={<SetPassword />} />
+              </Route>
+              
+              {/* PROTECTED NODE: Locked if user is NOT logged in */}
+              <Route element={<RequireAuthGuard isAuthenticated={isAuthenticated} />}>
                 <Route element={<MobileAppLayout />}>
                   <Route path="/" element={<MobileHome />} />
                   <Route path="/dashboard-home" element={<MobileHome />} />
