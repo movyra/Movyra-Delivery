@@ -27,26 +27,32 @@ export const auth = getAuth(app);
 
 // ============================================================================
 // SECTION 2: Persistence Enforcement (STRICT REDIRECT LOOP FIX)
-// Explicitly enforces 'browserLocalPersistence' so that the session
-// survives browser redirects and app reloads.
+// Explicitly ensures 'browserLocalPersistence' is established and awaited
+// before any auth actions are performed. This prevents the "null user" flicker
+// during browser redirects.
 // ============================================================================
-const enforcePersistence = async () => {
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-  } catch (error) {
-    console.error("Movyra Auth Error [Persistence]:", error);
+let persistencePromise = null;
+
+export const initPersistence = async () => {
+  if (!persistencePromise) {
+    persistencePromise = setPersistence(auth, browserLocalPersistence).catch((error) => {
+      console.error("Movyra Auth Error [Persistence]:", error);
+      persistencePromise = null; // Reset on failure to allow retry
+    });
   }
+  return persistencePromise;
 };
 
 // Fire the persistence enforcement immediately upon module load
-enforcePersistence();
+initPersistence();
 
 // ============================================================================
 // SECTION 3: Standard Email Registration
-// Registers a brand new user using their verified email and password.
 // ============================================================================
 export const registerWithEmail = async (email, password) => {
   try {
+    // Strictly await persistence initialization before attempting creation
+    await initPersistence();
     const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
     return userCredential.user;
   } catch (error) {
@@ -57,10 +63,11 @@ export const registerWithEmail = async (email, password) => {
 
 // ============================================================================
 // SECTION 4: Standard Email Authentication
-// Logs in an existing user securely using their email and password.
 // ============================================================================
 export const loginWithEmail = async (email, password) => {
   try {
+    // Strictly await persistence initialization before attempting login
+    await initPersistence();
     const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
     return userCredential.user;
   } catch (error) {
@@ -71,10 +78,11 @@ export const loginWithEmail = async (email, password) => {
 
 // ============================================================================
 // SECTION 5: Google Single Sign-On (SSO)
-// Seamlessly authenticates the user via a secure Google OAuth popup.
 // ============================================================================
 export const signInWithGooglePopup = async () => {
   try {
+    // Strictly await persistence initialization before attempting popup
+    await initPersistence();
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
     return userCredential.user;
