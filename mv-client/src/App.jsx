@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 // SECTION 1: Master Dependencies & Component Injections
 import MobileAppLayout from './components/MobileAppLayout';
@@ -8,18 +9,56 @@ import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import MobileLogin from './pages/Auth/MobileLogin';
 import MobileSignup from './pages/Auth/MobileSignup';
 import OTPVerification from './pages/Auth/OTPVerification';
+import SetPassword from './pages/Auth/SetPassword'; // NEW INJECTION
 import MobileHome from './pages/Dashboard/MobileHome';
 import SetLocation from './pages/Booking/SetLocation';
 import SelectVehicle from './pages/Booking/SelectVehicle';
 import ReviewOrder from './pages/Booking/ReviewOrder';
 import LiveTracking from './pages/Tracking/LiveTracking';
-import ShipmentDetail from './pages/Tracking/ShipmentDetail'; // NEW INJECTION
+import ShipmentDetail from './pages/Tracking/ShipmentDetail';
 import OrderHistory from './pages/order-history';
 import ProfileSettings from './pages/profile-settings';
 import BottomNavBar from './components/Navigation/BottomNavBar';
 
 // Real-Time Global Store Injection
 import { useOnboardingStore } from './store/useOnboardingStore';
+
+// ============================================================================
+// SECTION 7: ENTERPRISE FIREBASE AUTHENTICATION GUARD
+// Real-time listener checking Firebase backend for active session tokens
+// ============================================================================
+const RequireAuthGuard = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+
+  useEffect(() => {
+    try {
+      const auth = getAuth();
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setIsAuthenticated(!!user);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Firebase Auth Init Error:", error);
+      setIsAuthenticated(false); // Failsafe lockout
+    }
+  }, []);
+
+  // Real loading state while verifying token with Firebase servers
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-movyra-surface h-full min-h-screen z-[300] relative">
+        <motion.div 
+          animate={{ rotate: 360 }} 
+          transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
+          className="w-12 h-12 border-4 border-movyra-blue border-t-transparent rounded-full shadow-lg shadow-movyra-blue/20" 
+        />
+      </div>
+    );
+  }
+
+  // Strictly lock out unauthenticated users and push to the login node
+  return isAuthenticated ? <Outlet /> : <Navigate to="/auth-login" replace />;
+};
 
 // ============================================================================
 // MAIN VIEWPORT CONTROLLER
@@ -29,8 +68,6 @@ const MainViewport = () => {
   const location = useLocation();
   
   // SECTION 2: Dynamic Navigation Visibility Engine
-  // Real logic to determine if the Bottom Dock should be rendered based on the URL context
-  // Prevents the dock from overlapping full-screen maps or authentication flows.
   const getActiveTab = () => {
     const path = location.pathname;
     // Core Hub Screens that require the navigation dock
@@ -49,7 +86,6 @@ const MainViewport = () => {
     <div className="flex flex-col h-screen bg-movyra-surface overflow-hidden font-sans relative">
       
       {/* SECTION 3: Animated Viewport Controller */}
-      {/* Utilizes Framer Motion to create smooth cross-fades between routes */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-0">
         <AnimatePresence mode="wait">
           <motion.div
@@ -66,24 +102,27 @@ const MainViewport = () => {
               <Route path="/auth-login" element={<MobileLogin />} />
               <Route path="/auth-signup" element={<MobileSignup />} />
               <Route path="/auth/otp" element={<OTPVerification />} />
+              <Route path="/auth/set-password" element={<SetPassword />} /> {/* NEW ROUTE */}
               
-              {/* Protected / Main Application Node */}
-              <Route element={<MobileAppLayout />}>
-                <Route path="/" element={<MobileHome />} />
-                <Route path="/dashboard-home" element={<MobileHome />} />
-                
-                {/* Booking Engine Routes */}
-                <Route path="/booking/set-location" element={<SetLocation />} />
-                <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
-                <Route path="/booking/review" element={<ReviewOrder />} />
-                
-                {/* Tracking & History Routes */}
-                <Route path="/tracking-active" element={<LiveTracking />} />
-                <Route path="/tracking/detail/:id" element={<ShipmentDetail />} />
-                <Route path="/order-history" element={<OrderHistory />} />
-                
-                {/* Profile & Settings Route */}
-                <Route path="/profile-settings" element={<ProfileSettings />} />
+              {/* Protected / Main Application Node - WRAPPED IN FIREBASE GUARD */}
+              <Route element={<RequireAuthGuard />}>
+                <Route element={<MobileAppLayout />}>
+                  <Route path="/" element={<MobileHome />} />
+                  <Route path="/dashboard-home" element={<MobileHome />} />
+                  
+                  {/* Booking Engine Routes */}
+                  <Route path="/booking/set-location" element={<SetLocation />} />
+                  <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
+                  <Route path="/booking/review" element={<ReviewOrder />} />
+                  
+                  {/* Tracking & History Routes */}
+                  <Route path="/tracking-active" element={<LiveTracking />} />
+                  <Route path="/tracking/detail/:id" element={<ShipmentDetail />} />
+                  <Route path="/order-history" element={<OrderHistory />} />
+                  
+                  {/* Profile & Settings Route */}
+                  <Route path="/profile-settings" element={<ProfileSettings />} />
+                </Route>
               </Route>
             </Routes>
           </motion.div>
@@ -91,7 +130,6 @@ const MainViewport = () => {
       </div>
       
       {/* SECTION 5: Global Persistent Bottom Dock Injection */}
-      {/* Rendered OUTSIDE the routing switch to persist state during core tab navigation */}
       <AnimatePresence>
         {activeTab && (
           <motion.div
@@ -115,17 +153,13 @@ const MainViewport = () => {
 // ============================================================================
 export default function App() {
   // SECTION 6: Zustand Global State Interceptor
-  // Pulls the real-time completion status from the persisted store
   const hasCompletedOnboarding = useOnboardingStore(state => state.hasCompletedOnboarding);
 
   const handleOnboardingComplete = () => {
-    // Write directly to the Zustand store, which persists automatically to localStorage.
-    // This unlocks the main application routing.
     useOnboardingStore.setState({ hasCompletedOnboarding: true });
   };
 
-  // STRICT GUARD: Intercept the render cycle if the user has not completed the real-time flow.
-  // This locks the user into the Onboarding component regardless of their URL path.
+  // STRICT GUARD: Intercept the render cycle if the user has not completed onboarding
   if (!hasCompletedOnboarding) {
     return <OnboardingFlow onComplete={handleOnboardingComplete} />;
   }
