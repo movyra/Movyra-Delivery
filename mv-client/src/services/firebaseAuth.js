@@ -2,7 +2,9 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
   createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword 
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider
 } from 'firebase/auth';
 
 // ============================================================================
@@ -22,25 +24,12 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // ============================================================================
-// SECTION 2: Deterministic Hidden Password Engine
-// Generates a complex, repeatable password based on the user's email.
-// This allows a "passwordless" OTP experience on Firebase's 100% free tier.
+// SECTION 2: Standard Email Registration
+// Registers a brand new user using their verified email and password.
 // ============================================================================
-const generateHiddenPassword = (email) => {
-  // Combine a static salt with email properties to ensure Firebase accepts it
-  // as a strong password, while keeping it consistently reproducible per user.
-  const sanitizedEmail = email.trim().toLowerCase();
-  return `Movyra!_${sanitizedEmail.length}_${sanitizedEmail.substring(0, 4)}@2026_Secure_Bongo`;
-};
-
-// ============================================================================
-// SECTION 3: Free Tier Account Creation
-// Registers a brand new user using their email and the auto-generated password.
-// ============================================================================
-export const registerUserWithEmail = async (email) => {
+export const registerWithEmail = async (email, password) => {
   try {
-    const hiddenPassword = generateHiddenPassword(email);
-    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), hiddenPassword);
+    const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
     return userCredential.user;
   } catch (error) {
     console.error("Movyra Auth Error [Registration]:", error);
@@ -49,13 +38,12 @@ export const registerUserWithEmail = async (email) => {
 };
 
 // ============================================================================
-// SECTION 4: Free Tier Account Authentication
-// Logs in an existing user securely using their email and hidden password.
+// SECTION 3: Standard Email Authentication
+// Logs in an existing user securely using their email and password.
 // ============================================================================
-export const loginUserWithEmail = async (email) => {
+export const loginWithEmail = async (email, password) => {
   try {
-    const hiddenPassword = generateHiddenPassword(email);
-    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), hiddenPassword);
+    const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
     return userCredential.user;
   } catch (error) {
     console.error("Movyra Auth Error [Login]:", error);
@@ -64,23 +52,16 @@ export const loginUserWithEmail = async (email) => {
 };
 
 // ============================================================================
-// SECTION 5: Master Authentication Controller
-// Seamlessly attempts to log the user in. If the account doesn't exist,
-// it automatically creates it. This is triggered AFTER successful OTP verification.
+// SECTION 4: Google Single Sign-On (SSO)
+// Seamlessly authenticates the user via a secure Google OAuth popup.
 // ============================================================================
-export const authenticateSeamlessly = async (email) => {
+export const signInWithGooglePopup = async () => {
   try {
-    // Attempt Login First
-    const user = await loginUserWithEmail(email);
-    return { user, isNewUser: false };
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    return userCredential.user;
   } catch (error) {
-    // If user does not exist (invalid-credential is the modern Firebase error for this)
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-      console.log("User not found in system. Creating new free-tier account...");
-      const newUser = await registerUserWithEmail(email);
-      return { user: newUser, isNewUser: true };
-    }
-    // Throw any other genuine errors (e.g., network failure, account disabled)
+    console.error("Movyra Auth Error [Google SSO]:", error);
     throw error;
   }
 };
