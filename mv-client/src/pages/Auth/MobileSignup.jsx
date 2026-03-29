@@ -6,8 +6,9 @@ import { generateOTP, sendOTPEmail } from '../../services/emailAuth';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 
 // ============================================================================
-// PAGE: MOBILE SIGNUP (OTP-FIRST ARCHITECTURE)
-// Premium UI matching the new rounded aesthetic. Password fields removed.
+// PAGE: MOBILE SIGNUP (STARK MINIMALIST UI)
+// Implements the high-contrast, pure black/white Uber-inspired aesthetic.
+// Features flat gray inputs, massive display typography, and stark pill buttons.
 // Integrates EmailJS OTP Handshake & Firebase Google Auth.
 // ============================================================================
 
@@ -52,7 +53,7 @@ export default function MobileSignup() {
 
     } catch (err) {
       console.error("EmailJS Transmission Error:", err);
-      setError('Failed to send security code. Please check your network and try again.');
+      setError('Failed to send security code. Please check your network.');
     } finally {
       setIsLoading(false);
     }
@@ -80,89 +81,105 @@ export default function MobileSignup() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#4B75C6] flex flex-col font-sans relative overflow-hidden transition-colors duration-500">
+    // Root: Pure White Background
+    <div className="min-h-screen bg-white text-black flex flex-col font-sans relative overflow-hidden">
       
-      {/* SECTION 1: Top Navigation (Transparent over color) */}
-      <div className="absolute top-12 left-6 z-50">
+      {/* SECTION 1: Top Navigation & Logo */}
+      <div className="pt-12 px-6 pb-2 flex items-center justify-between z-50">
         <button 
           onClick={() => navigate(-1)} 
-          className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-95"
+          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors active:scale-95"
         >
-          <ChevronLeft size={24} />
+          <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
+        
+        {/* Real Brand Logo */}
+        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        </div>
       </div>
 
-      {/* SECTION 2: Upper Hero Area */}
-      <div className="flex-1 flex flex-col justify-center px-8 pt-10 pb-6 text-white z-10 relative">
+      {/* SECTION 2: Main Viewport */}
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-8 pt-8 pb-8">
+        
+        {/* SECTION 3: Massive Display Typography */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="mb-10"
         >
-          <h1 className="text-[38px] font-extrabold leading-[1.1] mb-3 tracking-tight">
-            Create your <br/>account
+          <h1 className="text-[44px] font-black text-black leading-[1.05] tracking-tighter mb-4">
+            Create an <br/>account.
           </h1>
-          <p className="text-white/80 text-[17px] font-medium max-w-[280px] leading-relaxed">
-            Join Movyra for global logistics, live tracking, and instant pricing.
+          <p className="text-[16px] text-gray-500 font-medium leading-relaxed">
+            Join Movyra for global logistics and live tracking.
           </p>
         </motion.div>
-      </div>
-      
-      {/* SECTION 3: Massive Bottom Sheet (Matching Image UI perfectly) */}
-      <div className="bg-white rounded-t-[40px] px-8 pt-10 pb-safe flex flex-col relative z-20 min-h-[60%] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-y-auto no-scrollbar">
         
-        {/* Google Single Sign-On */}
-        <button 
-          onClick={handleGoogleLogin}
-          disabled={isGoogleLoading || isLoading}
-          className="w-full flex items-center justify-center gap-3 bg-white border-[1.5px] border-gray-200 text-gray-800 py-4 rounded-[24px] font-bold text-[17px] hover:bg-gray-50 active:scale-[0.98] transition-all h-[60px] mb-6 shadow-sm disabled:opacity-50"
+        {/* Flat Gray Secondary Pill Button (Google) */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1, ease: "easeOut" }}
         >
-          {isGoogleLoading ? <Loader2 size={24} className="animate-spin text-gray-400" /> : (
-            <>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-              </svg>
-              <span>Continue with Google</span>
-            </>
-          )}
-        </button>
+          <button 
+            onClick={handleGoogleLogin}
+            disabled={isGoogleLoading || isLoading}
+            className="w-full flex items-center justify-center gap-3 bg-[#F6F6F6] text-black py-4 rounded-full font-bold text-[17px] hover:bg-gray-200 active:scale-[0.98] transition-all h-[60px] mb-6 disabled:opacity-50"
+          >
+            {isGoogleLoading ? <Loader2 size={24} className="animate-spin text-black" /> : (
+              <>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                <span>Continue with Google</span>
+              </>
+            )}
+          </button>
+        </motion.div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-px bg-gray-200 flex-1"></div>
-          <span className="text-sm font-bold text-gray-400 uppercase tracking-widest">or email</span>
-          <div className="h-px bg-gray-200 flex-1"></div>
+        {/* Minimalist Divider */}
+        <div className="flex items-center gap-4 mb-6 opacity-60">
+          <div className="h-px bg-gray-300 flex-1"></div>
+          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">or</span>
+          <div className="h-px bg-gray-300 flex-1"></div>
         </div>
 
-        {/* Native Input Fields */}
-        <div className="flex flex-col gap-4 mb-6">
-          <div className={`flex items-center gap-3 bg-[#F8F9FA] px-5 py-4 rounded-[20px] border-[1.5px] transition-all duration-300 ${name.length >= 2 ? 'border-gray-300 bg-white' : 'border-transparent focus-within:border-gray-300 focus-within:bg-white'}`}>
-            <User size={22} className={name.length >= 2 ? "text-[#121212]" : "text-gray-400"} />
+        {/* SECTION 4: Flat Minimalist Inputs */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+          className="flex flex-col gap-4 mb-6"
+        >
+          {/* Full Name Input */}
+          <div className={`flex items-center px-5 py-4.5 rounded-2xl border-2 transition-all duration-200 bg-[#F6F6F6] ${name.length >= 2 ? 'border-black bg-white' : 'border-transparent focus-within:border-black focus-within:bg-white'}`}>
             <input
               type="text"
               value={name}
               onChange={(e) => { setName(e.target.value); setError(''); }}
               placeholder="Full Name"
-              className="w-full text-[17px] font-bold text-[#121212] placeholder:text-gray-400 focus:outline-none bg-transparent"
+              className="w-full text-[17px] font-bold text-black placeholder:text-gray-400 placeholder:font-medium focus:outline-none bg-transparent"
             />
           </div>
 
-          <div className={`flex items-center gap-3 bg-[#F8F9FA] px-5 py-4 rounded-[20px] border-[1.5px] transition-all duration-300 ${isValidEmail(email) ? 'border-gray-300 bg-white' : 'border-transparent focus-within:border-gray-300 focus-within:bg-white'}`}>
-            <Mail size={22} className={isValidEmail(email) ? "text-[#121212]" : "text-gray-400"} />
+          {/* Email Input */}
+          <div className={`flex items-center px-5 py-4.5 rounded-2xl border-2 transition-all duration-200 bg-[#F6F6F6] ${isValidEmail(email) ? 'border-black bg-white' : 'border-transparent focus-within:border-black focus-within:bg-white'}`}>
             <input
               type="email"
               inputMode="email"
               autoComplete="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); setError(''); }}
-              placeholder="Email Address"
-              className="w-full text-[17px] font-bold text-[#121212] placeholder:text-gray-400 focus:outline-none bg-transparent"
+              placeholder="Email address"
+              className="w-full text-[17px] font-bold text-black placeholder:text-gray-400 placeholder:font-medium focus:outline-none bg-transparent"
             />
           </div>
-        </div>
+        </motion.div>
 
         {/* Real-time Error Engine */}
         <AnimatePresence>
@@ -171,32 +188,42 @@ export default function MobileSignup() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-red-50 rounded-[16px] p-4 flex items-start gap-3 mb-6"
+              className="bg-gray-100 border-l-4 border-black rounded-r-xl p-4 flex items-start gap-3 mb-6"
             >
-              <AlertCircle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
-              <p className="text-[14px] text-red-600 font-bold leading-snug">{error}</p>
+              <AlertCircle size={20} className="text-black flex-shrink-0 mt-0.5" />
+              <p className="text-[14px] text-black font-bold leading-snug">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
         
-        {/* Primary Action Button (Matches the Get Started pill from the image) */}
-        <button 
-          onClick={handleSendOTP}
-          disabled={!email || !name || isLoading || isGoogleLoading}
-          className="w-full flex items-center justify-center gap-2 bg-[#1A1A1A] text-white py-4 rounded-[24px] font-bold text-[17px] hover:bg-black active:scale-[0.98] transition-all h-[60px] disabled:opacity-50 mt-auto"
+        {/* SECTION 5: Stark Action Area */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3, ease: "easeOut" }}
+          className="mt-auto space-y-4 pb-4"
         >
-          {isLoading ? <Loader2 size={24} className="animate-spin text-white" /> : (
-            <>
-              <span>Verify Email</span>
-              <ArrowRight size={20} />
-            </>
-          )}
-        </button>
+          {/* Stark Black Primary Pill Button */}
+          <button 
+            onClick={handleSendOTP}
+            disabled={!email || !name || isLoading || isGoogleLoading}
+            className="w-full flex items-center justify-between px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] disabled:opacity-50"
+          >
+            <span className="flex-1 text-center pl-6">
+              {isLoading ? 'Sending...' : 'Verify Email'}
+            </span>
+            {isLoading ? (
+              <Loader2 size={24} className="animate-spin text-white" />
+            ) : (
+              <ArrowRight size={24} className="text-white" />
+            )}
+          </button>
 
-        {/* Login Redirect */}
-        <p className="text-center text-[#666666] text-[15px] mt-6 pb-4 font-medium">
-          Already have an account? <Link to="/auth-login" className="text-[#1A1A1A] font-extrabold hover:underline">Log in</Link>
-        </p>
+          {/* Login Redirect */}
+          <p className="text-center text-gray-500 text-[15px] pt-4 font-medium">
+            Already have an account? <Link to="/auth-login" className="text-black font-extrabold hover:underline">Log in</Link>
+          </p>
+        </motion.div>
         
       </div>
     </div>
