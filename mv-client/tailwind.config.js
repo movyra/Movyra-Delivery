@@ -6,33 +6,28 @@ export default {
 
   theme: {
     extend: {
-      // SECTION 2: Master Color Palette (Movyra Light Tier)
-      // Logic: Integrated both legacy dark tokens and new premium light tokens
+      // SECTION 2: Master Color Palette (High-Contrast Minimalist Tier)
+      // Logic: Integrated stark minimal tokens based on the new pure black/white design system
       colors: { 
-        // Real Movyra Mint Spectrum
-        movyraMint: '#00F0B5', 
-        movyraMintDark: '#00D09E', 
+        // Strict Palette Tokens (New Design Specs)
+        'movyra-black': '#000000',
+        'movyra-white': '#FFFFFF',
+        'movyra-off-white': '#F6F6F6',
+        'movyra-accent-blue': '#276EF1',
         
-        // Legacy Surface Tokens (Retained for Dark Mode compatibility)
-        surfaceBlack: '#000000', 
-        surfaceDark: '#121212', 
-        surfaceDarker: '#1A1A1A', 
-        
-        // New Premium Light Theme Tokens (Real Design Specs)
-        'movyra-blue': '#1E6AF5',       // Primary Action Blue
-        'movyra-surface': '#F8FAFF',    // Fluid Background Surface
-        'movyra-accent': '#FF9500',     // Warning/Highlight Orange
-        
-        // Secondary Utility Shades
-        textGray: '#8A8A8E',
-        'blue-soft': '#EAF2FF',
-        'teal-glow': '#44D7B6'
+        // Legacy Mappings (To prevent breaking existing components during transition)
+        'movyra-blue': '#276EF1',       // Mapped to stark Accent Blue
+        'movyra-surface': '#FFFFFF',    // Mapped to Pure White
+        'movyra-surface-alt': '#F6F6F6', // Mapped to Off-White
+        'textGray': '#8A8A8E',          // Retained strictly for legacy text fallbacks
+        'surfaceDark': '#121212'        // Retained strictly for legacy dark mode maps
       },
 
       // SECTION 3: Typography Architecture
-      // Logic: Prioritizes 'Satoshi' for the premium tech aesthetic
+      // Logic: Prioritizes a geometric, elongated sans-serif for the high-contrast tech aesthetic
       fontFamily: {
-        sans: ['Satoshi', 'Inter', 'sans-serif'],
+        sans: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['"Helvetica Neue"', 'Helvetica', 'Arial', 'sans-serif'],
       },
 
       // SECTION 4: Border Radius System (Mobile-First)
@@ -46,11 +41,11 @@ export default {
       },
 
       // SECTION 5: Visual Depth & Glow Effects
-      // Real-time shadow logic for interactive button states
+      // Real-time shadow logic for interactive button states (Neutralized for stark aesthetic)
       boxShadow: { 
-        'mintGlow': '0 0 20px -5px rgba(0, 240, 181, 0.4)',
-        'blueGlow': '0 10px 30px -10px rgba(30, 106, 245, 0.3)',
-        'premium': '0 20px 40px rgba(0,0,0,0.04)'
+        'blueGlow': '0 10px 30px -10px rgba(39, 110, 241, 0.3)', // Mapped to new Accent Blue
+        'premium': '0 20px 40px rgba(0,0,0,0.04)',
+        'stark': '0 8px 24px rgba(0,0,0,0.08)'
       },
 
       // SECTION 6: Animation Keyframes (Real Logic)
