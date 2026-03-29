@@ -3,8 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { ChevronLeft, AlertCircle, Loader2, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Real Firebase Auth Integration
-import { getAuth, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+// Real Centralized Firebase Auth Integration
+import { loginWithEmail, signInWithGooglePopup } from '../../services/firebaseAuth';
 
 // ============================================================================
 // PAGE: MOBILE LOGIN (STARK MINIMALIST UI)
@@ -43,8 +43,8 @@ export default function MobileLogin() {
     setError('');
 
     try {
-      const auth = getAuth();
-      await signInWithEmailAndPassword(auth, email, password);
+      // Utilizing centralized auth service
+      await loginWithEmail(email, password);
       // App.jsx RequireAuthGuard automatically redirects to /dashboard-home
       navigate('/dashboard-home', { replace: true });
     } catch (err) {
@@ -65,11 +65,10 @@ export default function MobileLogin() {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     setError('');
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
     
     try {
-      await signInWithPopup(auth, provider);
+      // Utilizing centralized Google SSO service
+      await signInWithGooglePopup();
       navigate('/dashboard-home', { replace: true });
     } catch (err) {
       console.error("Google Auth Error:", err);
