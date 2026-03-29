@@ -44,20 +44,22 @@ const GlobalLoadingScreen = () => (
 
 // ============================================================================
 // SECTION 7A: ENTERPRISE FIREBASE AUTHENTICATION GUARD (PROTECTED ROUTES)
-// Strictly locks out unauthenticated users from the main application.
+// Strictly locks out unauthenticated users. Uses 'replace' to fix loops.
 // ============================================================================
 const RequireAuthGuard = ({ isAuthenticated }) => {
   if (isAuthenticated === null) return <GlobalLoadingScreen />;
-  return isAuthenticated ? <Outlet /> : <Navigate to="/auth-login" replace />;
+  // Using replace={true} is critical to prevent history stack loops
+  return isAuthenticated ? <Outlet /> : <Navigate to="/auth-login" replace={true} />;
 };
 
 // ============================================================================
 // SECTION 7B: REVERSE AUTHENTICATION GUARD (GUEST ROUTES)
-// Strictly prevents authenticated users from accessing login/signup screens.
+// Prevents logged-in users from seeing Auth screens. Uses 'replace' to fix loops.
 // ============================================================================
 const RequireGuestGuard = ({ isAuthenticated }) => {
   if (isAuthenticated === null) return <GlobalLoadingScreen />;
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/dashboard-home" replace />;
+  // Using replace={true} is critical to prevent history stack loops
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/dashboard-home" replace={true} />;
 };
 
 // ============================================================================
@@ -69,16 +71,16 @@ const MainViewport = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
 
   // LIFTOUT: Global Auth State resolved BEFORE routing is evaluated
+  // This refined listener prevents race conditions during internal redirects.
   useEffect(() => {
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setIsAuthenticated(!!user);
-      });
-      return () => unsubscribe();
-    } catch (error) {
-      console.error("Firebase Auth Init Error:", error);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      // Explicitly check for boolean truthiness to avoid re-renders during hydration
+      setIsAuthenticated(!!user);
+    }, (error) => {
+      console.error("Firebase Auth Listener Error:", error);
       setIsAuthenticated(false);
-    }
+    });
+    return () => unsubscribe();
   }, []);
   
   // SECTION 2: Dynamic Navigation Visibility Engine

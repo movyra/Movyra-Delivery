@@ -4,7 +4,9 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 
 // ============================================================================
@@ -24,7 +26,23 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
 // ============================================================================
-// SECTION 2: Standard Email Registration
+// SECTION 2: Persistence Enforcement (STRICT REDIRECT LOOP FIX)
+// Explicitly enforces 'browserLocalPersistence' so that the session
+// survives browser redirects and app reloads.
+// ============================================================================
+const enforcePersistence = async () => {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+  } catch (error) {
+    console.error("Movyra Auth Error [Persistence]:", error);
+  }
+};
+
+// Fire the persistence enforcement immediately upon module load
+enforcePersistence();
+
+// ============================================================================
+// SECTION 3: Standard Email Registration
 // Registers a brand new user using their verified email and password.
 // ============================================================================
 export const registerWithEmail = async (email, password) => {
@@ -38,7 +56,7 @@ export const registerWithEmail = async (email, password) => {
 };
 
 // ============================================================================
-// SECTION 3: Standard Email Authentication
+// SECTION 4: Standard Email Authentication
 // Logs in an existing user securely using their email and password.
 // ============================================================================
 export const loginWithEmail = async (email, password) => {
@@ -52,7 +70,7 @@ export const loginWithEmail = async (email, password) => {
 };
 
 // ============================================================================
-// SECTION 4: Google Single Sign-On (SSO)
+// SECTION 5: Google Single Sign-On (SSO)
 // Seamlessly authenticates the user via a secure Google OAuth popup.
 // ============================================================================
 export const signInWithGooglePopup = async () => {
