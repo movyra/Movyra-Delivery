@@ -2,30 +2,26 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ShieldCheck, AlertCircle, Loader2, RefreshCcw, MailCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useAuthStore from '../../store/useAuthStore';
-import apiClient from '../../services/apiClient';
 import { verifyOTPSession, generateOTP, sendOTPEmail } from '../../services/emailAuth';
-import { authenticateSeamlessly } from '../../services/firebaseAuth';
 import MovyraButton from '../../components/UI/MovyraButton';
 
 // ============================================================================
-// PAGE: OTP VERIFICATION (100% FREE TIER)
-// Validates the 4-digit EmailJS code and securely provisions/authenticates
-// the user via Firebase's free Email/Password tier.
+// PAGE: OTP VERIFICATION (SIGNUP FLOW CONNECTION)
+// Validates the 4-digit EmailJS code locally. Upon success, strictly routes
+// the user to the Set Password screen to finalize account creation.
 // ============================================================================
 
 export default function OTPVerification() {
   const location = useLocation();
   const navigate = useNavigate();
-  const login = useAuthStore(s => s.login);
   
-  // Securely retrieve state passed from MobileLogin/MobileSignup
+  // Securely retrieve state passed from MobileSignup
   const email = location.state?.email || "";
   const name = location.state?.name || "";
 
   // Kick out users who land here without an email context
   useEffect(() => {
-    if (!email) navigate('/auth-login', { replace: true });
+    if (!email) navigate('/auth-signup', { replace: true });
   }, [email, navigate]);
 
   const [code, setCode] = useState(['', '', '', '']); // 4-digit EmailJS Standard
@@ -35,7 +31,7 @@ export default function OTPVerification() {
   
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
-  // NEW SECTION 1: Resend Countdown Timer (Prevents API Spam)
+  // SECTION 1: Resend Countdown Timer (Prevents API Spam)
   useEffect(() => {
     if (timeLeft <= 0) return;
     const timerId = setInterval(() => setTimeLeft(prev => prev - 1), 1000);
@@ -56,7 +52,7 @@ export default function OTPVerification() {
     }
   };
 
-  // NEW SECTION 2: 4-Digit Auto-Focus Logic
+  // SECTION 2: 4-Digit Auto-Focus Logic
   const handleChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
     setError(''); 
@@ -87,6 +83,7 @@ export default function OTPVerification() {
     }
   };
 
+  // SECTION 3: Local Verification & Redirect Logic
   const verifyOTP = async () => {
     const fullCode = code.join('');
     if (fullCode.length !== 4) return;
@@ -95,7 +92,7 @@ export default function OTPVerification() {
     setError('');
 
     try {
-      // 1. Validate the local EmailJS OTP session
+      // 1. Validate the local EmailJS OTP session strictly
       const validation = verifyOTPSession(fullCode);
       if (!validation.valid) {
         setError(validation.message);
@@ -103,33 +100,15 @@ export default function OTPVerification() {
         return;
       }
 
-      // 2. OTP Valid -> Authenticate or Register silently via Firebase free tier
-      const { user, isNewUser } = await authenticateSeamlessly(email);
-      
-      // 3. Extract the secure JWT for your Rust Backend
-      const token = await user.getIdToken(true);
-      
-      // 4. Trigger Real Backend Sync (creates PG database row if new user)
-      try {
-        await apiClient.post('/auth/sync', 
-          { email: user.email, name: name || user.displayName || "User", isNewUser },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } catch (syncErr) {
-        console.warn("Backend sync warning (continuing login):", syncErr);
-      }
-
-      // 5. Store user securely in Zustand and release into the app
-      login(
-        { id: user.uid, email: user.email, isAnonymous: false }, 
-        token
-      );
-      
-      // 6. Hard navigate to dashboard, clearing auth stack
-      navigate('/dashboard-home', { replace: true });
+      // 2. OTP Valid -> Push user strictly to the new Set Password page
+      // Passes the verified email and name securely in the router state
+      navigate('/auth/set-password', { 
+        state: { email, name },
+        replace: true 
+      });
 
     } catch (err) {
-      console.error("Firebase Authentication Error:", err);
+      console.error("Verification Error:", err);
       setError(err.message || 'Verification failed. Please try again.');
     } finally {
       setIsVerifying(false);
@@ -139,7 +118,7 @@ export default function OTPVerification() {
   return (
     <div className="min-h-screen bg-movyra-surface text-gray-800 flex flex-col font-sans relative overflow-hidden">
       
-      {/* SECTION 1: Secure Header Navigation with User Logo */}
+      {/* SECTION 4: Secure Header Navigation */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -159,7 +138,7 @@ export default function OTPVerification() {
       </motion.div>
 
       <div className="px-8 mt-4 flex-1 flex flex-col">
-        {/* SECTION 2: Hero Identity */}
+        {/* SECTION 5: Hero Identity */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -180,7 +159,7 @@ export default function OTPVerification() {
           </p>
         </motion.div>
 
-        {/* SECTION 3: Real-Time Exception Catcher */}
+        {/* SECTION 6: Real-Time Exception Catcher */}
         <AnimatePresence>
           {error && (
             <motion.div 
@@ -195,7 +174,7 @@ export default function OTPVerification() {
           )}
         </AnimatePresence>
 
-        {/* SECTION 4: 4-Digit Array Input Engine */}
+        {/* SECTION 7: 4-Digit Array Input Engine */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -242,7 +221,7 @@ export default function OTPVerification() {
         </motion.div>
       </div>
 
-      {/* SECTION 5: Footer Actions & Trust Badges */}
+      {/* SECTION 8: Footer Actions & Trust Badges */}
       <motion.div 
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
@@ -258,10 +237,10 @@ export default function OTPVerification() {
           {isVerifying ? (
             <>
               <Loader2 size={24} className="animate-spin text-white" />
-              <span>Authenticating...</span>
+              <span>Verifying...</span>
             </>
           ) : (
-            'Confirm Identity'
+            'Verify & Continue'
           )}
         </MovyraButton>
 
