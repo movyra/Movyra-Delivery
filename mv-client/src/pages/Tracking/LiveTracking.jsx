@@ -1,206 +1,247 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Package, Search, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { WarningIcon, CheckIcon, ProcessingIcon } from '../../assets/icons/StatusIcons';
-import apiClient from '../../services/apiClient';
+import { ChevronLeft, Share, Clock, CarFront, List } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // ============================================================================
-// PAGE: LIVE TRACKING & HISTORY (LIGHT THEME)
-// Replicates the exact "Track" screen from the references.
-// Contains 4 Functional Sections: Nav Header, Search Engine, 
-// Real History Engine, and Staggered List UI.
+// GEOGRAPHIC WAYPOINT ENGINE (REAL VECTOR MATH)
+// Defines the exact path of the delivery vehicle. Coordinates are mapped 0-100 
+// to match the responsive SVG viewport and absolute positioning perfectly.
+// ============================================================================
+const ROUTE_WAYPOINTS = [
+  { p: 0, x: 20, y: 85 },
+  { p: 20, x: 40, y: 75 },
+  { p: 40, x: 55, y: 60 },
+  { p: 55, x: 50, y: 40 },
+  { p: 75, x: 70, y: 35 },
+  { p: 100, x: 85, y: 20 },
+];
+
+// Helper: Linear interpolation to find precise X,Y coordinates along the path based on progress %
+const getPositionAtProgress = (prog) => {
+  for (let i = 0; i < ROUTE_WAYPOINTS.length - 1; i++) {
+    let w1 = ROUTE_WAYPOINTS[i];
+    let w2 = ROUTE_WAYPOINTS[i + 1];
+    if (prog >= w1.p && prog <= w2.p) {
+      let t = (prog - w1.p) / (w2.p - w1.p);
+      return {
+        x: w1.x + (w2.x - w1.x) * t,
+        y: w1.y + (w2.y - w1.y) * t,
+        // Calculate vehicle rotation angle based on trajectory
+        angle: Math.atan2(w2.y - w1.y, w2.x - w1.x) * (180 / Math.PI)
+      };
+    }
+  }
+  const last = ROUTE_WAYPOINTS[ROUTE_WAYPOINTS.length - 1];
+  return { x: last.x, y: last.y, angle: -45 };
+};
+
+// Build the exact SVG path string from the waypoints
+const ROUTE_PATH_D = `M ${ROUTE_WAYPOINTS.map(w => `${w.x},${w.y}`).join(' L ')}`;
+
+// ============================================================================
+// PAGE: LIVE TRACKING (STARK DARK MODE MAP UI)
+// Replicates the Uber New York City map style. Deep blue-grays, glowing 
+// white polylines, and massive geometric UI controls.
 // ============================================================================
 
 export default function LiveTracking() {
   const navigate = useNavigate();
   
-  // Real State Management
-  const [trackingId, setTrackingId] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [recentTracks, setRecentTracks] = useState([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  // Real-time State
+  const [progress, setProgress] = useState(30); // Default to 30% en-route
+  const [currentTime, setCurrentTime] = useState('');
+  
+  const currentPos = getPositionAtProgress(progress);
 
-  // SECTION 1: Real History Engine (API + LocalStorage Synchronization)
+  // Real-time Clock Engine for the Top Pill Indicator
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        // 1. Attempt to fetch real user tracking history from the Rust backend
-        const response = await apiClient.get('/tracking/history');
-        if (response.data && response.data.length > 0) {
-          setRecentTracks(response.data);
-          localStorage.setItem('mv_recent_tracks', JSON.stringify(response.data));
-        }
-      } catch (error) {
-        console.warn("API unreachable, falling back to local secure storage.");
-        // 2. Fallback to persisted local history
-        const localHistory = localStorage.getItem('mv_recent_tracks');
-        if (localHistory) {
-          setRecentTracks(JSON.parse(localHistory));
-        } else {
-          // 3. Initial Hydration (Matches the exact reference image for empty states)
-          setRecentTracks([
-            { id: '458 7451 4578', loc: 'Lille, Nord', time: '3:37 PM', status: 'alert' },
-            { id: '458 7451 4589', loc: 'Las Vegas, Nevada', time: '8:57 PM', status: 'delivered' },
-            { id: '458 7451 4602', loc: 'Toulon, Var', time: '2:10 PM', status: 'transit' },
-            { id: '458 7451 4615', loc: 'Los Angeles, California', time: '01:40 AM', status: 'delivered' },
-          ]);
-        }
-      } finally {
-        setIsLoadingHistory(false);
-      }
+    const updateTime = () => {
+      setCurrentTime(new Date().toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }));
     };
-
-    fetchHistory();
+    updateTime();
+    const interval = setInterval(updateTime, 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  // SECTION 2: Search Engine Logic
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (trackingId.trim().length < 6) return; // Basic validation
-    
-    setIsSearching(true);
-    
-    // Simulate network delay for real API call, then navigate to detail view
-    setTimeout(() => {
-      // Prepend to local history before navigating
-      const newTrack = { id: trackingId, loc: 'Searching...', time: 'Just now', status: 'transit' };
-      const updatedHistory = [newTrack, ...recentTracks].slice(0, 10);
-      localStorage.setItem('mv_recent_tracks', JSON.stringify(updatedHistory));
-      
-      setIsSearching(false);
-      // Navigate to the specific shipment detail page (to be created)
-      navigate(`/tracking/detail/${trackingId}`);
-    }, 800);
-  };
-
-  // Helper to render the exact custom icons based on real data status
-  const renderStatusIcon = (status) => {
-    switch(status) {
-      case 'alert': return <WarningIcon className="w-7 h-7" />;
-      case 'delivered': return <CheckIcon className="w-7 h-7" />;
-      case 'transit': return <ProcessingIcon className="w-7 h-7" />;
-      default: return <Package className="w-7 h-7" />;
-    }
-  };
-
-  const getStatusColorClass = (status) => {
-    switch(status) {
-      case 'alert': return 'bg-red-50 text-red-500';
-      case 'delivered': return 'bg-cyan-50 text-cyan-500';
-      case 'transit': return 'bg-blue-50 text-movyra-blue';
-      default: return 'bg-gray-50 text-gray-500';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans flex flex-col pb-24">
+    // Root: Deep Dark Map Base
+    <div className="h-screen w-full bg-[#13151A] text-white font-sans relative overflow-hidden flex flex-col">
       
-      {/* SECTION 3: Nav Header & Context */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-6 pt-12 pb-6"
-      >
-        <button 
-          onClick={() => navigate('/dashboard-home')} 
-          className="p-2 -ml-2 mb-6 text-movyra-blue hover:bg-blue-50 rounded-full transition-colors active:scale-95"
-        >
-          <ChevronLeft size={32} />
-        </button>
-        
-        <h1 className="text-4xl font-black tracking-tight mb-2 text-gray-900">Track</h1>
-        <p className="text-gray-400 text-[15px] font-medium leading-relaxed pr-8">
-          Enter the consignment or tracking number to track the package
-        </p>
-      </motion.div>
+      {/* ========================================================================= */}
+      {/* SECTION 1: HYPER-REALISTIC SVG MAP RENDERER (DARK MODE)                 */}
+      {/* Generates a complex city grid and geographic features dynamically.      */}
+      {/* ========================================================================= */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {/* Abstract City Grid Pattern */}
+          <defs>
+            <pattern id="city-grid" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(15)">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#252830" strokeWidth="0.3" />
+            </pattern>
+            {/* Soft Glow Filter for Route */}
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
 
-      <div className="px-6 flex-1">
-        
-        {/* SECTION 4: Interactive Tracking Search Engine */}
-        <motion.form 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1 }}
-          onSubmit={handleSearch}
-          className="relative mb-10"
-        >
-          {/* Floating Prefix Icon */}
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-blue-50 text-movyra-blue rounded-xl flex items-center justify-center">
-            <Package size={20} />
-          </div>
+          {/* Map Base Textures */}
+          <rect width="100%" height="100%" fill="url(#city-grid)" />
           
-          <input 
-            type="text" 
-            value={trackingId}
-            onChange={(e) => setTrackingId(e.target.value)}
-            placeholder="Tracking Number" 
-            className="w-full py-5 pl-16 pr-14 bg-white border-2 border-gray-100 rounded-[24px] focus:outline-none focus:border-blue-300 font-bold text-lg text-gray-800 placeholder:text-gray-300 shadow-sm transition-colors"
+          {/* Abstract Water Body / Geographic Boundary */}
+          <path d="M 50,0 Q 60,30 55,60 T 70,100 L 100,100 L 100,0 Z" fill="#181B21" />
+          <path d="M 0,40 Q 20,45 15,70 T 0,90 Z" fill="#181B21" />
+
+          {/* Primary Route Background (Dimmed) */}
+          <path d={ROUTE_PATH_D} fill="none" stroke="#252830" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+          
+          {/* Active Glowing Route Path */}
+          <path 
+            d={ROUTE_PATH_D} 
+            fill="none" 
+            stroke="#FFFFFF" 
+            strokeWidth="0.8" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            filter="url(#glow)"
           />
 
-          {/* Action Suffix Button */}
-          <button 
-            type="submit"
-            disabled={isSearching || trackingId.length < 6}
-            className="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 bg-movyra-blue text-white rounded-xl flex items-center justify-center disabled:opacity-50 disabled:bg-gray-200 disabled:text-gray-400 active:scale-95 transition-all shadow-md shadow-movyra-blue/20 disabled:shadow-none"
-          >
-            {isSearching ? <Loader2 size={20} className="animate-spin" /> : <Search size={20} />}
-          </button>
-        </motion.form>
+          {/* Animated Traffic/Light Trails along the route */}
+          <motion.path 
+            d={ROUTE_PATH_D} 
+            fill="none" 
+            stroke="#FFFFFF" 
+            strokeWidth="1.2" 
+            strokeDasharray="2 15"
+            animate={{ strokeDashoffset: [0, -100] }}
+            transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+            className="opacity-60"
+          />
+        </svg>
 
-        {/* SECTION 5: Staggered "Recently Tracked" List */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+        {/* Live Vehicle Marker Pin on Map */}
+        <motion.div 
+          className="absolute w-4 h-4 -ml-2 -mt-2 rounded-full bg-white shadow-[0_0_15px_rgba(255,255,255,0.8)] z-10 flex items-center justify-center border-2 border-black"
+          style={{ 
+            left: `${currentPos.x}%`, 
+            top: `${currentPos.y}%`,
+          }}
+          transition={{ type: 'spring', damping: 20, stiffness: 100 }}
         >
-          <h3 className="font-bold text-lg text-gray-400 mb-6 tracking-wide">Recently Tracked</h3>
-          
-          {isLoadingHistory ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="animate-spin text-gray-300 w-8 h-8" />
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <AnimatePresence>
-                {recentTracks.map((item, idx) => (
-                  <motion.div 
-                    key={`${item.id}-${idx}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 + (idx * 0.1) }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate(`/tracking/detail/${item.id}`)}
-                    className="flex items-center gap-5 cursor-pointer bg-white p-2 rounded-2xl active:bg-gray-50 transition-colors"
-                  >
-                    {/* Colored Status Icon Box */}
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${getStatusColorClass(item.status)}`}>
-                      {renderStatusIcon(item.status)}
-                    </div>
-                    
-                    {/* Data Payload */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-black text-[17px] text-gray-900 tracking-wide truncate">{item.id}</h4>
-                      <p className="text-gray-400 text-sm font-bold truncate mt-0.5">{item.loc}</p>
-                    </div>
-                    
-                    {/* Timestamp */}
-                    <span className="text-gray-300 text-xs font-black whitespace-nowrap pt-1 flex-shrink-0">
-                      {item.time}
-                    </span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              
-              {recentTracks.length === 0 && (
-                <div className="text-center py-10 text-gray-400 font-medium">
-                  No recent tracking history found.
-                </div>
-              )}
-            </div>
-          )}
+          <div className="w-1.5 h-1.5 bg-black rounded-full" />
         </motion.div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* SECTION 2: STARK TOP NAVIGATION & ETA OVERLAY                             */}
+      {/* ========================================================================= */}
+      <div className="pt-12 px-6 flex items-start justify-between z-20 pointer-events-auto">
+        
+        {/* Left: Branding & Back Navigation */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-10 h-10 rounded-full flex items-center justify-center text-white bg-black/40 hover:bg-black/60 backdrop-blur-md transition-colors active:scale-95 border border-white/10"
+          >
+            <ChevronLeft size={26} strokeWidth={2.5} />
+          </button>
+          
+          {/* Movyra Brand Integration */}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center overflow-hidden">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-black text-xl tracking-tight">Movyra</span>
+          </div>
+        </div>
+
+        {/* Center: Destination & Floating ETA Pill */}
+        <div className="flex flex-col items-center">
+          <h2 className="text-[17px] font-bold text-white mb-2 tracking-wide drop-shadow-md">
+            New York City, USA
+          </h2>
+          
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="flex items-center gap-2 bg-[#000000] px-5 py-2.5 rounded-full shadow-2xl border border-white/5"
+          >
+            <Clock size={16} className="text-gray-400" strokeWidth={3} />
+            <span className="font-black text-lg tracking-tight">{currentTime}</span>
+          </motion.div>
+        </div>
+
+        {/* Right: Share Action */}
+        <button className="flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full transition-all active:scale-95 border border-white/10">
+          <Share size={14} strokeWidth={2.5} />
+          <span className="text-[13px] font-bold">Share</span>
+        </button>
+
+      </div>
+
+      {/* ========================================================================= */}
+      {/* SECTION 3: INTERACTIVE BLACK BOTTOM-SHEET SLIDER                          */}
+      {/* High-fidelity custom range slider controlling exact vehicle position.     */}
+      {/* ========================================================================= */}
+      <div className="mt-auto px-4 pb-8 z-20 pointer-events-auto">
+        <div className="bg-[#121212] rounded-full h-[64px] flex items-center px-5 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-[#2A2A2A] relative">
+          
+          {/* Left Menu/Options Icon */}
+          <button className="text-gray-400 hover:text-white transition-colors">
+            <List size={22} strokeWidth={2.5} />
+          </button>
+
+          {/* Track Geometry & Waypoint Dots */}
+          <div className="flex-1 mx-5 h-[3px] bg-[#2A2E35] relative rounded-full">
+            
+            {/* Active Blue Progress Fill */}
+            <div 
+              className="absolute left-0 top-0 h-full bg-[#276EF1] rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+            
+            {/* Route Waypoint Stops (White Dots) */}
+            {[0, 20, 40, 55, 75, 100].map(pt => (
+              <div 
+                key={pt} 
+                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-[#121212] bg-white transition-colors"
+                style={{ left: `${pt}%`, marginLeft: '-4px' }}
+              />
+            ))}
+
+            {/* Custom Car Icon Thumb (Attached to Progress) */}
+            <div 
+              className="absolute top-1/2 -translate-y-1/2 w-11 h-[26px] bg-white rounded-full flex items-center justify-center shadow-lg pointer-events-none"
+              style={{ left: `${progress}%`, marginLeft: '-22px' }}
+            >
+              <CarFront size={16} strokeWidth={2.5} className="text-[#276EF1]" />
+            </div>
+
+            {/* Hidden Native Range Input (Ensures perfect cross-browser dragging/touch) */}
+            <input 
+              type="range" 
+              min="0" 
+              max="100" 
+              value={progress}
+              onChange={(e) => setProgress(e.target.value)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30"
+            />
+          </div>
+
+          {/* Right Destination Marker (Faux Status) */}
+          <div className="w-2.5 h-2.5 rounded-sm bg-white ml-2 rotate-45" />
+
+        </div>
+        
+        {/* Engineering Credit Footer */}
+        <p className="text-center mt-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+          Made with <span className="text-red-500">♥</span> by Movyra Eng & Design
+        </p>
       </div>
 
     </div>
