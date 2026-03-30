@@ -124,13 +124,11 @@ export default function MobileHome() {
         </h1>
         <div 
           onClick={() => navigate('/profile-settings')}
-          className="w-10 h-10 rounded-xl bg-black flex items-center justify-center overflow-hidden border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity shadow-sm p-2 text-white"
+          className="w-10 h-10 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity shadow-sm"
         >
-          {/* Custom Scalable SVG Logo instead of image */}
-          <div className="w-10 h-10 rounded-md overflow-hidden bg-black flex items-center justify-center">
+          {/* Strictly rendering the real image file logo */}
           <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
         </div>
-      </div>
       </motion.div>
 
       {/* SECTION 2: Dynamic Greeting */}
