@@ -193,6 +193,45 @@ export default function App() {
   // TRI-STATE AUTH LOGIC: loading | authenticated | unauthenticated
   const [authStatus, setAuthStatus] = useState('loading');
 
+  // ============================================================================
+  // BACKGROUND SYSTEM: VERSION POLLING (CACHE-BUSTING)
+  // Periodically checks version.json. If server version differs from initial load,
+  // forces a hard refresh to instantly deliver updates to the client.
+  // ============================================================================
+  useEffect(() => {
+    let currentVersion = null;
+
+    const checkAppVersion = async () => {
+      try {
+        // Appends a timestamp to bypass any local/network caching of the JSON file itself
+        const response = await fetch(`/version.json?t=${new Date().getTime()}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        
+        if (!currentVersion) {
+          // Initialize baseline version on first load
+          currentVersion = data.version;
+        } else if (currentVersion !== data.version) {
+          // A new deployment has occurred
+          console.log(`[System Update] New version detected (${data.version}). Forcing hard reload...`);
+          window.location.reload(true);
+        }
+      } catch (error) {
+        console.error("[System Update] Version check failed:", error);
+      }
+    };
+
+    // Initial check on mount
+    checkAppVersion();
+
+    // Poll every 2 minutes (120,000 ms)
+    const pollInterval = setInterval(checkAppVersion, 120000);
+
+    return () => clearInterval(pollInterval);
+  }, []);
+
+  // Firebase Auth Observer
   useEffect(() => {
     // Persistent listener that survives path changes. 
     // Uses the pre-initialized auth instance from the services file.
