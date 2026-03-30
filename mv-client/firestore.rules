@@ -1,46 +1,112 @@
 rules_version = '2';
 
 service cloud.firestore {
-match /databases/{database}/documents {
+  match /databases/{database}/documents {
 
-// ========================================================================
-// GLOBAL DENY
-// Strictly block all access by default to prevent data leaks.
-// ========================================================================
-match /{document=**} {
-  allow read, write: if false;
-}
+    // ========================================================================
+    // GLOBAL DENY
+    // Strictly block all access by default to prevent data leaks.
+    // ========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
 
-// ========================================================================
-// USERS COLLECTION
-// Users can only read and write to their own profile document.
-// Matches the UID of the authenticated user to the document ID.
-// ========================================================================
-match /users/{userId} {
-  allow read, write: if request.auth != null && request.auth.uid == userId;
-}
+    // ========================================================================
+    // USERS COLLECTION & SUB-COLLECTIONS
+    // Users can only read and write to their own profile document.
+    // Matches the UID of the authenticated user to the document ID.
+    // ========================================================================
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // TRUSTED DRIVERS SUB-COLLECTION (New)
+      // Secures the Priority Matching feature data tied to the specific user
+      match /trusted_drivers/{driverId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
 
-// ========================================================================
-// SHIPMENTS COLLECTION
-// Protects order history and active bookings.
-// Validates that the 'userId' field on the document matches the auth token.
-// ========================================================================
-match /shipments/{shipmentId} {
-  // Allow creation only if the user is assigning their own UID to the document
-  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-  // Allow read/update/delete only if the existing document belongs to the user
-  allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-}
+    // ========================================================================
+    // SHIPMENTS COLLECTION (Legacy/Base)
+    // Protects order history and active bookings.
+    // Validates that the 'userId' field on the document matches the auth token.
+    // ========================================================================
+    match /shipments/{shipmentId} {
+      // Allow creation only if the user is assigning their own UID to the document
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Allow read/update/delete only if the existing document belongs to the user
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
 
-// ========================================================================
-// TRACKING HISTORY COLLECTION
-// Secures the recent search history for the Live Tracking dashboard.
-// ========================================================================
-match /tracking_history/{trackingId} {
-  allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-  allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
-}
+    // ========================================================================
+    // TRACKING HISTORY COLLECTION
+    // Secures the recent search history for the Live Tracking dashboard.
+    // ========================================================================
+    match /tracking_history/{trackingId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
 
+    // ========================================================================
+    // ORDERS & INVOICES (New Core Logistics Ledger)
+    // Secures B2B expense tracking, current dispatches, and historical routes.
+    // ========================================================================
+    match /orders/{orderId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    match /invoices/{invoiceId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
 
-}
+    // ========================================================================
+    // SAVED ADDRESSES (Address Book UI)
+    // ========================================================================
+    match /saved_addresses/{addressId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================================================
+    // BIDS (Driver Marketplace System)
+    // Allows user to read bids directed at them, and write to simulate liquidity
+    // ========================================================================
+    match /bids/{bidId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================================================
+    // DISPUTES (Help Center System)
+    // ========================================================================
+    match /disputes/{disputeId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read, update: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // ========================================================================
+    // RATINGS & REVIEWS
+    // ========================================================================
+    match /ratings/{ratingId} {
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // ========================================================================
+    // SYSTEM TELEMETRY & LOGGING
+    // Allows write-only access for generating metrics without exposing reads.
+    // ========================================================================
+    match /system_analytics/{logId} {
+      allow create: if true; 
+      allow read, update, delete: if false;
+    }
+    
+    match /system_logs/{logId} {
+      allow create: if true;
+      allow read, update, delete: if false;
+    }
+
+  }
 }
