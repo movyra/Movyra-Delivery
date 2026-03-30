@@ -9,6 +9,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import MobileAppLayout from './components/MobileAppLayout';
 import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import BottomNavBar from './components/Navigation/BottomNavBar';
+import NetworkStatus from './components/UI/NetworkStatus';
 import { useOnboardingStore } from './store/useOnboardingStore';
 
 // ============================================================================
@@ -218,6 +219,8 @@ export default function App() {
   
   return (
     <BrowserRouter>
+      {/* Global Network Resilience Monitor */}
+      <NetworkStatus />
       <MainViewport authStatus={authStatus} />
     </BrowserRouter>
   );
