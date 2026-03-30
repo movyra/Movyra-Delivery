@@ -11,7 +11,8 @@ import {
   Settings, 
   Crown, 
   Sparkles,
-  User as UserIcon
+  User as UserIcon,
+  LifeBuoy
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import { auth } from '../services/firebaseAuth';
@@ -61,7 +62,10 @@ export default function ProfileSettings() {
           <ChevronLeft size={32} />
         </button>
         <h1 className="text-xl font-black tracking-wide">Profile</h1>
-        <div className="w-10"></div> {/* Spacer to center title */}
+        {/* Strict Real Logo Injection replacing the empty spacer */}
+        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center overflow-hidden shadow-sm">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        </div>
       </motion.div>
 
       {/* SECTION 3: Dynamic Identity Render */}
@@ -142,15 +146,18 @@ export default function ProfileSettings() {
         className="bg-white rounded-[32px] p-2 flex flex-col gap-1 border border-gray-100 shadow-sm mb-8"
       >
         {[ 
-          { i: UserIcon, l: "Account Details" }, 
-          { i: MapPin, l: "Saved Addresses" }, 
-          { i: CreditCard, l: "Payment Methods" }, 
-          { i: ShieldCheck, l: "Privacy & Security" }, 
-          { i: Settings, l: "App Preferences" } 
+          { i: UserIcon, l: "Account Details", action: null }, 
+          { i: MapPin, l: "Address Book", action: () => navigate('/profile/addresses') }, 
+          { i: CreditCard, l: "Payment Methods", action: null }, 
+          { i: ShieldCheck, l: "Privacy & Security", action: null }, 
+          { i: Settings, l: "App Preferences", action: null },
+          { i: LifeBuoy, l: "Help & Disputes", action: () => navigate('/support/dispute') }
         ].map((item, idx) => (
           <button 
             key={idx} 
-            className="flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-gray-50 active:scale-[0.98] transition-all group"
+            onClick={item.action}
+            disabled={!item.action}
+            className={`flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-gray-50 active:scale-[0.98] transition-all group ${!item.action ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-movyra-blue transition-colors">
@@ -158,7 +165,9 @@ export default function ProfileSettings() {
               </div>
               <span className="font-bold text-[15px] text-gray-800">{item.l}</span>
             </div>
-            <ChevronRight size={18} className="text-gray-300 group-hover:text-movyra-blue transition-colors" />
+            {item.action && (
+              <ChevronRight size={18} className="text-gray-300 group-hover:text-movyra-blue transition-colors" />
+            )}
           </button>
         ))}
       </motion.div>
