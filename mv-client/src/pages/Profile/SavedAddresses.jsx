@@ -14,7 +14,7 @@ import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 // ============================================================================
 // PAGE: SAVED ADDRESSES (STARK MINIMALIST UI)
 // Fully functional persistent address book. Connects directly to Firestore
-// and utilizes the real Google Maps Geocoding & Autocomplete APIs.
+// and utilizes the real OpenStreetMap Nominatim APIs.
 // ============================================================================
 
 export default function SavedAddresses() {
@@ -60,7 +60,7 @@ export default function SavedAddresses() {
   }, []);
 
   // ============================================================================
-  // LOGIC: GOOGLE MAPS AUTOCOMPLETE & GEOCODING
+  // LOGIC: OPENSTREETMAP AUTOCOMPLETE & GEOCODING
   // ============================================================================
   useEffect(() => {
     const fetchTimer = setTimeout(async () => {
@@ -88,8 +88,9 @@ export default function SavedAddresses() {
     setIsSearching(true);
     
     try {
-      // Convert the human-readable string into exact GPS coordinates
-      const geocoded = await geocodeAddress(prediction.description);
+      // Convert the human-readable string (or place_id coordinates) into exact GPS coordinates
+      // Our refactored service allows passing the description directly to Nominatim
+      const geocoded = await geocodeAddress(prediction.place_id || prediction.description);
       setSelectedPlace(geocoded);
     } catch (err) {
       setError('Failed to pinpoint this location on the map.');
@@ -291,7 +292,7 @@ export default function SavedAddresses() {
 
             <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col">
               
-              {/* Google Maps Search Input */}
+              {/* OpenStreetMap Search Input */}
               <div className="relative mb-6">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
                   <Search size={20} strokeWidth={2.5} />
@@ -329,8 +330,11 @@ export default function SavedAddresses() {
                       >
                         <MapPin size={18} className="text-gray-400 shrink-0 mt-0.5" />
                         <div>
-                          <span className="block text-[15px] font-bold text-black">{pred.structured_formatting.main_text}</span>
-                          <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.structured_formatting.secondary_text}</span>
+                          {/* Split the Nominatim comma-separated string to simulate Google's main_text / secondary_text UI */}
+                          <span className="block text-[15px] font-bold text-black">{pred.description.split(',')[0]}</span>
+                          <span className="block text-[13px] font-medium text-gray-500 truncate">
+                            {pred.description.split(',').slice(1).join(',').trim() || pred.description}
+                          </span>
                         </div>
                       </button>
                     ))}
