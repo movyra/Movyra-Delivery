@@ -16,6 +16,7 @@ import { useOnboardingStore } from './store/useOnboardingStore';
 // ============================================================================
 // PERFORMANCE OPTIMIZATION: React Lazy Loading
 // Splitting the bundle to ensure the app loads instantly on weak 3G networks.
+// CRITICAL: Ensure exact case matching for Linux/Codespaces (e.g., Dashboard vs dashboard)
 // ============================================================================
 const MobileLogin = lazy(() => import('./pages/Auth/MobileLogin'));
 const MobileSignup = lazy(() => import('./pages/Auth/MobileSignup'));
