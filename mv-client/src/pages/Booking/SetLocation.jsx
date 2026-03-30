@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Crosshair, Plus, X, Home, 
   Briefcase, Bookmark, Loader2, Search, ArrowUpDown, AlertCircle, 
-  Maximize, Minimize, MapPin
+  Maximize, Minimize, MapPin, Route
 } from 'lucide-react';
 
 // Real Store & Service Integrations
@@ -17,14 +17,8 @@ import { fetchUserAddresses } from '../../services/firestore';
 
 // ============================================================================
 // PAGE: SET LOCATION (STARK MINIMALIST THEME)
-// A high-contrast, multi-stop routing interface featuring 7 Advanced Tools:
-// 1. Live Map Viewport with OSRM Route Line Drawing
-// 2. Full-Screen Map Mode & Floating Distance Metrics
-// 3. Strict Duplicate Address Validation
-// 4. Real-Time Route Swapping
-// 5. Nominatim REST API Search Overlay
-// 6. Smart Firestore Saved Address Chips
-// 7. Minimalist Pulsing Map Marker
+// A high-contrast, multi-stop routing interface featuring 6 Advanced Sections
+// and 5+ Fully Functional Features powered by Free OSM & Photon APIs.
 // ============================================================================
 
 export default function SetLocation() {
@@ -44,9 +38,10 @@ export default function SetLocation() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [routeError, setRouteError] = useState('');
   
-  // New Layout & Routing States
+  // Layout & Routing States
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [routeDistance, setRouteDistance] = useState('');
+  const [routeDuration, setRouteDuration] = useState('');
 
   // Search Engine State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -61,30 +56,36 @@ export default function SetLocation() {
   }, [dropoffs.length, addDropoff]);
 
   // ============================================================================
-  // FEATURE 1: STRICT DUPLICATE ADDRESS VALIDATOR
+  // FEATURE 1: STRICT DUPLICATE ADDRESS VALIDATOR & AUTO-CLEAR
   // ============================================================================
   useEffect(() => {
     if (pickup?.lat && dropoffs.length > 0) {
-      // Create a flat array of all stops to check for any duplicates across the board
-      const allStops = [pickup, ...dropoffs.filter(d => d.lat !== 0)];
-      
-      const hasDuplicate = allStops.some((stop, idx) => 
-        allStops.findIndex(other => 
-          (other.lat === stop.lat && other.lng === stop.lng) || 
-          (other.address === stop.address && other.address !== 'Resolving address...')
-        ) !== idx
-      );
-      
-      const hasEmpty = dropoffs.some(d => !d.lat || !d.address);
+      let hasError = false;
 
-      if (hasDuplicate) setRouteError("All pickup and drop-off locations must be unique.");
-      else if (hasEmpty && dropoffs.length > 1) setRouteError("Please set all drop-off locations.");
-      else setRouteError("");
+      // 1. Check if any dropoff exactly matches the pickup
+      dropoffs.forEach((drop, idx) => {
+        if (drop.lat !== 0 && (
+          (drop.lat === pickup.lat && drop.lng === pickup.lng) || 
+          (drop.address === pickup.address && pickup.address !== 'Resolving address...')
+        )) {
+          setRouteError("Pickup and drop-off cannot be the exact same location.");
+          updateDropoff(idx, { address: '', lat: 0, lng: 0 }); // Auto-clear the duplicate field immediately
+          hasError = true;
+        }
+      });
+
+      // 2. Check for empty dropoffs if there are multiple stops
+      const hasEmpty = dropoffs.some(d => !d.lat || !d.address);
+      
+      if (!hasError) {
+        if (hasEmpty && dropoffs.length > 1) setRouteError("Please set all drop-off locations.");
+        else setRouteError("");
+      }
     }
-  }, [pickup, dropoffs]);
+  }, [pickup, dropoffs, updateDropoff]);
 
   // ============================================================================
-  // SECTION 1: MAP ENGINE INITIALIZATION
+  // SECTION 1 & 2: INTERACTIVE MAPLIBRE VIEWPORT & INITIALIZATION
   // ============================================================================
   useEffect(() => {
     if (map.current) return;
@@ -139,18 +140,20 @@ export default function SetLocation() {
 
   // Sync GPS updates to map
   useEffect(() => {
-    if (currentLocation && map.current && activeField === 'pickup') {
+    if (currentLocation && map.current && activeField === 'pickup' && isMapLoaded) {
       map.current.flyTo({ center: [currentLocation.lng, currentLocation.lat], zoom: 16 });
       setPickup({ lat: currentLocation.lat, lng: currentLocation.lng, address: 'Current Location' });
     }
-  }, [currentLocation]);
+  }, [currentLocation, isMapLoaded]);
 
   // ============================================================================
-  // FEATURE 2: OSRM LIVE ROUTE DRAWING & DISTANCE CALCULATION
+  // FEATURE 4 & 5: REAL-TIME OSRM ROUTE DRAWING & AUTO-BOUNDS
   // ============================================================================
   useEffect(() => {
     const drawRouteLine = async () => {
-      if (!map.current || !isMapLoaded) return;
+      // FIX: Ensure map and style are fully loaded to prevent `getSource` null crash
+      if (!map.current || !isMapLoaded || !map.current.isStyleLoaded()) return;
+      
       const validDropoffs = dropoffs.filter(d => d.lat !== 0 && d.lng !== 0);
       
       // If we have a valid pickup and at least one valid dropoff
@@ -164,8 +167,10 @@ export default function SetLocation() {
           if (data.code === 'Ok') {
             const routeGeoJSON = data.routes[0].geometry;
             const dist = data.routes[0].distance; // Distance in meters
+            const duration = data.routes[0].duration; // Duration in seconds
             
             setRouteDistance(dist > 1000 ? `${(dist / 1000).toFixed(1)} km` : `${Math.round(dist)} m`);
+            setRouteDuration(`${Math.ceil(duration / 60)} min`);
 
             if (map.current.getSource('route')) {
               map.current.getSource('route').setData(routeGeoJSON);
@@ -180,10 +185,14 @@ export default function SetLocation() {
               });
             }
             
-            // Auto-fit bounds only if user isn't dragging and we just completed the route
+            // Feature 5: Auto-camera bounding zooms map to fit all pins perfectly
             if (!isDragging && !isSearchOpen) {
-              const bounds = routeGeoJSON.coordinates.reduce((b, coord) => b.extend(coord), new maplibregl.LngLatBounds(routeGeoJSON.coordinates[0], routeGeoJSON.coordinates[0]));
-              map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
+              const bounds = routeGeoJSON.coordinates.reduce(
+                (b, coord) => b.extend(coord), 
+                new maplibregl.LngLatBounds(routeGeoJSON.coordinates[0], routeGeoJSON.coordinates[0])
+              );
+              // Adding padding to account for the bottom sheet UI
+              map.current.fitBounds(bounds, { padding: { top: 80, bottom: 400, left: 40, right: 40 }, duration: 1000 });
             }
           }
         } catch (err) {
@@ -194,6 +203,7 @@ export default function SetLocation() {
         if (map.current.getSource('route')) {
           map.current.getSource('route').setData({ type: 'FeatureCollection', features: [] });
           setRouteDistance('');
+          setRouteDuration('');
         }
       }
     };
@@ -201,7 +211,7 @@ export default function SetLocation() {
   }, [pickup, dropoffs, isMapLoaded, isDragging, isSearchOpen]);
 
   // ============================================================================
-  // SECTION 3: SEARCH ENGINE LOGIC (NOMINATIM REST API)
+  // SECTION 3 & FEATURE 3: LIVE PHOTON SEARCH OVERLAY
   // ============================================================================
   useEffect(() => {
     const fetchTimer = setTimeout(async () => {
@@ -281,28 +291,28 @@ export default function SetLocation() {
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden font-sans flex flex-col">
       
-      {/* SECTION 1: LIVE MAP VIEWPORT */}
+      {/* SECTION 1: FLOATING HEADER NAVIGATION */}
+      <div className="absolute top-0 left-0 right-0 pt-12 px-6 z-20 pointer-events-none flex justify-between">
+        <button 
+          onClick={() => navigate(-1)} 
+          className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black shadow-md pointer-events-auto hover:bg-gray-50 active:scale-95 transition-all border border-gray-100"
+        >
+          <ChevronLeft size={26} strokeWidth={2.5} />
+        </button>
+        
+        <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-md pointer-events-auto overflow-hidden p-2.5">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
+        </div>
+      </div>
+
+      {/* SECTION 2: INTERACTIVE MAPLIBRE VIEWPORT */}
       <div className="flex-1 relative z-0">
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
-          ref={mapContainer} className="absolute inset-0" 
+          ref={mapContainer} className="absolute inset-0 bg-gray-100" 
         />
 
-        {/* Floating Headers & Actions */}
-        <div className="absolute top-0 left-0 right-0 pt-12 px-6 z-20 pointer-events-none flex justify-between">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black shadow-md pointer-events-auto hover:bg-gray-50 active:scale-95 transition-all border border-gray-100"
-          >
-            <ChevronLeft size={26} strokeWidth={2.5} />
-          </button>
-          
-          <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-md pointer-events-auto overflow-hidden p-2.5">
-            <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
-          </div>
-        </div>
-
-        {/* Feature 3: Full-Screen Map Toggle & Live Distance Metric */}
+        {/* Full-Screen Map Toggle & Live Distance Metric */}
         <div className="absolute right-6 top-28 z-20 pointer-events-none flex flex-col items-end gap-3">
           <button 
             onClick={() => setIsFullscreen(!isFullscreen)}
@@ -312,23 +322,22 @@ export default function SetLocation() {
           </button>
           
           <AnimatePresence>
-            {routeDistance && (
+            {routeDistance && !isFullscreen && (
               <motion.div 
                 initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-                className="bg-black text-white px-4 py-2 rounded-full font-black text-sm shadow-lg border-2 border-white pointer-events-auto"
+                className="bg-black text-white px-4 py-3 rounded-2xl shadow-lg border-2 border-white pointer-events-auto flex flex-col items-end gap-0.5"
               >
-                {routeDistance}
+                <span className="font-black text-[16px] leading-none">{routeDistance}</span>
+                <span className="font-bold text-[11px] text-gray-400 uppercase tracking-widest">{routeDuration} ETA</span>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Feature 4: Minimalist Pulsing Map Marker */}
+        {/* Minimalist Pulsing Map Marker */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
-            {/* The stark black dot */}
             <div className="w-3.5 h-3.5 bg-black rounded-full shadow-md relative z-10 ring-4 ring-white" />
-            {/* The active drag pulse */}
             {(isDragging || isResolvingAddress) && (
               <div className="absolute w-12 h-12 bg-black/10 rounded-full animate-ping" />
             )}
@@ -336,7 +345,7 @@ export default function SetLocation() {
         </div>
       </div>
 
-      {/* SECTION 4: DYNAMIC ROUTING INPUTS (BOTTOM SHEET) */}
+      {/* SECTION 3 & 4: DYNAMIC ROUTE BUILDER & SAVED PLACES */}
       <motion.div 
         initial={{ y: 0 }}
         animate={{ y: isFullscreen ? '100%' : 0 }}
@@ -344,12 +353,11 @@ export default function SetLocation() {
         className="bg-white rounded-t-[32px] shadow-[0_-20px_40px_rgba(0,0,0,0.08)] relative z-20 flex flex-col max-h-[65vh] absolute bottom-0 left-0 right-0"
       >
         <div className="p-6 pb-4 shrink-0">
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" onClick={() => setIsFullscreen(!isFullscreen)}></div>
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setIsFullscreen(!isFullscreen)}></div>
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">
               Where to?
             </h1>
-            {/* Feature 5: Live GPS Injection */}
             <button 
               onClick={() => { setActiveField('pickup'); fetchCurrentLocation(); }}
               disabled={isLocating}
@@ -359,7 +367,7 @@ export default function SetLocation() {
             </button>
           </div>
 
-          {/* SMART FIRESTORE CHIPS */}
+          {/* SECTION 4: SMART FIRESTORE CHIPS (Horizontal List) */}
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
             {savedAddresses.map(addr => (
               <button 
@@ -376,11 +384,10 @@ export default function SetLocation() {
           </div>
         </div>
 
-        {/* Multi-Stop Input List */}
+        {/* Feature 2: Multi-Stop Input List */}
         <div className="px-6 overflow-y-auto no-scrollbar pb-6 shrink min-h-[150px]">
           <div className="relative border-l-2 border-dashed border-gray-300 ml-4 pl-6 space-y-4 py-2">
             
-            {/* Feature: Route Swap Engine */}
             <button 
               onClick={handleSwapRoute}
               disabled={dropoffs.length === 0 || !pickup?.lat || !dropoffs[0]?.lat}
@@ -465,7 +472,7 @@ export default function SetLocation() {
           )}
         </div>
 
-        {/* Confirmation CTA & Validation Errors */}
+        {/* SECTION 5: ANALYTICS & ACTION FOOTER */}
         <div className="p-6 pt-2 shrink-0 bg-white border-t border-gray-100">
           <AnimatePresence>
             {routeError && (
@@ -481,16 +488,16 @@ export default function SetLocation() {
           <button 
             onClick={() => navigate('/booking/select-vehicle')}
             disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError}
-            className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_20px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:shadow-none"
+            className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_20px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2"
           >
-            Confirm Locations
+            Confirm Locations {routeDistance && <span className="text-gray-400 font-medium">• {routeDistance}</span>}
           </button>
         </div>
 
       </motion.div>
 
       {/* ============================================================================ */}
-      {/* SECTION 5: FULL-SCREEN NOMINATIM SEARCH OVERLAY                              */}
+      {/* SECTION 6: FULL-SCREEN NOMINATIM SEARCH OVERLAY                              */}
       {/* ============================================================================ */}
       <AnimatePresence>
         {isSearchOpen && (
