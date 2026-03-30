@@ -1,17 +1,17 @@
 // ============================================================================
-// SERVICE: OPENSTREETMAP & OSRM ENGINE
+// SERVICE: OPEN SOURCE MAPPING ENGINE (PHOTON + OSRM)
 // Architected to replace proprietary Google Maps with 100% Free Open-Source APIs.
-// Uses real API calls to Nominatim (Geocoding/Places) and OSRM (Routing/ETA).
+// Uses real API calls to Photon (Geocoding/Places) and OSRM (Routing/ETA/Polylines).
+// Note: Kept the filename 'googleMaps.js' to prevent breaking legacy imports.
 // ============================================================================
 
-// No API Keys needed for Nominatim and OSRM public endpoints!
-
 // ============================================================================
-// SECTION 1: PLACES AUTOCOMPLETE API (Smart Location Search)
+// SECTION 1: PLACES AUTOCOMPLETE API (Photon by Komoot)
 // ============================================================================
 
 /**
- * Fetches real-time address predictions as the user types using Nominatim.
+ * Fetches real-time address predictions as the user types using Photon.
+ * Photon is highly optimized for autocomplete unlike standard Nominatim.
  * @param {string} input - The partial address string typed by the user.
  * @returns {Promise<Array>} - Array of prediction objects.
  */
@@ -19,26 +19,33 @@ export const fetchPlacePredictions = async (input) => {
   if (!input || input.trim() === '') return [];
   
   try {
-    // Nominatim Free OpenStreetMap Search API
-    // Restricted to India (IN) to match previous logic. Remove `&countrycodes=in` to make it global.
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input)}&addressdetails=1&limit=5&countrycodes=in`, {
-      headers: {
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
+    // We add a slight location bias to India (lat: 20, lon: 79) for relevance
+    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(input)}&limit=5&lat=20&lon=79`);
     
     if (!response.ok) throw new Error("Network response was not ok");
     
     const data = await response.json();
     
-    // Map to the exact format existing UI components expect: { description, place_id }
-    return data.map(item => ({
-      description: item.display_name,
-      // Hack: Embed lat/lon as the place_id so geocoding is instant later without a 2nd API call
-      place_id: `${item.lat},${item.lon}` 
-    }));
+    // Map to the format the UI expects. Photon provides instant Lat/Lng!
+    return data.features.map(feature => {
+      const p = feature.properties;
+      const name = p.name || p.street || 'Unknown Location';
+      const context = [p.city, p.state, p.country].filter(Boolean).join(', ');
+      const description = context ? `${name}, ${context}` : name;
+      
+      const lng = feature.geometry.coordinates[0];
+      const lat = feature.geometry.coordinates[1];
+
+      return {
+        description: description,
+        // Embed lat/lon as the place_id so geocoding is instant later
+        place_id: `${lat},${lng}`,
+        lat: lat,
+        lng: lng
+      };
+    });
   } catch (error) {
-    console.error("Nominatim API Error [fetchPlacePredictions]:", error);
+    console.error("Photon API Error [fetchPlacePredictions]:", error);
     return [];
   }
 };
@@ -48,18 +55,15 @@ export const fetchPlacePredictions = async (input) => {
 // ============================================================================
 
 /**
- * Converts a human-readable address or custom Place ID into exact GPS coordinates.
- * @param {string} address - Full address string or Place ID (lat,lon string).
+ * Converts a custom Place ID (lat,lng) or address string into coordinates.
+ * @param {string} address - Full address string or Place ID.
  */
 export const geocodeAddress = async (address) => {
   try {
-    // If the address matches our custom place_id format (lat,lng), parse it instantly to save API calls!
+    // If it's our embedded coordinate string from Photon, parse it instantly (Zero API calls)
     if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(address)) {
       const [lat, lng] = address.split(',');
-      
-      // Attempt to grab the display name via reverse geocode, but coordinates are the priority
       const formattedAddress = await reverseGeocode(lat, lng).catch(() => "Selected Location");
-      
       return {
         lat: parseFloat(lat),
         lng: parseFloat(lng),
@@ -67,59 +71,63 @@ export const geocodeAddress = async (address) => {
       };
     }
 
-    // Fallback: Perform an actual text search query
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`);
+    // Fallback: Perform a text search query if raw text was passed
+    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(address)}&limit=1`);
     const data = await response.json();
 
-    if (data && data.length > 0) {
+    if (data && data.features && data.features.length > 0) {
+      const feature = data.features[0];
+      const p = feature.properties;
+      const name = p.name || p.street || 'Unknown Location';
+      const context = [p.city, p.state, p.country].filter(Boolean).join(', ');
+      
       return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-        formattedAddress: data[0].display_name
+        lat: feature.geometry.coordinates[1],
+        lng: feature.geometry.coordinates[0],
+        formattedAddress: context ? `${name}, ${context}` : name
       };
     } else {
       throw new Error("Geocoding failed: No results found.");
     }
   } catch (error) {
-    console.error("Nominatim API Error [geocodeAddress]:", error);
+    console.error("Photon API Error [geocodeAddress]:", error);
     throw error;
   }
 };
 
 /**
- * Converts exact GPS coordinates into a human-readable address (Reverse Geocoding).
- * @param {number} lat - Latitude
- * @param {number} lng - Longitude
+ * Converts exact GPS coordinates into a human-readable address.
+ * @param {number|string} lat - Latitude
+ * @param {number|string} lng - Longitude
  */
 export const reverseGeocode = async (lat, lng) => {
   try {
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-      headers: {
-        'Accept-Language': 'en-US,en;q=0.9'
-      }
-    });
+    const response = await fetch(`https://photon.komoot.io/reverse?lon=${lng}&lat=${lat}`);
     
     if (!response.ok) throw new Error("Network response was not ok");
     
     const data = await response.json();
     
-    if (data && data.display_name) {
-      return data.display_name;
+    if (data && data.features && data.features.length > 0) {
+      const p = data.features[0].properties;
+      const name = p.name || p.street || 'Dropped Pin';
+      const context = [p.city, p.state].filter(Boolean).join(', ');
+      return context ? `${name}, ${context}` : name;
     } else {
-      throw new Error("Reverse geocoding failed: Invalid response.");
+      return "Unknown Location";
     }
   } catch (error) {
-    console.error("Nominatim API Error [reverseGeocode]:", error);
-    throw error;
+    console.error("Photon API Error [reverseGeocode]:", error);
+    return "Unknown Location";
   }
 };
 
 // ============================================================================
-// SECTION 3: DISTANCE MATRIX API (OSRM Routing Engine)
+// SECTION 3: DISTANCE MATRIX & POLYLINE API (OSRM Routing Engine)
 // ============================================================================
 
 /**
- * Calculates real-time distance and ETA for single or multi-stop routes using OSRM.
+ * Calculates real-time distance and ETA for routes using OSRM.
  * @param {Object} origin - { lat, lng }
  * @param {Array<Object>} destinations - Array of { lat, lng } objects.
  */
@@ -129,11 +137,9 @@ export const calculateRouteAndETA = async (origin, destinations) => {
   }
 
   try {
-    // Evaluate each destination independently against the origin
     const metricsPromises = destinations.map(async (dest) => {
       // OSRM format: longitude,latitude
       const coordinatesString = `${origin.lng},${origin.lat};${dest.lng},${dest.lat}`;
-      
       const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordinatesString}?overview=false`);
       const data = await response.json();
 
@@ -142,7 +148,6 @@ export const calculateRouteAndETA = async (origin, destinations) => {
         const distanceValue = route.distance; // in meters
         const durationValue = route.duration; // in seconds
         
-        // Format to match Google's exact text output styles so the UI doesn't break
         const distanceText = distanceValue > 1000 
           ? `${(distanceValue / 1000).toFixed(1)} km` 
           : `${Math.round(distanceValue)} m`;
@@ -154,11 +159,10 @@ export const calculateRouteAndETA = async (origin, destinations) => {
 
         return {
           status: "OK",
-          distanceText: distanceText,
+          distanceText,
           distanceValueMeters: distanceValue,
-          durationText: durationText,
+          durationText,
           durationValueSeconds: durationValue,
-          // OSRM lacks live traffic data, so we simulate a slight traffic buffer (15%)
           durationInTrafficText: Math.ceil(durationMins * 1.15) + " mins",
           durationInTrafficValueSeconds: durationValue * 1.15,
         };
@@ -167,12 +171,37 @@ export const calculateRouteAndETA = async (origin, destinations) => {
       }
     });
 
-    // Resolve all destination routes
-    const metrics = await Promise.all(metricsPromises);
-    return metrics;
-
+    return await Promise.all(metricsPromises);
   } catch (error) {
     console.error("OSRM Routing Error [calculateRouteAndETA]:", error);
     throw error;
+  }
+};
+
+/**
+ * Generates the full GeoJSON polyline for a multi-stop route.
+ * @param {Object} origin - { lat, lng }
+ * @param {Array<Object>} dropoffs - Array of { lat, lng } objects.
+ * @returns {Promise<Object>} GeoJSON LineString geometry
+ */
+export const getRoutePolyline = async (origin, dropoffs) => {
+  if (!origin || !dropoffs || dropoffs.length === 0) return null;
+
+  try {
+    // Combine origin and all dropoffs in sequence. OSRM format: lon,lat
+    const waypoints = [origin, ...dropoffs];
+    const coordinatesString = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
+    
+    // Fetch full route overview with GeoJSON geometries
+    const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordinatesString}?overview=full&geometries=geojson`);
+    const data = await response.json();
+
+    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+      return data.routes[0].geometry; // This is a standard GeoJSON LineString
+    }
+    return null;
+  } catch (error) {
+    console.error("OSRM Polyline Error [getRoutePolyline]:", error);
+    return null;
   }
 };

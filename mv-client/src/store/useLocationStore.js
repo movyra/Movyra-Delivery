@@ -5,7 +5,16 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 // STORE: GLOBAL LOCATION & GPS STATE (ZUSTAND + PERSIST)
 // Architected for production. Manages real-time device coordinates, 
 // categorized saved addresses (Home/Work/Custom), and smart auto-fill caching.
+// Features graceful fallbacks to prevent fatal crashes on GPS denial.
 // ============================================================================
+
+// Default safe coordinate fallback (New York City)
+const FALLBACK_LOCATION = {
+  lat: 40.7128,
+  lng: -74.0060,
+  accuracy: 1000,
+  timestamp: Date.now()
+};
 
 const useLocationStore = create(
   persist(
@@ -31,55 +40,70 @@ const useLocationStore = create(
       // ACTIONS & MUTATORS
       // ======================================================================
 
-      // Trigger actual device GPS hardware
+      // Trigger actual device GPS hardware with strict fallback safety
       fetchCurrentLocation: () => {
         set({ isLocating: true, locationError: null });
 
         if (!navigator.geolocation) {
           set({ 
+            currentLocation: FALLBACK_LOCATION,
             isLocating: false, 
-            locationError: 'Geolocation is not supported by your device/browser.' 
+            locationError: 'Geolocation unsupported. Using default location.' 
           });
           return;
         }
 
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            set({
-              currentLocation: {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-                accuracy: position.coords.accuracy,
-                timestamp: position.timestamp,
-              },
-              isLocating: false,
-              locationError: null,
-            });
-          },
-          (error) => {
-            console.error("GPS Hardware Error:", error);
-            let errorMessage = 'Failed to fetch location.';
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = 'Location permission denied by user.';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Location information is unavailable.';
-                break;
-              case error.TIMEOUT:
-                errorMessage = 'The request to get user location timed out.';
-                break;
-              default:
-                errorMessage = 'An unknown error occurred.';
+        try {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              set({
+                currentLocation: {
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                  accuracy: position.coords.accuracy,
+                  timestamp: position.timestamp,
+                },
+                isLocating: false,
+                locationError: null,
+              });
+            },
+            (error) => {
+              console.error("GPS Hardware Error:", error);
+              let errorMessage = 'Failed to fetch location. Using default.';
+              
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  errorMessage = 'Location permission denied. Using default location.';
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  errorMessage = 'Location information is unavailable. Using default.';
+                  break;
+                case error.TIMEOUT:
+                  errorMessage = 'Location request timed out. Using default.';
+                  break;
+              }
+              
+              // Graceful Fallback injection instead of crashing
+              set({ 
+                currentLocation: FALLBACK_LOCATION,
+                isLocating: false, 
+                locationError: errorMessage 
+              });
+            },
+            {
+              enableHighAccuracy: true,
+              timeout: 10000,
+              maximumAge: 0
             }
-            set({ isLocating: false, locationError: errorMessage });
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-          }
-        );
+          );
+        } catch (err) {
+          console.error("Unexpected GPS Error:", err);
+          set({ 
+            currentLocation: FALLBACK_LOCATION,
+            isLocating: false, 
+            locationError: 'Unexpected system error. Using default location.' 
+          });
+        }
       },
 
       // Manage Saved Addresses
@@ -106,14 +130,12 @@ const useLocationStore = create(
         let newFrequent = [...state.frequentLocations];
 
         if (existingIndex >= 0) {
-          // Increment usage count and update timestamp
           newFrequent[existingIndex] = {
             ...newFrequent[existingIndex],
             usageCount: newFrequent[existingIndex].usageCount + 1,
             lastUsed: Date.now()
           };
         } else {
-          // Add new frequent location
           newFrequent.push({
             ...location,
             usageCount: 1,
@@ -132,7 +154,7 @@ const useLocationStore = create(
     }),
     {
       name: 'movyra-location-storage', // unique name for localStorage key
-      storage: createJSONStorage(() => localStorage), // defines the caching mechanism
+      storage: createJSONStorage(() => localStorage), 
       // Only persist saved and frequent locations. Do not persist real-time GPS state or errors.
       partialize: (state) => ({ 
         savedAddresses: state.savedAddresses, 
