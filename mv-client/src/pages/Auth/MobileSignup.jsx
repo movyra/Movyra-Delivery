@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronLeft, AlertCircle, Loader2, Mail, User, ArrowRight } from 'lucide-react';
+import { ChevronLeft, AlertCircle, Loader2, Mail, User, ArrowRight, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateOTP, sendOTPEmail } from '../../services/emailAuth';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
@@ -16,6 +16,11 @@ export default function MobileSignup() {
   const navigate = useNavigate(); 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  
+  // New B2B State
+  const [isBusiness, setIsBusiness] = useState(false);
+  const [gstNumber, setGstNumber] = useState('');
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,6 +42,12 @@ export default function MobileSignup() {
       setError('Please enter a valid email address.');
       return;
     }
+
+    // B2B Strict Validation
+    if (isBusiness && gstNumber.trim().length !== 15) {
+      setError('Please enter a valid 15-character GST number.');
+      return;
+    }
     
     setIsLoading(true);
     setError('');
@@ -48,8 +59,16 @@ export default function MobileSignup() {
       // 2. Trigger the EmailJS API to deliver the code
       await sendOTPEmail(email, otp);
       
-      // 3. Navigate to OTP Verification, passing both name and email securely
-      navigate('/auth/otp', { state: { email: email.trim(), name: name.trim(), isSignup: true } });
+      // 3. Navigate to OTP Verification, passing name, email, and B2B data securely
+      navigate('/auth/otp', { 
+        state: { 
+          email: email.trim(), 
+          name: name.trim(), 
+          isBusiness,
+          gstNumber: isBusiness ? gstNumber.trim().toUpperCase() : null,
+          isSignup: true 
+        } 
+      });
 
     } catch (err) {
       console.error("EmailJS Transmission Error:", err);
@@ -148,7 +167,7 @@ export default function MobileSignup() {
           <div className="h-px bg-gray-300 flex-1"></div>
         </div>
 
-        {/* SECTION 4: Flat Minimalist Inputs */}
+        {/* SECTION 4: Flat Minimalist Inputs & B2B Toggle */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,6 +197,55 @@ export default function MobileSignup() {
               className="w-full text-[17px] font-bold text-black placeholder:text-gray-400 placeholder:font-medium focus:outline-none bg-transparent"
             />
           </div>
+
+          {/* Business Profile Toggle */}
+          <div className="flex items-center justify-between p-5 rounded-2xl border-2 border-transparent bg-[#F6F6F6] transition-all">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isBusiness ? 'bg-black text-white' : 'bg-gray-200 text-gray-400'}`}>
+                <Briefcase size={20} strokeWidth={2.5} />
+              </div>
+              <div>
+                <span className="block text-[15px] font-bold text-black leading-tight">Business Profile</span>
+                <span className="block text-[12px] font-medium text-gray-500 mt-0.5">For B2B expense tracking</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setIsBusiness(!isBusiness); setError(''); }}
+              className={`w-[46px] h-[26px] rounded-full p-[3px] transition-colors duration-300 ease-in-out ${isBusiness ? 'bg-[#276EF1]' : 'bg-gray-300'}`}
+            >
+              <motion.div
+                layout
+                className="w-5 h-5 bg-white rounded-full shadow-sm"
+                animate={{ x: isBusiness ? 20 : 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+              />
+            </button>
+          </div>
+
+          {/* GST Input (Animated Expansion) */}
+          <AnimatePresence>
+            {isBusiness && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, marginTop: -16 }}
+                animate={{ opacity: 1, height: 'auto', marginTop: 0 }}
+                exit={{ opacity: 0, height: 0, marginTop: -16 }}
+                className="overflow-hidden"
+              >
+                <div className={`flex items-center px-5 py-4.5 rounded-2xl border-2 transition-all duration-200 bg-[#F6F6F6] ${gstNumber.length === 15 ? 'border-black bg-white' : 'border-transparent focus-within:border-black focus-within:bg-white'}`}>
+                  <input
+                    type="text"
+                    maxLength={15}
+                    value={gstNumber}
+                    onChange={(e) => { setGstNumber(e.target.value.toUpperCase()); setError(''); }}
+                    placeholder="15-Digit GST Number"
+                    className="w-full text-[17px] font-bold text-black placeholder:text-gray-400 placeholder:font-medium focus:outline-none bg-transparent uppercase"
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
         </motion.div>
 
         {/* Real-time Error Engine */}
@@ -187,10 +255,10 @@ export default function MobileSignup() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="bg-gray-100 border-l-4 border-black rounded-r-xl p-4 flex items-start gap-3 mb-6"
+              className="bg-red-50 text-red-600 p-4 rounded-2xl font-bold text-sm flex items-start gap-2 mb-6"
             >
-              <AlertCircle size={20} className="text-black flex-shrink-0 mt-0.5" />
-              <p className="text-[14px] text-black font-bold leading-snug">{error}</p>
+              <AlertCircle size={20} className="shrink-0 mt-0.5" />
+              <p className="leading-snug">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
