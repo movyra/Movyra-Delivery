@@ -3,18 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Crosshair, MapPin, Plus, X, Home, Briefcase, Bookmark, Loader2, Search } from 'lucide-react';
+import { 
+  ChevronLeft, Crosshair, MapPin, Plus, X, Home, 
+  Briefcase, Bookmark, Loader2, Search, ArrowUpDown, AlertCircle 
+} from 'lucide-react';
 
 // Real Store & Service Integrations
 import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
 import { reverseGeocode, fetchPlacePredictions, geocodeAddress } from '../../services/googleMaps';
+import { fetchUserAddresses } from '../../services/firestore';
 
 // ============================================================================
 // PAGE: SET LOCATION (STARK MINIMALIST THEME)
-// A high-contrast, multi-stop routing interface. Features flat gray inputs,
-// massive geometric typography, an interactive real-time map engine, and
-// an integrated OpenStreetMap Nominatim Search Engine.
+// A high-contrast, multi-stop routing interface featuring 5+ advanced tools:
+// 1. Live Nominatim Search Overlay
+// 2. Strict Duplicate Address Validation
+// 3. Real-Time Route Swapping
+// 4. Firestore Saved Address Injection
+// 5. Hardware GPS Telemetry
 // ============================================================================
 
 export default function SetLocation() {
@@ -31,6 +38,8 @@ export default function SetLocation() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeField, setActiveField] = useState('pickup'); // 'pickup' | number (index of dropoff)
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [routeError, setRouteError] = useState('');
 
   // Search Engine State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -43,7 +52,49 @@ export default function SetLocation() {
     if (dropoffs.length === 0) {
       addDropoff({ address: '', lat: 0, lng: 0 });
     }
+    // Fetch user's saved addresses from Firestore
+    fetchUserAddresses().then(setSavedAddresses).catch(console.error);
   }, [dropoffs.length, addDropoff]);
+
+  // ============================================================================
+  // FEATURE 1: STRICT DUPLICATE ADDRESS VALIDATOR
+  // ============================================================================
+  useEffect(() => {
+    if (pickup?.lat && dropoffs.length > 0) {
+      // Check if any dropoff perfectly matches the pickup coordinates
+      const hasDuplicate = dropoffs.some(d => 
+        (d.lat === pickup.lat && d.lng === pickup.lng && d.lat !== 0) ||
+        (d.address === pickup.address && d.address !== '' && d.address !== 'Resolving address...')
+      );
+      
+      const hasEmpty = dropoffs.some(d => !d.lat || !d.address);
+
+      if (hasDuplicate) {
+        setRouteError("Pickup and drop-off cannot be identical.");
+      } else if (hasEmpty && dropoffs.length > 1) {
+        setRouteError("Please set all drop-off locations.");
+      } else {
+        setRouteError("");
+      }
+    }
+  }, [pickup, dropoffs]);
+
+  // ============================================================================
+  // FEATURE 2: ROUTE SWAP ENGINE
+  // ============================================================================
+  const handleSwapRoute = () => {
+    if (dropoffs.length > 0 && pickup?.lat && dropoffs[0]?.lat) {
+      const tempPickup = { ...pickup };
+      setPickup({ ...dropoffs[0] });
+      updateDropoff(0, tempPickup);
+      
+      // Instantly recenter the map on the new pickup
+      if (map.current) {
+        map.current.flyTo({ center: [dropoffs[0].lng, dropoffs[0].lat], zoom: 15 });
+        setActiveField('pickup');
+      }
+    }
+  };
 
   // ============================================================================
   // SECTION 1: MAP ENGINE INITIALIZATION
@@ -56,7 +107,7 @@ export default function SetLocation() {
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json', // Premium light-theme
+      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
       center: initialCenter,
       zoom: pickup?.lat ? 15 : 12,
       attributionControl: false,
@@ -65,39 +116,25 @@ export default function SetLocation() {
 
     map.current.on('load', () => {
       setIsMapLoaded(true);
-      // Auto-trigger GPS if no pickup is set yet
-      if (!pickup) fetchCurrentLocation();
+      if (!pickup?.lat) fetchCurrentLocation();
     });
 
-    // ============================================================================
-    // SECTION 2: MAP TELEMETRY & REVERSE GEOCODING (DRAG MAP)
-    // ============================================================================
     map.current.on('movestart', () => setIsDragging(true));
     
     map.current.on('moveend', async () => {
       setIsDragging(false);
       const center = map.current.getCenter();
       
-      // Optimistically update coordinates
       const locData = { lat: center.lat, lng: center.lng, address: 'Resolving address...' };
-      
-      if (activeField === 'pickup') {
-        setPickup(locData);
-      } else {
-        updateDropoff(activeField, locData);
-      }
+      if (activeField === 'pickup') setPickup(locData);
+      else updateDropoff(activeField, locData);
 
-      // Real Reverse Geocoding via Nominatim Service
       setIsResolvingAddress(true);
       try {
         const readableAddress = await reverseGeocode(center.lat, center.lng);
-        if (activeField === 'pickup') {
-          setPickup({ ...locData, address: readableAddress });
-        } else {
-          updateDropoff(activeField, { ...locData, address: readableAddress });
-        }
+        if (activeField === 'pickup') setPickup({ ...locData, address: readableAddress });
+        else updateDropoff(activeField, { ...locData, address: readableAddress });
       } catch (error) {
-        console.warn("Geocoding failed, keeping coordinate view.", error);
         const fallbackAddress = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
         if (activeField === 'pickup') setPickup({ ...locData, address: fallbackAddress });
         else updateDropoff(activeField, { ...locData, address: fallbackAddress });
@@ -112,17 +149,18 @@ export default function SetLocation() {
         map.current = null;
       }
     };
-  }, []);
+  }, [activeField]);
 
-  // Sync GPS hardware updates to the map
+  // Sync GPS updates to the map
   useEffect(() => {
     if (currentLocation && map.current && activeField === 'pickup') {
       map.current.flyTo({ center: [currentLocation.lng, currentLocation.lat], zoom: 16 });
+      setPickup({ lat: currentLocation.lat, lng: currentLocation.lng, address: 'Current Location' });
     }
   }, [currentLocation]);
 
   // ============================================================================
-  // SECTION 3: SEARCH ENGINE LOGIC (REST API)
+  // SECTION 3: SEARCH ENGINE LOGIC (NOMINATIM REST API)
   // ============================================================================
   useEffect(() => {
     const fetchTimer = setTimeout(async () => {
@@ -139,7 +177,7 @@ export default function SetLocation() {
       } else {
         setPredictions([]);
       }
-    }, 400); // 400ms debounce to prevent API spam
+    }, 400);
 
     return () => clearTimeout(fetchTimer);
   }, [searchQuery]);
@@ -147,28 +185,18 @@ export default function SetLocation() {
   const handleSelectPrediction = async (prediction) => {
     setIsTyping(true);
     try {
-      // Send the place_id (coordinates) or description to the geocoder
       const geocoded = await geocodeAddress(prediction.place_id || prediction.description);
-      
       const locData = {
         address: geocoded.formattedAddress || prediction.description.split(',')[0],
         lat: geocoded.lat,
         lng: geocoded.lng
       };
 
-      // Save to global Zustand booking store
-      if (activeField === 'pickup') {
-        setPickup(locData);
-      } else {
-        updateDropoff(activeField, locData);
-      }
+      if (activeField === 'pickup') setPickup(locData);
+      else updateDropoff(activeField, locData);
 
-      // Center the map on the new location
-      if (map.current) {
-        map.current.flyTo({ center: [locData.lng, locData.lat], zoom: 16 });
-      }
+      if (map.current) map.current.flyTo({ center: [locData.lng, locData.lat], zoom: 16 });
       
-      // Clean up search overlay state
       setIsSearchOpen(false);
       setSearchQuery('');
       setPredictions([]);
@@ -179,20 +207,34 @@ export default function SetLocation() {
     }
   };
 
+  // FEATURE 3: Smart Chip Injection
+  const handleQuickSet = (addr) => {
+    const locData = { address: addr.address, lat: addr.lat, lng: addr.lng };
+    if (activeField === 'pickup') setPickup(locData);
+    else updateDropoff(activeField, locData);
+    if (map.current) map.current.flyTo({ center: [addr.lng, addr.lat], zoom: 16 });
+  };
+
+  const getIconForType = (type) => {
+    if (type === 'home') return <Home size={16} strokeWidth={2.5} />;
+    if (type === 'work') return <Briefcase size={16} strokeWidth={2.5} />;
+    return <Bookmark size={16} strokeWidth={2.5} />;
+  };
+
   // ============================================================================
   // RENDER UI
   // ============================================================================
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden font-sans flex flex-col">
       
-      {/* MAP VIEWPORT (Upper Half) */}
+      {/* SECTION 1: LIVE MAP VIEWPORT */}
       <div className="flex-1 relative z-0">
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}
           ref={mapContainer} className="absolute inset-0" 
         />
 
-        {/* Floating Header */}
+        {/* SECTION 2: QUICK ACTION FLOATING CONTROLS */}
         <div className="absolute top-0 left-0 right-0 pt-12 px-6 z-20 pointer-events-none flex justify-between">
           <button 
             onClick={() => navigate(-1)} 
@@ -201,10 +243,10 @@ export default function SetLocation() {
             <ChevronLeft size={26} strokeWidth={2.5} />
           </button>
           
-          <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-md pointer-events-auto overflow-hidden p-2">
-            <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-          </div>
+          <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
         </div>
+      </div>
 
         {/* Dynamic Center Pin */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none flex flex-col items-center justify-center">
@@ -225,8 +267,8 @@ export default function SetLocation() {
         </div>
       </div>
 
-      {/* STARK BOTTOM SHEET (Input & Multi-Stop Engine) */}
-      <div className="bg-white rounded-t-[32px] shadow-[0_-20px_40px_rgba(0,0,0,0.08)] relative z-20 flex flex-col max-h-[60vh]">
+      {/* SECTION 3: DYNAMIC ROUTING INPUTS (BOTTOM SHEET) */}
+      <div className="bg-white rounded-t-[32px] shadow-[0_-20px_40px_rgba(0,0,0,0.08)] relative z-20 flex flex-col max-h-[65vh]">
         
         {/* Drag Handle & Massive Typography */}
         <div className="p-6 pb-4 shrink-0">
@@ -235,8 +277,9 @@ export default function SetLocation() {
             <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">
               Where to?
             </h1>
+            {/* Feature 4: Live GPS Injection */}
             <button 
-              onClick={fetchCurrentLocation}
+              onClick={() => { setActiveField('pickup'); fetchCurrentLocation(); }}
               disabled={isLocating}
               className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black hover:bg-gray-200 transition-colors active:scale-95 disabled:opacity-50"
             >
@@ -244,24 +287,36 @@ export default function SetLocation() {
             </button>
           </div>
 
-          {/* Smart Location Chips */}
+          {/* SECTION 4: SMART FIRESTORE CHIPS */}
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-            <button className="shrink-0 px-5 py-2.5 bg-[#F6F6F6] rounded-full text-[15px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
-              <Home size={18} /> Home
-            </button>
-            <button className="shrink-0 px-5 py-2.5 bg-[#F6F6F6] rounded-full text-[15px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
-              <Briefcase size={18} /> Work
-            </button>
-            <button className="shrink-0 px-5 py-2.5 bg-[#F6F6F6] rounded-full text-[15px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
-              <Bookmark size={18} /> Saved
-            </button>
+            {savedAddresses.map(addr => (
+              <button 
+                key={addr.id}
+                onClick={() => handleQuickSet(addr)}
+                className="shrink-0 px-5 py-2.5 bg-[#F6F6F6] rounded-full text-[15px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all"
+              >
+                {getIconForType(addr.type)} {addr.name}
+              </button>
+            ))}
+            {savedAddresses.length === 0 && (
+              <span className="text-[13px] font-bold text-gray-400 py-2.5">No saved locations yet.</span>
+            )}
           </div>
         </div>
 
-        {/* Dynamic Multi-Stop Input List */}
+        {/* Multi-Stop Input List */}
         <div className="px-6 overflow-y-auto no-scrollbar pb-6 shrink min-h-[150px]">
           <div className="relative border-l-2 border-dashed border-gray-300 ml-4 pl-6 space-y-4 py-2">
             
+            {/* Feature 2: Route Swap Engine */}
+            <button 
+              onClick={handleSwapRoute}
+              disabled={dropoffs.length === 0 || !pickup?.lat || !dropoffs[0]?.lat}
+              className="absolute -left-[20px] top-[42px] z-10 w-10 h-10 bg-white border-2 border-gray-100 rounded-full flex items-center justify-center text-black hover:bg-gray-50 active:scale-95 transition-all shadow-sm disabled:opacity-50 disabled:active:scale-100"
+            >
+              <ArrowUpDown size={18} strokeWidth={2.5} />
+            </button>
+
             {/* Pickup Input */}
             <div className="relative">
               <div className="absolute -left-[31px] top-1/2 -translate-y-1/2 w-4 h-4 bg-black rounded-full ring-4 ring-white" />
@@ -326,7 +381,7 @@ export default function SetLocation() {
                 addDropoff({ address: '', lat: 0, lng: 0 });
                 setActiveField(newIdx);
                 setSearchQuery('');
-                setIsSearchOpen(true); // Open search directly for new stop
+                setIsSearchOpen(true);
               }}
               className="mt-4 ml-2 text-[15px] font-bold text-black flex items-center gap-2 hover:opacity-70 transition-opacity"
             >
@@ -338,11 +393,24 @@ export default function SetLocation() {
           )}
         </div>
 
-        {/* Confirmation CTA */}
+        {/* Confirmation CTA & Validation Errors */}
         <div className="p-6 pt-2 shrink-0 bg-white border-t border-gray-100">
+          
+          {/* Feature 5: Dynamic Validation Feedback */}
+          <AnimatePresence>
+            {routeError && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                className="bg-red-50 text-red-600 px-4 py-3 rounded-xl font-bold text-[13px] flex items-start gap-2 mb-4"
+              >
+                <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <button 
             onClick={() => navigate('/booking/select-vehicle')}
-            disabled={!pickup?.lat || dropoffs.some(d => !d.lat)}
+            disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError}
             className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_20px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:shadow-none"
           >
             Confirm Locations
@@ -352,7 +420,7 @@ export default function SetLocation() {
       </div>
 
       {/* ============================================================================ */}
-      {/* OVERLAY: FULL SCREEN SEARCH MODAL                                            */}
+      {/* SECTION 5: FULL-SCREEN NOMINATIM SEARCH OVERLAY                              */}
       {/* ============================================================================ */}
       <AnimatePresence>
         {isSearchOpen && (
@@ -418,7 +486,6 @@ export default function SetLocation() {
                           <MapPin size={16} strokeWidth={2.5} />
                         </div>
                         <div className="overflow-hidden">
-                          {/* Split Nominatim response to simulate main_text/secondary_text */}
                           <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
                           <span className="block text-[13px] font-medium text-gray-500 truncate">
                             {pred.description.split(',').slice(1).join(',').trim() || pred.description}
