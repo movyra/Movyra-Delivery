@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Crosshair, MapPin, Plus, X, Home, Briefcase, Bookmark, Loader2 } from 'lucide-react';
+import { ChevronLeft, Crosshair, MapPin, Plus, X, Home, Briefcase, Bookmark, Loader2, Search } from 'lucide-react';
 
 // Real Store & Service Integrations
 import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
-import { reverseGeocode } from '../../services/googleMaps';
+import { reverseGeocode, fetchPlacePredictions, geocodeAddress } from '../../services/googleMaps';
 
 // ============================================================================
 // PAGE: SET LOCATION (STARK MINIMALIST THEME)
 // A high-contrast, multi-stop routing interface. Features flat gray inputs,
-// massive geometric typography, and an interactive real-time map engine.
+// massive geometric typography, an interactive real-time map engine, and
+// an integrated OpenStreetMap Nominatim Search Engine.
 // ============================================================================
 
 export default function SetLocation() {
@@ -30,6 +31,12 @@ export default function SetLocation() {
   const [isDragging, setIsDragging] = useState(false);
   const [activeField, setActiveField] = useState('pickup'); // 'pickup' | number (index of dropoff)
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
+
+  // Search Engine State
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [predictions, setPredictions] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
 
   // Initialize at least one dropoff if empty
   useEffect(() => {
@@ -63,7 +70,7 @@ export default function SetLocation() {
     });
 
     // ============================================================================
-    // SECTION 2: MAP TELEMETRY & REVERSE GEOCODING
+    // SECTION 2: MAP TELEMETRY & REVERSE GEOCODING (DRAG MAP)
     // ============================================================================
     map.current.on('movestart', () => setIsDragging(true));
     
@@ -80,7 +87,7 @@ export default function SetLocation() {
         updateDropoff(activeField, locData);
       }
 
-      // Real Reverse Geocoding via Google Maps Service
+      // Real Reverse Geocoding via Nominatim Service
       setIsResolvingAddress(true);
       try {
         const readableAddress = await reverseGeocode(center.lat, center.lng);
@@ -115,6 +122,64 @@ export default function SetLocation() {
   }, [currentLocation]);
 
   // ============================================================================
+  // SECTION 3: SEARCH ENGINE LOGIC (REST API)
+  // ============================================================================
+  useEffect(() => {
+    const fetchTimer = setTimeout(async () => {
+      if (searchQuery.trim().length > 2) {
+        setIsTyping(true);
+        try {
+          const results = await fetchPlacePredictions(searchQuery);
+          setPredictions(results);
+        } catch (err) {
+          console.error("Autocomplete Error:", err);
+        } finally {
+          setIsTyping(false);
+        }
+      } else {
+        setPredictions([]);
+      }
+    }, 400); // 400ms debounce to prevent API spam
+
+    return () => clearTimeout(fetchTimer);
+  }, [searchQuery]);
+
+  const handleSelectPrediction = async (prediction) => {
+    setIsTyping(true);
+    try {
+      // Send the place_id (coordinates) or description to the geocoder
+      const geocoded = await geocodeAddress(prediction.place_id || prediction.description);
+      
+      const locData = {
+        address: geocoded.formattedAddress || prediction.description.split(',')[0],
+        lat: geocoded.lat,
+        lng: geocoded.lng
+      };
+
+      // Save to global Zustand booking store
+      if (activeField === 'pickup') {
+        setPickup(locData);
+      } else {
+        updateDropoff(activeField, locData);
+      }
+
+      // Center the map on the new location
+      if (map.current) {
+        map.current.flyTo({ center: [locData.lng, locData.lat], zoom: 16 });
+      }
+      
+      // Clean up search overlay state
+      setIsSearchOpen(false);
+      setSearchQuery('');
+      setPredictions([]);
+    } catch (err) {
+      console.error("Geocoding Error:", err);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  // ============================================================================
   // RENDER UI
   // ============================================================================
   return (
@@ -136,7 +201,7 @@ export default function SetLocation() {
             <ChevronLeft size={26} strokeWidth={2.5} />
           </button>
           
-          <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-md pointer-events-auto overflow-hidden">
+          <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-md pointer-events-auto overflow-hidden p-2">
             <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
           </div>
         </div>
@@ -203,7 +268,11 @@ export default function SetLocation() {
               <input 
                 type="text"
                 readOnly
-                onClick={() => setActiveField('pickup')}
+                onClick={() => {
+                  setActiveField('pickup');
+                  setSearchQuery(pickup?.address !== 'Resolving address...' ? pickup?.address || '' : '');
+                  setIsSearchOpen(true);
+                }}
                 value={pickup?.address || ''}
                 placeholder="Set Pickup Location"
                 className={`w-full bg-[#F6F6F6] p-4 rounded-2xl font-bold text-[16px] text-black border-2 transition-all cursor-pointer outline-none ${activeField === 'pickup' ? 'border-black bg-white shadow-sm' : 'border-transparent hover:border-gray-300'}`}
@@ -224,7 +293,11 @@ export default function SetLocation() {
                   <input 
                     type="text"
                     readOnly
-                    onClick={() => setActiveField(idx)}
+                    onClick={() => {
+                      setActiveField(idx);
+                      setSearchQuery(drop.address !== 'Resolving address...' ? drop.address || '' : '');
+                      setIsSearchOpen(true);
+                    }}
                     value={drop.address || ''}
                     placeholder={`Dropoff ${idx + 1}`}
                     className={`flex-1 bg-[#F6F6F6] p-4 rounded-2xl font-bold text-[16px] text-black border-2 transition-all cursor-pointer outline-none ${activeField === idx ? 'border-black bg-white shadow-sm' : 'border-transparent hover:border-gray-300'}`}
@@ -252,6 +325,8 @@ export default function SetLocation() {
                 const newIdx = dropoffs.length;
                 addDropoff({ address: '', lat: 0, lng: 0 });
                 setActiveField(newIdx);
+                setSearchQuery('');
+                setIsSearchOpen(true); // Open search directly for new stop
               }}
               className="mt-4 ml-2 text-[15px] font-bold text-black flex items-center gap-2 hover:opacity-70 transition-opacity"
             >
@@ -275,6 +350,98 @@ export default function SetLocation() {
         </div>
 
       </div>
+
+      {/* ============================================================================ */}
+      {/* OVERLAY: FULL SCREEN SEARCH MODAL                                            */}
+      {/* ============================================================================ */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div 
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed inset-0 bg-white z-[100] flex flex-col font-sans"
+          >
+            {/* Overlay Header */}
+            <div className="pt-12 px-6 pb-4 flex items-center gap-4 border-b border-gray-100 shrink-0 shadow-sm">
+              <button 
+                onClick={() => setIsSearchOpen(false)}
+                className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black active:scale-95 shrink-0"
+              >
+                <ChevronLeft size={24} strokeWidth={2.5} />
+              </button>
+              
+              <div className="flex-1 relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={20} strokeWidth={2.5} />
+                </div>
+                <input 
+                  type="text"
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={activeField === 'pickup' ? "Where are we picking up?" : "Where is this going?"}
+                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-10 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none"
+                />
+                {isTyping ? (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <Loader2 size={18} className="animate-spin text-gray-400" />
+                  </div>
+                ) : searchQuery.length > 0 ? (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black"
+                  >
+                    <X size={18} strokeWidth={2.5} />
+                  </button>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Results / Predictions */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[#FAFAFA]">
+              <AnimatePresence>
+                {predictions.length > 0 ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+                    className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden"
+                  >
+                    {predictions.map((pred) => (
+                      <button
+                        key={pred.place_id}
+                        onClick={() => handleSelectPrediction(pred)}
+                        disabled={isTyping}
+                        className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] active:bg-gray-100 transition-colors flex items-start gap-3 disabled:opacity-50"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                          <MapPin size={16} strokeWidth={2.5} />
+                        </div>
+                        <div className="overflow-hidden">
+                          {/* Split Nominatim response to simulate main_text/secondary_text */}
+                          <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
+                          <span className="block text-[13px] font-medium text-gray-500 truncate">
+                            {pred.description.split(',').slice(1).join(',').trim() || pred.description}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                ) : searchQuery.length > 2 && !isTyping ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Search size={24} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-[18px] font-black text-black mb-1">No results found</h3>
+                    <p className="text-[14px] font-bold text-gray-500">Try a different search term.</p>
+                  </div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
