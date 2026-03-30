@@ -14,7 +14,7 @@ import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
 // ============================================================================
 // PAGE: SAVED ADDRESSES (STARK MINIMALIST UI)
 // Fully functional persistent address book. Connects directly to Firestore
-// and utilizes the real OpenStreetMap Nominatim APIs.
+// and utilizes the real OpenStreetMap Photon APIs for search and geocoding.
 // ============================================================================
 
 export default function SavedAddresses() {
@@ -68,7 +68,7 @@ export default function SavedAddresses() {
         setIsSearching(true);
         try {
           const results = await fetchPlacePredictions(searchQuery);
-          setPredictions(results);
+          setPredictions(results || []);
         } catch (err) {
           console.error("Autocomplete Error:", err);
         } finally {
@@ -83,16 +83,20 @@ export default function SavedAddresses() {
   }, [searchQuery, selectedPlace]);
 
   const handleSelectPrediction = async (prediction) => {
-    setSearchQuery(prediction.description);
+    if (!prediction) return;
+    
+    // Safety check for the OSM description format
+    const displayString = prediction.description || 'Unknown Location';
+    setSearchQuery(displayString);
     setPredictions([]);
     setIsSearching(true);
     
     try {
-      // Convert the human-readable string (or place_id coordinates) into exact GPS coordinates
-      // Our refactored service allows passing the description directly to Nominatim
-      const geocoded = await geocodeAddress(prediction.place_id || prediction.description);
+      // Passes the embedded coordinates (place_id) or the raw string to the OSM Geocoder
+      const geocoded = await geocodeAddress(prediction.place_id || displayString);
       setSelectedPlace(geocoded);
     } catch (err) {
+      console.error("Geocoding Error:", err);
       setError('Failed to pinpoint this location on the map.');
     } finally {
       setIsSearching(false);
@@ -132,6 +136,7 @@ export default function SavedAddresses() {
       loadAddresses();
 
     } catch (err) {
+      console.error("Save Address Error:", err);
       setError('Failed to save the address to your profile.');
     } finally {
       setIsSaving(false);
@@ -155,6 +160,16 @@ export default function SavedAddresses() {
     if (type === 'home') return <Home size={20} strokeWidth={2.5} />;
     if (type === 'work') return <Briefcase size={20} strokeWidth={2.5} />;
     return <MapPin size={20} strokeWidth={2.5} />;
+  };
+
+  // Safe split helper for OSM descriptions
+  const getMainAndSecondaryText = (description) => {
+    if (!description) return { main: 'Unknown Location', secondary: '' };
+    const parts = description.split(',');
+    return {
+      main: parts[0] ? parts[0].trim() : 'Unknown Location',
+      secondary: parts.slice(1).join(',').trim() || ''
+    };
   };
 
   // ============================================================================
@@ -315,29 +330,33 @@ export default function SavedAddresses() {
                 )}
               </div>
 
-              {/* Autocomplete Predictions List */}
+              {/* OSM Autocomplete Predictions List */}
               <AnimatePresence>
                 {predictions.length > 0 && !selectedPlace && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
                     className="bg-white border border-gray-100 rounded-2xl shadow-lg overflow-hidden mb-6"
                   >
-                    {predictions.map((pred) => (
-                      <button
-                        key={pred.place_id}
-                        onClick={() => handleSelectPrediction(pred)}
-                        className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] active:bg-gray-100 transition-colors flex items-start gap-3"
-                      >
-                        <MapPin size={18} className="text-gray-400 shrink-0 mt-0.5" />
-                        <div>
-                          {/* Split the Nominatim comma-separated string to simulate Google's main_text / secondary_text UI */}
-                          <span className="block text-[15px] font-bold text-black">{pred.description.split(',')[0]}</span>
-                          <span className="block text-[13px] font-medium text-gray-500 truncate">
-                            {pred.description.split(',').slice(1).join(',').trim() || pred.description}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
+                    {predictions.map((pred) => {
+                      const { main, secondary } = getMainAndSecondaryText(pred.description);
+                      return (
+                        <button
+                          key={pred.place_id || pred.description}
+                          onClick={() => handleSelectPrediction(pred)}
+                          className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] active:bg-gray-100 transition-colors flex items-start gap-3"
+                        >
+                          <MapPin size={18} className="text-gray-400 shrink-0 mt-0.5" />
+                          <div className="overflow-hidden">
+                            <span className="block text-[15px] font-bold text-black truncate">{main}</span>
+                            {secondary && (
+                              <span className="block text-[13px] font-medium text-gray-500 truncate">
+                                {secondary}
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </motion.div>
                 )}
               </AnimatePresence>
