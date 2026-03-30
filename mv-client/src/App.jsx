@@ -2,8 +2,9 @@ import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
-// Using standard Firebase Auth SDK directly to resolve import compilation issues
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+// Import initialized auth instance instead of raw getAuth
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './services/firebaseAuth';
 
 // SECTION 1: Master Dependencies & Component Injections
 import MobileAppLayout from './components/MobileAppLayout';
@@ -192,8 +193,8 @@ export default function App() {
   const [authStatus, setAuthStatus] = useState('loading');
 
   useEffect(() => {
-    // Persistent listener that survives path changes
-    const auth = getAuth();
+    // Persistent listener that survives path changes. 
+    // Uses the pre-initialized auth instance from the services file.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthStatus('authenticated');
