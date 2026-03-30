@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -8,26 +8,44 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 // SECTION 1: Master Dependencies & Component Injections
 import MobileAppLayout from './components/MobileAppLayout';
 import OnboardingFlow from './components/Onboarding/OnboardingFlow';
-import MobileLogin from './pages/Auth/MobileLogin';
-import MobileSignup from './pages/Auth/MobileSignup';
-import OTPVerification from './pages/Auth/OTPVerification';
-import SetPassword from './pages/Auth/SetPassword'; 
-import MobileHome from './pages/Dashboard/MobileHome';
-import SetLocation from './pages/Booking/SetLocation';
-import SelectVehicle from './pages/Booking/SelectVehicle';
-import ReviewOrder from './pages/Booking/ReviewOrder';
-import LiveTracking from './pages/Tracking/LiveTracking';
-import ShipmentDetail from './pages/Tracking/ShipmentDetail';
-import OrderHistory from './pages/order-history';
-import ProfileSettings from './pages/profile-settings';
 import BottomNavBar from './components/Navigation/BottomNavBar';
-
-// Real-Time Global Store Injection
 import { useOnboardingStore } from './store/useOnboardingStore';
 
 // ============================================================================
-// SHARED LOADING STATE (Used during Firebase Auth resolution)
+// PERFORMANCE OPTIMIZATION: React Lazy Loading
+// Splitting the bundle to ensure the app loads instantly on weak 3G networks.
+// ============================================================================
+const MobileLogin = lazy(() => import('./pages/Auth/MobileLogin'));
+const MobileSignup = lazy(() => import('./pages/Auth/MobileSignup'));
+const OTPVerification = lazy(() => import('./pages/Auth/OTPVerification'));
+const SetPassword = lazy(() => import('./pages/Auth/SetPassword')); 
+const MobileHome = lazy(() => import('./pages/Dashboard/MobileHome'));
+
+// Core Booking Engine
+const SetLocation = lazy(() => import('./pages/Booking/SetLocation'));
+const SelectVehicle = lazy(() => import('./pages/Booking/SelectVehicle'));
+const BookingDetails = lazy(() => import('./pages/Booking/BookingDetails'));
+const PriceSelection = lazy(() => import('./pages/Booking/PriceSelection'));
+const SearchingDriver = lazy(() => import('./pages/Booking/SearchingDriver'));
+const ReviewOrder = lazy(() => import('./pages/Booking/ReviewOrder'));
+
+// Tracking & Delivery
+const LiveTracking = lazy(() => import('./pages/Tracking/LiveTracking'));
+const ShipmentDetail = lazy(() => import('./pages/Tracking/ShipmentDetail'));
+const DeliveryComplete = lazy(() => import('./pages/Tracking/DeliveryComplete'));
+const Rating = lazy(() => import('./pages/Tracking/Rating'));
+
+// Profile, History & Support
+const OrderHistory = lazy(() => import('./pages/order-history'));
+const OrderDetails = lazy(() => import('./pages/OrderHistory/OrderDetails'));
+const ProfileSettings = lazy(() => import('./pages/profile-settings'));
+const SavedAddresses = lazy(() => import('./pages/Profile/SavedAddresses'));
+const HelpCenter = lazy(() => import('./pages/Support/HelpCenter'));
+
+// ============================================================================
+// SHARED LOADING STATE
 // Strictly covers the entire screen to prevent flickering of protected UI.
+// Used for both Auth verification AND Lazy-Loading Suspense.
 // ============================================================================
 const GlobalLoadingScreen = () => (
   <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
@@ -44,14 +62,9 @@ const GlobalLoadingScreen = () => (
 
 // ============================================================================
 // SECTION 7A: ENTERPRISE FIREBASE AUTHENTICATION GUARD (PROTECTED ROUTES)
-// Strictly locks out unauthenticated users. Uses 'replace' to fix history loops.
 // ============================================================================
 const RequireAuthGuard = ({ authStatus }) => {
-  // If loading, show the full-screen loader to prevent route flickering
   if (authStatus === 'loading') return <GlobalLoadingScreen />;
-  
-  // If authenticated, allow entry to the child routes (Outlet)
-  // Otherwise, strictly redirect to login and REPLACE history to break loops
   return authStatus === 'authenticated' 
     ? <Outlet /> 
     : <Navigate to="/auth-login" replace={true} />;
@@ -59,13 +72,9 @@ const RequireAuthGuard = ({ authStatus }) => {
 
 // ============================================================================
 // SECTION 7B: REVERSE AUTHENTICATION GUARD (GUEST ROUTES)
-// Prevents logged-in users from seeing Auth screens. Uses 'replace' to fix loops.
 // ============================================================================
 const RequireGuestGuard = ({ authStatus }) => {
   if (authStatus === 'loading') return <GlobalLoadingScreen />;
-  
-  // If unauthenticated, allow entry to Login/Signup
-  // If already authenticated, strictly kick to dashboard and REPLACE history
   return authStatus === 'unauthenticated' 
     ? <Outlet /> 
     : <Navigate to="/dashboard-home" replace={true} />;
@@ -83,7 +92,7 @@ const MainViewport = ({ authStatus }) => {
     const path = location.pathname;
     if (path === '/' || path === '/dashboard-home') return 'home';
     if (path === '/tracking-active') return 'tracking';
-    if (path === '/order-history') return 'history';
+    if (path === '/order-history' || path === '/expense-tracker') return 'history';
     if (path === '/profile-settings') return 'profile';
     return null; 
   };
@@ -104,38 +113,51 @@ const MainViewport = ({ authStatus }) => {
             transition={{ duration: 0.2, ease: "easeInOut" }}
             className="min-h-full"
           >
-            {/* SECTION 4: Core Routing Matrix */}
-            <Routes location={location}>
-              
-              {/* GUEST NODE: Locked if user is already logged in */}
-              <Route element={<RequireGuestGuard authStatus={authStatus} />}>
-                <Route path="/auth-login" element={<MobileLogin />} />
-                <Route path="/auth-signup" element={<MobileSignup />} />
-                <Route path="/auth/otp" element={<OTPVerification />} />
-                <Route path="/auth/set-password" element={<SetPassword />} />
-              </Route>
-              
-              {/* PROTECTED NODE: Locked if user is NOT logged in */}
-              <Route element={<RequireAuthGuard authStatus={authStatus} />}>
-                <Route element={<MobileAppLayout title="Movyra" />}>
-                  <Route path="/" element={<MobileHome />} />
-                  <Route path="/dashboard-home" element={<MobileHome />} />
-                  
-                  {/* Booking Engine Routes */}
-                  <Route path="/booking/set-location" element={<SetLocation />} />
-                  <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
-                  <Route path="/booking/review" element={<ReviewOrder />} />
-                  
-                  {/* Tracking & History Routes */}
-                  <Route path="/tracking-active" element={<LiveTracking />} />
-                  <Route path="/tracking/detail/:id" element={<ShipmentDetail />} />
-                  <Route path="/order-history" element={<OrderHistory />} />
-                  
-                  {/* Profile & Settings Route */}
-                  <Route path="/profile-settings" element={<ProfileSettings />} />
+            {/* Suspense Wrapper for Lazy Loaded Routes */}
+            <Suspense fallback={<GlobalLoadingScreen />}>
+              <Routes location={location}>
+                
+                {/* GUEST NODE */}
+                <Route element={<RequireGuestGuard authStatus={authStatus} />}>
+                  <Route path="/auth-login" element={<MobileLogin />} />
+                  <Route path="/auth-signup" element={<MobileSignup />} />
+                  <Route path="/auth/otp" element={<OTPVerification />} />
+                  <Route path="/auth/set-password" element={<SetPassword />} />
                 </Route>
-              </Route>
-            </Routes>
+                
+                {/* PROTECTED NODE */}
+                <Route element={<RequireAuthGuard authStatus={authStatus} />}>
+                  <Route element={<MobileAppLayout title="Movyra" />}>
+                    <Route path="/" element={<MobileHome />} />
+                    <Route path="/dashboard-home" element={<MobileHome />} />
+                    
+                    {/* Booking Engine Routes */}
+                    <Route path="/booking/set-location" element={<SetLocation />} />
+                    <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
+                    <Route path="/booking/details" element={<BookingDetails />} />
+                    <Route path="/booking/price-selection" element={<PriceSelection />} />
+                    <Route path="/booking/searching" element={<SearchingDriver />} />
+                    <Route path="/booking/review" element={<ReviewOrder />} />
+                    
+                    {/* Tracking & Delivery Routes */}
+                    <Route path="/tracking-active" element={<LiveTracking />} />
+                    <Route path="/tracking/detail/:id" element={<ShipmentDetail />} />
+                    <Route path="/tracking/complete" element={<DeliveryComplete />} />
+                    <Route path="/tracking/rating" element={<Rating />} />
+                    
+                    {/* History & Finances */}
+                    <Route path="/order-history" element={<OrderHistory />} />
+                    <Route path="/order-history/detail/:id" element={<OrderDetails />} />
+                    <Route path="/expense-tracker" element={<OrderHistory />} /> {/* Shares UI with history toggle */}
+                    
+                    {/* Profile & Settings Routes */}
+                    <Route path="/profile-settings" element={<ProfileSettings />} />
+                    <Route path="/profile/addresses" element={<SavedAddresses />} />
+                    <Route path="/support/dispute" element={<HelpCenter />} />
+                  </Route>
+                </Route>
+              </Routes>
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -172,7 +194,6 @@ export default function App() {
     // Persistent listener that survives path changes
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      // Explicitly transition status based on user presence
       if (user) {
         setAuthStatus('authenticated');
       } else {
