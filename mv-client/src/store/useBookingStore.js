@@ -12,10 +12,17 @@ const useBookingStore = create(
   persist(
     (set, get) => ({
       // --------------------------------------------------------------------------
-      // 1. LOCATION & ROUTING STATE (Supports Advanced Multi-Stop)
+      // 1. LOCATION & ROUTING STATE (Supports Advanced Multi-Stop & Metadata)
       // --------------------------------------------------------------------------
-      pickup: null, // { address: string, lat: number, lng: number, contact: string, phone: string }
-      dropoffs: [], // Array to support multi-stop delivery loops
+      // location object structure: { address, lat, lng, contactName, contactPhone, notes, timeWindow }
+      pickup: null, 
+      dropoffs: [], 
+      
+      routeDetails: {
+        isOptimized: false, // Flagged true when TSP algorithm sorts the array
+        alternativeRoutes: [], // Array of potential path coordinates (fastest, shortest)
+        selectedRouteIndex: 0
+      },
 
       // --------------------------------------------------------------------------
       // 2. PACKAGE SAFETY & DETAILS (The "Unique Advantage" Features)
@@ -57,7 +64,9 @@ const useBookingStore = create(
       // ==========================================================================
 
       // Location Management
-      setPickup: (location) => set({ pickup: location }),
+      setPickup: (location) => set((state) => ({ 
+        pickup: { ...state.pickup, ...location } 
+      })),
 
       addDropoff: (location) => set((state) => ({ 
         dropoffs: [...state.dropoffs, location] 
@@ -71,6 +80,16 @@ const useBookingStore = create(
 
       removeDropoff: (index) => set((state) => ({
         dropoffs: state.dropoffs.filter((_, i) => i !== index)
+      })),
+
+      // Advanced Routing Overrides
+      setOptimizedDropoffs: (optimizedArray) => set((state) => ({
+        dropoffs: optimizedArray,
+        routeDetails: { ...state.routeDetails, isOptimized: true }
+      })),
+
+      setRouteDetails: (details) => set((state) => ({
+        routeDetails: { ...state.routeDetails, ...details }
       })),
 
       // Package Safety Toggles
@@ -102,6 +121,11 @@ const useBookingStore = create(
       resetBooking: () => set({
         pickup: null,
         dropoffs: [],
+        routeDetails: { 
+          isOptimized: false, 
+          alternativeRoutes: [], 
+          selectedRouteIndex: 0 
+        },
         packageDetails: { 
           itemType: '', 
           isFragile: false, 
