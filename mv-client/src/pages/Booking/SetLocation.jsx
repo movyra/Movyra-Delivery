@@ -2,8 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, Crosshair, Plus, X, Home, 
-  Briefcase, Bookmark, Loader2, Search, ArrowUpDown, AlertCircle, 
+  ChevronLeft, Crosshair, X, 
+  Briefcase, Loader2, Search, AlertCircle, 
   MapPin, Train, Star, Clock, Mic, Wand2, User, Phone, FileText, Check
 } from 'lucide-react';
 
@@ -14,17 +14,20 @@ import useMapSettingsStore from '../../store/useMapSettingsStore';
 
 // Services & Overlays
 import { MAP_LAYERS } from '../../services/mapLayers';
+import { reverseGeocodeWithCache } from '../../services/geocodeCache';
 import MapActionFAB from '../../components/Map/MapActionFAB';
 import DraggableWaypointList from '../../components/Map/DraggableWaypointList';
+import MiniRouteSummary from '../../components/Map/MiniRouteSummary';
+import TimelineInputList from '../../components/Map/TimelineInputList';
 
 /**
  * PAGE: SET LOCATION (ADVANCED OPENSTREETMAP ARCHITECTURE)
  * Features: 
- * - Fullscreen Immersive Mode (Hides Bottom Sheet)
- * - MapActionFAB (Dark Mode, Fullscreen, GPS Sync)
- * - Draggable Waypoint Reordering Overlay
- * - Route Snapping (Click Polyline to Add Stop)
- * - Auto-Optimization (Traveling Salesperson)
+ * - Fullscreen Immersive Mode & Header Removal
+ * - Map Bounds Auto-Fitting (Camera locks onto active route)
+ * - Geocoding Cache Optimization (Session Storage intercepts)
+ * - Vertical Timeline Input Engine
+ * - Floating Mini Route Summary
  */
 
 const CATEGORY_CHIPS = [
@@ -44,7 +47,7 @@ export default function SetLocation() {
   const programmaticMoveRef = useRef(false);
   
   // Global States
-  const { pickup, dropoffs, setPickup, addDropoff, updateDropoff, removeDropoff } = useBookingStore();
+  const { pickup, dropoffs, setPickup, updateDropoff } = useBookingStore();
   const { fetchCurrentLocation, currentLocation, isLocating } = useLocationStore();
   const { mapTheme } = useMapSettingsStore();
 
@@ -69,10 +72,6 @@ export default function SetLocation() {
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-
-  useEffect(() => {
-    if (dropoffs.length === 0) addDropoff({ address: '', lat: null, lng: null });
-  }, []);
 
   // Listen to Native Browser Fullscreen API
   useEffect(() => {
@@ -146,10 +145,8 @@ export default function SetLocation() {
 
       setIsResolvingAddress(true);
       try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${center.lat}&lon=${center.lng}`);
-        const data = await res.json();
-        const readableAddress = data.display_name || `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
-        
+        // Optimized Geocoding Cache Intercept
+        const readableAddress = await reverseGeocodeWithCache(center.lat, center.lng);
         if (activeField === 'pickup') setPickup({ ...locData, address: readableAddress });
         else updateDropoff(activeField, { ...locData, address: readableAddress });
       } catch (error) {
@@ -184,7 +181,7 @@ export default function SetLocation() {
   }, [currentLocation]);
 
   // ============================================================================
-  // CUSTOM INTERACTIVE MARKERS (CLICKS OPEN CONTACT INFO)
+  // CUSTOM INTERACTIVE MARKERS
   // ============================================================================
   useEffect(() => {
     if (!map.current || !markersGroup.current || !window.L) return;
@@ -216,7 +213,6 @@ export default function SetLocation() {
     });
   }, [pickup, dropoffs, activeField, isDragging]);
 
-  // Pre-fill contact modal when a pin is selected
   useEffect(() => {
     if (selectedPin === 'pickup' && pickup) {
       setContactForm({ name: pickup.contactName || '', phone: pickup.contactPhone || '', notes: pickup.notes || '' });
@@ -236,7 +232,7 @@ export default function SetLocation() {
   };
 
   // ============================================================================
-  // OSRM LINEAR ROUTING, VALIDATION & POLYLINE SNAPPING
+  // OSRM LINEAR ROUTING, VALIDATION, POLYLINE SNAPPING & AUTO-FITTING
   // ============================================================================
   useEffect(() => {
     const fetchRoute = async () => {
@@ -274,16 +270,24 @@ export default function SetLocation() {
 
             if (routeLayer.current) map.current.removeLayer(routeLayer.current);
             
-            // Highly visible polyline responsive to theme
             routeLayer.current = L.polyline(routeCoords, {
               color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#276EF1',
               weight: 5,
               opacity: 0.9,
               lineJoin: 'round',
-              interactive: true // Essential for clicking
+              interactive: true
             }).addTo(map.current);
 
-            // FEATURE: Route Snapping (Click polyline to inject a dropoff exactly there)
+            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly above the bottom sheet)
+            if (!programmaticMoveRef.current) {
+              programmaticMoveRef.current = true;
+              map.current.fitBounds(routeLayer.current.getBounds(), {
+                paddingTopLeft: [50, 100], 
+                paddingBottomRight: [50, 450] // Generous bottom padding for the timeline sheet
+              });
+            }
+
+            // FEATURE: Route Snapping
             routeLayer.current.on('click', async (e) => {
               const { lat, lng } = e.latlng;
               const storeState = useBookingStore.getState();
@@ -297,15 +301,12 @@ export default function SetLocation() {
               storeState.addDropoff({ address: 'Snapping to route...', lat, lng });
               
               try {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
-                const geoData = await geoRes.json();
-                const address = geoData.display_name || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                const address = await reverseGeocodeWithCache(lat, lng);
                 storeState.updateDropoff(newIndex, { address, lat, lng });
               } catch (error) {
                 storeState.updateDropoff(newIndex, { address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, lat, lng });
               }
             });
-
           }
         } catch (err) { console.error("OSRM Route Error", err); }
       } else {
@@ -345,11 +346,6 @@ export default function SetLocation() {
         });
 
         useBookingStore.setState({ dropoffs: optimizedDropoffs });
-        
-        if (map.current) {
-          programmaticMoveRef.current = true;
-          map.current.setView([optimizedDropoffs[0].lat, optimizedDropoffs[0].lng], 14);
-        }
       }
     } catch (err) {
       console.error("Optimization failed", err);
@@ -359,28 +355,20 @@ export default function SetLocation() {
   };
 
   // ============================================================================
-  // VOICE SEARCH (Web Speech API)
+  // VOICE SEARCH & NOMINATIM
   // ============================================================================
   const startVoiceSearch = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert('Voice search is not supported in your browser.');
-      return;
-    }
+    if (!SpeechRecognition) return alert('Voice search is not supported in your browser.');
+    
     const recognition = new SpeechRecognition();
     recognition.onstart = () => setIsListening(true);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-    };
+    recognition.onresult = (event) => setSearchQuery(event.results[0][0].transcript);
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
     recognition.start();
   };
 
-  // ============================================================================
-  // NOMINATIM SEARCH
-  // ============================================================================
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (searchQuery.trim().length > 2) {
@@ -417,19 +405,6 @@ export default function SetLocation() {
     setSearchQuery('');
   };
 
-  const handleSwapRoute = () => {
-    if (dropoffs[0]?.lat && pickup?.lat) {
-      const temp = { ...pickup };
-      setPickup({ ...dropoffs[0] });
-      updateDropoff(0, temp);
-      
-      if (map.current) {
-        programmaticMoveRef.current = true;
-        map.current.setView([dropoffs[0].lat, dropoffs[0].lng], 15);
-      }
-    }
-  };
-
   const focusField = (field) => {
     setActiveField(field);
     const targetLoc = field === 'pickup' ? pickup : dropoffs[field];
@@ -443,33 +418,26 @@ export default function SetLocation() {
   return (
     <div className="relative w-full h-screen bg-[#1a1a1a] overflow-hidden font-sans flex flex-col">
       
-      {/* FLOATING CONTROLS & OVERLAYS (No bulky header) */}
+      {/* ========================================================= */}
+      {/* FLOATING CONTROLS & OVERLAYS (STRICT HEADER ERADICATION) */}
+      {/* ========================================================= */}
+      
+      {/* Floating Standalone Back Button */}
       <button 
         onClick={() => navigate(-1)} 
-        className="absolute top-6 right-24 z-[2000] w-14 h-14 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-black shadow-[0_8px_25px_rgba(0,0,0,0.15)] border border-gray-100 active:scale-95 transition-all"
+        className="absolute top-6 left-6 z-[2000] w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-md border border-gray-100 active:scale-95 transition-all"
       >
         <ChevronLeft size={28} strokeWidth={2.5} />
       </button>
 
       <MapActionFAB />
       <DraggableWaypointList />
+      <MiniRouteSummary distance={routeDistance} duration={routeDuration} />
 
       {/* OPENSTREETMAP VIEWPORT */}
       <div className="flex-1 relative z-0">
         <div ref={mapContainer} className="absolute inset-0 bg-[#f8f8f8]" />
         
-        {/* Route Metrics Badge */}
-        <div className="absolute right-6 top-24 z-[1000] pointer-events-none flex flex-col items-end gap-3">
-          <AnimatePresence>
-            {routeDistance && !routeError && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-black/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl pointer-events-auto flex flex-col items-end gap-0.5 border border-gray-800">
-                <span className="font-black text-[16px] leading-none">{routeDistance}</span>
-                <span className="font-bold text-[11px] text-gray-400 uppercase tracking-widest">{routeDuration} ETA</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
         {/* DRAGGABLE CENTER TARGET PIN (Reflects Active Field) */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
@@ -485,7 +453,7 @@ export default function SetLocation() {
         </div>
       </div>
 
-      {/* BOTTOM SHEET UI (Hides intelligently in Fullscreen mode) */}
+      {/* BOTTOM SHEET UI (TIMELINE ENGINE INJECTION) */}
       <motion.div 
         initial={{ y: 0 }} 
         animate={{ 
@@ -496,9 +464,9 @@ export default function SetLocation() {
         style={{ pointerEvents: isFullscreen ? 'none' : 'auto' }}
         className="bg-white rounded-t-[32px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] relative z-[1001] flex flex-col max-h-[70vh] absolute bottom-0 left-0 right-0"
       >
-        <div className="p-6 pb-4 shrink-0">
+        <div className="p-6 pb-2 shrink-0">
           <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">Where to?</h1>
             <div className="flex items-center gap-2">
               {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
@@ -507,6 +475,9 @@ export default function SetLocation() {
                   Auto-Sort
                 </button>
               )}
+              <button onClick={() => { fetchCurrentLocation(); }} disabled={isLocating} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all">
+                {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
+              </button>
             </div>
           </div>
 
@@ -519,69 +490,13 @@ export default function SetLocation() {
           </div>
         </div>
 
+        {/* MODULAR TIMELINE INPUT LIST */}
         <div className="px-6 overflow-y-auto no-scrollbar pb-6 shrink min-h-[150px]">
-          <div className="relative border-l-2 border-dashed border-gray-300 ml-4 pl-6 space-y-4 py-2">
-            
-            <button onClick={handleSwapRoute} className="absolute -left-[20px] top-[42px] z-10 w-10 h-10 bg-white border-2 border-gray-100 rounded-full flex items-center justify-center text-black shadow-sm active:scale-95 hover:bg-gray-50 transition-all">
-              <ArrowUpDown size={18} strokeWidth={2.5} />
-            </button>
-
-            {/* PICKUP FIELD */}
-            <div className="relative">
-              <div className={`absolute -left-[31px] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full ring-4 ring-white ${activeField === 'pickup' ? 'bg-black' : 'bg-gray-300'}`} />
-              <div className="relative w-full">
-                <input 
-                  type="text" 
-                  readOnly 
-                  onClick={() => focusField('pickup')} 
-                  value={pickup?.address || ''} 
-                  placeholder="Set Pickup Location" 
-                  className={`w-full bg-[#F6F6F6] p-4 pr-12 rounded-2xl font-bold text-[15px] text-black border-2 transition-all outline-none cursor-pointer truncate ${activeField === 'pickup' ? 'border-black bg-white shadow-sm' : 'border-transparent'}`} 
-                />
-                <button onClick={() => { focusField('pickup'); setIsSearchOpen(true); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-black">
-                  <Search size={18} strokeWidth={2.5} />
-                </button>
-              </div>
-            </div>
-
-            {/* DROPOFF FIELDS */}
-            {dropoffs.map((drop, idx) => (
-              <motion.div key={idx} initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="relative flex items-center gap-3">
-                <div className={`absolute -left-[31px] top-1/2 -translate-y-1/2 w-4 h-4 border-4 rounded-full ring-4 ring-white ${activeField === idx ? 'bg-white border-black' : 'bg-white border-gray-300'}`} />
-                <div className="relative flex-1">
-                  <input 
-                    type="text" 
-                    readOnly 
-                    onClick={() => focusField(idx)} 
-                    value={drop.address || ''} 
-                    placeholder={`Dropoff location ${idx + 1}`} 
-                    className={`w-full bg-[#F6F6F6] p-4 pr-12 rounded-2xl font-bold text-[15px] text-black border-2 transition-all outline-none cursor-pointer truncate ${activeField === idx ? 'border-black bg-white shadow-sm' : 'border-transparent'}`} 
-                  />
-                  <button onClick={() => { focusField(idx); setIsSearchOpen(true); }} className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-black">
-                    <Search size={18} strokeWidth={2.5} />
-                  </button>
-                </div>
-                {dropoffs.length > 1 && (
-                  <button onClick={() => { removeDropoff(idx); setActiveField('pickup'); }} className="w-12 h-12 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all shrink-0 active:scale-95">
-                    <X size={20} strokeWidth={2.5} />
-                  </button>
-                )}
-              </motion.div>
-            ))}
-          </div>
-          
-          {dropoffs.length < 5 && (
-            <button onClick={() => { 
-              const newIndex = dropoffs.length;
-              addDropoff({ address: '', lat: null, lng: null }); 
-              focusField(newIndex);
-            }} className="mt-4 ml-2 text-[15px] font-bold text-black flex items-center gap-2 hover:opacity-70 transition-opacity">
-              <div className="w-6 h-6 rounded-full bg-[#F6F6F6] flex items-center justify-center">
-                <Plus size={16} strokeWidth={3} />
-              </div>
-              Add another stop
-            </button>
-          )}
+          <TimelineInputList 
+            activeField={activeField} 
+            onFocusField={focusField} 
+            onOpenSearch={() => setIsSearchOpen(true)} 
+          />
         </div>
 
         <div className="p-6 pt-2 bg-white border-t border-gray-100">
@@ -595,7 +510,7 @@ export default function SetLocation() {
             disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
             className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            Confirm Route {routeDistance && !routeError && <span className="text-gray-400 font-medium">• {routeDistance}</span>}
+            Confirm Route
           </button>
         </div>
       </motion.div>
