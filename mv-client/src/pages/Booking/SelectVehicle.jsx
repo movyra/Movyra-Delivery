@@ -52,9 +52,8 @@ export default function SelectVehicle() {
       setError('');
 
       try {
-        // 1. Calculate Real Distance and ETA via Google Maps
-        // Note: For multi-stop, we'd normally calculate waypoint routing. 
-        // Here we sum the segments (Pickup -> Drop 1 -> Drop 2, etc.)
+        // 1. Calculate Real Distance and ETA via Map Services
+        // Sum the segments (Pickup -> Drop 1 -> Drop 2, etc.)
         let totalMeters = 0;
         let totalSeconds = 0;
         
@@ -115,7 +114,7 @@ export default function SelectVehicle() {
         surgeMultiplier: baseFareObj.surgeMultiplier,
         isGroupDelivery: isGroupDelivery
       });
-      navigate('/booking/details'); // Navigate to the advanced details screen (Phase 2)
+      navigate('/booking/details'); // Navigate to the advanced details screen
     }
   };
 
