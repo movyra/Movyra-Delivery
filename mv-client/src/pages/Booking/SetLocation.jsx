@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Crosshair, Plus, X, Home, 
   Briefcase, Bookmark, Loader2, Search, ArrowUpDown, AlertCircle, 
-  Maximize, Minimize, MapPin, Train, Star, Clock
+  Maximize, Minimize, MapPin, Train, Star, Clock,
+  Layers, Mic, Wand2, User, Phone, FileText, Check
 } from 'lucide-react';
 
 // Real Store Integrations
@@ -12,14 +13,13 @@ import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
 
 /**
- * PAGE: SET LOCATION (STRICT OPENSTREETMAP ARCHITECTURE)
+ * PAGE: SET LOCATION (ADVANCED OPENSTREETMAP ARCHITECTURE)
  * Features: 
- * - Dual & Multi-stop location selection with strict state separation.
- * - Map Panning Lock (Programmatic move ref prevents search overwrites).
- * - Same-Coordinate Validation.
- * - Leaflet Engine with CDN Fallback.
- * - Real Nominatim/OSM Search & Reverse Geocoding.
- * - OSRM Routing Engine for visual paths.
+ * - Multi-stop location selection with strict state separation.
+ * - Dynamic Map Layers (Satellite & Standard).
+ * - Interactive Marker Clicks (Attach Contacts & Notes per pin).
+ * - Real OSRM Trip API Auto-Optimization (Traveling Salesperson).
+ * - Voice Search Integration via Web Speech API.
  */
 
 const CATEGORY_CHIPS = [
@@ -29,14 +29,18 @@ const CATEGORY_CHIPS = [
   { id: 'recent', label: 'Recent', icon: Clock, query: '' }
 ];
 
+const TILE_URLS = {
+  standard: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+};
+
 export default function SetLocation() {
   const navigate = useNavigate();
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const tileLayerRef = useRef(null);
   const markersGroup = useRef(null);
   const routeLayer = useRef(null);
-  
-  // Programmatic move lock to prevent map dragging logic from overwriting search text
   const programmaticMoveRef = useRef(false);
   
   // Global State
@@ -46,22 +50,26 @@ export default function SetLocation() {
   // Local UI State
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [activeField, setActiveField] = useState('pickup'); // 'pickup' or index (e.g., 0)
+  const [activeField, setActiveField] = useState('pickup'); 
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
   const [routeError, setRouteError] = useState('');
   
-  // Layout & Routing States
+  // Advanced Feature States
+  const [mapLayer, setMapLayer] = useState('standard');
+  const [isListening, setIsListening] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [selectedPin, setSelectedPin] = useState(null); // 'pickup' or dropoff index
+  const [contactForm, setContactForm] = useState({ name: '', phone: '', notes: '' });
+  
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [routeDistance, setRouteDistance] = useState('');
   const [routeDuration, setRouteDuration] = useState('');
 
-  // Search Engine State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Initialize dropoff array if empty
   useEffect(() => {
     if (dropoffs.length === 0) addDropoff({ address: '', lat: null, lng: null });
   }, []);
@@ -105,7 +113,7 @@ export default function SetLocation() {
       attributionControl: false
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map.current);
+    tileLayerRef.current = L.tileLayer(TILE_URLS[mapLayer]).addTo(map.current);
     markersGroup.current = L.layerGroup().addTo(map.current);
 
     map.current.on('movestart', () => {
@@ -114,7 +122,6 @@ export default function SetLocation() {
     
     map.current.on('moveend', async () => {
       if (programmaticMoveRef.current) {
-        // Unlock map for future drags after programmatic pan completes
         programmaticMoveRef.current = false;
         setIsDragging(false);
         return; 
@@ -136,7 +143,6 @@ export default function SetLocation() {
         if (activeField === 'pickup') setPickup({ ...locData, address: readableAddress });
         else updateDropoff(activeField, { ...locData, address: readableAddress });
       } catch (error) {
-        console.error("OSM Reverse Geocode Error", error);
         const fallback = `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}`;
         if (activeField === 'pickup') setPickup({ ...locData, address: fallback });
         else updateDropoff(activeField, { ...locData, address: fallback });
@@ -147,6 +153,13 @@ export default function SetLocation() {
 
     setTimeout(() => map.current?.invalidateSize(), 100);
   }, [isMapLoaded, activeField]);
+
+  // Handle Dynamic Map Layer Toggle
+  useEffect(() => {
+    if (map.current && tileLayerRef.current) {
+      tileLayerRef.current.setUrl(TILE_URLS[mapLayer]);
+    }
+  }, [mapLayer]);
 
   // GPS Sync
   useEffect(() => {
@@ -161,39 +174,59 @@ export default function SetLocation() {
   }, [currentLocation]);
 
   // ============================================================================
-  // FEATURE: CUSTOM DYNAMIC MARKERS (ISOLATES ACTIVE FIELD)
+  // CUSTOM INTERACTIVE MARKERS (CLICKS OPEN CONTACT INFO)
   // ============================================================================
   useEffect(() => {
     if (!map.current || !markersGroup.current || !window.L) return;
     const L = window.L;
     markersGroup.current.clearLayers();
 
-    // Draw non-active markers. The active field is represented by the center crosshair.
     if (pickup?.lat && activeField !== 'pickup') {
       const pickupIcon = L.divIcon({
         className: '',
-        html: `<div class="w-4 h-4 bg-white rounded-full border-4 border-black shadow-md ring-2 ring-white"></div>`,
+        html: `<div class="w-4 h-4 bg-white rounded-full border-4 border-black shadow-md ring-2 ring-white hover:scale-125 transition-transform cursor-pointer"></div>`,
         iconSize: [16, 16],
         iconAnchor: [8, 8]
       });
-      L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(markersGroup.current);
+      const m = L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(markersGroup.current);
+      m.on('click', () => setSelectedPin('pickup'));
     }
 
     dropoffs.forEach((drop, idx) => {
       if (drop.lat && activeField !== idx) {
         const dropIcon = L.divIcon({
           className: '',
-          html: `<div class="w-6 h-6 bg-black text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md">${idx + 1}</div>`,
+          html: `<div class="w-6 h-6 bg-black text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer">${idx + 1}</div>`,
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         });
-        L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(markersGroup.current);
+        const m = L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(markersGroup.current);
+        m.on('click', () => setSelectedPin(idx));
       }
     });
   }, [pickup, dropoffs, activeField, isDragging]);
 
+  // Pre-fill contact modal when a pin is selected
+  useEffect(() => {
+    if (selectedPin === 'pickup' && pickup) {
+      setContactForm({ name: pickup.contactName || '', phone: pickup.contactPhone || '', notes: pickup.notes || '' });
+    } else if (typeof selectedPin === 'number' && dropoffs[selectedPin]) {
+      const d = dropoffs[selectedPin];
+      setContactForm({ name: d.contactName || '', phone: d.contactPhone || '', notes: d.notes || '' });
+    }
+  }, [selectedPin]);
+
+  const handleSaveContactInfo = () => {
+    if (selectedPin === 'pickup') {
+      setPickup({ ...pickup, contactName: contactForm.name, contactPhone: contactForm.phone, notes: contactForm.notes });
+    } else if (typeof selectedPin === 'number') {
+      updateDropoff(selectedPin, { ...dropoffs[selectedPin], contactName: contactForm.name, contactPhone: contactForm.phone, notes: contactForm.notes });
+    }
+    setSelectedPin(null);
+  };
+
   // ============================================================================
-  // FEATURE: OSRM LINEAR ROUTING & VALIDATION
+  // OSRM LINEAR ROUTING & VALIDATION
   // ============================================================================
   useEffect(() => {
     const fetchRoute = async () => {
@@ -202,7 +235,6 @@ export default function SetLocation() {
       const validDropoffs = dropoffs.filter(d => d.lat !== null && d.lat !== 0);
 
       if (pickup?.lat && validDropoffs.length > 0) {
-        // STRICT VALIDATION: Prevent exact same coordinates
         const isSameLocation = validDropoffs.some(d => 
           Math.abs(d.lat - pickup.lat) < 0.0001 && Math.abs(d.lng - pickup.lng) < 0.0001
         );
@@ -233,7 +265,7 @@ export default function SetLocation() {
             if (routeLayer.current) map.current.removeLayer(routeLayer.current);
             
             routeLayer.current = L.polyline(routeCoords, {
-              color: '#000000',
+              color: mapLayer === 'satellite' ? '#ffffff' : '#000000',
               weight: 5,
               opacity: 0.9,
               lineJoin: 'round'
@@ -251,10 +283,69 @@ export default function SetLocation() {
       }
     };
     fetchRoute();
-  }, [pickup, dropoffs]);
+  }, [pickup, dropoffs, mapLayer]);
 
   // ============================================================================
-  // NOMINATIM SEARCH (DUAL OVERLAY LOGIC)
+  // AUTO-ROUTE OPTIMIZATION (OSRM Trip API)
+  // ============================================================================
+  const handleOptimizeRoute = async () => {
+    const validDropoffs = dropoffs.filter(d => d.lat !== null && d.lat !== 0);
+    if (validDropoffs.length < 2 || !pickup?.lat) return;
+
+    setIsOptimizing(true);
+    try {
+      const coords = [pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
+      // roundtrip=false & source=first keeps the pickup locked as the starting point.
+      const res = await fetch(`https://router.project-osrm.org/trip/v1/driving/${coords}?roundtrip=false&source=first`);
+      const data = await res.json();
+
+      if (data.code === 'Ok') {
+        const sortedWaypoints = data.waypoints.sort((a, b) => a.waypoint_index - b.waypoint_index);
+        const optimizedDropoffs = [];
+        
+        sortedWaypoints.forEach(wp => {
+          if (wp.original_index !== 0) { // Skip pickup
+            optimizedDropoffs.push(validDropoffs[wp.original_index - 1]);
+          }
+        });
+
+        // Directly manipulate Zustand global store
+        useBookingStore.setState({ dropoffs: optimizedDropoffs });
+        
+        if (map.current) {
+          programmaticMoveRef.current = true;
+          map.current.setView([optimizedDropoffs[0].lat, optimizedDropoffs[0].lng], 14);
+        }
+      }
+    } catch (err) {
+      console.error("Optimization failed", err);
+    } finally {
+      setIsOptimizing(false);
+    }
+  };
+
+  // ============================================================================
+  // VOICE SEARCH (Web Speech API)
+  // ============================================================================
+  const startVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice search is not supported in your browser.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognition.start();
+  };
+
+  // ============================================================================
+  // NOMINATIM SEARCH
   // ============================================================================
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -284,7 +375,7 @@ export default function SetLocation() {
     else updateDropoff(activeField, locData);
     
     if (map.current) {
-      programmaticMoveRef.current = true; // Lock pan overwrites
+      programmaticMoveRef.current = true;
       map.current.setView([lat, lng], 16);
     }
     
@@ -322,18 +413,24 @@ export default function SetLocation() {
         <button onClick={() => navigate(-1)} className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black shadow-md pointer-events-auto border border-gray-100 active:scale-95 transition-all">
           <ChevronLeft size={26} strokeWidth={2.5} />
         </button>
-        <img src="/logo.png" alt="Movyra" className="w-12 h-12 object-contain pointer-events-auto" />
+        <img src="/logo.png" alt="Movyra" className="w-12 h-12 object-contain pointer-events-auto drop-shadow-sm" />
       </div>
 
       {/* OPENSTREETMAP VIEWPORT */}
       <div className="flex-1 relative z-0">
         <div ref={mapContainer} className="absolute inset-0 bg-[#f8f8f8]" />
         
-        {/* Fullscreen Toggle & Distance Badge */}
+        {/* Map Layers & Interactions */}
         <div className="absolute right-6 top-28 z-[1000] pointer-events-none flex flex-col items-end gap-3">
           <button onClick={() => { setIsFullscreen(!isFullscreen); setTimeout(() => map.current?.invalidateSize(), 300); }} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md text-black pointer-events-auto border border-gray-100 active:scale-95 transition-all">
             {isFullscreen ? <Minimize size={20} strokeWidth={2.5} /> : <Maximize size={20} strokeWidth={2.5} />}
           </button>
+          
+          {/* Dynamic Layer Toggle */}
+          <button onClick={() => setMapLayer(l => l === 'standard' ? 'satellite' : 'standard')} className={`w-12 h-12 rounded-full flex items-center justify-center shadow-md pointer-events-auto border border-gray-100 active:scale-95 transition-all ${mapLayer === 'satellite' ? 'bg-black text-white' : 'bg-white text-black'}`}>
+            <Layers size={20} strokeWidth={2.5} />
+          </button>
+
           <AnimatePresence>
             {routeDistance && !isFullscreen && !routeError && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-black text-white px-4 py-3 rounded-2xl shadow-xl pointer-events-auto flex flex-col items-end gap-0.5">
@@ -370,9 +467,17 @@ export default function SetLocation() {
           <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => { setIsFullscreen(!isFullscreen); setTimeout(() => map.current?.invalidateSize(), 300); }}></div>
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">Where to?</h1>
-            <button onClick={() => { fetchCurrentLocation(); }} disabled={isLocating} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all">
-              {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
-            </button>
+            <div className="flex items-center gap-2">
+              {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
+                <button onClick={handleOptimizeRoute} disabled={isOptimizing} className="h-10 px-4 rounded-full bg-blue-50 text-blue-600 flex items-center gap-2 hover:bg-blue-100 active:scale-95 transition-all font-bold text-[13px]">
+                  {isOptimizing ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} strokeWidth={2.5} />}
+                  Auto-Sort
+                </button>
+              )}
+              <button onClick={() => { fetchCurrentLocation(); }} disabled={isLocating} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all">
+                {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mb-2">
@@ -465,7 +570,7 @@ export default function SetLocation() {
         </div>
       </motion.div>
 
-      {/* SEARCH OVERLAY */}
+      {/* SEARCH OVERLAY WITH VOICE SEARCH */}
       <AnimatePresence>
         {isSearchOpen && (
           <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-0 bg-white z-[10000] flex flex-col font-sans">
@@ -483,34 +588,117 @@ export default function SetLocation() {
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
                   placeholder={activeField === 'pickup' ? "Where are we picking up?" : "Where to drop off?"} 
-                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-10 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none" 
+                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-12 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none" 
                 />
-                {isTyping && <div className="absolute right-4 top-1/2 -translate-y-1/2"><Loader2 size={18} className="animate-spin text-black" /></div>}
+                {/* Web Speech API Voice Button */}
+                <button onClick={startVoiceSearch} className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${isListening ? 'bg-red-50 text-red-500 animate-pulse' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
+                  <Mic size={18} strokeWidth={2.5} />
+                </button>
               </div>
             </div>
+            
             <div className="flex-1 overflow-y-auto p-6 bg-[#FAFAFA]">
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
-                {predictions.map((pred, i) => (
-                  <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-3 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
-                      <MapPin size={16} strokeWidth={2.5} />
+              {isListening && (
+                <div className="text-center py-8 text-gray-500 font-bold animate-pulse">
+                  Listening for address...
+                </div>
+              )}
+              {!isListening && (
+                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+                  {predictions.map((pred, i) => (
+                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-3 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                        <MapPin size={16} strokeWidth={2.5} />
+                      </div>
+                      <div className="overflow-hidden">
+                        <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
+                        <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
+                      </div>
+                    </button>
+                  ))}
+                  {predictions.length === 0 && !isTyping && searchQuery.length > 2 && (
+                    <div className="p-6 text-center text-gray-500 font-medium">
+                      No results found for "{searchQuery}"
                     </div>
-                    <div className="overflow-hidden">
-                      <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
-                      <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
-                    </div>
-                  </button>
-                ))}
-                {predictions.length === 0 && !isTyping && searchQuery.length > 2 && (
-                  <div className="p-6 text-center text-gray-500 font-medium">
-                    No results found for "{searchQuery}"
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* MARKER CONTACT MODAL (Clicking a pin) */}
+      <AnimatePresence>
+        {selectedPin !== null && (
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[11000] flex items-end justify-center p-4"
+          >
+            <motion.div 
+              initial={{ y: '100%' }} 
+              animate={{ y: 0 }} 
+              exit={{ y: '100%' }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white w-full max-w-lg rounded-[32px] p-6 shadow-2xl relative"
+            >
+              <button onClick={() => setSelectedPin(null)} className="absolute right-6 top-6 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 active:scale-95 transition-all">
+                <X size={20} strokeWidth={2.5} />
+              </button>
+              
+              <h2 className="text-[24px] font-black text-black mb-1">
+                {selectedPin === 'pickup' ? 'Pickup Details' : `Dropoff ${selectedPin + 1} Details`}
+              </h2>
+              <p className="text-[14px] font-medium text-gray-500 mb-6 truncate pr-12">
+                {selectedPin === 'pickup' ? pickup?.address : dropoffs[selectedPin]?.address}
+              </p>
+
+              <div className="space-y-4 mb-8">
+                <div className="relative">
+                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Contact Name (e.g., John Doe)" 
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                  />
+                </div>
+                <div className="relative">
+                  <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number" 
+                    value={contactForm.phone}
+                    onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                  />
+                </div>
+                <div className="relative">
+                  <FileText size={18} className="absolute left-4 top-4 text-gray-400" />
+                  <textarea 
+                    placeholder="Delivery Instructions (Gate code, etc.)" 
+                    rows={3}
+                    value={contactForm.notes}
+                    onChange={(e) => setContactForm({ ...contactForm, notes: e.target.value })}
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all resize-none"
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleSaveContactInfo}
+                className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2"
+              >
+                <Check size={20} strokeWidth={3} /> Save Location Details
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
