@@ -1,354 +1,352 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
-  ChevronLeft, 
-  MapPin, 
-  Plane, 
-  PackageCheck, 
-  Truck, 
-  CheckCircle2, 
-  HelpCircle,
-  Clock,
-  Loader2,
-  AlertCircle,
-  Package,
-  ShieldAlert,
-  Diamond,
-  UserCircle2
+  ChevronLeft, MapPin, Clock, Loader2, 
+  AlertCircle, CheckCircle2, Truck,
+  Package, ShieldAlert, Diamond, UserCircle2, Crosshair, Receipt
 } from 'lucide-react';
 
 // Real Database Integration
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
-import { auth } from '../../services/firebaseAuth';
 
-// ============================================================================
-// PAGE: SHIPMENT DETAIL (MOVYRA LIGHT THEME)
-// Connects directly to the 'orders' Firestore collection.
-// Contains 6 Functional Sections: Real-time Data Engine, Header, 
-// Spatial Hero, Meta Card, Multi-Stop Timeline, and Details/Footer.
-// ============================================================================
+// Modular UI Components (Matching Premium Split-Screen Aesthetic)
+import OrderFloatingStatusCard from '../../components/OrderDetails/OrderFloatingStatusCard';
+import OrderSegmentedToggle from '../../components/OrderDetails/OrderSegmentedToggle';
+import OrderInfoListCard from '../../components/OrderDetails/OrderInfoListCard';
+import OrderAnalyticsChart from '../../components/OrderDetails/OrderAnalyticsChart';
+
+/**
+ * PAGE: ACTIVE SHIPMENT DETAIL (LIVE TRACKING)
+ * Architecture: 45vh/55vh Split Screen
+ * Features: 
+ * - Real-time Firestore Sync (onSnapshot)
+ * - Leaflet Map with Custom Red Destination Pin & Route
+ * - Dynamic Floating Status Card
+ * - Segmented Toggles
+ */
+
+const TABS = [
+  { id: 'details', label: 'Details' },
+  { id: 'timeline', label: 'Timeline' },
+  { id: 'receipt', label: 'Live Total' }
+];
 
 export default function ShipmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const db = getFirestore();
+  
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const routeLayer = useRef(null);
 
-  // SECTION 1: Real-time Data Engine (Firestore)
+  // Local Data & UI State
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('details');
 
+  // ============================================================================
+  // REAL-TIME FIRESTORE DATA SYNC (LIVE TRACKING)
+  // ============================================================================
   useEffect(() => {
     if (!id) return;
-    const db = getFirestore();
     const orderRef = doc(db, 'orders', id);
 
-    // Real-time listener for exact order details
     const unsubscribe = onSnapshot(orderRef, (docSnap) => {
       if (docSnap.exists()) {
         setOrder({ id: docSnap.id, ...docSnap.data() });
         setError('');
       } else {
-        setError('Order record not found in the database.');
+        setError('Order record not found or has been removed.');
         setOrder(null);
       }
       setIsLoading(false);
     }, (err) => {
-      console.error("Firestore Tracking Error:", err);
-      setError('Failed to fetch live order details.');
+      console.error("Firestore Live Tracking Error:", err);
+      setError('Failed to securely fetch live order details.');
       setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, [id]);
+  }, [id, db]);
 
-  // UI Formatters
-  const getStatusColor = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'searching': return 'text-orange-500 bg-orange-50 border-orange-200';
-      case 'assigned': return 'text-blue-500 bg-blue-50 border-blue-200';
-      case 'picked_up': return 'text-purple-500 bg-purple-50 border-purple-200';
-      case 'delivered': return 'text-green-500 bg-green-50 border-green-200';
-      default: return 'text-gray-500 bg-gray-50 border-gray-200';
+  // ============================================================================
+  // OPENSTREETMAP ENGINE (LEAFLET PLOTTING & ROUTING)
+  // ============================================================================
+  useEffect(() => {
+    if (!order || !mapContainer.current) return;
+
+    const pickupLat = order.pickup?.lat || 28.6139;
+    const pickupLng = order.pickup?.lng || 77.2090;
+
+    // Initialize Leaflet Map once
+    if (!map.current) {
+      map.current = L.map(mapContainer.current, {
+        center: [pickupLat, pickupLng],
+        zoom: 13,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false,
+        touchZoom: true
+      });
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(map.current);
     }
-  };
 
-  const getStatusLabel = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'searching': return 'Finding Driver';
-      case 'assigned': return 'Driver Assigned';
-      case 'picked_up': return 'In Transit';
-      case 'delivered': return 'Delivered';
-      default: return status || 'Processing';
+    // Clear existing layers to prevent duplicates on live updates
+    map.current.eachLayer((layer) => {
+      if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+        map.current.removeLayer(layer);
+      }
+    });
+
+    const validDropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
+    const points = [];
+
+    // Plot Pickup Marker (Hollow Dot)
+    if (order.pickup?.lat) {
+      const pickupIcon = L.divIcon({
+        className: '',
+        html: `<div class="w-4 h-4 bg-white border-[4px] border-[#111111] rounded-full shadow-md"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+      L.marker([order.pickup.lat, order.pickup.lng], { icon: pickupIcon }).addTo(map.current);
+      points.push([order.pickup.lat, order.pickup.lng]);
     }
-  };
 
+    // Plot Dropoff Markers (Static Red Pin)
+    validDropoffs.forEach((drop) => {
+      if (drop?.lat) {
+        const dropIcon = L.divIcon({
+          className: '',
+          html: `<div class="w-[22px] h-[22px] bg-[#FF3B30] rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] border-[3px] border-white"></div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+        L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(map.current);
+        points.push([drop.lat, drop.lng]);
+      }
+    });
+
+    // Fetch and draw the OSRM route polyline
+    if (order.pickup?.lat && validDropoffs.length > 0 && validDropoffs[0].lat) {
+      const fetchRoute = async () => {
+        try {
+          const coords = [order.pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?geometries=geojson&overview=full`);
+          const data = await res.json();
+          
+          if (data.code === 'Ok') {
+            const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            
+            routeLayer.current = L.polyline(routeCoords, {
+              color: '#111111', 
+              weight: 4,
+              opacity: 0.8,
+              lineJoin: 'round'
+            }).addTo(map.current);
+            
+            // Auto-fit map to route bounds with padding
+            map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, 80] });
+          }
+        } catch (err) {
+          console.error("OSRM Route Error:", err);
+          if (points.length > 1) map.current.fitBounds(L.latLngBounds(points), { padding: [50, 80] });
+        }
+      };
+      fetchRoute();
+    } else if (points.length > 1) {
+      map.current.fitBounds(L.latLngBounds(points), { padding: [50, 80] });
+    }
+
+    setTimeout(() => map.current?.invalidateSize(), 200);
+
+    return () => {
+      // Cleanup handled via eachLayer on next effect run to keep map instance alive
+    };
+  }, [order]);
+
+  // ============================================================================
+  // LOADING & ERROR STATES
+  // ============================================================================
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-black">
-        <Loader2 size={40} className="animate-spin mb-4 text-[#276EF1]" />
-        <h2 className="font-bold tracking-widest text-sm uppercase text-gray-400">Locating Order</h2>
+      <div className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center font-sans">
+        <Loader2 size={40} className="animate-spin text-[#111111] mb-4" />
+        <p className="text-[14px] font-bold text-gray-500 uppercase tracking-widest">Connecting to Live Feed</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center">
-        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-          <AlertCircle size={32} />
-        </div>
-        <h2 className="text-xl font-black text-black mb-2">Record Not Found</h2>
-        <p className="text-gray-500 font-medium mb-8">{error}</p>
-        <button onClick={() => navigate(-1)} className="bg-black text-white px-8 py-3 rounded-full font-bold">
-          Go Back
-        </button>
+      <div className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center p-6 text-center font-sans">
+        <AlertCircle size={48} className="text-red-500 mb-4" strokeWidth={2} />
+        <h1 className="text-[24px] font-black text-[#111111] mb-2">Signal Lost</h1>
+        <p className="text-[15px] font-medium text-gray-500 mb-8">{error}</p>
+        <button onClick={() => navigate(-1)} className="px-8 py-4 bg-[#111111] text-white rounded-full font-bold shadow-lg active:scale-95 transition-transform">Go Back</button>
       </div>
     );
   }
 
-  // Derive route points safely
-  const pickup = order.pickup || {};
-  const dropoffs = order.dropoffs || [];
-  const finalDropoff = dropoffs[dropoffs.length - 1] || {};
-  const routePoints = [pickup, ...dropoffs];
+  // Formatting Utilities
+  const getStatusDisplay = (status) => {
+    switch(status?.toLowerCase()) {
+      case 'searching': return 'Finding Partner...';
+      case 'assigned': return 'Partner En Route';
+      case 'picked_up': return 'Package In Transit';
+      case 'delivered': return 'Delivery Complete';
+      default: return 'Processing Order...';
+    }
+  };
+
+  const totalAmount = order.pricing?.estimatedPrice || order.totalFare || 0;
+  const taxableValue = totalAmount / 1.18;
+  const cgst = taxableValue * 0.09;
+  const sgst = taxableValue * 0.09;
+  const dropoffsArray = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
+
+  const handleRecenter = () => {
+    if (map.current && routeLayer.current) {
+      map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, 80] });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white font-sans flex flex-col relative">
+    <div className="relative w-full h-screen bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
-      {/* ==========================================
-          UPPER HALF: MOVYRA BLUE SPLIT-SCREEN
-          ========================================== */}
-      <div className="bg-[#276EF1] w-full pt-12 pb-32 px-6 rounded-b-[40px] relative z-0">
-        
-        {/* SECTION 2: Header Navigation */}
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <button 
-            onClick={() => navigate(-1)} 
-            className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors active:scale-95"
-          >
-            <ChevronLeft size={32} />
-          </button>
-          <h1 className="text-white font-black tracking-wide text-xl">Order Details</h1>
-          <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center border border-white/20">
-            <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-          </div>
-        </motion.div>
+      {/* ========================================================= */}
+      {/* TOP HALF: 45vh MAP CANVAS */}
+      {/* ========================================================= */}
+      <div className="relative w-full h-[45vh] shrink-0 z-10">
+        <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
 
-        {/* SECTION 3: Blue Hero Spatial Visualization */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, type: 'spring' }}
-          className="w-full flex flex-col mt-4"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-blue-200 text-sm font-bold uppercase tracking-widest">
-              Order #{order.id.slice(0, 8).toUpperCase()}
-            </p>
-            <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusColor(order.status)}`}>
-              {getStatusLabel(order.status)}
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between relative">
-            {/* Origin */}
-            <div className="flex flex-col items-start z-10 w-1/3">
-              <div className="w-4 h-4 rounded-full bg-white border-4 border-[#276EF1] shadow-[0_0_0_2px_rgba(255,255,255,0.3)] mb-2"></div>
-              <h2 className="text-white font-black text-xl tracking-tight truncate w-full">
-                {pickup.address?.split(',')[0] || 'Pickup'}
-              </h2>
-            </div>
-
-            {/* Connecting Visual Line & Vehicle Icon */}
-            <div className="absolute left-1/4 right-1/4 top-2 h-[2px] border-t-2 border-dashed border-white/40 z-0"></div>
-            <motion.div 
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.4, type: 'spring', stiffness: 200 }}
-              className="absolute left-1/2 -translate-x-1/2 -top-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10 text-[#276EF1]"
-            >
-              <Truck size={20} strokeWidth={2.5} />
-            </motion.div>
-
-            {/* Destination */}
-            <div className="flex flex-col items-end z-10 w-1/3 text-right">
-              <div className="w-4 h-4 rounded-full bg-blue-300 border-4 border-[#276EF1] shadow-[0_0_0_2px_rgba(147,197,253,0.3)] mb-2"></div>
-              <h2 className="text-white font-black text-xl tracking-tight truncate w-full">
-                {finalDropoff.address?.split(',')[0] || 'Dropoff'}
-              </h2>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* ==========================================
-          LOWER HALF: WHITE TIMELINE UI
-          ========================================== */}
-      <div className="flex-1 bg-white -mt-24 px-6 pt-0 pb-32 relative z-10">
-        
-        {/* SECTION 4: Meta Information (Floating Card) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-[24px] p-6 shadow-[0_15px_40px_rgba(0,0,0,0.08)] border border-gray-50 flex items-center justify-between mb-8"
-        >
-          <div className="flex flex-col">
-            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Total Fare</span>
-            <span className="text-black font-black text-2xl">
-              ₹{order.pricing?.estimatedPrice || order.pricing?.totalFare || 0}
-            </span>
-          </div>
-          <div className="flex flex-col items-end text-right">
-            <span className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Vehicle</span>
-            <span className="text-black font-black text-lg uppercase">
-              {order.vehicleType || 'Standard'}
-            </span>
-          </div>
-        </motion.div>
-
-        {/* SECTION 5: Dynamic Multi-Stop Route Timeline */}
-        <div className="mb-10">
-          <h3 className="font-bold text-[15px] text-gray-400 uppercase tracking-widest mb-6">Route Details</h3>
-          
-          <div className="relative border-l-2 border-dashed border-gray-200 ml-4 space-y-8 pb-4">
-            {routePoints.map((point, index) => {
-              const isFirst = index === 0;
-              const isLast = index === routePoints.length - 1;
-              
-              return (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3 + (index * 0.1) }}
-                  className="relative pl-8"
-                >
-                  {/* Timeline Node Dot */}
-                  <div className={`absolute -left-[11px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm flex items-center justify-center ${
-                    isFirst ? 'bg-black ring-4 ring-gray-100' : 'bg-gray-300'
-                  }`}>
-                    {isFirst && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
-                  </div>
-
-                  {/* Timeline Content */}
-                  <div className="flex flex-col">
-                    <h4 className={`font-black text-[16px] tracking-tight mb-1 ${
-                      isFirst ? 'text-black' : 'text-gray-800'
-                    }`}>
-                      {isFirst ? 'Pickup Location' : `Dropoff ${routePoints.length > 2 ? index : ''}`}
-                    </h4>
-                    
-                    <div className="flex items-start gap-2 text-gray-500 text-[14px] font-bold mb-2">
-                      <MapPin size={16} className="mt-0.5 shrink-0" />
-                      <span className="leading-snug">{point.address}</span>
-                    </div>
-
-                    {/* Exact Timestamp Logic */}
-                    {isFirst && order.createdAt && (
-                      <div className="flex items-center gap-2 text-gray-500 text-[11px] font-black uppercase tracking-wider bg-[#F6F6F6] w-fit px-3 py-1.5 rounded-lg">
-                        <Clock size={12} strokeWidth={3} />
-                        <span>Created: {new Date(order.createdAt.toDate ? order.createdAt.toDate() : order.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SECTION 6: Package Details & Security Context */}
-        <div className="bg-[#F6F6F6] rounded-[24px] p-6 mb-8 border border-gray-100">
-          <h3 className="font-bold text-[13px] text-gray-400 uppercase tracking-widest mb-4">Package Config</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-black">
-                <Package size={18} strokeWidth={2.5} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-gray-400 uppercase">Item Type</span>
-                <span className="text-[14px] font-black text-black">{order.packageDetails?.itemType || 'Package'}</span>
-              </div>
-            </div>
-            
-            {order.packageDetails?.isFragile && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-black">
-                  <ShieldAlert size={18} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-gray-400 uppercase">Safety</span>
-                  <span className="text-[14px] font-black text-black">Fragile</span>
-                </div>
-              </div>
-            )}
-            
-            {order.packageDetails?.isHighValue && (
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#276EF1] rounded-full shadow-sm flex items-center justify-center text-white">
-                  <Diamond size={18} strokeWidth={2.5} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-[#276EF1] uppercase">Security</span>
-                  <span className="text-[14px] font-black text-black">High Value</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Secure Delivery PIN */}
-          {order.packageDetails?.secureOTP && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <span className="text-[11px] font-bold text-gray-400 uppercase block mb-1">Delivery PIN</span>
-              <span className="text-[24px] font-black tracking-widest text-black">{order.packageDetails.secureOTP}</span>
-            </div>
-          )}
-          
-          {/* Driver Notes */}
-          {order.packageDetails?.driverNotes && (
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <span className="text-[11px] font-bold text-gray-400 uppercase block mb-1">Notes for Driver</span>
-              <span className="text-[14px] font-bold text-black leading-snug">{order.packageDetails.driverNotes}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* SECTION 7: Support / Driver Footer */}
-      <motion.div 
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md pb-safe pt-4 px-6 border-t border-gray-100 z-50 flex items-center justify-between"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-[#F6F6F6] flex items-center justify-center text-gray-600 border border-gray-200">
-            <UserCircle2 size={24} strokeWidth={2} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-              {order.selectedBid ? 'Assigned Driver' : 'AI Matching'}
-            </span>
-            <span className="font-black text-black text-[15px]">
-              {order.selectedBid?.driverName || 'Finding best driver...'}
-            </span>
-          </div>
-        </div>
-        
+        {/* Floating Top-Left Back Button */}
         <button 
-          onClick={() => navigate('/support/dispute')}
-          className="flex items-center gap-2 bg-gray-100 text-black px-5 py-3.5 rounded-full font-bold text-[14px] active:scale-95 transition-transform hover:bg-gray-200"
+          onClick={() => navigate(-1)} 
+          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
         >
-          <HelpCircle size={18} />
-          Support
+          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
-      </motion.div>
+
+        {/* OVERLAPPING FLOATING CARD */}
+        <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
+          <OrderFloatingStatusCard 
+            pickupAddress={order.pickup?.address}
+            dropoffAddress={dropoffsArray[0]?.address}
+            statusText={getStatusDisplay(order.status)}
+            subText="Live Tracking Active"
+            onActionClick={handleRecenter}
+            actionIcon={Crosshair}
+          />
+        </div>
+      </div>
+
+      {/* ========================================================= */}
+      {/* BOTTOM HALF: 55vh SCROLLABLE CONTENT */}
+      {/* ========================================================= */}
+      <div className="flex-1 overflow-y-auto pt-16 pb-8 px-5 space-y-4 z-0 relative">
+        
+        {/* Segmented Tab Toggles */}
+        <OrderSegmentedToggle 
+          tabs={TABS} 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+        />
+
+        <AnimatePresence mode="wait">
+          
+          {/* TAB 1: DETAILS */}
+          {activeTab === 'details' && (
+            <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-2">
+              
+              <OrderInfoListCard 
+                icon={UserCircle2}
+                title="Assigned Partner"
+                subtitle={order.selectedBid?.driverName || "Searching for partner..."}
+                rightValue={order.selectedBid?.vehicleType || "Auto-Match"}
+                rightSubValue="Vehicle Class"
+              />
+
+              <OrderInfoListCard 
+                icon={Package}
+                title="Package Configuration"
+                subtitle={order.packageDetails?.itemType || "Standard Package"}
+                rightValue={order.packageDetails?.isFragile ? "Fragile" : "Standard"}
+                rightSubValue="Handling Type"
+                alertMode={order.packageDetails?.isFragile}
+              />
+
+              {order.packageDetails?.requiresSecureOTP && (
+                <OrderInfoListCard 
+                  icon={Diamond}
+                  title="Delivery Authentication"
+                  subtitle="End-to-End Secure OTP"
+                  rightValue={order.packageDetails.secureOTP || "****"}
+                  rightSubValue="Verification PIN"
+                />
+              )}
+            </motion.div>
+          )}
+
+          {/* TAB 2: TIMELINE */}
+          {activeTab === 'timeline' && (
+            <motion.div key="timeline" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-2">
+              
+              <OrderInfoListCard 
+                icon={order.status === 'picked_up' || order.status === 'delivered' ? CheckCircle2 : Clock}
+                title="Origin Checkpoint"
+                subtitle={order.pickup?.address}
+                rightValue="Pickup"
+                rightSubValue={order.status === 'picked_up' || order.status === 'delivered' ? 'Cleared' : 'Pending'}
+              />
+
+              {dropoffsArray.map((drop, idx) => (
+                <OrderInfoListCard 
+                  key={idx}
+                  icon={MapPin}
+                  title={`Destination ${idx + 1}`}
+                  subtitle={drop.address}
+                  rightValue="Dropoff"
+                  rightSubValue={order.status === 'delivered' ? 'Cleared' : 'En Route'}
+                />
+              ))}
+            </motion.div>
+          )}
+
+          {/* TAB 3: RECEIPT / LIVE TOTAL */}
+          {activeTab === 'receipt' && (
+            <motion.div key="receipt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-2">
+              
+              <OrderAnalyticsChart 
+                totalValue={totalAmount.toFixed(2)}
+                currency="₹"
+                dateRange={`Order ID: ${order.id.slice(-8).toUpperCase()}`}
+                data={[
+                  { label: 'Base Fare', value: taxableValue.toFixed(2), isActive: false },
+                  { label: 'Taxes', value: (cgst + sgst).toFixed(2), isActive: false },
+                  { label: 'Total', value: totalAmount.toFixed(2), isActive: true }
+                ]}
+              />
+
+              <OrderInfoListCard 
+                icon={Receipt}
+                title="Payment Status"
+                subtitle={order.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Pre-Paid / Wallet'}
+                rightValue={`₹${totalAmount.toFixed(2)}`}
+                rightSubValue="Final Amount"
+              />
+
+            </motion.div>
+          )}
+
+        </AnimatePresence>
+      </div>
 
     </div>
   );
