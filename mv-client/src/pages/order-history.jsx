@@ -7,24 +7,36 @@ import { ChevronLeft, Search, Filter, Package, Truck, CheckCircle2, AlertCircle,
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
+// Modular UI Components (Premium Split-Screen Aesthetic)
+import OrderSegmentedToggle from '../../components/OrderDetails/OrderSegmentedToggle';
+
 // ============================================================================
-// PAGE: ORDER HISTORY & SHIPMENTS (MOVYRA LIGHT THEME)
-// Replaces the old dark mode list with a premium tabbed UI.
-// Features 6 Functional Sections: Real-time Firestore Engine, Header, 
-// Search/Filter, Stats Dashboard, Animated Tabs, and Dynamic Skeleton List.
+// PAGE: ORDER HISTORY & SHIPMENTS (PREMIUM CARD UI)
+// Architecture: Deeply rounded 32px cards on #F2F4F7 background.
+// Features: Real-time Firestore Engine, Isolated Navigation, 
+// Segmented Toggles, and Light-Blue (#BCE3FF) Active States.
 // ============================================================================
 
+const TABS = [
+  { id: 'All', label: 'All' },
+  { id: 'Active', label: 'Active' },
+  { id: 'Completed', label: 'Completed' },
+  { id: 'Cancelled', label: 'Cancelled' }
+];
+
 const SkeletonCard = () => (
-  <div className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm flex items-center gap-4 animate-pulse">
-    <div className="w-14 h-14 rounded-[18px] bg-gray-100 flex-shrink-0"></div>
-    <div className="flex-1 space-y-3 py-1">
-      <div className="h-4 bg-gray-200 rounded-md w-1/2"></div>
-      <div className="h-3 bg-gray-100 rounded-md w-3/4"></div>
+  <div className="bg-white p-6 rounded-[32px] border border-gray-50/50 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col gap-4 animate-pulse">
+    <div className="flex items-start justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-gray-100 flex-shrink-0"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 rounded-md w-24"></div>
+          <div className="h-3 bg-gray-100 rounded-md w-16"></div>
+        </div>
+      </div>
+      <div className="h-6 w-16 bg-gray-100 rounded-full"></div>
     </div>
-    <div className="flex flex-col items-end space-y-3 flex-shrink-0">
-      <div className="h-4 bg-gray-200 rounded-md w-16"></div>
-      <div className="h-3 bg-gray-100 rounded-md w-12"></div>
-    </div>
+    <div className="h-4 bg-gray-100 rounded-md w-full mt-2"></div>
   </div>
 );
 
@@ -76,11 +88,15 @@ export default function OrderHistory() {
       const status = (order.status || '').toLowerCase();
       
       // Tab Filtering
-      const isCompleted = ['delivered', 'cancelled', 'failed'].includes(status);
+      const isCompleted = ['delivered'].includes(status);
+      const isCancelled = ['cancelled', 'failed'].includes(status);
+      const isActive = !isCompleted && !isCancelled;
+
       const matchesTab = 
         activeTab === 'All' || 
-        (activeTab === 'Active' && !isCompleted) ||
-        (activeTab === 'Completed' && isCompleted);
+        (activeTab === 'Active' && isActive) ||
+        (activeTab === 'Completed' && isCompleted) ||
+        (activeTab === 'Cancelled' && isCancelled);
       
       // Search Filtering
       const normalizedSearch = searchQuery.toLowerCase();
@@ -104,7 +120,7 @@ export default function OrderHistory() {
     };
   }, [orders]);
 
-  // FEATURE 4: Status Configuration UI Matrix
+  // FEATURE 3: Premium Status Configuration UI Matrix
   const getStatusConfig = (status) => {
     const s = (status || '').toLowerCase();
     switch(s) {
@@ -113,17 +129,19 @@ export default function OrderHistory() {
       case 'processing':
       case 'accepted':
       case 'assigned':
-        return { icon: Truck, color: 'text-[#276EF1]', bg: 'bg-blue-50', border: 'border-blue-100', label: 'In Transit' };
+      case 'searching':
+      case 'picked_up':
+        return { icon: Truck, color: 'text-[#111111]', bg: 'bg-[#BCE3FF]', border: 'border-[#A5D5F9]', label: 'Active' };
       case 'delivered':
       case 'completed':
-        return { icon: CheckCircle2, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-100', label: 'Delivered' };
+        return { icon: CheckCircle2, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200', label: 'Delivered' };
       case 'cancelled':
       case 'failed':
         return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', label: 'Cancelled' };
       case 'alert':
         return { icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100', label: 'Exception' };
       default: 
-        return { icon: Package, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200', label: 'Processing' };
+        return { icon: Package, color: 'text-gray-500', bg: 'bg-gray-100', border: 'border-gray-200', label: 'Processing' };
     }
   };
 
@@ -135,27 +153,20 @@ export default function OrderHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans pb-32">
+    <div className="min-h-screen bg-[#F2F4F7] text-[#111111] font-sans pb-32">
       
-      {/* SECTION 2: Premium Header Navigation */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="px-6 pt-14 pb-4 flex items-center justify-between"
-      >
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate('/dashboard-home')} 
-            className="w-10 h-10 -ml-2 flex items-center justify-center text-black hover:bg-gray-100 rounded-full transition-colors active:scale-95"
-          >
-            <ChevronLeft size={28} strokeWidth={2.5} />
-          </button>
-          <h1 className="text-3xl font-black tracking-tight text-black">Shipments.</h1>
-        </div>
-        <div className="w-10 h-10 bg-black rounded-[10px] p-2 shadow-md flex items-center justify-center">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
-        </div>
-      </motion.div>
+      {/* SECTION 2: Stark Header Navigation (No Box Shadows or Backgrounds) */}
+      <div className="px-6 pt-12 pb-6 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md">
+        <button 
+          onClick={() => navigate('/dashboard-home')} 
+          className="w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
+        >
+          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
+        </button>
+        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] leading-none">
+          Shipments
+        </h1>
+      </div>
 
       <div className="px-6">
         
@@ -166,66 +177,53 @@ export default function OrderHistory() {
           transition={{ delay: 0.1 }}
           className="flex gap-3 mb-6"
         >
-          <div className="flex-1 bg-[#F6F6F6] rounded-2xl flex items-center px-4 py-3 border-2 border-transparent focus-within:border-black transition-colors shadow-sm">
+          <div className="flex-1 bg-white rounded-[20px] flex items-center px-4 py-3 border border-gray-100 focus-within:border-gray-300 transition-colors shadow-[0_4px_15px_rgba(0,0,0,0.02)]">
             <Search size={20} className="text-gray-400 mr-3" strokeWidth={2.5} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search ID or City..." 
-              className="bg-transparent outline-none text-[15px] font-bold text-black w-full placeholder:text-gray-400 placeholder:font-bold"
+              className="bg-transparent outline-none text-[15px] font-bold text-[#111111] w-full placeholder:text-gray-400 placeholder:font-bold"
             />
           </div>
-          <button className="w-[52px] h-[52px] bg-[#F6F6F6] rounded-2xl flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 transition-all">
+          <button className="w-[52px] h-[52px] bg-white border border-gray-100 rounded-[20px] flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.02)] active:scale-95 transition-all">
             <Filter size={20} strokeWidth={2.5} />
           </button>
         </motion.div>
 
-        {/* SECTION 4: Statistical Summary Dashboard */}
+        {/* SECTION 4: Statistical Summary Dashboard (Rounded Card Aesthetic) */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           className="flex gap-4 mb-8"
         >
-          <div className="flex-1 bg-white border border-gray-200 shadow-sm rounded-[24px] p-5 flex flex-col justify-between">
-             <p className="text-3xl font-black text-[#276EF1] mb-1">{stats.active}</p>
-             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Active</p>
+          <div className="flex-1 bg-white shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 rounded-[28px] p-6 flex flex-col justify-between">
+             <p className="text-[32px] font-black text-[#111111] mb-1 leading-none">{stats.active}</p>
+             <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Active</p>
           </div>
-          <div className="flex-1 bg-white border border-gray-200 shadow-sm rounded-[24px] p-5 flex flex-col justify-between">
-             <p className="text-3xl font-black text-black mb-1">{stats.completed}</p>
-             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Completed</p>
+          <div className="flex-1 bg-white shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 rounded-[28px] p-6 flex flex-col justify-between">
+             <p className="text-[32px] font-black text-gray-500 mb-1 leading-none">{stats.completed}</p>
+             <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Completed</p>
           </div>
         </motion.div>
 
-        {/* SECTION 5: Animated Tab Navigation */}
+        {/* SECTION 5: Modular Segmented Tab Navigation */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex gap-2 mb-6 bg-[#F6F6F6] p-1.5 rounded-2xl"
+          className="mb-6"
         >
-          {['All', 'Active', 'Completed'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`relative flex-1 py-2.5 text-sm font-black tracking-wide rounded-xl transition-colors z-10 ${
-                activeTab === tab ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              {activeTab === tab && (
-                <motion.div
-                  layoutId="activeTabBackground"
-                  className="absolute inset-0 bg-white rounded-xl shadow-sm -z-10"
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                />
-              )}
-              {tab}
-            </button>
-          ))}
+          <OrderSegmentedToggle 
+            tabs={TABS} 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab} 
+          />
         </motion.div>
 
-        {/* SECTION 6: Dynamic Staggered Shipment List */}
+        {/* SECTION 6: Dynamic Staggered Shipment List (Massive Rounded Cards) */}
         <div className="flex flex-col gap-4">
           {isLoading ? (
             // FEATURE 3: Skeleton Loading States
@@ -252,35 +250,34 @@ export default function OrderHistory() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                       transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
-                      // FEATURE 5: Seamless Routing to Mapbox Order Details
-                      onClick={() => navigate(`/order-history/detail/${order.id}`)}
-                      className="bg-white p-4 rounded-[24px] border border-gray-200 shadow-sm flex items-center gap-4 cursor-pointer active:scale-[0.98] hover:shadow-md transition-all"
+                      onClick={() => navigate(order.status === 'delivered' || order.status === 'cancelled' ? `/order-history/detail/${order.id}` : `/tracking/detail/${order.id}`)}
+                      className="bg-white p-6 rounded-[32px] border border-gray-50/50 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col gap-4 cursor-pointer active:scale-[0.98] hover:border-gray-200 transition-all"
                     >
-                      {/* Status Icon Indicator */}
-                      <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center flex-shrink-0 border ${config.bg} ${config.color} ${config.border}`}>
-                        <Icon size={24} strokeWidth={2.5} />
-                      </div>
-                      
-                      {/* Shipment Data Payload */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-black text-[16px] text-black tracking-wide truncate mb-0.5">
-                          {order.id.slice(-8).toUpperCase()}
-                        </h4>
-                        <div className="flex items-center gap-1.5 text-gray-500 text-[13px] font-bold truncate">
-                          <span className="truncate">{originShort}</span>
-                          <span className="text-gray-300">→</span>
-                          <span className="truncate">{destinationShort}</span>
+                      {/* Top Row: Icon + ID + Status Pill */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 pr-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${config.bg} ${config.color}`}>
+                            <Icon size={20} strokeWidth={2.5} />
+                          </div>
+                          <div className="flex flex-col">
+                            <h4 className="font-black text-[16px] text-[#111111] tracking-tight mb-0.5">
+                              {order.id.slice(-8).toUpperCase()}
+                            </h4>
+                            <span className="text-gray-400 text-[12px] font-bold">
+                              {formatDate(order.createdAt)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-
-                      {/* Right Side Context */}
-                      <div className="flex flex-col items-end flex-shrink-0">
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md mb-1 ${config.bg} ${config.color}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 ${config.bg} ${config.color}`}>
                           {config.label}
                         </span>
-                        <span className="text-gray-400 text-[11px] font-bold">
-                          {formatDate(order.createdAt)}
-                        </span>
+                      </div>
+
+                      {/* Route Row */}
+                      <div className="flex items-center gap-2 text-[#4A6B85] text-[14px] font-bold mt-2">
+                        <span className="truncate flex-1">{originShort}</span>
+                        <span className="text-gray-300 shrink-0">→</span>
+                        <span className="truncate flex-1">{destinationShort}</span>
                       </div>
                     </motion.div>
                   );
@@ -291,10 +288,10 @@ export default function OrderHistory() {
                   animate={{ opacity: 1 }} 
                   className="text-center py-12"
                 >
-                  <div className="w-16 h-16 bg-[#F6F6F6] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                  <div className="w-16 h-16 bg-white shadow-sm rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
                     <Package size={24} strokeWidth={2.5} />
                   </div>
-                  <p className="text-[16px] font-black text-black mb-1">No Shipments Found</p>
+                  <p className="text-[16px] font-black text-[#111111] mb-1">No Shipments Found</p>
                   <p className="text-[13px] font-bold text-gray-400">You haven't made any orders in this category yet.</p>
                 </motion.div>
               )}
