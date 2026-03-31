@@ -17,7 +17,7 @@ const db = getFirestore();
  * Generates a standard National Payments Corporation of India (NPCI) UPI Intent URI.
  * This URI can be fed directly into a QR Code generator component or used as a 
  * deep link to open apps like GPay, PhonePe, or Paytm automatically.
- * * @param {number} amount - The exact transaction amount in ₹.
+ * @param {number} amount - The exact transaction amount in ₹.
  * @param {string} transactionId - Unique order/tracking ID.
  * @param {string} note - Description of the transaction.
  * @returns {string} - The deeply formatted upi://pay URI.
@@ -45,9 +45,9 @@ export const generateUPIIntent = (amount, transactionId, note = 'Movyra Delivery
 /**
  * Calculates real-time surge multiplier based on the current hour of the day.
  * Implements strict peak-hour logistics logic to ensure driver availability.
- * * Peak Hours: 08:00 - 11:00 (Morning Rush) | 17:00 - 21:00 (Evening Rush)
+ * Peak Hours: 08:00 - 11:00 (Morning Rush) | 17:00 - 21:00 (Evening Rush)
  * Night Owl: 23:00 - 04:00 (Late Night Premium)
- * * @returns {number} - The surge multiplier (e.g., 1.0, 1.25, 1.5).
+ * @returns {number} - The surge multiplier (e.g., 1.0, 1.25, 1.5).
  */
 export const calculateSurgeMultiplier = () => {
   const currentHour = new Date().getHours();
@@ -75,7 +75,7 @@ export const calculateSurgeMultiplier = () => {
 
 /**
  * Calculates the exact delivery cost based on vehicle type, distance, and real-time surge.
- * * @param {number} distanceKm - Distance in kilometers from Google Maps Distance Matrix.
+ * @param {number} distanceKm - Distance in kilometers from Map Services.
  * @param {string} vehicleType - 'bike' | '3wheeler' | 'minitruck'.
  * @returns {Object} - Breakdown of base, perKm, surge, and final total in ₹.
  */
@@ -111,7 +111,7 @@ export const calculateDeliveryFare = (distanceKm, vehicleType) => {
 
 /**
  * Validates and applies a discount coupon to a given total amount.
- * * @param {string} couponCode - The code entered by the user.
+ * @param {string} couponCode - The code entered by the user.
  * @param {number} currentTotal - The total amount before discount.
  * @returns {Object} - { isValid, discountAmount, newTotal, message }
  */
@@ -169,7 +169,7 @@ export const applyDiscountCoupon = (couponCode, currentTotal) => {
 
 /**
  * Deducts the delivery amount from the user's digital wallet in Firestore.
- * * @param {number} amount - Amount to deduct in ₹.
+ * @param {number} amount - Amount to deduct in ₹.
  * @param {string} transactionId - Associated Order ID for the ledger.
  */
 export const deductFromWallet = async (amount, transactionId) => {
