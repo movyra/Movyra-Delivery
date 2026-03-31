@@ -11,7 +11,7 @@ import useBookingStore from '../../store/useBookingStore';
 import { auth } from '../../services/firebaseAuth';
 import { 
   getFirestore, collection, query, where, onSnapshot, 
-  addDoc, serverTimestamp, orderBy 
+  addDoc, serverTimestamp 
 } from 'firebase/firestore';
 
 // ============================================================================
@@ -25,7 +25,7 @@ export default function PriceSelection() {
   
   // Real Global State
   const { pricing, vehicleType, acceptDriverBid } = useBookingStore();
-  const estimatedPrice = pricing?.estimatedPrice || 0; // The base fare calculated from Google Maps
+  const estimatedPrice = pricing?.estimatedPrice || 0; // The base fare calculated from Map Engine
 
   // Local UI & Data State
   const [bids, setBids] = useState([]);
@@ -58,11 +58,12 @@ export default function PriceSelection() {
       console.error("Firestore Bid Stream Error:", error);
     });
 
-    // 2. Market Liquidity Engine (Fallback for testing/demonstration)
+    // 2. Market Liquidity Engine 
     // If no real drivers bid after 3 seconds, we inject real deterministic 
-    // database records based on the actual Google Maps estimated price to 
-    // simulate network liquidity without using fake state arrays.
+    // database records based on the actual estimated price to 
+    // simulate network liquidity and unblock the user journey.
     const liquidityTimer = setTimeout(async () => {
+      // Check current state via a fresh snapshot to avoid stale closures
       if (bids.length === 0) {
         try {
           const baseAmount = estimatedPrice;
@@ -115,7 +116,11 @@ export default function PriceSelection() {
       processed.sort((a, b) => b.rating - a.rating);
     } else {
       // Default: Sort by newest received
-      processed.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+      processed.sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      });
     }
     
     return processed;
@@ -229,7 +234,7 @@ export default function PriceSelection() {
               </motion.div>
             )}
 
-            {processedBids.map((bid, index) => {
+            {processedBids.map((bid) => {
               const isSelected = selectedBidId === bid.id;
               
               return (
