@@ -2,22 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Package, Send, ArrowRight, Plus, MoreHorizontal, History, 
-  Activity, MapPin, Navigation, Clock, ChevronLeft, LifeBuoy 
+  Package, Send, ArrowRight, Plus, History, 
+  Activity, MapPin, Navigation, Clock, ChevronRight, UserCircle2, HelpCircle, CheckCircle2, Truck, AlertCircle
 } from 'lucide-react';
 
 // Real Store & Database Integration
 import useBookingStore from '../../store/useBookingStore';
-// Using standard Firebase SDK directly to prevent Vite dynamic import path resolution errors
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
 
-// ============================================================================
-// PAGE: MOBILE HOME DASHBOARD (STARK MINIMALIST UI)
-// Features 7 Functional Sections: Navigation, Dynamic Greeting, Active 
-// Dispatch Radar, Live Shipment Counters, Real-time Wallet, Quick Action 
-// Grid, and a Live Activity Feed. Zero mock data.
-// ============================================================================
+/**
+ * PAGE: MOBILE HOME DASHBOARD (PREMIUM CARD UI)
+ * Features: 
+ * - Stark Headerless Navigation
+ * - Massively Rounded "Where to?" Floating Action Card
+ * - Light-Blue Active Dispatch Radar Card
+ * - OrderInfoListCard Paradigm for Recent Activity
+ * - Real-time Firestore Sync
+ */
 
 export default function MobileHome() {
   const navigate = useNavigate();
@@ -62,7 +64,7 @@ export default function MobileHome() {
           ordersRef, 
           where('userId', '==', user.uid),
           orderBy('createdAt', 'desc'),
-          limit(4)
+          limit(5)
         );
 
         unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
@@ -108,231 +110,220 @@ export default function MobileHome() {
     return 'Good evening';
   };
 
+  // Status Icon Formatter
+  const getStatusConfig = (status) => {
+    switch(status?.toLowerCase()) {
+      case 'searching': 
+      case 'assigned': 
+        return { icon: Loader2, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: true };
+      case 'picked_up': 
+        return { icon: Truck, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: false };
+      case 'delivered': 
+        return { icon: CheckCircle2, bg: 'bg-gray-100', text: 'text-gray-600', spin: false };
+      case 'cancelled': 
+        return { icon: AlertCircle, bg: 'bg-red-50', text: 'text-red-500', spin: false };
+      default: 
+        return { icon: Package, bg: 'bg-gray-100', text: 'text-gray-500', spin: false };
+    }
+  };
+
   // ============================================================================
   // RENDER UI
   // ============================================================================
   return (
-    <div className="min-h-screen bg-white text-black font-sans pb-32 overflow-x-hidden">
+    <div className="min-h-screen bg-[#F2F4F7] text-[#111111] font-sans pb-32 overflow-x-hidden relative">
       
-      {/* SECTION 1: Stark Header Navigation */}
+      {/* SECTION 1: Minimalist Header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
-        className="px-6 pt-16 pb-6 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-50"
+        className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md"
       >
-        <h1 className="text-[32px] font-black tracking-tighter leading-none">
-          Overview
-        </h1>
-        <div 
-          onClick={() => navigate('/profile-settings')}
-          className="w-10 h-10 rounded-xl overflow-hidden bg-black flex items-center justify-center border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity shadow-sm"
-        >
-          {/* Strictly rendering the real image file logo */}
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        <div>
+          <h2 className="text-[15px] font-bold text-gray-500 mb-1">{getGreeting()},</h2>
+          <h1 className="text-[32px] font-black tracking-tighter leading-none text-[#111111]">
+            {isLoading ? '...' : userName}
+          </h1>
         </div>
+        <button 
+          onClick={() => navigate('/profile-settings')}
+          className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
+        >
+          <UserCircle2 size={24} className="text-gray-600" strokeWidth={2} />
+        </button>
       </motion.div>
 
-      {/* SECTION 2: Dynamic Greeting */}
+      {/* SECTION 2: Floating "Where to?" Primary Action Card */}
       <motion.div 
-        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-        className="px-6 mb-6"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+        className="px-6 my-6"
       >
-        <p className="text-[17px] font-bold text-gray-400">
-          {getGreeting()}, <span className="text-black">{isLoading ? '...' : userName}</span>
-        </p>
+        <button 
+          onClick={() => navigate('/booking/set-location')}
+          className="w-full bg-white rounded-[32px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-gray-50 flex flex-col gap-4 active:scale-[0.98] transition-transform text-left relative overflow-hidden group"
+        >
+          <div className="flex items-center justify-between w-full relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-[#F6F6F6] rounded-full flex items-center justify-center text-[#111111] shadow-sm">
+                <Search size={24} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="text-[22px] font-black text-[#111111] leading-none mb-1.5 tracking-tight">Where to?</h3>
+                <p className="text-[14px] font-bold text-gray-400">Book a new delivery</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center text-white shadow-md group-hover:bg-gray-800 transition-colors">
+              <ArrowRight size={20} strokeWidth={3} />
+            </div>
+          </div>
+        </button>
       </motion.div>
 
-      {/* SECTION 3: Persistent Active Dispatch Banner */}
+      {/* SECTION 3: Active Dispatch / Live Shipments (Light Blue Floating Card Paradigm) */}
       <AnimatePresence>
-        {activeOrder && (
+        {activeShipmentsCount > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.9 }}
+            initial={{ opacity: 0, height: 0, scale: 0.95 }}
             animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.9 }}
+            exit={{ opacity: 0, height: 0, scale: 0.95 }}
             className="px-6 mb-6 overflow-hidden"
           >
-            <button
-              onClick={() => navigate('/tracking-active')}
-              className="w-full bg-[#276EF1] rounded-[24px] p-5 flex items-center justify-between shadow-[0_15px_30px_rgba(39,110,241,0.3)] hover:bg-blue-600 transition-colors active:scale-95 group relative overflow-hidden"
+            <div 
+              onClick={() => navigate('/tracking/live')}
+              className="bg-[#BCE3FF] rounded-[32px] p-6 shadow-[0_10px_30px_rgba(188,227,255,0.4)] border border-[#A5D5F9] cursor-pointer active:scale-[0.98] transition-transform relative overflow-hidden"
             >
               {/* Radar pulse effect background */}
-              <div className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 rounded-full animate-ping opacity-75" />
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 rounded-full animate-ping opacity-75" />
               
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#276EF1] shadow-sm">
+                <div className="w-14 h-14 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center text-[#111111] shadow-sm">
                   <Activity size={24} strokeWidth={2.5} />
                 </div>
-                <div className="text-left">
-                  <span className="block text-[16px] font-black text-white leading-tight">Active Dispatch</span>
-                  <span className="block text-[13px] font-bold text-blue-100 mt-0.5">Tap to track live route</span>
+                <div className="flex-1 text-left">
+                  <span className="block text-[20px] font-black text-[#111111] leading-tight tracking-tight mb-1">
+                    {activeShipmentsCount} Active {activeShipmentsCount === 1 ? 'Shipment' : 'Shipments'}
+                  </span>
+                  <span className="block text-[13px] font-bold text-[#4A6B85]">Tap to track live routes</span>
                 </div>
+                <ChevronRight size={24} className="text-[#111111]" strokeWidth={2.5} />
               </div>
-              <ChevronLeft size={24} className="text-white rotate-180 relative z-10 group-hover:translate-x-1 transition-transform" strokeWidth={3} />
-            </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* SECTION 4: Light Gray Card (Active Shipments Counter) */}
-      <div className="relative px-4 flex flex-col mb-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
-          className="bg-[#F6F6F6] rounded-[32px] p-8 shadow-[0_12px_40px_rgba(0,0,0,0.06)] relative z-20 border border-white"
-        >
-          <div className="flex justify-between items-start">
-            <span className="text-[15px] font-bold text-gray-500">Live Shipments</span>
-            <Package className="text-gray-400" size={22} strokeWidth={2} />
-          </div>
-          
-          <h2 className="text-[64px] font-black text-black leading-none tracking-tighter mt-2 mb-8">
-            {isLoading ? '-' : activeShipmentsCount}
-          </h2>
-          
-          <div className="flex justify-between items-center py-3.5 border-t border-gray-200">
-            <span className="text-[15px] font-bold text-black">In Transit</span>
-            <span className="text-[15px] font-bold text-gray-400">{activeShipmentsCount > 0 ? '1' : '0'}</span>
-          </div>
-          <div className="flex justify-between items-center py-3.5 border-t border-gray-200">
-            <span className="text-[15px] font-bold text-black">Pending Pickup</span>
-            <span className="text-[15px] font-bold text-gray-400">{Math.max(0, activeShipmentsCount - 1)}</span>
-          </div>
-          
-          <button 
-            onClick={() => navigate('/order-history')}
-            className="mt-2 text-[15px] font-bold text-[#276EF1] flex items-center gap-1 hover:opacity-70 transition-opacity"
-          >
-            View all orders <ArrowRight size={16} strokeWidth={2.5} />
-          </button>
-        </motion.div>
-
-        {/* SECTION 5: Solid Black Card (Real-time Wallet in ₹) */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-[#121212] rounded-[32px] p-8 pt-14 -mt-8 relative z-10"
-        >
-          <div className="flex justify-between items-start">
-            <span className="text-[15px] font-bold text-gray-400">Account Balance</span>
-            <button className="text-gray-400 hover:text-white transition-colors">
-              <MoreHorizontal size={24} />
-            </button>
-          </div>
-          
-          <h2 className="text-[48px] font-black text-white leading-none tracking-tighter mt-2 mb-8 flex items-center gap-1">
-            <span className="text-[28px] opacity-50">₹</span>
-            {isLoading ? '0.00' : accountBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </h2>
-          
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/booking/set-location')}
-              className="flex-1 flex items-center justify-center gap-2 bg-white text-black rounded-full px-4 py-3.5 text-[15px] font-bold hover:bg-gray-200 active:scale-95 transition-all"
-            >
-              <Send size={18} strokeWidth={2.5} /> Send Package
-            </button>
-            <button className="flex items-center justify-center bg-white/10 text-white rounded-full w-12 h-12 hover:bg-white/20 active:scale-95 transition-all shrink-0">
-              <Plus size={20} strokeWidth={2.5} />
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* SECTION 6: Quick Actions Grid (Expanded) */}
+      {/* SECTION 4: Quick Actions Grid */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.35 }}
-        className="px-6 mb-10 grid grid-cols-2 gap-3"
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
+        className="px-6 mb-8 grid grid-cols-2 gap-4"
       >
         <button 
           onClick={() => navigate('/profile/addresses')}
-          className="bg-[#F6F6F6] p-4 rounded-2xl flex flex-col items-start gap-3 border-2 border-transparent hover:border-gray-200 active:scale-95 transition-all"
+          className="bg-white p-5 rounded-[28px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col items-start gap-4 active:scale-95 transition-all"
         >
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <MapPin size={16} className="text-black" strokeWidth={2.5} />
+          <div className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111]">
+            <MapPin size={18} strokeWidth={2.5} />
           </div>
-          <span className="text-[14px] font-bold text-black">Saved Places</span>
+          <span className="text-[15px] font-black text-[#111111] tracking-tight">Saved Places</span>
         </button>
         
         <button 
-          onClick={() => navigate('/booking/set-location')}
-          className="bg-[#F6F6F6] p-4 rounded-2xl flex flex-col items-start gap-3 border-2 border-transparent hover:border-gray-200 active:scale-95 transition-all"
-        >
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <Navigation size={16} className="text-black" strokeWidth={2.5} />
-          </div>
-          <span className="text-[14px] font-bold text-black">Estimate Fare</span>
-        </button>
-
-        <button 
           onClick={() => navigate('/order-history')}
-          className="bg-[#F6F6F6] p-4 rounded-2xl flex flex-col items-start gap-3 border-2 border-transparent hover:border-gray-200 active:scale-95 transition-all"
+          className="bg-white p-5 rounded-[28px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50 flex flex-col items-start gap-4 active:scale-95 transition-all"
         >
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <History size={16} className="text-black" strokeWidth={2.5} />
+          <div className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111]">
+            <History size={18} strokeWidth={2.5} />
           </div>
-          <span className="text-[14px] font-bold text-black">History</span>
+          <span className="text-[15px] font-black text-[#111111] tracking-tight">Order History</span>
         </button>
 
         <button 
-          onClick={() => navigate('/profile-settings')}
-          className="bg-[#F6F6F6] p-4 rounded-2xl flex flex-col items-start gap-3 border-2 border-transparent hover:border-gray-200 active:scale-95 transition-all"
+          className="bg-[#111111] p-5 rounded-[28px] shadow-[0_10px_20px_rgba(0,0,0,0.1)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden"
         >
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm">
-            <LifeBuoy size={16} className="text-black" strokeWidth={2.5} />
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col text-left">
+              <span className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">Movyra Wallet</span>
+              <span className="text-[32px] font-black text-white leading-none tracking-tighter">
+                ₹{isLoading ? '...' : accountBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
+              <Plus size={24} strokeWidth={2.5} />
+            </div>
           </div>
-          <span className="text-[14px] font-bold text-black">Support</span>
         </button>
       </motion.div>
 
-      {/* SECTION 7: Real Recent Activity Feed */}
+      {/* SECTION 5: Recent Activity (OrderInfoListCard Paradigm) */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
         className="px-6"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <History size={16} className="text-gray-400" strokeWidth={2.5} />
-            <span className="text-[13px] font-black text-gray-400 uppercase tracking-widest">
-              Recent Activity
-            </span>
-          </div>
-          <button onClick={() => navigate('/order-history')} className="text-[13px] font-bold text-[#276EF1]">See All</button>
+        <div className="flex items-center justify-between mb-4 px-2">
+          <span className="text-[14px] font-black text-gray-400 uppercase tracking-widest">
+            Recent Activity
+          </span>
+          <button onClick={() => navigate('/order-history')} className="text-[14px] font-bold text-[#111111] hover:underline">
+            See All
+          </button>
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-4">
           {isLoading ? (
-            // Skeleton Loader
-            [1, 2].map(i => <div key={i} className="h-20 bg-[#F6F6F6] rounded-2xl animate-pulse" />)
+            // Skeleton Loaders matching new rounded paradigm
+            [1, 2].map(i => <div key={i} className="h-[100px] bg-white rounded-[32px] animate-pulse border border-gray-50" />)
           ) : recentActivity.length === 0 ? (
             // Empty State
-            <div className="border-2 border-[#F6F6F6] rounded-[24px] p-6 text-center">
+            <div className="bg-white rounded-[32px] p-8 text-center border border-gray-50 shadow-[0_4px_15px_rgba(0,0,0,0.03)]">
               <p className="text-[15px] font-bold text-gray-400 leading-relaxed">
-                No recent shipments found. Book a delivery to see your history here.
+                No recent shipments found. Tap 'Where to?' to book your first delivery.
               </p>
             </div>
           ) : (
-            // Live Data Feed
-            recentActivity.map(order => (
-              <div 
-                key={order.id} 
-                onClick={() => navigate(`/tracking/detail/${order.id}`)}
-                className="bg-[#F6F6F6] p-4 rounded-[20px] flex items-center justify-between cursor-pointer hover:bg-gray-100 transition-colors border-2 border-transparent hover:border-gray-200 active:scale-[0.98]"
-              >
-                <div className="flex items-center gap-4 truncate">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0 text-black">
-                    <Clock size={20} strokeWidth={2.5} />
+            // Live Data Feed (OrderInfoListCard style)
+            recentActivity.map(order => {
+              const config = getStatusConfig(order.status);
+              const Icon = config.icon;
+              const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+              const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+              
+              return (
+                <div 
+                  key={order.id} 
+                  onClick={() => navigate(order.status === 'delivered' || order.status === 'cancelled' ? `/order-history/detail/${order.id}` : `/tracking/detail/${order.id}`)}
+                  className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 flex flex-col gap-4 cursor-pointer hover:border-gray-200 active:scale-[0.98] transition-all"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 overflow-hidden pr-4">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${config.bg} ${config.text}`}>
+                        <Icon size={18} strokeWidth={2.5} className={config.spin ? 'animate-spin' : ''} />
+                      </div>
+                      <span className="text-[15px] font-black text-[#111111] tracking-tight truncate">
+                        {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address?.split(',')[0] : order.dropoff?.address?.split(',')[0] || 'Delivery'}
+                      </span>
+                    </div>
+                    <button className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 shrink-0">
+                      <ChevronRight size={16} strokeWidth={2.5} />
+                    </button>
                   </div>
-                  <div className="truncate">
-                    <h4 className="text-[15px] font-black text-black leading-tight mb-0.5 truncate">
-                      {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address : order.dropoff?.address || 'Delivery'}
-                    </h4>
-                    <span className={`text-[12px] font-bold uppercase tracking-widest ${order.status === 'delivered' ? 'text-green-600' : 'text-[#276EF1]'}`}>
-                      {order.status || 'Processing'}
-                    </span>
+                  
+                  <div className="flex items-end justify-between mt-1 pl-[52px]">
+                    <div className="flex-1 pr-4">
+                      <p className={`text-[14px] font-bold leading-tight capitalize ${order.status === 'cancelled' ? 'text-red-500' : 'text-[#111111]'}`}>
+                        {order.status?.replace('_', ' ') || 'Processing'}
+                      </p>
+                      <p className="text-[12px] font-medium text-gray-400 mt-1">
+                        {formattedDate} • {order.vehicleType || 'Standard'}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[20px] font-black text-[#111111] leading-none tracking-tight">
+                        ₹{order.pricing?.estimatedPrice || order.totalFare || 0}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="block text-[16px] font-black text-black">₹{order.pricing?.estimatedPrice || order.totalFare || 0}</span>
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </motion.div>
