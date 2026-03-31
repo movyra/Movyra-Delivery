@@ -31,8 +31,9 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    // Explicitly pre-bundle heavy dependencies to prevent 504 Gateway Timeouts during lazy loading transitions
-    include: ['@emailjs/browser', 'mapbox-gl', 'axios', 'framer-motion', 'lucide-react']
+    // Explicitly pre-bundle heavy dependencies to prevent 504 Gateway Timeouts during lazy loading transitions.
+    // Removed 'mapbox-gl' and replaced with 'leaflet' for OpenStreetMap stability.
+    include: ['@emailjs/browser', 'leaflet', 'axios', 'framer-motion', 'lucide-react']
   },
   server: {
     // Ensures stable hot-module reloading and prevents network drops in cloud environments

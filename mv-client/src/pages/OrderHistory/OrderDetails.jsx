@@ -1,27 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
   ChevronLeft, MapPin, Clock, Download, 
   Loader2, AlertCircle, CheckCircle2, XCircle, Truck,
   Package, ShieldAlert, Diamond, UserCircle2, HelpCircle
 } from 'lucide-react';
-import jsPDF from 'jspdf';
+
+// Corrected import for production build compatibility
+import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 // Real Database Integration
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 // ============================================================================
-// PAGE: ORDER DETAILS & HISTORICAL INVOICE (STARK MINIMALIST UI)
-// Deep-dive into a past order. Generates a read-only map of the route, 
-// a timestamped logistics timeline, driver details, and a printable B2B GST invoice.
+// PAGE: ORDER DETAILS & HISTORICAL INVOICE (STRICT OSM ARCHITECTURE)
+// Deep-dive into a past order using Leaflet Raster Tiles for maximum stability.
+// Generates a read-only route map, logistics timeline, and GST invoice.
 // ============================================================================
-
-// Secure Mapbox Authentication Injection
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -44,6 +43,7 @@ export default function OrderDetails() {
   useEffect(() => {
     const fetchOrderDetails = async () => {
       try {
+        if (!id) return;
         const orderRef = doc(db, 'orders', id);
         const snapshot = await getDoc(orderRef);
         
@@ -60,55 +60,70 @@ export default function OrderDetails() {
       }
     };
 
-    if (id) fetchOrderDetails();
+    fetchOrderDetails();
   }, [id, db]);
 
   // ============================================================================
-  // FEATURE 2: PROPRIETARY MAPBOX ENGINE (READ-ONLY ROUTE PLOTTING)
+  // FEATURE 2: OPENSTREETMAP ENGINE (LEAFLET READ-ONLY PLOTTING)
   // ============================================================================
   useEffect(() => {
     if (!order || !mapContainer.current || map.current) return;
 
-    // Initialize Read-Only Mapbox Instance
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: import.meta.env.VITE_MAPBOX_STYLE_URL || 'mapbox://styles/mapbox/light-v11',
-      interactive: false, // Freeze the map for receipt view
-      attributionControl: false
+    // Determine Map Center
+    const pickupLat = order.pickup?.lat || 28.6139;
+    const pickupLng = order.pickup?.lng || 77.2090;
+
+    // Initialize Leaflet Map (Raster based - immune to WebGL blanking)
+    map.current = L.map(mapContainer.current, {
+      center: [pickupLat, pickupLng],
+      zoom: 13,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      touchZoom: false
     });
 
-    map.current.on('load', () => {
-      const bounds = new mapboxgl.LngLatBounds();
-      
-      // Plot Pickup Marker
-      if (order.pickup?.lat && order.pickup?.lng) {
-        const pickupEl = document.createElement('div');
-        pickupEl.className = 'w-4 h-4 bg-white border-4 border-black rounded-full shadow-md';
-        new mapboxgl.Marker({ element: pickupEl })
-          .setLngLat([order.pickup.lng, order.pickup.lat])
-          .addTo(map.current);
-        bounds.extend([order.pickup.lng, order.pickup.lat]);
-      }
+    // Add OSM Tile Layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map.current);
 
-      // Plot Dropoff Marker(s)
-      const dropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
-      dropoffs.forEach((drop, idx) => {
-        if (drop?.lat && drop?.lng) {
-          const dropEl = document.createElement('div');
-          dropEl.className = 'w-5 h-5 bg-black text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md';
-          dropEl.innerText = (idx + 1).toString();
-          new mapboxgl.Marker({ element: dropEl })
-            .setLngLat([drop.lng, drop.lat])
-            .addTo(map.current);
-          bounds.extend([drop.lng, drop.lat]);
-        }
+    const points = [];
+
+    // Plot Pickup Marker
+    if (order.pickup?.lat) {
+      const pickupIcon = L.divIcon({
+        className: '',
+        html: `<div class="w-4 h-4 bg-white border-4 border-black rounded-full shadow-md"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
       });
+      L.marker([order.pickup.lat, order.pickup.lng], { icon: pickupIcon }).addTo(map.current);
+      points.push([order.pickup.lat, order.pickup.lng]);
+    }
 
-      // Algorithmic framing to perfectly center the route
-      if (!bounds.isEmpty()) {
-        map.current.fitBounds(bounds, { padding: 50, duration: 0 });
+    // Plot Dropoff Marker(s)
+    const dropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
+    dropoffs.forEach((drop, idx) => {
+      if (drop?.lat) {
+        const dropIcon = L.divIcon({
+          className: '',
+          html: `<div class="w-5 h-5 bg-black text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md">${idx + 1}</div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+        L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(map.current);
+        points.push([drop.lat, drop.lng]);
       }
     });
+
+    // Fit bounds to show entire route
+    if (points.length > 1) {
+      const bounds = L.latLngBounds(points);
+      map.current.fitBounds(bounds, { padding: [40, 40] });
+    }
+
+    // Force layout update for Leaflet
+    setTimeout(() => map.current?.invalidateSize(), 200);
 
     return () => {
       if (map.current) {
@@ -119,7 +134,7 @@ export default function OrderDetails() {
   }, [order]);
 
   // ============================================================================
-  // FEATURE 7: B2B GST INVOICE GENERATOR (HTML2CANVAS + JSPDF)
+  // FEATURE 7: B2B GST INVOICE GENERATOR
   // ============================================================================
   const handleDownloadInvoice = async () => {
     if (!receiptRef.current || !order) return;
@@ -138,7 +153,7 @@ export default function OrderDetails() {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`Movyra_Invoice_${order.id}.pdf`);
+      pdf.save(`Movyra_Invoice_${order.id.slice(-8)}.pdf`);
     } catch (err) {
       console.error("PDF Engine Error:", err);
     } finally {
@@ -146,9 +161,6 @@ export default function OrderDetails() {
     }
   };
 
-  // ============================================================================
-  // RENDER UI
-  // ============================================================================
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center font-sans">
@@ -169,7 +181,6 @@ export default function OrderDetails() {
     );
   }
 
-  // Formatting Real Data
   const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date();
   const formattedDate = dateObj.toLocaleString('en-IN', { 
     day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true 
@@ -179,13 +190,12 @@ export default function OrderDetails() {
   const taxableValue = totalAmount / 1.18;
   const cgst = taxableValue * 0.09;
   const sgst = taxableValue * 0.09;
-
   const dropoffsArray = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
 
   return (
     <div className="min-h-screen bg-[#F6F6F6] text-black flex flex-col font-sans relative">
       
-      {/* HEADER NAVIGATION */}
+      {/* HEADER */}
       <div className="pt-12 px-6 pb-4 flex items-center justify-between sticky top-0 bg-[#F6F6F6]/90 backdrop-blur-md z-50">
         <button 
           onClick={() => navigate(-1)} 
@@ -193,19 +203,18 @@ export default function OrderDetails() {
         >
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
-        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-black flex items-center justify-center p-1">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
         
-        {/* FEATURE 3: GEOGRAPHIC MAPBOX VISUALIZATION */}
-        <div className="h-[250px] w-full relative bg-gray-200 border-b-4 border-black">
+        {/* FEATURE 3: OSM LOGISTICS MAP */}
+        <div className="h-[250px] w-full relative bg-gray-100 border-b-4 border-black">
           <div ref={mapContainer} className="absolute inset-0" />
           
-          {/* Status Overlay Badge */}
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000]">
             <span className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-black uppercase tracking-widest shadow-lg ${
               order.status === 'delivered' ? 'bg-black text-white' : 
               order.status === 'cancelled' ? 'bg-[#FF3B30] text-white' : 
@@ -221,7 +230,7 @@ export default function OrderDetails() {
 
         <div className="px-6 -mt-8 relative z-20 space-y-6">
           
-          {/* FEATURE 4: PACKAGE CONFIGURATION & SECURITY */}
+          {/* PACKAGE DETAILS */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
             <h3 className="font-bold text-[13px] text-gray-400 uppercase tracking-widest mb-4">Package Config</h3>
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -261,7 +270,7 @@ export default function OrderDetails() {
             )}
           </motion.div>
 
-          {/* FEATURE 5: VERIFIED PARTNER DETAILS */}
+          {/* PARTNER ASSIGNMENT */}
           {order.selectedBid && (
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200 flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -280,7 +289,7 @@ export default function OrderDetails() {
             </motion.div>
           )}
 
-          {/* FEATURE 6: DETAILED ROUTE TIMELINE */}
+          {/* TIMELINE */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
             <h3 className="text-[18px] font-black text-black mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
               <MapPin size={20} /> Logistics Timeline
@@ -303,43 +312,43 @@ export default function OrderDetails() {
             </div>
           </motion.div>
 
-          {/* FEATURE 7: DIGITAL GST INVOICE (Printable Target) */}
+          {/* TAX INVOICE */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <div ref={receiptRef} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
-              <div className="flex justify-between items-start mb-6 pb-6 border-b-2 border-dashed border-gray-200">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black rounded-md flex items-center justify-center overflow-hidden">
-                    <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+            <div ref={receiptRef} className="bg-white rounded-[24px] p-8 shadow-sm border border-gray-200">
+              <div className="flex justify-between items-start mb-8 pb-8 border-b-2 border-dashed border-gray-200">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center overflow-hidden p-1.5 shadow-md">
+                    <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h2 className="text-[20px] font-black tracking-tight text-black leading-none">Movyra</h2>
+                    <h2 className="text-[24px] font-black tracking-tight text-black leading-none">Movyra</h2>
                     <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Tax Invoice</span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="block text-[12px] font-black text-black tracking-wider uppercase">{order.id.slice(-8)}</span>
+                  <span className="block text-[13px] font-black text-black tracking-wider uppercase">{order.id.slice(-8).toUpperCase()}</span>
                   <span className="block text-[11px] font-bold text-gray-400 mt-1">{formattedDate.split(',')[0]}</span>
                 </div>
               </div>
 
               <div className="space-y-3 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-bold text-gray-500">Logistics Base Fare</span>
-                  <span className="text-[14px] font-black text-black">₹{taxableValue.toFixed(2)}</span>
+                <div className="flex justify-between items-center text-[15px]">
+                  <span className="font-bold text-gray-500">Logistics Base Fare</span>
+                  <span className="font-black text-black">₹{taxableValue.toFixed(2)}</span>
                 </div>
                 {order.pricing?.isGroupDelivery && (
-                  <div className="flex justify-between items-center text-green-600 bg-green-50 p-2 rounded-lg">
-                    <span className="text-[13px] font-bold">Group Pool Discount</span>
-                    <span className="text-[13px] font-black">Applied</span>
+                  <div className="flex justify-between items-center text-green-600 bg-green-50 p-2 rounded-lg text-[13px]">
+                    <span className="font-bold">Group Pool Discount</span>
+                    <span className="font-black">Applied</span>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="text-[14px] font-bold text-gray-500">CGST (9%)</span>
-                  <span className="text-[14px] font-black text-black">₹{cgst.toFixed(2)}</span>
+                <div className="flex justify-between items-center text-[15px]">
+                  <span className="font-bold text-gray-500">CGST (9%)</span>
+                  <span className="font-black text-black">₹{cgst.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center pb-4 border-b border-gray-100">
-                  <span className="text-[14px] font-bold text-gray-500">SGST (9%)</span>
-                  <span className="text-[14px] font-black text-black">₹{sgst.toFixed(2)}</span>
+                <div className="flex justify-between items-center pb-4 border-b border-gray-100 text-[15px]">
+                  <span className="font-bold text-gray-500">SGST (9%)</span>
+                  <span className="font-black text-black">₹{sgst.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-[18px] font-black text-black uppercase tracking-wide">Final Total</span>
@@ -349,14 +358,14 @@ export default function OrderDetails() {
 
               <div className="text-center mt-6 pt-6 border-t border-gray-100">
                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">GSTIN: 27AADCM9999A1Z9</p>
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Paid securely via Movyra App</p>
+                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">This is a computer generated invoice.</p>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* FLOATING ACTION FOOTER */}
+      {/* FOOTER ACTIONS */}
       <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F6F6F6]/90 backdrop-blur-md z-30 flex gap-3">
         <button 
           onClick={() => navigate('/support/dispute')}
