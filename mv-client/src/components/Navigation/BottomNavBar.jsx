@@ -1,25 +1,38 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Package, History, User } from 'lucide-react';
+import { Home, Package, History, User, PieChart } from 'lucide-react';
 import { motion } from 'framer-motion';
+
+// Real Auth Store Integration
+import useAuthStore from '../../store/useAuthStore';
 
 // ============================================================================
 // COMPONENT: BOTTOM NAV BAR (STARK MINIMALIST UI)
 // Replicates the Uber-inspired ultra-flat, high-contrast bottom dock.
-// Features a stark white background, 1px border, filled black icons for 
-// active states, and thin gray icons for inactive states.
+// Dynamically toggles Activity/Expenses routing based on B2B User Role.
 // ============================================================================
 
 export default function BottomNavBar() {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Real Global State
+  const { user } = useAuthStore();
 
-  // SECTION 1: Tab Configuration Engine
+  // Determine if the authenticated user has a Business/B2B account profile
+  const isB2B = user?.isB2B === true || user?.accountType === 'business';
+
+  // SECTION 1: Dynamic Tab Configuration Engine
   // Defines the 4 required core routes and their corresponding minimalist icons
   const tabs = [
     { id: 'home', path: '/dashboard-home', icon: Home, label: 'Home' },
     { id: 'tracking', path: '/tracking-active', icon: Package, label: 'Track' },
-    { id: 'history', path: '/order-history', icon: History, label: 'Activity' },
+    { 
+      id: 'history', 
+      path: isB2B ? '/expense-tracker' : '/order-history', 
+      icon: isB2B ? PieChart : History, 
+      label: isB2B ? 'Expenses' : 'Activity' 
+    },
     { id: 'profile', path: '/profile-settings', icon: User, label: 'Account' }
   ];
 
@@ -28,7 +41,14 @@ export default function BottomNavBar() {
   const isActive = (path) => {
     // Special case fallback for the root directory matching dashboard
     if (path === '/dashboard-home' && location.pathname === '/') return true;
-    return location.pathname.includes(path);
+    
+    // Exact match handling to prevent overlaps
+    if (location.pathname === path) return true;
+    
+    // Detail route matching (e.g., /order-history/detail/123 -> matches /order-history)
+    if (location.pathname.startsWith(path + '/')) return true;
+
+    return false;
   };
 
   return (
@@ -57,8 +77,8 @@ export default function BottomNavBar() {
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="flex flex-col items-center justify-center gap-1.5"
             >
-              {/* Icon state logic strictly follows instructions:
-                Active: Stroke width 2.5 + filled background
+              {/* Icon state logic strictly follows high-contrast rules:
+                Active: Stroke width 2.5 + filled background via currentColor
                 Inactive: Stroke width 1.5 + no fill
               */}
               <Icon 
