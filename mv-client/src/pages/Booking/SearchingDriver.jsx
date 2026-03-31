@@ -1,43 +1,112 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle2, UserCircle2, MapPin, ShieldCheck } from 'lucide-react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { X, CheckCircle2, UserCircle2, ShieldCheck, Loader2, Activity } from 'lucide-react';
 
 // Real Store & Firestore Integration
 import useBookingStore from '../../store/useBookingStore';
+import useMapSettingsStore from '../../store/useMapSettingsStore';
 import { getFirestore, doc, onSnapshot, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth } from '../../services/firebaseAuth';
 
-// ============================================================================
-// PAGE: SEARCHING DRIVER (STARK MINIMALIST UI)
-// Implements a real-time radar animation that listens strictly to Firestore 
-// for order status changes. Transitions dynamically when a driver accepts.
-// ============================================================================
+// Modular UI Components & Services
+import { MAP_LAYERS } from '../../services/mapLayers';
+import OrderFloatingStatusCard from '../../components/OrderDetails/OrderFloatingStatusCard';
+
+/**
+ * PAGE: SEARCHING DRIVER (IMMERSIVE RADAR UI)
+ * Architecture: 100vh Fullscreen Map Overlay
+ * Features: 
+ * - High-Fidelity CSS Radar Pulse
+ * - Read-only Leaflet Route Plotting
+ * - Floating Status Card Integration
+ * - Real-time Firestore Auto-Assign logic
+ */
 
 export default function SearchingDriver() {
   const navigate = useNavigate();
+  const db = getFirestore();
+  const mapContainer = useRef(null);
+  const map = useRef(null);
   
   // Global State
-  const { activeOrder, pricing, resetBooking } = useBookingStore();
+  const { activeOrder, pricing, pickup, dropoffs, resetBooking } = useBookingStore();
+  const { mapTheme } = useMapSettingsStore();
   
   // Local UI State
   const [searchStatus, setSearchStatus] = useState('searching'); // 'searching' | 'found' | 'cancelled'
   const [driverDetails, setDriverDetails] = useState(null);
 
   // ============================================================================
+  // OPENSTREETMAP ENGINE (IMMERSIVE BACKGROUND)
+  // ============================================================================
+  useEffect(() => {
+    if (!pickup?.lat || !mapContainer.current) return;
+
+    if (!map.current) {
+      map.current = L.map(mapContainer.current, {
+        center: [pickup.lat, pickup.lng],
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: false,
+        scrollWheelZoom: false,
+        touchZoom: false
+      });
+      L.tileLayer(MAP_LAYERS[mapTheme] || MAP_LAYERS.standard).addTo(map.current);
+    }
+
+    const safeDropoffs = Array.isArray(dropoffs) ? dropoffs : [];
+    const points = [];
+
+    // Plot route waypoints
+    const pickupIcon = L.divIcon({
+      className: '',
+      html: `<div class="w-4 h-4 bg-white border-[4px] border-[#111111] rounded-full shadow-md"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+    L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map.current);
+    points.push([pickup.lat, pickup.lng]);
+
+    safeDropoffs.forEach((drop) => {
+      if (drop?.lat) {
+        const dropIcon = L.divIcon({
+          className: '',
+          html: `<div class="w-[22px] h-[22px] bg-[#FF3B30] rounded-full shadow-lg border-[3px] border-white"></div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11]
+        });
+        L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(map.current);
+        points.push([drop.lat, drop.lng]);
+      }
+    });
+
+    if (points.length > 1) {
+      map.current.fitBounds(L.latLngBounds(points), { padding: [100, 100] });
+    }
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, [pickup, dropoffs, mapTheme]);
+
+  // ============================================================================
   // LOGIC: REAL-TIME FIRESTORE LISTENER & AUTO-ASSIGN ENGINE
   // ============================================================================
   useEffect(() => {
-    // Failsafe: If accessed without an active order, kick back to home
     if (!activeOrder) {
       navigate('/dashboard-home', { replace: true });
       return;
     }
 
-    const db = getFirestore();
     const orderRef = doc(db, 'orders', activeOrder);
 
-    // 1. Strict real-time listener on the actual Firestore document
     const unsubscribe = onSnapshot(orderRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
@@ -45,11 +114,7 @@ export default function SearchingDriver() {
         if (data.status === 'assigned' || data.status === 'accepted') {
           setDriverDetails(data.driver || pricing.selectedBid);
           setSearchStatus('found');
-          
-          // Auto-transition to Live Tracking after showing the success state
-          setTimeout(() => {
-            navigate('/tracking-active', { replace: true });
-          }, 2500);
+          setTimeout(() => navigate('/tracking-active', { replace: true }), 2500);
         } else if (data.status === 'cancelled') {
           setSearchStatus('cancelled');
           setTimeout(() => {
@@ -60,205 +125,121 @@ export default function SearchingDriver() {
       }
     });
 
-    // 2. Market Liquidity Engine (Ensures the flow completes for demonstration)
-    // If no real driver app updates the Firestore doc within 4 seconds, we 
-    // force the update to 'assigned' using the bid the user previously selected.
+    // Liquidity Engine (Simulation for Demo)
     const liquidityTimer = setTimeout(async () => {
       if (searchStatus === 'searching') {
         try {
           const matchedDriver = pricing.selectedBid || {
-            driverName: "System Assigned",
-            rating: 4.8,
+            driverName: "Verified Partner",
+            rating: 4.9,
             vehicleType: "bike"
           };
-
           await updateDoc(orderRef, {
             status: 'assigned',
             driver: matchedDriver,
             matchedAt: serverTimestamp()
           });
-        } catch (error) {
-          console.error("Failed to auto-assign driver:", error);
-        }
+        } catch (error) { console.error(error); }
       }
-    }, 4000);
+    }, 5000);
 
-    return () => {
-      unsubscribe();
-      clearTimeout(liquidityTimer);
-    };
-  }, [activeOrder, navigate, pricing.selectedBid, resetBooking, searchStatus]);
+    return () => { unsubscribe(); clearTimeout(liquidityTimer); };
+  }, [activeOrder, navigate, pricing.selectedBid, resetBooking, searchStatus, db]);
 
-  // ============================================================================
-  // HANDLERS
-  // ============================================================================
   const handleCancelSearch = async () => {
     if (!activeOrder) return;
-    
     try {
-      const db = getFirestore();
-      const orderRef = doc(db, 'orders', activeOrder);
-      
-      // Physically update the database to halt driver assignment
-      await updateDoc(orderRef, {
+      await updateDoc(doc(db, 'orders', activeOrder), {
         status: 'cancelled',
         cancelledAt: serverTimestamp(),
-        cancelReason: 'User cancelled during search'
+        cancelReason: 'User cancelled search'
       });
-      
-    } catch (error) {
-      console.error("Failed to cancel order:", error);
-    }
+    } catch (error) { console.error(error); }
   };
 
-  // ============================================================================
-  // RENDER UI
-  // ============================================================================
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col items-center justify-center font-sans relative overflow-hidden">
+    <div className="relative h-screen w-full bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
-      {/* SECTION 1: Dynamic Radar & Success Visuals */}
-      <div className="relative w-full max-w-sm aspect-square flex items-center justify-center mb-12 mt-12">
-        
+      {/* SECTION 1: 100vh IMMERSIVE MAP */}
+      <div ref={mapContainer} className="absolute inset-0 z-0 bg-[#e5e7eb]" />
+
+      {/* SECTION 2: RADAR OVERLAY */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
         <AnimatePresence mode="wait">
           {searchStatus === 'searching' && (
             <motion.div 
-              key="radar"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="absolute inset-0 flex items-center justify-center"
+              key="radar-effect"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="relative flex items-center justify-center w-full max-w-xs aspect-square"
             >
-              {/* Expanding Radar Rings */}
+              {/* Pulsing Ripple Rings */}
               {[1, 2, 3].map((ring) => (
                 <motion.div
                   key={ring}
-                  animate={{ 
-                    scale: [1, 2.5], 
-                    opacity: [0.15, 0],
-                    borderWidth: ['2px', '1px']
-                  }}
-                  transition={{ 
-                    repeat: Infinity, 
-                    duration: 2.5, 
-                    delay: ring * 0.6,
-                    ease: "easeOut" 
-                  }}
-                  className="absolute w-24 h-24 rounded-full border-black bg-black/5"
+                  animate={{ scale: [1, 2.8], opacity: [0.3, 0] }}
+                  transition={{ repeat: Infinity, duration: 3, delay: ring * 0.8, ease: "easeOut" }}
+                  className="absolute w-32 h-32 rounded-full border-4 border-[#111111] bg-[#111111]/5"
                 />
               ))}
               
-              {/* Central Logo Core */}
-              <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center z-10 shadow-[0_10px_30px_rgba(0,0,0,0.2)] border-4 border-white overflow-hidden">
-                <img src="/logo.png" alt="Movyra" className="w-12 h-12 object-contain" />
+              {/* Central Radar Core */}
+              <div className="w-24 h-24 bg-[#111111] rounded-full flex items-center justify-center z-20 shadow-[0_15px_40px_rgba(0,0,0,0.3)] border-4 border-white overflow-hidden">
+                <Activity size={32} className="text-white animate-pulse" strokeWidth={2.5} />
               </div>
             </motion.div>
           )}
 
           {searchStatus === 'found' && (
             <motion.div 
-              key="found"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="absolute inset-0 flex flex-col items-center justify-center"
+              key="found-effect"
+              initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
+              className="bg-white p-8 rounded-[48px] shadow-2xl flex flex-col items-center gap-4 z-20 border border-gray-100"
             >
-              <div className="w-32 h-32 bg-black rounded-full flex items-center justify-center shadow-[0_20px_40px_rgba(0,0,0,0.2)] mb-6 border-8 border-gray-50">
-                <CheckCircle2 size={64} className="text-white" strokeWidth={2.5} />
+              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-[0_10px_25px_rgba(34,197,94,0.4)]">
+                <CheckCircle2 size={40} className="text-white" strokeWidth={3} />
               </div>
-            </motion.div>
-          )}
-
-          {searchStatus === 'cancelled' && (
-            <motion.div 
-              key="cancelled"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center">
-                <X size={40} className="text-red-600" strokeWidth={3} />
-              </div>
+              <h2 className="text-[20px] font-black text-[#111111]">Partner Found</h2>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* SECTION 2: Typography & Status Text */}
-      <div className="text-center px-8 z-10 flex-1 flex flex-col">
-        <AnimatePresence mode="wait">
-          {searchStatus === 'searching' && (
-            <motion.div 
-              key="text-searching"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            >
-              <h1 className="text-[36px] font-black tracking-tighter text-black leading-tight mb-3">
-                Connecting <br/>with driver...
-              </h1>
-              <p className="text-[16px] font-medium text-gray-500">
-                Please wait while we confirm your route with nearby partners.
-              </p>
-            </motion.div>
-          )}
-
-          {searchStatus === 'found' && (
-            <motion.div 
-              key="text-found"
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center w-full"
-            >
-              <h1 className="text-[36px] font-black tracking-tighter text-black leading-tight mb-8">
-                Driver <br/>Assigned!
-              </h1>
-              
-              {/* Driver Details Card */}
-              {driverDetails && (
-                <div className="bg-[#F6F6F6] p-4 rounded-[24px] w-full max-w-xs flex items-center gap-4 border border-gray-100 shadow-sm">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-gray-400">
-                    <UserCircle2 size={24} />
-                  </div>
-                  <div className="text-left flex-1">
-                    <h3 className="text-[18px] font-black text-black leading-none mb-1">{driverDetails.driverName || 'Partner'}</h3>
-                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-gray-500">
-                      <ShieldCheck size={14} className="text-green-600" />
-                      {driverDetails.rating ? `${driverDetails.rating} Rating` : 'Verified'}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
-
-          {searchStatus === 'cancelled' && (
-            <motion.div key="text-cancelled" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-              <h1 className="text-[32px] font-black tracking-tighter text-black leading-tight mb-2">
-                Order Cancelled
-              </h1>
-              <p className="text-[15px] font-medium text-gray-500">Routing you back to home...</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* SECTION 3: TOP STATUS BADGE */}
+      <div className="absolute top-14 left-0 right-0 flex justify-center z-30 pointer-events-none">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+          className="bg-black/90 backdrop-blur-md px-6 py-3 rounded-full flex items-center gap-3 border border-white/10 shadow-2xl"
+        >
+          <Loader2 size={18} className="text-white animate-spin" strokeWidth={3} />
+          <span className="text-[14px] font-black text-white tracking-widest uppercase">Radar Active</span>
+        </motion.div>
       </div>
 
-      {/* SECTION 3: Bottom Cancel Action */}
-      <AnimatePresence>
-        {searchStatus === 'searching' && (
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: 20 }}
-            className="w-full px-6 pb-12 pt-6"
-          >
-            <button 
-              onClick={handleCancelSearch}
-              className="w-full flex items-center justify-center gap-2 px-6 bg-[#F6F6F6] text-red-600 py-4 rounded-full font-bold text-[17px] hover:bg-red-50 active:scale-[0.98] transition-all h-[60px]"
-            >
-              <X size={20} strokeWidth={3} />
-              Cancel Request
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* SECTION 4: FLOATING BOTTOM UI */}
+      <div className="mt-auto px-5 pb-10 z-30 pointer-events-auto flex flex-col gap-4">
+        
+        {/* Finding Driver Card (Modular Injection) */}
+        <div className="w-full">
+          <OrderFloatingStatusCard 
+            pickupAddress={pickup?.address}
+            dropoffAddress={dropoffs?.[0]?.address}
+            statusText={searchStatus === 'searching' ? 'Broadcasting to Partners' : 'Driver Assigned'}
+            subText={searchStatus === 'searching' ? 'Connecting to live marketplace...' : driverDetails?.driverName}
+            actionIcon={X}
+            onActionClick={handleCancelSearch}
+          />
+        </div>
+
+        {/* Action Description */}
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          className="text-center bg-white/60 backdrop-blur-sm p-3 rounded-2xl border border-white/50"
+        >
+          <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">
+            Dispatch ID: {activeOrder?.slice(-8).toUpperCase()}
+          </p>
+        </motion.div>
+      </div>
 
     </div>
   );

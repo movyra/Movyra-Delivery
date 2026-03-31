@@ -1,37 +1,119 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
   ChevronLeft, ArrowRight, Zap, TrendingDown, Star, 
-  ShieldCheck, Activity, Clock, UserCircle2
+  ShieldCheck, Activity, Clock, UserCircle2, Loader2, Info
 } from 'lucide-react';
 
-// Real Services & Global State
+// Real Store, Auth & Database Integration
 import useBookingStore from '../../store/useBookingStore';
+import useMapSettingsStore from '../../store/useMapSettingsStore';
 import { auth } from '../../services/firebaseAuth';
 import { 
   getFirestore, collection, query, where, onSnapshot, 
   addDoc, serverTimestamp 
 } from 'firebase/firestore';
 
-// ============================================================================
-// PAGE: PRICE SELECTION & DRIVER BIDDING (STARK MINIMALIST UI)
-// Implements the live marketplace. Drivers bid on the user's route, and the 
-// user selects the best deal based on AI suggestions (Cheapest, Fastest, Trusted).
-// ============================================================================
+// Modular UI Components (Premium Split-Screen Aesthetic)
+import { MAP_LAYERS } from '../../services/mapLayers';
+import FloatingLocationCard from '../../components/Map/FloatingLocationCard';
+
+/**
+ * PAGE: PRICE SELECTION & MARKETPLACE (SPLIT-SCREEN)
+ * Architecture: 45vh Map / 55vh List
+ * Features: 
+ * - Real-time Firestore Bid Listener
+ * - Liquidity Injection Engine
+ * - AI Best Match Sorting
+ * - Leaflet Route Plotting
+ */
 
 export default function PriceSelection() {
   const navigate = useNavigate();
+  const db = getFirestore();
+  const mapContainer = useRef(null);
+  const map = useRef(null);
+  const routeLayer = useRef(null);
   
   // Real Global State
-  const { pricing, vehicleType, acceptDriverBid } = useBookingStore();
-  const estimatedPrice = pricing?.estimatedPrice || 0; // The base fare calculated from Map Engine
+  const { pricing, vehicleType, pickup, dropoffs, acceptDriverBid } = useBookingStore();
+  const { mapTheme } = useMapSettingsStore();
+  const estimatedPrice = pricing?.estimatedPrice || 0;
+  const safeDropoffs = Array.isArray(dropoffs) ? dropoffs : [];
 
   // Local UI & Data State
   const [bids, setBids] = useState([]);
   const [selectedBidId, setSelectedBidId] = useState(null);
-  const [aiFilter, setAiFilter] = useState('none'); // 'cheapest' | 'fastest' | 'trusted' | 'none'
+  const [aiFilter, setAiFilter] = useState('none'); 
   const [isBroadcasting, setIsBroadcasting] = useState(true);
+
+  // ============================================================================
+  // OPENSTREETMAP ENGINE (ROUTE PLOTTING)
+  // ============================================================================
+  useEffect(() => {
+    if (!pickup?.lat || safeDropoffs.length === 0 || !mapContainer.current) return;
+
+    if (!map.current) {
+      map.current = L.map(mapContainer.current, {
+        center: [pickup.lat, pickup.lng],
+        zoom: 13,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        scrollWheelZoom: false,
+        touchZoom: true
+      });
+      L.tileLayer(MAP_LAYERS[mapTheme] || MAP_LAYERS.standard).addTo(map.current);
+    }
+
+    const validDropoffs = safeDropoffs.filter(d => d && d.lat != null);
+    const points = [];
+
+    // Pickup (Hollow)
+    const pickupIcon = L.divIcon({
+      className: '',
+      html: `<div class="w-4 h-4 bg-white border-[4px] border-[#111111] rounded-full shadow-md"></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8]
+    });
+    L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map.current);
+    points.push([pickup.lat, pickup.lng]);
+
+    // Destination (Solid Red)
+    validDropoffs.forEach((drop) => {
+      const dropIcon = L.divIcon({
+        className: '',
+        html: `<div class="w-[22px] h-[22px] bg-[#FF3B30] rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] border-[3px] border-white"></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11]
+      });
+      L.marker([drop.lat, drop.lng], { icon: dropIcon }).addTo(map.current);
+      points.push([drop.lat, drop.lng]);
+    });
+
+    const fetchRoute = async () => {
+      try {
+        const coords = [pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?geometries=geojson&overview=full`);
+        const data = await res.json();
+        if (data.code === 'Ok') {
+          const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+          if (routeLayer.current) map.current.removeLayer(routeLayer.current);
+          routeLayer.current = L.polyline(routeCoords, {
+            color: '#111111', weight: 5, opacity: 0.8, lineJoin: 'round'
+          }).addTo(map.current);
+          map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, 100] });
+        }
+      } catch (err) {
+        if (points.length > 1) map.current.fitBounds(L.latLngBounds(points), { padding: [50, 100] });
+      }
+    };
+    fetchRoute();
+    setTimeout(() => map.current?.invalidateSize(), 200);
+  }, [pickup, safeDropoffs, mapTheme]);
 
   // ============================================================================
   // LOGIC: REAL-TIME FIRESTORE LISTENER & LIQUIDITY ENGINE
@@ -40,41 +122,23 @@ export default function PriceSelection() {
     const user = auth.currentUser;
     if (!user || estimatedPrice === 0) return;
 
-    const db = getFirestore();
     const bidsRef = collection(db, 'bids');
-    
-    // 1. Real-time strict listener for driver bids directed at this user
-    const q = query(
-      bidsRef, 
-      where('userId', '==', user.uid),
-      where('status', '==', 'pending')
-    );
+    const q = query(bidsRef, where('userId', '==', user.uid), where('status', '==', 'pending'));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const liveBids = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setBids(liveBids);
       if (liveBids.length > 0) setIsBroadcasting(false);
-    }, (error) => {
-      console.error("Firestore Bid Stream Error:", error);
     });
 
-    // 2. Market Liquidity Engine 
-    // If no real drivers bid after 3 seconds, we inject real deterministic 
-    // database records based on the actual estimated price to 
-    // simulate network liquidity and unblock the user journey.
     const liquidityTimer = setTimeout(async () => {
-      // Check current state via a fresh snapshot to avoid stale closures
       if (bids.length === 0) {
         try {
-          const baseAmount = estimatedPrice;
-          
-          // Generate 3 mathematically bound competitive bids
           const marketplaceQuotes = [
-            { name: "Rajesh K.", rating: 4.6, eta: 15, amount: Math.max(20, Math.round(baseAmount * 0.85)), type: 'cheapest' },
-            { name: "Amit S.", rating: 4.9, eta: 5, amount: Math.round(baseAmount * 1.15), type: 'fastest' },
-            { name: "Vikram M.", rating: 5.0, eta: 10, amount: Math.round(baseAmount * 1.05), type: 'trusted' }
+            { name: "Rajesh K.", rating: 4.6, eta: 15, amount: Math.max(20, Math.round(estimatedPrice * 0.85)), type: 'cheapest' },
+            { name: "Amit S.", rating: 4.9, eta: 5, amount: Math.round(estimatedPrice * 1.15), type: 'fastest' },
+            { name: "Vikram M.", rating: 5.0, eta: 10, amount: Math.round(estimatedPrice * 1.05), type: 'trusted' }
           ];
-
           for (const quote of marketplaceQuotes) {
             await addDoc(bidsRef, {
               userId: user.uid,
@@ -89,193 +153,130 @@ export default function PriceSelection() {
               createdAt: serverTimestamp()
             });
           }
-        } catch (err) {
-          console.error("Liquidity Engine Error:", err);
-        }
+        } catch (err) { console.error(err); }
       }
     }, 3000);
 
-    return () => {
-      unsubscribe();
-      clearTimeout(liquidityTimer);
-    };
-  }, [estimatedPrice, vehicleType, bids.length]);
+    return () => { unsubscribe(); clearTimeout(liquidityTimer); };
+  }, [estimatedPrice, vehicleType, db]);
 
   // ============================================================================
-  // LOGIC: AI BEST MATCH SELECTOR
+  // LOGIC: AI PROCESSING
   // ============================================================================
-  const getProcessedBids = () => {
-    let processed = [...bids];
-    
-    // Sort logic based on AI Filter selection
-    if (aiFilter === 'cheapest') {
-      processed.sort((a, b) => a.amount - b.amount);
-    } else if (aiFilter === 'fastest') {
-      processed.sort((a, b) => a.etaMins - b.etaMins);
-    } else if (aiFilter === 'trusted') {
-      processed.sort((a, b) => b.rating - a.rating);
-    } else {
-      // Default: Sort by newest received
-      processed.sort((a, b) => {
-        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-        return timeB - timeA;
-      });
-    }
-    
-    return processed;
-  };
+  const processedBids = useMemo(() => {
+    let list = [...bids];
+    if (aiFilter === 'cheapest') list.sort((a, b) => a.amount - b.amount);
+    else if (aiFilter === 'fastest') list.sort((a, b) => a.etaMins - b.etaMins);
+    else if (aiFilter === 'trusted') list.sort((a, b) => b.rating - a.rating);
+    else list.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+    return list;
+  }, [bids, aiFilter]);
 
   const handleAcceptBid = () => {
     const selected = bids.find(b => b.id === selectedBidId);
     if (selected) {
-      // Commit chosen bid to global state
       acceptDriverBid(selected);
       navigate('/booking/review');
     }
   };
 
-  const processedBids = getProcessedBids();
-
-  // ============================================================================
-  // RENDER UI
-  // ============================================================================
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col font-sans relative">
+    <div className="relative w-full h-screen bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
-      {/* SECTION 1: Top Navigation */}
-      <div className="pt-12 px-6 pb-2 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-50">
+      {/* TOP HALF: 45vh MAP */}
+      <div className="relative w-full h-[45vh] shrink-0 z-10">
+        <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
+        
         <button 
           onClick={() => navigate(-1)} 
-          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors active:scale-95"
+          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-lg active:scale-95 transition-all"
         >
-          <ChevronLeft size={28} strokeWidth={2.5} />
+          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
-        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+
+        <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
+          <FloatingLocationCard activeField="dropoff" isResolving={isBroadcasting} />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-4 pb-32">
+      {/* BOTTOM HALF: 55vh LIST */}
+      <div className="flex-1 overflow-y-auto pt-14 pb-32 px-5 space-y-4 z-0 relative">
         
-        {/* SECTION 2: Header & Market Average Graph */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="text-[40px] font-black text-black leading-[1.05] tracking-tighter mb-6">
-            Live Pricing.
-          </h1>
-          
-          <div className="bg-[#F6F6F6] p-6 rounded-[24px] border border-gray-100 relative overflow-hidden">
-            <div className="flex justify-between items-end mb-4 relative z-10">
-              <span className="text-gray-500 font-bold text-[14px] uppercase tracking-widest">Market Average</span>
-              <span className="text-black font-black text-[24px] leading-none">₹{estimatedPrice}</span>
-            </div>
-            
-            {/* Minimalist Range Bar */}
-            <div className="w-full h-2.5 bg-gray-200 rounded-full relative z-10">
-               {/* Safe Zone (80% to 120% of estimate) */}
-               <div className="absolute left-[20%] right-[20%] h-full bg-black/10 rounded-full" />
-               {/* Current Estimate Indicator */}
-               <div className="absolute left-[50%] -translate-x-1/2 w-5 h-5 bg-black rounded-full top-1/2 -translate-y-1/2 ring-4 ring-white shadow-sm" />
-            </div>
-            
-            <div className="flex justify-between mt-3 text-[12px] font-bold text-gray-400 relative z-10">
-               <span>₹{Math.max(20, Math.round(estimatedPrice * 0.8))}</span>
-               <span>Fair Price Range</span>
-               <span>₹{Math.round(estimatedPrice * 1.2)}</span>
-            </div>
+        {/* Market Range Context */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-50 flex items-center justify-between mb-2">
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Market Avg</span>
+            <p className="text-[20px] font-black text-[#111111]">₹{estimatedPrice}</p>
+          </div>
+          <div className="flex-1 max-w-[120px] h-1.5 bg-[#F2F4F7] rounded-full relative">
+            <div className="absolute left-1/2 -translate-x-1/2 w-4 h-4 bg-[#111111] rounded-full -top-1.5 border-4 border-white shadow-sm" />
+          </div>
+          <div className="text-right">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Fair Price</span>
+            <p className="text-[13px] font-bold text-green-600">Secure Rate</p>
           </div>
         </motion.div>
 
-        {/* SECTION 3: AI Auto-Selector Filters */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="flex gap-2 overflow-x-auto no-scrollbar pb-6"
-        >
-          <button 
-            onClick={() => setAiFilter(aiFilter === 'cheapest' ? 'none' : 'cheapest')}
-            className={`shrink-0 px-5 py-3 rounded-full text-[14px] font-bold flex items-center gap-2 border-2 transition-all active:scale-95 ${aiFilter === 'cheapest' ? 'bg-black text-white border-black shadow-md' : 'bg-white text-black border-gray-200 hover:border-black'}`}
-          >
-            <TrendingDown size={18} strokeWidth={2.5} /> Cheapest
-          </button>
-          <button 
-            onClick={() => setAiFilter(aiFilter === 'fastest' ? 'none' : 'fastest')}
-            className={`shrink-0 px-5 py-3 rounded-full text-[14px] font-bold flex items-center gap-2 border-2 transition-all active:scale-95 ${aiFilter === 'fastest' ? 'bg-[#276EF1] text-white border-[#276EF1] shadow-md' : 'bg-white text-black border-gray-200 hover:border-black'}`}
-          >
-            <Zap size={18} strokeWidth={2.5} /> Fastest
-          </button>
-          <button 
-            onClick={() => setAiFilter(aiFilter === 'trusted' ? 'none' : 'trusted')}
-            className={`shrink-0 px-5 py-3 rounded-full text-[14px] font-bold flex items-center gap-2 border-2 transition-all active:scale-95 ${aiFilter === 'trusted' ? 'bg-black text-white border-black shadow-md' : 'bg-white text-black border-gray-200 hover:border-black'}`}
-          >
-            <ShieldCheck size={18} strokeWidth={2.5} /> Top Rated
-          </button>
-        </motion.div>
+        {/* AI Chips */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+          {[
+            { id: 'cheapest', label: 'Cheapest', icon: TrendingDown },
+            { id: 'fastest', label: 'Fastest', icon: Zap },
+            { id: 'trusted', label: 'Top Rated', icon: ShieldCheck }
+          ].map(chip => (
+            <button 
+              key={chip.id}
+              onClick={() => setAiFilter(aiFilter === chip.id ? 'none' : chip.id)}
+              className={`shrink-0 px-5 py-3 rounded-full text-[14px] font-bold flex items-center gap-2 border-2 transition-all active:scale-95 ${aiFilter === chip.id ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-white text-[#111111] border-gray-100'}`}
+            >
+              <chip.icon size={18} strokeWidth={2.5} /> {chip.label}
+            </button>
+          ))}
+        </div>
 
-        {/* SECTION 4: Live Bids Feed */}
+        {/* Bids List */}
         <div className="space-y-4">
           <AnimatePresence mode="popLayout">
             {isBroadcasting && bids.length === 0 && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                className="flex flex-col items-center justify-center py-12"
-              >
-                <div className="relative flex items-center justify-center w-24 h-24 mb-6">
-                  <motion.div 
-                    animate={{ scale: [1, 2.5], opacity: [0.3, 0] }} 
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }} 
-                    className="absolute w-full h-full bg-black rounded-full" 
-                  />
-                  <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center z-10 shadow-lg border-4 border-white">
-                    <Activity size={28} className="text-white" strokeWidth={2.5} />
-                  </div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-12">
+                <div className="w-16 h-16 bg-[#BCE3FF] rounded-full flex items-center justify-center mb-4 relative">
+                  <motion.div animate={{ scale: [1, 2], opacity: [0.5, 0] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute inset-0 bg-[#BCE3FF] rounded-full" />
+                  <Activity size={28} className="text-[#111111] z-10" />
                 </div>
-                <h3 className="text-[18px] font-black text-black">Broadcasting Request</h3>
-                <p className="text-[14px] font-bold text-gray-400 mt-1">Waiting for nearby drivers...</p>
+                <h3 className="text-[16px] font-black text-[#111111]">Searching Marketplace</h3>
+                <p className="text-[13px] font-bold text-gray-400 mt-1">Collecting live driver quotes...</p>
               </motion.div>
             )}
 
             {processedBids.map((bid) => {
               const isSelected = selectedBidId === bid.id;
-              
               return (
                 <motion.div 
-                  layout
-                  key={bid.id}
-                  initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
+                  layout key={bid.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
                   onClick={() => setSelectedBidId(bid.id)}
-                  className={`p-5 rounded-[24px] border-2 cursor-pointer transition-all ${isSelected ? 'border-black bg-white shadow-[0_12px_30px_rgba(0,0,0,0.08)] scale-[1.02]' : 'border-transparent bg-[#F6F6F6] hover:border-gray-300'}`}
+                  className={`p-6 rounded-[32px] border-2 cursor-pointer transition-all flex flex-col gap-4 shadow-[0_4px_15px_rgba(0,0,0,0.02)] ${isSelected ? 'border-[#111111] bg-white' : 'border-transparent bg-white hover:border-gray-200'}`}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-4">
-                      {/* Driver Avatar */}
-                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 shrink-0 border-2 border-white shadow-sm">
+                      <div className="w-12 h-12 rounded-full bg-[#F2F4F7] flex items-center justify-center text-gray-400 border border-gray-100 shrink-0">
                         <UserCircle2 size={24} strokeWidth={2} />
                       </div>
-                      
-                      {/* Driver Info */}
                       <div>
-                        <h3 className="text-[18px] font-black tracking-tight text-black">{bid.driverName}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="bg-black text-white text-[12px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                            {bid.rating.toFixed(1)} <Star size={12} fill="currentColor" />
-                          </span>
-                          <span className="text-[13px] font-bold text-gray-500 flex items-center gap-1">
-                            <Clock size={14} /> {bid.etaMins} mins
-                          </span>
+                        <h3 className="text-[18px] font-black text-[#111111] tracking-tight">{bid.driverName}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-[13px] font-bold text-gray-500">
+                          <span className="flex items-center gap-1 text-[#111111]"><Star size={14} fill="currentColor" /> {bid.rating.toFixed(1)}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1"><Clock size={14} /> {bid.etaMins} mins</span>
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Bid Amount */}
                     <div className="text-right">
-                      <div className="text-[28px] font-black text-black leading-none flex items-start justify-end gap-0.5">
-                        <span className="text-[16px] mt-1">₹</span>{bid.amount}
-                      </div>
-                      {/* AI Highlight Tag */}
-                      {bid.marketType === 'cheapest' && <span className="text-[10px] font-black text-green-600 uppercase tracking-wider block mt-2">Best Price</span>}
-                      {bid.marketType === 'fastest' && <span className="text-[10px] font-black text-[#276EF1] uppercase tracking-wider block mt-2">Fastest</span>}
-                      {bid.marketType === 'trusted' && <span className="text-[10px] font-black text-purple-600 uppercase tracking-wider block mt-2">Highly Rated</span>}
+                      <p className="text-[26px] font-black text-[#111111] leading-none tracking-tight">₹{bid.amount}</p>
+                      {bid.marketType !== 'none' && (
+                        <span className={`text-[10px] font-black uppercase tracking-wider block mt-2 ${bid.marketType === 'cheapest' ? 'text-green-600' : bid.marketType === 'fastest' ? 'text-[#276EF1]' : 'text-purple-600'}`}>
+                          {bid.marketType}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -285,15 +286,15 @@ export default function PriceSelection() {
         </div>
       </div>
 
-      {/* SECTION 5: Floating Bottom CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-50">
+      {/* FOOTER */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 backdrop-blur-md border-t border-gray-200 z-50">
         <button 
           onClick={handleAcceptBid}
           disabled={!selectedBidId}
-          className="w-full flex items-center justify-between px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:shadow-none"
+          className="w-full flex items-center justify-between px-6 bg-[#111111] text-white py-4 rounded-[28px] font-bold text-[17px] active:scale-[0.98] transition-all h-[64px] shadow-xl disabled:opacity-50"
         >
-          <span className="flex-1 text-center pl-6">Accept Bid & Review</span>
-          <ArrowRight size={24} className="text-white" />
+          <span className="flex-1 text-center pl-6">Confirm Driver & Bid</span>
+          <ArrowRight size={24} className="text-white" strokeWidth={3} />
         </button>
       </div>
 
