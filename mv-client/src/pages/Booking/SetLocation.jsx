@@ -317,14 +317,12 @@ export default function SetLocation() {
 
   return (
     <div className="relative w-full h-screen bg-white overflow-hidden font-sans flex flex-col">
-      {/* HEADER WITH LOGO */}
-      <div className="absolute top-0 left-0 right-0 pt-12 px-6 z-[1000] pointer-events-none flex justify-between">
+      {/* HEADER WITH LOGO (No background container) */}
+      <div className="absolute top-0 left-0 right-0 pt-12 px-6 z-[1000] pointer-events-none flex justify-between items-center">
         <button onClick={() => navigate(-1)} className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black shadow-md pointer-events-auto border border-gray-100 active:scale-95 transition-all">
           <ChevronLeft size={26} strokeWidth={2.5} />
         </button>
-        <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center shadow-lg pointer-events-auto overflow-hidden p-2.5">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
-        </div>
+        <img src="/logo.png" alt="Movyra" className="w-12 h-12 object-contain pointer-events-auto" />
       </div>
 
       {/* OPENSTREETMAP VIEWPORT */}
@@ -458,7 +456,7 @@ export default function SetLocation() {
             </div>
           )}
           <button 
-            onClick={() => navigate('/booking/vehicles')} 
+            onClick={() => navigate('/booking/select-vehicle')} 
             disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
             className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
           >

@@ -68,9 +68,9 @@ class GlobalErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center bg-white h-screen min-h-screen z-[999] relative px-6 text-center font-sans">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black flex items-center justify-center mb-6 shadow-lg border border-gray-200">
-            <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-          </div>
+          {/* Strictly no background behind the logo image */}
+          <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
+          
           <h1 className="text-[24px] font-black text-black mb-2 tracking-tight">Network Error</h1>
           <p className="text-[15px] font-bold text-gray-500 mb-8 max-w-[280px] leading-snug">
             A required module failed to load. Please check your connection and tap to reload.
@@ -95,9 +95,8 @@ class GlobalErrorBoundary extends Component {
 // ============================================================================
 const GlobalLoadingScreen = () => (
   <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
-    <div className="w-12 h-12 rounded-md overflow-hidden bg-black flex items-center justify-center mb-6 shadow-md">
-      <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-    </div>
+    {/* Strictly no background behind the logo image */}
+    <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
     <motion.div 
       animate={{ rotate: 360 }} 
       transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 

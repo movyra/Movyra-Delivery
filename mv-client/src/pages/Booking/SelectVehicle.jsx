@@ -25,6 +25,9 @@ export default function SelectVehicle() {
   // Real Global State
   const { pickup, dropoffs, vehicleType, setVehicle, setPricing } = useBookingStore();
   
+  // Strict Fallback to prevent silent crashes from corrupted/legacy persist storage
+  const safeDropoffs = Array.isArray(dropoffs) ? dropoffs : [];
+  
   // Local UI State
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,8 +42,8 @@ export default function SelectVehicle() {
   // ============================================================================
   useEffect(() => {
     const fetchRealPricing = async () => {
-      // 1. Validate locations exist from Zustand store
-      const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
+      // 1. Validate locations exist safely
+      const validDropoffs = safeDropoffs.filter(d => d && d.lat != null && d.lat !== 0);
       
       if (!pickup?.lat || validDropoffs.length === 0) {
         setError('Valid pickup and drop-off locations are required. Please go back and set them.');
@@ -135,9 +138,8 @@ export default function SelectVehicle() {
         >
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
-        <div className="w-10 h-10 rounded-md overflow-hidden bg-black flex items-center justify-center p-1 shadow-sm">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
-        </div>
+        {/* Strictly no background behind the logo image */}
+        <img src="/logo.png" alt="Movyra" className="w-10 h-10 object-contain" />
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-6 pb-32">
