@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useEffect, Suspense, lazy, Component } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -44,6 +44,49 @@ const OrderDetails = lazy(() => import('./pages/OrderHistory/OrderDetails'));
 const ProfileSettings = lazy(() => import('./pages/profile-settings'));
 const SavedAddresses = lazy(() => import('./pages/Profile/SavedAddresses'));
 const HelpCenter = lazy(() => import('./pages/Support/HelpCenter'));
+
+// ============================================================================
+// SECTION 0: STRICT GLOBAL ERROR BOUNDARY
+// Catches Vite chunk load failures (504 Gateway Timeouts) and network drops
+// during dynamic imports, preventing fatal white screens.
+// ============================================================================
+class GlobalErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error("Global Error Boundary Caught:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center bg-white h-screen min-h-screen z-[999] relative px-6 text-center font-sans">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-black flex items-center justify-center mb-6 shadow-lg border border-gray-200">
+            <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="text-[24px] font-black text-black mb-2 tracking-tight">Network Error</h1>
+          <p className="text-[15px] font-bold text-gray-500 mb-8 max-w-[280px] leading-snug">
+            A required module failed to load. Please check your connection and tap to reload.
+          </p>
+          <button 
+            onClick={() => window.location.reload(true)}
+            className="w-full max-w-[280px] bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+          >
+            Tap to Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // ============================================================================
 // SHARED LOADING STATE
@@ -260,9 +303,11 @@ export default function App() {
   
   return (
     <BrowserRouter>
-      {/* Global Network Resilience Monitor */}
-      <NetworkStatus />
-      <MainViewport authStatus={authStatus} />
+      <GlobalErrorBoundary>
+        {/* Global Network Resilience Monitor */}
+        <NetworkStatus />
+        <MainViewport authStatus={authStatus} />
+      </GlobalErrorBoundary>
     </BrowserRouter>
   );
 }
