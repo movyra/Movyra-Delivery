@@ -1,18 +1,37 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Search, Filter, Package, Truck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import apiClient from '../services/apiClient';
+import { ChevronLeft, Search, Filter, Package, Truck, CheckCircle2, AlertCircle, Loader2, XCircle } from 'lucide-react';
+
+// Real Database Integration
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 // ============================================================================
 // PAGE: ORDER HISTORY & SHIPMENTS (MOVYRA LIGHT THEME)
 // Replaces the old dark mode list with a premium tabbed UI.
-// Features 6 Functional Sections: Data Engine, Header, Search/Filter,
-// Stats Dashboard, Animated Tab Navigation, and Dynamic List Rendering.
+// Features 6 Functional Sections: Real-time Firestore Engine, Header, 
+// Search/Filter, Stats Dashboard, Animated Tabs, and Dynamic Skeleton List.
 // ============================================================================
+
+const SkeletonCard = () => (
+  <div className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm flex items-center gap-4 animate-pulse">
+    <div className="w-14 h-14 rounded-[18px] bg-gray-100 flex-shrink-0"></div>
+    <div className="flex-1 space-y-3 py-1">
+      <div className="h-4 bg-gray-200 rounded-md w-1/2"></div>
+      <div className="h-3 bg-gray-100 rounded-md w-3/4"></div>
+    </div>
+    <div className="flex flex-col items-end space-y-3 flex-shrink-0">
+      <div className="h-4 bg-gray-200 rounded-md w-16"></div>
+      <div className="h-3 bg-gray-100 rounded-md w-12"></div>
+    </div>
+  </div>
+);
 
 export default function OrderHistory() {
   const navigate = useNavigate();
+  const db = getFirestore();
+  const auth = getAuth();
 
   // SECTION 1: Real-time Data Engine & State Management
   const [orders, setOrders] = useState([]);
@@ -20,44 +39,58 @@ export default function OrderHistory() {
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // FEATURE 1: Real-time Firestore Sync
   useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        // Attempt to fetch real user history
-        const response = await apiClient.get('/tracking/history');
-        setOrders(response.data);
-      } catch (error) {
-        console.warn("API unreachable, utilizing structural fallback.");
-        // Structural fallback mapping real database payload shapes
-        setOrders([
-          { id: "458 7451 4589", origin: "Los Angeles, US", destination: "Manila, PH", status: "transit", date: "Oct 24, 2026" },
-          { id: "458 7451 4602", origin: "New York, US", destination: "London, UK", status: "delivered", date: "Oct 20, 2026" },
-          { id: "458 7451 4615", origin: "Tokyo, JP", destination: "Sydney, AU", status: "alert", date: "Oct 19, 2026" },
-          { id: "458 7451 4620", origin: "Berlin, DE", destination: "Paris, FR", status: "delivered", date: "Oct 15, 2026" },
-          { id: "458 7451 4633", origin: "Mumbai, IN", destination: "Dubai, AE", status: "transit", date: "Oct 10, 2026" },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchHistory();
-  }, []);
+    const user = auth.currentUser;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
-  // Compute filtered results dynamically
+    // Query active user's actual past and current orders
+    const q = query(collection(db, 'orders'), where('userId', '==', user.uid));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      // Sort dynamically in JS to avoid complex Firestore indexing rules
+      fetchedOrders.sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+        return dateB - dateA;
+      });
+      
+      setOrders(fetchedOrders);
+      setIsLoading(false);
+    }, (err) => {
+      console.error("Firestore Sync Error [OrderHistory]:", err);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [db, auth.currentUser]);
+
+  // FEATURE 2: Dynamic Status Filtering Engine
   const filteredOrders = useMemo(() => {
     return orders.filter(order => {
+      const status = (order.status || '').toLowerCase();
+      
       // Tab Filtering
+      const isCompleted = ['delivered', 'cancelled', 'failed'].includes(status);
       const matchesTab = 
         activeTab === 'All' || 
-        (activeTab === 'Active' && ['transit', 'alert'].includes(order.status)) ||
-        (activeTab === 'Completed' && order.status === 'delivered');
+        (activeTab === 'Active' && !isCompleted) ||
+        (activeTab === 'Completed' && isCompleted);
       
       // Search Filtering
       const normalizedSearch = searchQuery.toLowerCase();
+      const origin = (order.pickup?.address || '').toLowerCase();
+      const destination = (order.dropoffs?.[0]?.address || order.dropoff?.address || '').toLowerCase();
+      
       const matchesSearch = 
         order.id.toLowerCase().includes(normalizedSearch) ||
-        order.origin.toLowerCase().includes(normalizedSearch) ||
-        order.destination.toLowerCase().includes(normalizedSearch);
+        origin.includes(normalizedSearch) ||
+        destination.includes(normalizedSearch);
 
       return matchesTab && matchesSearch;
     });
@@ -66,37 +99,62 @@ export default function OrderHistory() {
   // Compute Quick Stats
   const stats = useMemo(() => {
     return {
-      active: orders.filter(o => ['transit', 'alert'].includes(o.status)).length,
-      completed: orders.filter(o => o.status === 'delivered').length,
+      active: orders.filter(o => !['delivered', 'cancelled', 'failed'].includes((o.status || '').toLowerCase())).length,
+      completed: orders.filter(o => ['delivered', 'cancelled', 'failed'].includes((o.status || '').toLowerCase())).length,
     };
   }, [orders]);
 
-  // Helper for status styling
+  // FEATURE 4: Status Configuration UI Matrix
   const getStatusConfig = (status) => {
-    switch(status) {
-      case 'transit': return { icon: Truck, color: 'text-movyra-blue', bg: 'bg-blue-50', border: 'border-blue-100', label: 'In Transit' };
-      case 'delivered': return { icon: CheckCircle2, color: 'text-teal-500', bg: 'bg-teal-50', border: 'border-teal-100', label: 'Delivered' };
-      case 'alert': return { icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', label: 'Exception' };
-      default: return { icon: Package, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-100', label: 'Processing' };
+    const s = (status || '').toLowerCase();
+    switch(s) {
+      case 'transit':
+      case 'active':
+      case 'processing':
+      case 'accepted':
+      case 'assigned':
+        return { icon: Truck, color: 'text-[#276EF1]', bg: 'bg-blue-50', border: 'border-blue-100', label: 'In Transit' };
+      case 'delivered':
+      case 'completed':
+        return { icon: CheckCircle2, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-100', label: 'Delivered' };
+      case 'cancelled':
+      case 'failed':
+        return { icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100', label: 'Cancelled' };
+      case 'alert':
+        return { icon: AlertCircle, color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-100', label: 'Exception' };
+      default: 
+        return { icon: Package, color: 'text-gray-600', bg: 'bg-gray-100', border: 'border-gray-200', label: 'Processing' };
     }
   };
 
+  // FEATURE 4: Intelligent Date Formatting
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'Unknown Date';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   return (
-    <div className="min-h-screen bg-movyra-surface text-gray-900 font-sans pb-32">
+    <div className="min-h-screen bg-white text-black font-sans pb-32">
       
-      {/* SECTION 2: Header Navigation */}
+      {/* SECTION 2: Premium Header Navigation */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="px-6 pt-14 pb-4"
+        className="px-6 pt-14 pb-4 flex items-center justify-between"
       >
-        <button 
-          onClick={() => navigate('/dashboard-home')} 
-          className="p-2 -ml-2 mb-4 text-movyra-blue hover:bg-blue-50 rounded-full transition-colors active:scale-95"
-        >
-          <ChevronLeft size={32} />
-        </button>
-        <h1 className="text-4xl font-black tracking-tight text-gray-900">Shipments.</h1>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/dashboard-home')} 
+            className="w-10 h-10 -ml-2 flex items-center justify-center text-black hover:bg-gray-100 rounded-full transition-colors active:scale-95"
+          >
+            <ChevronLeft size={28} strokeWidth={2.5} />
+          </button>
+          <h1 className="text-3xl font-black tracking-tight text-black">Shipments.</h1>
+        </div>
+        <div className="w-10 h-10 bg-black rounded-[10px] p-2 shadow-md flex items-center justify-center">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
+        </div>
       </motion.div>
 
       <div className="px-6">
@@ -108,17 +166,17 @@ export default function OrderHistory() {
           transition={{ delay: 0.1 }}
           className="flex gap-3 mb-6"
         >
-          <div className="flex-1 bg-white rounded-2xl flex items-center px-4 py-3 border-2 border-gray-100 focus-within:border-blue-300 transition-colors shadow-sm">
+          <div className="flex-1 bg-[#F6F6F6] rounded-2xl flex items-center px-4 py-3 border-2 border-transparent focus-within:border-black transition-colors shadow-sm">
             <Search size={20} className="text-gray-400 mr-3" strokeWidth={2.5} />
             <input 
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by ID or City" 
-              className="bg-transparent outline-none text-[15px] font-bold text-gray-800 w-full placeholder:text-gray-300 placeholder:font-bold"
+              placeholder="Search ID or City..." 
+              className="bg-transparent outline-none text-[15px] font-bold text-black w-full placeholder:text-gray-400 placeholder:font-bold"
             />
           </div>
-          <button className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center border-2 border-gray-100 text-movyra-blue shadow-sm active:scale-95 transition-transform">
+          <button className="w-[52px] h-[52px] bg-[#F6F6F6] rounded-2xl flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 transition-all">
             <Filter size={20} strokeWidth={2.5} />
           </button>
         </motion.div>
@@ -130,12 +188,12 @@ export default function OrderHistory() {
           transition={{ delay: 0.2 }}
           className="flex gap-4 mb-8"
         >
-          <div className="flex-1 bg-white border border-gray-100 shadow-sm rounded-3xl p-5 flex flex-col justify-between">
-             <p className="text-3xl font-black text-movyra-blue mb-1">{stats.active}</p>
+          <div className="flex-1 bg-white border border-gray-200 shadow-sm rounded-[24px] p-5 flex flex-col justify-between">
+             <p className="text-3xl font-black text-[#276EF1] mb-1">{stats.active}</p>
              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Active</p>
           </div>
-          <div className="flex-1 bg-white border border-gray-100 shadow-sm rounded-3xl p-5 flex flex-col justify-between">
-             <p className="text-3xl font-black text-gray-900 mb-1">{stats.completed}</p>
+          <div className="flex-1 bg-white border border-gray-200 shadow-sm rounded-[24px] p-5 flex flex-col justify-between">
+             <p className="text-3xl font-black text-black mb-1">{stats.completed}</p>
              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Completed</p>
           </div>
         </motion.div>
@@ -145,14 +203,14 @@ export default function OrderHistory() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="flex gap-2 mb-6 bg-gray-100 p-1.5 rounded-2xl"
+          className="flex gap-2 mb-6 bg-[#F6F6F6] p-1.5 rounded-2xl"
         >
           {['All', 'Active', 'Completed'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative flex-1 py-2.5 text-sm font-black tracking-wide rounded-xl transition-colors z-10 ${
-                activeTab === tab ? 'text-movyra-blue' : 'text-gray-400 hover:text-gray-600'
+                activeTab === tab ? 'text-black' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {activeTab === tab && (
@@ -170,8 +228,11 @@ export default function OrderHistory() {
         {/* SECTION 6: Dynamic Staggered Shipment List */}
         <div className="flex flex-col gap-4">
           {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin text-movyra-blue w-8 h-8" />
+            // FEATURE 3: Skeleton Loading States
+            <div className="flex flex-col gap-4">
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
             </div>
           ) : (
             <AnimatePresence mode='popLayout'>
@@ -179,6 +240,9 @@ export default function OrderHistory() {
                 filteredOrders.map((order, idx) => {
                   const config = getStatusConfig(order.status);
                   const Icon = config.icon;
+                  const originShort = order.pickup?.address?.split(',')[0] || 'Origin';
+                  const dropoffAddr = order.dropoffs?.[0]?.address || order.dropoff?.address || 'Destination';
+                  const destinationShort = dropoffAddr.split(',')[0];
                   
                   return (
                     <motion.div
@@ -188,8 +252,9 @@ export default function OrderHistory() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
                       transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300, damping: 24 }}
-                      onClick={() => navigate(`/tracking/detail/${order.id}`)}
-                      className="bg-white p-4 rounded-[24px] border border-gray-100 shadow-sm flex items-center gap-4 cursor-pointer active:scale-[0.98] hover:shadow-md transition-all"
+                      // FEATURE 5: Seamless Routing to Mapbox Order Details
+                      onClick={() => navigate(`/order-history/detail/${order.id}`)}
+                      className="bg-white p-4 rounded-[24px] border border-gray-200 shadow-sm flex items-center gap-4 cursor-pointer active:scale-[0.98] hover:shadow-md transition-all"
                     >
                       {/* Status Icon Indicator */}
                       <div className={`w-14 h-14 rounded-[18px] flex items-center justify-center flex-shrink-0 border ${config.bg} ${config.color} ${config.border}`}>
@@ -198,23 +263,23 @@ export default function OrderHistory() {
                       
                       {/* Shipment Data Payload */}
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-black text-[16px] text-gray-900 tracking-wide truncate mb-0.5">
-                          {order.id}
+                        <h4 className="font-black text-[16px] text-black tracking-wide truncate mb-0.5">
+                          {order.id.slice(-8).toUpperCase()}
                         </h4>
-                        <div className="flex items-center gap-1.5 text-gray-500 text-[12px] font-bold truncate">
-                          <span className="truncate">{order.origin}</span>
+                        <div className="flex items-center gap-1.5 text-gray-500 text-[13px] font-bold truncate">
+                          <span className="truncate">{originShort}</span>
                           <span className="text-gray-300">→</span>
-                          <span className="truncate">{order.destination}</span>
+                          <span className="truncate">{destinationShort}</span>
                         </div>
                       </div>
 
                       {/* Right Side Context */}
                       <div className="flex flex-col items-end flex-shrink-0">
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md mb-1 ${config.bg} ${config.color}`}>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md mb-1 ${config.bg} ${config.color}`}>
                           {config.label}
                         </span>
                         <span className="text-gray-400 text-[11px] font-bold">
-                          {order.date}
+                          {formatDate(order.createdAt)}
                         </span>
                       </div>
                     </motion.div>
@@ -224,9 +289,13 @@ export default function OrderHistory() {
                 <motion.div 
                   initial={{ opacity: 0 }} 
                   animate={{ opacity: 1 }} 
-                  className="text-center py-12 text-gray-400 font-medium"
+                  className="text-center py-12"
                 >
-                  No shipments found matching your criteria.
+                  <div className="w-16 h-16 bg-[#F6F6F6] rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
+                    <Package size={24} strokeWidth={2.5} />
+                  </div>
+                  <p className="text-[16px] font-black text-black mb-1">No Shipments Found</p>
+                  <p className="text-[13px] font-bold text-gray-400">You haven't made any orders in this category yet.</p>
                 </motion.div>
               )}
             </AnimatePresence>
