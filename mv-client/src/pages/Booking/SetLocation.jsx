@@ -62,6 +62,9 @@ export default function SetLocation() {
   const [predictions, setPredictions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
+  // Token Validation Guard
+  const isTokenValid = mapboxgl.accessToken && mapboxgl.accessToken.startsWith('pk.');
+
   // Initialize at least one dropoff if empty & fetch Firestore chips
   useEffect(() => {
     if (dropoffs.length === 0) addDropoff({ address: '', lat: 0, lng: 0 });
@@ -97,7 +100,7 @@ export default function SetLocation() {
   // FEATURE 1 & 5: MAPBOX ENGINE & DRAGGABLE REVERSE-GEOCODE INITIALIZATION
   // ============================================================================
   useEffect(() => {
-    if (map.current) return;
+    if (map.current || !isTokenValid) return;
 
     const initialCenter = pickup?.lat ? [pickup.lng, pickup.lat] : [77.2090, 28.6139];
 
@@ -113,6 +116,14 @@ export default function SetLocation() {
 
     map.current.on('load', () => {
       setIsMapLoaded(true);
+      
+      // FIX: Force WebGL canvas to recalculate dimensions after mounting inside animated containers
+      // This permanently fixes the blank 0x0 white grid issue.
+      map.current.resize();
+      setTimeout(() => {
+        if (map.current) map.current.resize();
+      }, 400);
+
       if (!pickup?.lat) fetchCurrentLocation();
     });
 
@@ -147,7 +158,7 @@ export default function SetLocation() {
         map.current = null;
       }
     };
-  }, [activeField]);
+  }, [activeField, isTokenValid]);
 
   // Sync GPS updates to map
   useEffect(() => {
@@ -369,6 +380,16 @@ export default function SetLocation() {
         </div>
       </div>
 
+      {/* STRICT UI ERROR BOUNDARY FOR MISSING TOKEN */}
+      {!isTokenValid && (
+        <div className="absolute top-28 left-6 right-6 z-50 bg-red-500 text-white p-4 rounded-2xl font-bold text-[13px] shadow-lg flex items-start gap-3">
+          <AlertCircle size={20} className="shrink-0 mt-0.5" />
+          <p>
+            Missing or invalid Mapbox Token. Check your <code className="bg-red-600 px-1 py-0.5 rounded">.env.local</code> file and restart the Vite server.
+          </p>
+        </div>
+      )}
+
       {/* INTERACTIVE LIGHT MAP VIEWPORT */}
       <div className="flex-1 relative z-0">
         <motion.div 
@@ -379,7 +400,11 @@ export default function SetLocation() {
         {/* Full-Screen Map Toggle & Live Distance Metric */}
         <div className="absolute right-6 top-28 z-20 pointer-events-none flex flex-col items-end gap-3">
           <button 
-            onClick={() => setIsFullscreen(!isFullscreen)}
+            onClick={() => {
+              setIsFullscreen(!isFullscreen);
+              // Force resize again when expanding/collapsing map container
+              setTimeout(() => map.current?.resize(), 300);
+            }}
             className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md text-black pointer-events-auto border border-gray-100 active:scale-95 transition-all hover:bg-gray-50"
           >
             {isFullscreen ? <Minimize size={20} strokeWidth={2.5} /> : <Maximize size={20} strokeWidth={2.5} />}
@@ -419,7 +444,10 @@ export default function SetLocation() {
         className="bg-white rounded-t-[32px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] relative z-20 flex flex-col max-h-[70vh] absolute bottom-0 left-0 right-0"
       >
         <div className="p-6 pb-4 shrink-0">
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => setIsFullscreen(!isFullscreen)}></div>
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6 cursor-pointer" onClick={() => {
+            setIsFullscreen(!isFullscreen);
+            setTimeout(() => map.current?.resize(), 300);
+          }}></div>
           
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">
