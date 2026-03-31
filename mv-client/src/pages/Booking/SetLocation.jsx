@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, Crosshair, X, 
+  ChevronLeft, Crosshair, X, Menu,
   Briefcase, Loader2, Search, AlertCircle, 
   MapPin, Train, Star, Clock, Mic, Wand2, User, Phone, FileText, Check
 } from 'lucide-react';
@@ -12,22 +12,23 @@ import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
 import useMapSettingsStore from '../../store/useMapSettingsStore';
 
-// Services & Overlays
+// Services & Modular Overlays
 import { MAP_LAYERS } from '../../services/mapLayers';
 import { reverseGeocodeWithCache } from '../../services/geocodeCache';
 import MapActionFAB from '../../components/Map/MapActionFAB';
-import DraggableWaypointList from '../../components/Map/DraggableWaypointList';
-import MiniRouteSummary from '../../components/Map/MiniRouteSummary';
 import TimelineInputList from '../../components/Map/TimelineInputList';
 
+// Future Injectable Components (Plotted for Step 2)
+import NearbyCarsLayer from '../../components/Map/NearbyCarsLayer';
+import SearchBottomSheet from '../../components/Map/SearchBottomSheet';
+
 /**
- * PAGE: SET LOCATION (ADVANCED OPENSTREETMAP ARCHITECTURE)
+ * PAGE: SET LOCATION (UBER-STYLE IMMERSIVE UI)
  * Features: 
- * - Fullscreen Immersive Mode & Header Removal
- * - Map Bounds Auto-Fitting (Camera locks onto active route)
- * - Geocoding Cache Optimization (Session Storage intercepts)
- * - Vertical Timeline Input Engine
- * - Floating Mini Route Summary
+ * - 100vh Headerless Map Canvas
+ * - Real-time Nearby Drivers Layer (Firestore synced)
+ * - Fluid Bottom Sheet Idle State -> Fullscreen Timeline Active State
+ * - Auto-Fitting Bounds & Polyline Snapping
  */
 
 const CATEGORY_CHIPS = [
@@ -58,6 +59,9 @@ export default function SetLocation() {
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
   const [routeError, setRouteError] = useState('');
   
+  // Uber-Style Fluid Architecture States
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  
   // Advanced Feature States
   const [isListening, setIsListening] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -68,7 +72,6 @@ export default function SetLocation() {
   const [routeDistance, setRouteDistance] = useState('');
   const [routeDuration, setRouteDuration] = useState('');
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -145,7 +148,6 @@ export default function SetLocation() {
 
       setIsResolvingAddress(true);
       try {
-        // Optimized Geocoding Cache Intercept
         const readableAddress = await reverseGeocodeWithCache(center.lat, center.lng);
         if (activeField === 'pickup') setPickup({ ...locData, address: readableAddress });
         else updateDropoff(activeField, { ...locData, address: readableAddress });
@@ -270,20 +272,21 @@ export default function SetLocation() {
 
             if (routeLayer.current) map.current.removeLayer(routeLayer.current);
             
+            // Highly visible polyline responsive to theme
             routeLayer.current = L.polyline(routeCoords, {
-              color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#276EF1',
+              color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#000000',
               weight: 5,
               opacity: 0.9,
               lineJoin: 'round',
               interactive: true
             }).addTo(map.current);
 
-            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly above the bottom sheet)
+            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly)
             if (!programmaticMoveRef.current) {
               programmaticMoveRef.current = true;
               map.current.fitBounds(routeLayer.current.getBounds(), {
-                paddingTopLeft: [50, 100], 
-                paddingBottomRight: [50, 450] // Generous bottom padding for the timeline sheet
+                paddingTopLeft: [50, 150], 
+                paddingBottomRight: [50, isSearchExpanded ? 450 : 250] 
               });
             }
 
@@ -401,7 +404,6 @@ export default function SetLocation() {
       map.current.setView([lat, lng], 16);
     }
     
-    setIsSearchOpen(false);
     setSearchQuery('');
   };
 
@@ -422,23 +424,40 @@ export default function SetLocation() {
       {/* FLOATING CONTROLS & OVERLAYS (STRICT HEADER ERADICATION) */}
       {/* ========================================================= */}
       
-      {/* Floating Standalone Back Button */}
+      {/* Top Left Interaction Button (Uber Style Menu/Back) */}
       <button 
-        onClick={() => navigate(-1)} 
-        className="absolute top-6 left-6 z-[2000] w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-md border border-gray-100 active:scale-95 transition-all"
+        onClick={() => {
+          if (isSearchExpanded) setIsSearchExpanded(false);
+          else navigate(-1);
+        }} 
+        className="absolute top-12 left-6 z-[2000] w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-[0_8px_25px_rgba(0,0,0,0.15)] border border-gray-100 active:scale-95 transition-all"
       >
-        <ChevronLeft size={28} strokeWidth={2.5} />
+        {isSearchExpanded ? <ChevronLeft size={28} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
       </button>
 
+      {/* Dynamic Action FAB (Themes, GPS) */}
       <MapActionFAB />
-      <DraggableWaypointList />
-      <MiniRouteSummary distance={routeDistance} duration={routeDuration} />
 
-      {/* OPENSTREETMAP VIEWPORT */}
+      {/* OPENSTREETMAP VIEWPORT (100vh) */}
       <div className="flex-1 relative z-0">
         <div ref={mapContainer} className="absolute inset-0 bg-[#f8f8f8]" />
         
-        {/* DRAGGABLE CENTER TARGET PIN (Reflects Active Field) */}
+        {/* Live Nearby Drivers Simulation/Fetcher */}
+        {isMapLoaded && map.current && <NearbyCarsLayer mapInstance={map.current} />}
+
+        {/* Route Metrics Floating Badge */}
+        <div className="absolute right-6 top-32 z-[1000] pointer-events-none flex flex-col items-end gap-3">
+          <AnimatePresence>
+            {routeDistance && !routeError && !isSearchExpanded && (
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-black/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl pointer-events-auto flex flex-col items-end gap-0.5 border border-gray-800">
+                <span className="font-black text-[16px] leading-none">{routeDistance}</span>
+                <span className="font-bold text-[11px] text-gray-400 uppercase tracking-widest">{routeDuration} ETA</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* DRAGGABLE CENTER TARGET PIN */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
             {activeField === 'pickup' ? (
@@ -453,126 +472,120 @@ export default function SetLocation() {
         </div>
       </div>
 
-      {/* BOTTOM SHEET UI (TIMELINE ENGINE INJECTION) */}
-      <motion.div 
-        initial={{ y: 0 }} 
-        animate={{ 
-          y: isFullscreen ? '120%' : 0, 
-          opacity: isFullscreen ? 0 : 1 
-        }} 
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        style={{ pointerEvents: isFullscreen ? 'none' : 'auto' }}
-        className="bg-white rounded-t-[32px] shadow-[0_-20px_50px_rgba(0,0,0,0.1)] relative z-[1001] flex flex-col max-h-[70vh] absolute bottom-0 left-0 right-0"
-      >
-        <div className="p-6 pb-2 shrink-0">
-          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6" />
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-[36px] font-black tracking-tighter text-black leading-none">Where to?</h1>
-            <div className="flex items-center gap-2">
+      {/* ========================================================= */}
+      {/* STATE 1: IDLE BOTTOM SHEET ("Where to?") */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {!isSearchExpanded && !isFullscreen && (
+          <SearchBottomSheet 
+            onExpand={() => setIsSearchExpanded(true)} 
+            pickupAddress={pickup?.address} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================= */}
+      {/* STATE 2: EXPANDED TIMELINE & ROUTING VIEW */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {isSearchExpanded && (
+          <motion.div 
+            initial={{ y: '100%' }} 
+            animate={{ y: 0 }} 
+            exit={{ y: '100%' }} 
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="fixed inset-0 bg-white z-[1500] flex flex-col pt-24" // pt-24 ensures the absolute back button remains visible and clickable
+          >
+            {/* Header & Tools Area */}
+            <div className="px-6 flex items-center justify-end gap-3 mb-2 shrink-0">
               {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
                 <button onClick={handleOptimizeRoute} disabled={isOptimizing} className="h-10 px-4 rounded-full bg-blue-50 text-blue-600 flex items-center gap-2 hover:bg-blue-100 active:scale-95 transition-all font-bold text-[13px]">
                   {isOptimizing ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} strokeWidth={2.5} />}
                   Auto-Sort
                 </button>
               )}
-              <button onClick={() => { fetchCurrentLocation(); }} disabled={isLocating} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black hover:bg-gray-200 active:scale-95 disabled:opacity-50 transition-all">
-                {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
-              </button>
             </div>
-          </div>
 
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mb-2">
-            {CATEGORY_CHIPS.map(chip => (
-              <button key={chip.id} onClick={() => { setSearchQuery(chip.query); setIsSearchOpen(true); }} className="shrink-0 px-4 py-2.5 bg-[#F6F6F6] rounded-2xl text-[14px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
-                <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* MODULAR TIMELINE INPUT LIST */}
-        <div className="px-6 overflow-y-auto no-scrollbar pb-6 shrink min-h-[150px]">
-          <TimelineInputList 
-            activeField={activeField} 
-            onFocusField={focusField} 
-            onOpenSearch={() => setIsSearchOpen(true)} 
-          />
-        </div>
-
-        <div className="p-6 pt-2 bg-white border-t border-gray-100">
-          {routeError && (
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl font-bold text-[13px] flex items-start gap-2 mb-4">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
+            {/* Modular Timeline Input List */}
+            <div className="px-6 pb-4 bg-white z-10 shadow-sm relative shrink-0">
+              <TimelineInputList 
+                activeField={activeField} 
+                onFocusField={focusField} 
+                onOpenSearch={() => {}} 
+              />
             </div>
-          )}
-          <button 
-            onClick={() => navigate('/booking/select-vehicle')} 
-            disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
-            className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            Confirm Route
-          </button>
-        </div>
-      </motion.div>
 
-      {/* SEARCH OVERLAY WITH VOICE SEARCH */}
-      <AnimatePresence>
-        {isSearchOpen && (
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-0 bg-white z-[10000] flex flex-col font-sans">
-            <div className="pt-12 px-6 pb-4 flex items-center gap-4 border-b border-gray-100 shrink-0 shadow-sm">
-              <button onClick={() => setIsSearchOpen(false)} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black active:scale-95 shrink-0 transition-transform">
-                <ChevronLeft size={24} strokeWidth={2.5} />
+            {/* Smart Search Bar (Contextual to active field) */}
+            <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3 shrink-0">
+              <Search size={20} className="text-gray-400" />
+              <input 
+                type="text" 
+                autoFocus 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)} 
+                placeholder={activeField === 'pickup' ? "Where are we picking up?" : "Where to drop off?"} 
+                className="flex-1 bg-transparent text-[16px] font-bold text-black outline-none placeholder-gray-400" 
+              />
+              <button onClick={startVoiceSearch} className={`p-2 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-gray-400 hover:text-black hover:bg-gray-50'}`}>
+                <Mic size={18} strokeWidth={2.5} />
               </button>
-              <div className="flex-1 relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Search size={20} strokeWidth={2.5} />
-                </div>
-                <input 
-                  type="text" 
-                  autoFocus 
-                  value={searchQuery} 
-                  onChange={(e) => setSearchQuery(e.target.value)} 
-                  placeholder={activeField === 'pickup' ? "Where are we picking up?" : "Where to drop off?"} 
-                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-12 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none" 
-                />
-                <button onClick={startVoiceSearch} className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${isListening ? 'bg-red-50 text-red-500 animate-pulse' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
-                  <Mic size={18} strokeWidth={2.5} />
-                </button>
-              </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 bg-[#FAFAFA]">
+            {/* Search Results & Predictions */}
+            <div className="flex-1 overflow-y-auto p-6 bg-white">
               {isListening && (
                 <div className="text-center py-8 text-gray-500 font-bold animate-pulse">
                   Listening for address...
                 </div>
               )}
-              {!isListening && (
-                <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+              
+              {!isListening && predictions.length > 0 && (
+                <div className="flex flex-col">
                   {predictions.map((pred, i) => (
-                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-3 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
-                        <MapPin size={16} strokeWidth={2.5} />
+                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-4 transition-colors px-2 rounded-xl">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                        <MapPin size={18} strokeWidth={2.5} />
                       </div>
-                      <div className="overflow-hidden">
-                        <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
-                        <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
+                      <div className="overflow-hidden flex-1">
+                        <span className="block text-[16px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
+                        <span className="block text-[14px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
                       </div>
                     </button>
                   ))}
-                  {predictions.length === 0 && !isTyping && searchQuery.length > 2 && (
-                    <div className="p-6 text-center text-gray-500 font-medium">
-                      No results found for "{searchQuery}"
-                    </div>
-                  )}
                 </div>
               )}
+
+              {!isListening && predictions.length === 0 && searchQuery.length < 3 && (
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                  {CATEGORY_CHIPS.map(chip => (
+                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="shrink-0 px-4 py-2.5 bg-[#F6F6F6] rounded-2xl text-[14px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
+                      <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sticky Action Footer */}
+            <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] shrink-0 pb-8">
+              {routeError && (
+                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl font-bold text-[13px] flex items-start gap-2 mb-4">
+                  <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
+                </div>
+              )}
+              <button 
+                onClick={() => navigate('/booking/select-vehicle')} 
+                disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
+                className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                Confirm Route {routeDistance && !routeError && <span className="text-gray-400 font-medium">• {routeDistance}</span>}
+              </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MARKER CONTACT MODAL (Clicking a pin) */}
+      {/* MARKER CONTACT MODAL */}
       <AnimatePresence>
         {selectedPin !== null && (
           <motion.div 
@@ -604,7 +617,7 @@ export default function SetLocation() {
                   <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
-                    placeholder="Contact Name (e.g., John Doe)" 
+                    placeholder="Contact Name" 
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                     className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
@@ -623,7 +636,7 @@ export default function SetLocation() {
                 <div className="relative">
                   <FileText size={18} className="absolute left-4 top-4 text-gray-400" />
                   <textarea 
-                    placeholder="Delivery Instructions (Gate code, etc.)" 
+                    placeholder="Delivery Instructions" 
                     rows={3}
                     value={contactForm.notes}
                     onChange={(e) => setContactForm({ ...contactForm, notes: e.target.value })}
