@@ -82,6 +82,14 @@ const useBookingStore = create(
         dropoffs: state.dropoffs.filter((_, i) => i !== index)
       })),
 
+      // Reorders dropoffs for Drag-and-Drop UI integrations securely
+      reorderDropoffs: (startIndex, endIndex) => set((state) => {
+        const newDropoffs = Array.from(state.dropoffs);
+        const [movedItem] = newDropoffs.splice(startIndex, 1);
+        newDropoffs.splice(endIndex, 0, movedItem);
+        return { dropoffs: newDropoffs };
+      }),
+
       // Advanced Routing Overrides
       setOptimizedDropoffs: (optimizedArray) => set((state) => ({
         dropoffs: optimizedArray,

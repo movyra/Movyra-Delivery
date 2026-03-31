@@ -11,10 +11,12 @@ const useMapSettingsStore = create(
   persist(
     (set) => ({
       // ----------------------------------------------------------------------
-      // 1. BASE TILE THEMES
+      // 1. BASE TILE THEMES & UI MODES
       // ----------------------------------------------------------------------
       // Available themes: 'standard', 'dark', 'light', 'satellite', 'terrain'
       mapTheme: 'standard', 
+      isDarkMode: false,
+      isFullscreen: false,
 
       // ----------------------------------------------------------------------
       // 2. ADVANCED DATA LAYERS & OVERLAYS
@@ -32,10 +34,37 @@ const useMapSettingsStore = create(
       // ======================================================================
 
       /**
-       * Updates the primary base map tile layer.
+       * Updates the primary base map tile layer and syncs dark mode state.
        * @param {string} theme - The theme identifier.
        */
-      setMapTheme: (theme) => set({ mapTheme: theme }),
+      setMapTheme: (theme) => set({ 
+        mapTheme: theme,
+        isDarkMode: theme === 'dark'
+      }),
+
+      /**
+       * Toggles dark mode globally across the map UI and applies the dark theme.
+       */
+      toggleDarkMode: () => set((state) => {
+        const newIsDark = !state.isDarkMode;
+        return {
+          isDarkMode: newIsDark,
+          mapTheme: newIsDark ? 'dark' : 'standard'
+        };
+      }),
+
+      /**
+       * Toggles the immersive fullscreen mode state.
+       */
+      toggleFullscreen: () => set((state) => ({
+        isFullscreen: !state.isFullscreen
+      })),
+
+      /**
+       * Explicitly sets the fullscreen state (useful for syncing with native browser APIs).
+       * @param {boolean} value - Fullscreen active state.
+       */
+      setIsFullscreen: (value) => set({ isFullscreen: value }),
 
       /**
        * Toggles the visibility of a specific map overlay layer.
@@ -65,6 +94,8 @@ const useMapSettingsStore = create(
        */
       resetMapSettings: () => set({
         mapTheme: 'standard',
+        isDarkMode: false,
+        isFullscreen: false,
         layers: {
           traffic: false,
           weather: false,
