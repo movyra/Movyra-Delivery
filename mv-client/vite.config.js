@@ -31,8 +31,8 @@ export default defineConfig({
     })
   ],
   optimizeDeps: {
-    // Explicitly pre-bundle emailjs to prevent 504 Gateway Timeouts during lazy loading
-    include: ['@emailjs/browser']
+    // Explicitly pre-bundle heavy dependencies to prevent 504 Gateway Timeouts during lazy loading
+    include: ['@emailjs/browser', 'mapbox-gl']
   },
   server: {
     // Ensures stable hot-module reloading and prevents network drops in cloud environments

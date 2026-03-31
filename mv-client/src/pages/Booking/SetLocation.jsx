@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Crosshair, Plus, X, Home, 
@@ -16,11 +16,14 @@ import { reverseGeocode, fetchPlacePredictions, geocodeAddress } from '../../ser
 import { fetchUserAddresses } from '../../services/firestore';
 
 // ============================================================================
-// PAGE: SET LOCATION (STARK LIGHT THEME)
+// PAGE: SET LOCATION (MAPBOX LIGHT THEME)
 // A high-contrast, multi-stop routing interface featuring 6+ Advanced Features:
-// Light Map Engine, Perfect Linear Routing, Category Filters, Dynamic DOM Markers,
+// Official Mapbox Engine, Perfect Linear Routing, Category Filters, Dynamic DOM Markers,
 // Draggable Reverse-Geocoding Pin, and Algorithmic Auto-Bounds.
 // ============================================================================
+
+// Secure Mapbox Authentication Injection
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 // Feature 3: Functional Location Categories targeting real Photon POI queries
 const CATEGORY_CHIPS = [
@@ -34,7 +37,7 @@ export default function SetLocation() {
   const navigate = useNavigate();
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const markersRef = useRef([]); // Holds dynamic MapLibre DOM markers
+  const markersRef = useRef([]); // Holds dynamic Mapbox DOM markers
   
   // Global State
   const { pickup, dropoffs, setPickup, addDropoff, updateDropoff, removeDropoff } = useBookingStore();
@@ -91,17 +94,17 @@ export default function SetLocation() {
   }, [pickup, dropoffs, updateDropoff]);
 
   // ============================================================================
-  // FEATURE 1 & 5: LIGHT MAP ENGINE & DRAGGABLE REVERSE-GEOCODE INITIALIZATION
+  // FEATURE 1 & 5: MAPBOX ENGINE & DRAGGABLE REVERSE-GEOCODE INITIALIZATION
   // ============================================================================
   useEffect(() => {
     if (map.current) return;
 
     const initialCenter = pickup?.lat ? [pickup.lng, pickup.lat] : [77.2090, 28.6139];
 
-    map.current = new maplibregl.Map({
+    map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      // Feature 1: Reliable High-Contrast Light Theme (Fixes black map void)
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      // Feature 1: Reliable High-Contrast Mapbox Light Theme
+      style: import.meta.env.VITE_MAPBOX_STYLE_URL || 'mapbox://styles/mapbox/light-v11',
       center: initialCenter,
       zoom: pickup?.lat ? 15 : 12,
       attributionControl: false,
@@ -170,7 +173,7 @@ export default function SetLocation() {
       // Draw Pickup Marker (Black Dot for Light Map)
       const pickupEl = document.createElement('div');
       pickupEl.className = 'w-4 h-4 bg-white rounded-full border-4 border-black shadow-md ring-2 ring-white';
-      const pMarker = new maplibregl.Marker({ element: pickupEl })
+      const pMarker = new mapboxgl.Marker({ element: pickupEl })
         .setLngLat([pickup.lng, pickup.lat])
         .addTo(map.current);
       markersRef.current.push(pMarker);
@@ -181,7 +184,7 @@ export default function SetLocation() {
           const dropEl = document.createElement('div');
           dropEl.className = 'w-6 h-6 bg-black text-white text-[12px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md';
           dropEl.innerText = (idx + 1).toString();
-          const dMarker = new maplibregl.Marker({ element: dropEl })
+          const dMarker = new mapboxgl.Marker({ element: dropEl })
             .setLngLat([drop.lng, drop.lat])
             .addTo(map.current);
           markersRef.current.push(dMarker);
@@ -242,7 +245,7 @@ export default function SetLocation() {
             if (!isDragging && !isSearchOpen) {
               const bounds = routeGeoJSON.coordinates.reduce(
                 (b, coord) => b.extend(coord), 
-                new maplibregl.LngLatBounds(routeGeoJSON.coordinates[0], routeGeoJSON.coordinates[0])
+                new mapboxgl.LngLatBounds(routeGeoJSON.coordinates[0], routeGeoJSON.coordinates[0])
               );
               map.current.fitBounds(bounds, { padding: { top: 120, bottom: 450, left: 60, right: 60 }, duration: 1200 });
             }

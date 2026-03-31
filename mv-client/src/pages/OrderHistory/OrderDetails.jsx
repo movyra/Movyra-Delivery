@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { 
-  ChevronLeft, MapPin, Clock, Receipt, Download, 
-  Loader2, AlertCircle, CheckCircle2, XCircle, Truck 
+  ChevronLeft, MapPin, Clock, Download, 
+  Loader2, AlertCircle, CheckCircle2, XCircle, Truck,
+  Package, ShieldAlert, Diamond, UserCircle2, HelpCircle
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -16,8 +17,11 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore';
 // ============================================================================
 // PAGE: ORDER DETAILS & HISTORICAL INVOICE (STARK MINIMALIST UI)
 // Deep-dive into a past order. Generates a read-only map of the route, 
-// a timestamped logistics timeline, and a printable B2B GST invoice.
+// a timestamped logistics timeline, driver details, and a printable B2B GST invoice.
 // ============================================================================
+
+// Secure Mapbox Authentication Injection
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 export default function OrderDetails() {
   const { id } = useParams();
@@ -35,7 +39,7 @@ export default function OrderDetails() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // ============================================================================
-  // LOGIC: FETCH REAL ORDER FROM FIRESTORE
+  // FEATURE 1: REAL-TIME FIRESTORE DATA SYNC
   // ============================================================================
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -60,46 +64,49 @@ export default function OrderDetails() {
   }, [id, db]);
 
   // ============================================================================
-  // LOGIC: MAPLIBRE ENGINE (READ-ONLY ROUTE PLOTTING)
+  // FEATURE 2: PROPRIETARY MAPBOX ENGINE (READ-ONLY ROUTE PLOTTING)
   // ============================================================================
   useEffect(() => {
     if (!order || !mapContainer.current || map.current) return;
 
-    // Initialize Read-Only Map
-    map.current = new maplibregl.Map({
+    // Initialize Read-Only Mapbox Instance
+    map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      style: import.meta.env.VITE_MAPBOX_STYLE_URL || 'mapbox://styles/mapbox/light-v11',
       interactive: false, // Freeze the map for receipt view
       attributionControl: false
     });
 
     map.current.on('load', () => {
-      const bounds = new maplibregl.LngLatBounds();
+      const bounds = new mapboxgl.LngLatBounds();
       
-      // Plot Pickup
+      // Plot Pickup Marker
       if (order.pickup?.lat && order.pickup?.lng) {
-        new maplibregl.Marker({ color: '#000000' })
+        const pickupEl = document.createElement('div');
+        pickupEl.className = 'w-4 h-4 bg-white border-4 border-black rounded-full shadow-md';
+        new mapboxgl.Marker({ element: pickupEl })
           .setLngLat([order.pickup.lng, order.pickup.lat])
           .addTo(map.current);
         bounds.extend([order.pickup.lng, order.pickup.lat]);
       }
 
-      // Plot Dropoff(s)
+      // Plot Dropoff Marker(s)
       const dropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
-      dropoffs.forEach(drop => {
+      dropoffs.forEach((drop, idx) => {
         if (drop?.lat && drop?.lng) {
-          const el = document.createElement('div');
-          el.className = 'w-4 h-4 bg-white border-4 border-black rounded-sm shadow-md';
-          new maplibregl.Marker(el)
+          const dropEl = document.createElement('div');
+          dropEl.className = 'w-5 h-5 bg-black text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md';
+          dropEl.innerText = (idx + 1).toString();
+          new mapboxgl.Marker({ element: dropEl })
             .setLngLat([drop.lng, drop.lat])
             .addTo(map.current);
           bounds.extend([drop.lng, drop.lat]);
         }
       });
 
-      // Frame the exact route gracefully
+      // Algorithmic framing to perfectly center the route
       if (!bounds.isEmpty()) {
-        map.current.fitBounds(bounds, { padding: 40, duration: 0 });
+        map.current.fitBounds(bounds, { padding: 50, duration: 0 });
       }
     });
 
@@ -112,7 +119,7 @@ export default function OrderDetails() {
   }, [order]);
 
   // ============================================================================
-  // LOGIC: PDF INVOICE GENERATION
+  // FEATURE 7: B2B GST INVOICE GENERATOR (HTML2CANVAS + JSPDF)
   // ============================================================================
   const handleDownloadInvoice = async () => {
     if (!receiptRef.current || !order) return;
@@ -178,7 +185,7 @@ export default function OrderDetails() {
   return (
     <div className="min-h-screen bg-[#F6F6F6] text-black flex flex-col font-sans relative">
       
-      {/* SECTION 1: Top Navigation */}
+      {/* HEADER NAVIGATION */}
       <div className="pt-12 px-6 pb-4 flex items-center justify-between sticky top-0 bg-[#F6F6F6]/90 backdrop-blur-md z-50">
         <button 
           onClick={() => navigate(-1)} 
@@ -193,7 +200,7 @@ export default function OrderDetails() {
 
       <div className="flex-1 overflow-y-auto no-scrollbar pb-32">
         
-        {/* SECTION 2: Geographic Route Verification */}
+        {/* FEATURE 3: GEOGRAPHIC MAPBOX VISUALIZATION */}
         <div className="h-[250px] w-full relative bg-gray-200 border-b-4 border-black">
           <div ref={mapContainer} className="absolute inset-0" />
           
@@ -212,12 +219,71 @@ export default function OrderDetails() {
           </div>
         </div>
 
-        <div className="px-6 -mt-8 relative z-20">
+        <div className="px-6 -mt-8 relative z-20 space-y-6">
           
-          {/* SECTION 3: Detailed Logistics Timeline */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200 mb-6">
+          {/* FEATURE 4: PACKAGE CONFIGURATION & SECURITY */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
+            <h3 className="font-bold text-[13px] text-gray-400 uppercase tracking-widest mb-4">Package Config</h3>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#F6F6F6] rounded-full flex items-center justify-center text-black">
+                  <Package size={18} strokeWidth={2.5} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase">Item Type</span>
+                  <span className="text-[14px] font-black text-black">{order.packageDetails?.itemType || 'Package'}</span>
+                </div>
+              </div>
+              
+              {order.packageDetails?.isFragile && (
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center text-red-500">
+                    <ShieldAlert size={18} strokeWidth={2.5} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-red-400 uppercase">Safety</span>
+                    <span className="text-[14px] font-black text-red-600">Fragile</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {order.packageDetails?.requiresSecureOTP && (
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Diamond size={16} className="text-[#276EF1]" strokeWidth={2.5} />
+                  <span className="text-[13px] font-bold text-gray-500 uppercase tracking-widest">Delivery PIN</span>
+                </div>
+                <span className="text-[20px] font-black tracking-widest text-black bg-gray-100 px-3 py-1 rounded-lg">
+                  {order.packageDetails.secureOTP || '****'}
+                </span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* FEATURE 5: VERIFIED PARTNER DETAILS */}
+          {order.selectedBid && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 border border-gray-200">
+                  <UserCircle2 size={24} strokeWidth={2} />
+                </div>
+                <div>
+                  <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Assigned Partner</span>
+                  <p className="text-[16px] font-black text-black">{order.selectedBid.driverName}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Vehicle</span>
+                <p className="text-[14px] font-black text-[#276EF1] capitalize bg-blue-50 px-3 py-1 rounded-full">{order.selectedBid.vehicleType || 'Standard'}</p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* FEATURE 6: DETAILED ROUTE TIMELINE */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
             <h3 className="text-[18px] font-black text-black mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
-              <MapPin size={20} /> Route Timeline
+              <MapPin size={20} /> Logistics Timeline
             </h3>
             
             <div className="relative border-l-2 border-dashed border-gray-300 ml-3 pl-6 space-y-6">
@@ -235,23 +301,10 @@ export default function OrderDetails() {
                 </div>
               ))}
             </div>
-
-            {order.driver && (
-              <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-                <div>
-                  <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Assigned Partner</span>
-                  <p className="text-[16px] font-black text-black">{order.driver.driverName || 'Verified Partner'}</p>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Vehicle</span>
-                  <p className="text-[16px] font-black text-black capitalize">{order.vehicleType || 'Standard'}</p>
-                </div>
-              </div>
-            )}
           </motion.div>
 
-          {/* SECTION 4: Digital GST Receipt (Printable Target) */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          {/* FEATURE 7: DIGITAL GST INVOICE (Printable Target) */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <div ref={receiptRef} className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-200">
               <div className="flex justify-between items-start mb-6 pb-6 border-b-2 border-dashed border-gray-200">
                 <div className="flex items-center gap-3">
@@ -275,9 +328,9 @@ export default function OrderDetails() {
                   <span className="text-[14px] font-black text-black">₹{taxableValue.toFixed(2)}</span>
                 </div>
                 {order.pricing?.isGroupDelivery && (
-                  <div className="flex justify-between items-center text-green-600">
-                    <span className="text-[14px] font-bold">Group Pool Discount</span>
-                    <span className="text-[14px] font-black">Applied</span>
+                  <div className="flex justify-between items-center text-green-600 bg-green-50 p-2 rounded-lg">
+                    <span className="text-[13px] font-bold">Group Pool Discount</span>
+                    <span className="text-[13px] font-black">Applied</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center">
@@ -303,15 +356,21 @@ export default function OrderDetails() {
         </div>
       </div>
 
-      {/* SECTION 5: Floating Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F6F6F6]/90 backdrop-blur-md z-30">
+      {/* FLOATING ACTION FOOTER */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F6F6F6]/90 backdrop-blur-md z-30 flex gap-3">
+        <button 
+          onClick={() => navigate('/support/dispute')}
+          className="w-14 h-[60px] flex items-center justify-center bg-white border border-gray-200 text-black rounded-2xl active:scale-95 transition-transform shadow-sm shrink-0"
+        >
+          <HelpCircle size={24} strokeWidth={2.5} />
+        </button>
         <button 
           onClick={handleDownloadInvoice}
           disabled={isDownloading}
-          className="w-full flex items-center justify-center gap-3 px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-3 px-6 bg-black text-white py-4 rounded-2xl font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50"
         >
           {isDownloading ? <Loader2 size={20} className="animate-spin text-white" /> : <Download size={20} strokeWidth={3} />}
-          {isDownloading ? 'Processing PDF...' : 'Download Full Invoice'}
+          {isDownloading ? 'Processing...' : 'Download Invoice'}
         </button>
       </div>
 
