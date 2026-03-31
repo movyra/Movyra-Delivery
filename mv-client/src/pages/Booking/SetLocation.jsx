@@ -12,22 +12,21 @@ import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
 import useMapSettingsStore from '../../store/useMapSettingsStore';
 
-// Services & Modular Overlays
+// Services & Overlays
 import { MAP_LAYERS } from '../../services/mapLayers';
 import { reverseGeocodeWithCache } from '../../services/geocodeCache';
-import MapActionFAB from '../../components/Map/MapActionFAB';
-import TimelineInputList from '../../components/Map/TimelineInputList';
 
-// Future Injectable Components (Plotted for Step 2)
-import NearbyCarsLayer from '../../components/Map/NearbyCarsLayer';
-import SearchBottomSheet from '../../components/Map/SearchBottomSheet';
+// New Split-Screen Components (Target UI Image Match)
+import FloatingLocationCard from '../../components/Map/FloatingLocationCard';
+import LocationInputCards from '../../components/Map/LocationInputCards';
 
 /**
- * PAGE: SET LOCATION (UBER-STYLE IMMERSIVE UI)
+ * PAGE: SET LOCATION (SPLIT-SCREEN CARD UI)
  * Features: 
- * - 100vh Headerless Map Canvas
- * - Real-time Nearby Drivers Layer (Firestore synced)
- * - Fluid Bottom Sheet Idle State -> Fullscreen Timeline Active State
+ * - 45vh/55vh Strict Split-Screen Layout
+ * - Absolute Header & Logo Eradication
+ * - Overlapping Floating Location Blue Card
+ * - Isolated Circular Map Controls
  * - Auto-Fitting Bounds & Polyline Snapping
  */
 
@@ -59,31 +58,23 @@ export default function SetLocation() {
   const [isResolvingAddress, setIsResolvingAddress] = useState(false);
   const [routeError, setRouteError] = useState('');
   
-  // Uber-Style Fluid Architecture States
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  
   // Advanced Feature States
   const [isListening, setIsListening] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedPin, setSelectedPin] = useState(null); 
   const [contactForm, setContactForm] = useState({ name: '', phone: '', notes: '' });
   
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [routeDistance, setRouteDistance] = useState('');
   const [routeDuration, setRouteDuration] = useState('');
 
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [predictions, setPredictions] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
 
-  // Listen to Native Browser Fullscreen API
+  // Initialize dropoff array if empty
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-      setTimeout(() => map.current?.invalidateSize(), 300);
-    };
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    if (dropoffs.length === 0) useBookingStore.getState().addDropoff({ address: '', lat: null, lng: null });
   }, []);
 
   // ============================================================================
@@ -193,7 +184,7 @@ export default function SetLocation() {
     if (pickup?.lat && activeField !== 'pickup') {
       const pickupIcon = L.divIcon({
         className: '',
-        html: `<div class="w-4 h-4 bg-white rounded-full border-4 border-black shadow-md ring-2 ring-white hover:scale-125 transition-transform cursor-pointer"></div>`,
+        html: `<div class="w-4 h-4 bg-white rounded-full border-4 border-red-500 shadow-md ring-2 ring-white hover:scale-125 transition-transform cursor-pointer"></div>`, // Red pin styling to match image
         iconSize: [16, 16],
         iconAnchor: [8, 8]
       });
@@ -205,7 +196,7 @@ export default function SetLocation() {
       if (drop.lat && activeField !== idx) {
         const dropIcon = L.divIcon({
           className: '',
-          html: `<div class="w-6 h-6 bg-black text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer">${idx + 1}</div>`,
+          html: `<div class="w-6 h-6 bg-[#111111] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer">${idx + 1}</div>`,
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         });
@@ -281,12 +272,12 @@ export default function SetLocation() {
               interactive: true
             }).addTo(map.current);
 
-            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly)
+            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly in the 45vh map area)
             if (!programmaticMoveRef.current) {
               programmaticMoveRef.current = true;
               map.current.fitBounds(routeLayer.current.getBounds(), {
-                paddingTopLeft: [50, 150], 
-                paddingBottomRight: [50, isSearchExpanded ? 450 : 250] 
+                paddingTopLeft: [50, 80], 
+                paddingBottomRight: [50, 80] 
               });
             }
 
@@ -404,6 +395,7 @@ export default function SetLocation() {
       map.current.setView([lat, lng], 16);
     }
     
+    setIsSearchOpen(false);
     setSearchQuery('');
   };
 
@@ -418,137 +410,143 @@ export default function SetLocation() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#1a1a1a] overflow-hidden font-sans flex flex-col">
+    <div className="relative w-full h-screen bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
       {/* ========================================================= */}
-      {/* FLOATING CONTROLS & OVERLAYS (STRICT HEADER ERADICATION) */}
+      {/* TOP HALF: 45vh MAP CANVAS (STRICT HEADER ERADICATION) */}
       {/* ========================================================= */}
-      
-      {/* Top Left Interaction Button (Uber Style Menu/Back) */}
-      <button 
-        onClick={() => {
-          if (isSearchExpanded) setIsSearchExpanded(false);
-          else navigate(-1);
-        }} 
-        className="absolute top-12 left-6 z-[2000] w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-[0_8px_25px_rgba(0,0,0,0.15)] border border-gray-100 active:scale-95 transition-all"
-      >
-        {isSearchExpanded ? <ChevronLeft size={28} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
-      </button>
+      <div className="relative w-full h-[45vh] shrink-0 z-10">
+        <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
 
-      {/* Dynamic Action FAB (Themes, GPS) */}
-      <MapActionFAB />
+        {/* Top Left Interaction Button (Menu icon matching image) */}
+        <button 
+          onClick={() => navigate(-1)} 
+          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+        >
+          <Menu size={20} strokeWidth={2.5} />
+        </button>
 
-      {/* OPENSTREETMAP VIEWPORT (100vh) */}
-      <div className="flex-1 relative z-0">
-        <div ref={mapContainer} className="absolute inset-0 bg-[#f8f8f8]" />
-        
-        {/* Live Nearby Drivers Simulation/Fetcher */}
-        {isMapLoaded && map.current && <NearbyCarsLayer mapInstance={map.current} />}
+        {/* Top Right Interaction Button (Search icon matching image) */}
+        <button 
+          onClick={() => setIsSearchOpen(true)} 
+          className="absolute top-12 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+        >
+          <Search size={20} strokeWidth={2.5} />
+        </button>
 
-        {/* Route Metrics Floating Badge */}
-        <div className="absolute right-6 top-32 z-[1000] pointer-events-none flex flex-col items-end gap-3">
-          <AnimatePresence>
-            {routeDistance && !routeError && !isSearchExpanded && (
-              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-black/90 backdrop-blur-md text-white px-4 py-3 rounded-2xl shadow-xl pointer-events-auto flex flex-col items-end gap-0.5 border border-gray-800">
-                <span className="font-black text-[16px] leading-none">{routeDistance}</span>
-                <span className="font-bold text-[11px] text-gray-400 uppercase tracking-widest">{routeDuration} ETA</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* Current Location Quick Action */}
+        <button 
+          onClick={() => fetchCurrentLocation()} 
+          disabled={isLocating} 
+          className="absolute top-28 right-6 z-[2000] w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all disabled:opacity-50"
+        >
+          {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} strokeWidth={2.5} />}
+        </button>
 
         {/* DRAGGABLE CENTER TARGET PIN */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
             {activeField === 'pickup' ? (
-              <div className="w-4 h-4 bg-white rounded-full border-4 border-black shadow-md relative z-10 ring-4 ring-white" />
+              <div className="w-5 h-5 bg-[#FF3B30] rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] relative z-10 border-[3px] border-white" />
             ) : (
-              <div className="w-8 h-8 bg-black text-white text-[12px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xl relative z-10">
+              <div className="w-6 h-6 bg-[#111111] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xl relative z-10">
                 {activeField + 1}
               </div>
             )}
             {(isDragging || isResolvingAddress) && <div className="absolute w-12 h-12 bg-black/10 rounded-full animate-ping" />}
           </div>
         </div>
+
+        {/* OVERLAPPING FLOATING CARD (Matches the blue 'JET' pill from image) */}
+        <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
+          <FloatingLocationCard activeField={activeField} isResolving={isResolvingAddress} />
+        </div>
       </div>
 
       {/* ========================================================= */}
-      {/* STATE 1: IDLE BOTTOM SHEET ("Where to?") */}
+      {/* BOTTOM HALF: 55vh SCROLLABLE LIST OF CARDS */}
       {/* ========================================================= */}
-      <AnimatePresence>
-        {!isSearchExpanded && !isFullscreen && (
-          <SearchBottomSheet 
-            onExpand={() => setIsSearchExpanded(true)} 
-            pickupAddress={pickup?.address} 
-          />
-        )}
-      </AnimatePresence>
+      <div className="flex-1 overflow-y-auto pt-14 pb-8 px-5 space-y-4 z-0 relative">
+        
+        {/* Render Modular Input Cards */}
+        <LocationInputCards 
+          activeField={activeField} 
+          onFocusField={focusField} 
+          onOpenSearch={() => setIsSearchOpen(true)} 
+        />
 
-      {/* ========================================================= */}
-      {/* STATE 2: EXPANDED TIMELINE & ROUTING VIEW */}
-      {/* ========================================================= */}
-      <AnimatePresence>
-        {isSearchExpanded && (
-          <motion.div 
-            initial={{ y: '100%' }} 
-            animate={{ y: 0 }} 
-            exit={{ y: '100%' }} 
-            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-            className="fixed inset-0 bg-white z-[1500] flex flex-col pt-24" // pt-24 ensures the absolute back button remains visible and clickable
+        {/* Action Controls */}
+        <div className="pt-2 space-y-3">
+          {routeError && (
+            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-[20px] font-bold text-[13px] flex items-start gap-2">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
+            </div>
+          )}
+
+          {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
+            <button 
+              onClick={handleOptimizeRoute} 
+              disabled={isOptimizing} 
+              className="w-full bg-white border border-gray-200 text-black py-3.5 rounded-[24px] font-bold text-[15px] shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isOptimizing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} strokeWidth={2.5} />}
+              Optimize Sequence
+            </button>
+          )}
+
+          <button 
+            onClick={() => navigate('/booking/select-vehicle')} 
+            disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
+            className="w-full bg-[#111111] text-white py-4 rounded-[28px] font-bold text-[16px] active:scale-[0.98] transition-all shadow-[0_10px_20px_rgba(0,0,0,0.1)] disabled:opacity-50 flex items-center justify-center gap-2 min-h-[60px]"
           >
-            {/* Header & Tools Area */}
-            <div className="px-6 flex items-center justify-end gap-3 mb-2 shrink-0">
-              {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
-                <button onClick={handleOptimizeRoute} disabled={isOptimizing} className="h-10 px-4 rounded-full bg-blue-50 text-blue-600 flex items-center gap-2 hover:bg-blue-100 active:scale-95 transition-all font-bold text-[13px]">
-                  {isOptimizing ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} strokeWidth={2.5} />}
-                  Auto-Sort
-                </button>
-              )}
-            </div>
+            Confirm Route {routeDistance && !routeError && <span className="text-gray-400 font-medium ml-1">• {routeDistance}</span>}
+          </button>
+        </div>
+      </div>
 
-            {/* Modular Timeline Input List */}
-            <div className="px-6 pb-4 bg-white z-10 shadow-sm relative shrink-0">
-              <TimelineInputList 
-                activeField={activeField} 
-                onFocusField={focusField} 
-                onOpenSearch={() => {}} 
-              />
-            </div>
-
-            {/* Smart Search Bar (Contextual to active field) */}
-            <div className="px-6 py-4 border-b border-gray-50 flex items-center gap-3 shrink-0">
-              <Search size={20} className="text-gray-400" />
-              <input 
-                type="text" 
-                autoFocus 
-                value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)} 
-                placeholder={activeField === 'pickup' ? "Where are we picking up?" : "Where to drop off?"} 
-                className="flex-1 bg-transparent text-[16px] font-bold text-black outline-none placeholder-gray-400" 
-              />
-              <button onClick={startVoiceSearch} className={`p-2 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-gray-400 hover:text-black hover:bg-gray-50'}`}>
-                <Mic size={18} strokeWidth={2.5} />
+      {/* ========================================================= */}
+      {/* SEARCH MODAL WITH VOICE SUPPORT */}
+      {/* ========================================================= */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-0 bg-white z-[10000] flex flex-col font-sans">
+            <div className="pt-12 px-6 pb-4 flex items-center gap-4 border-b border-gray-100 shrink-0 shadow-sm">
+              <button onClick={() => setIsSearchOpen(false)} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black active:scale-95 shrink-0 transition-transform">
+                <ChevronLeft size={24} strokeWidth={2.5} />
               </button>
+              <div className="flex-1 relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                  <Search size={20} strokeWidth={2.5} />
+                </div>
+                <input 
+                  type="text" 
+                  autoFocus 
+                  value={searchQuery} 
+                  onChange={(e) => setSearchQuery(e.target.value)} 
+                  placeholder={activeField === 'pickup' ? "Search location..." : "Where to drop off?"} 
+                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-12 rounded-[20px] font-bold text-[15px] text-black outline-none" 
+                />
+                <button onClick={startVoiceSearch} className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
+                  <Mic size={18} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
             
-            {/* Search Results & Predictions */}
-            <div className="flex-1 overflow-y-auto p-6 bg-white">
+            <div className="flex-1 overflow-y-auto p-6 bg-[#FAFAFA]">
               {isListening && (
-                <div className="text-center py-8 text-gray-500 font-bold animate-pulse">
-                  Listening for address...
-                </div>
+                <div className="text-center py-8 text-gray-500 font-bold animate-pulse">Listening for address...</div>
               )}
               
               {!isListening && predictions.length > 0 && (
-                <div className="flex flex-col">
+                <div className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
                   {predictions.map((pred, i) => (
-                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-4 transition-colors px-2 rounded-xl">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
-                        <MapPin size={18} strokeWidth={2.5} />
+                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-3 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                        <MapPin size={16} strokeWidth={2.5} />
                       </div>
-                      <div className="overflow-hidden flex-1">
-                        <span className="block text-[16px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
-                        <span className="block text-[14px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
+                      <div className="overflow-hidden">
+                        <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
+                        <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
                       </div>
                     </button>
                   ))}
@@ -556,36 +554,20 @@ export default function SetLocation() {
               )}
 
               {!isListening && predictions.length === 0 && searchQuery.length < 3 && (
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                <div className="flex flex-wrap gap-2">
                   {CATEGORY_CHIPS.map(chip => (
-                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="shrink-0 px-4 py-2.5 bg-[#F6F6F6] rounded-2xl text-[14px] font-bold text-black flex items-center gap-2 border-2 border-transparent hover:border-black active:scale-95 transition-all">
-                      <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
+                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="px-4 py-2.5 bg-white shadow-sm border border-gray-100 rounded-[20px] text-[13px] font-bold text-black flex items-center gap-2 active:scale-95 transition-all">
+                      <chip.icon size={14} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-
-            {/* Sticky Action Footer */}
-            <div className="p-6 bg-white border-t border-gray-100 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] shrink-0 pb-8">
-              {routeError && (
-                <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl font-bold text-[13px] flex items-start gap-2 mb-4">
-                  <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
-                </div>
-              )}
-              <button 
-                onClick={() => navigate('/booking/select-vehicle')} 
-                disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
-                className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                Confirm Route {routeDistance && !routeError && <span className="text-gray-400 font-medium">• {routeDistance}</span>}
-              </button>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MARKER CONTACT MODAL */}
+      {/* MARKER CONTACT MODAL (Clicking a pin) */}
       <AnimatePresence>
         {selectedPin !== null && (
           <motion.div 
@@ -620,7 +602,7 @@ export default function SetLocation() {
                     placeholder="Contact Name" 
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
                   />
                 </div>
                 <div className="relative">
@@ -630,7 +612,7 @@ export default function SetLocation() {
                     placeholder="Phone Number" 
                     value={contactForm.phone}
                     onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
                   />
                 </div>
                 <div className="relative">
@@ -640,16 +622,16 @@ export default function SetLocation() {
                     rows={3}
                     value={contactForm.notes}
                     onChange={(e) => setContactForm({ ...contactForm, notes: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all resize-none"
+                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all resize-none"
                   />
                 </div>
               </div>
 
               <button 
                 onClick={handleSaveContactInfo}
-                className="w-full bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2"
+                className="w-full bg-[#111111] text-white py-4 rounded-[24px] font-bold text-[17px] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2"
               >
-                <Check size={20} strokeWidth={3} /> Save Location Details
+                <Check size={20} strokeWidth={3} /> Save Details
               </button>
             </motion.div>
           </motion.div>
