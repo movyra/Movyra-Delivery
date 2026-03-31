@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, Send, ArrowRight, Plus, History, 
-  Activity, MapPin, Navigation, Clock, ChevronRight, UserCircle2, HelpCircle, CheckCircle2, Truck, AlertCircle
+  Activity, MapPin, Navigation, Clock, ChevronRight, 
+  UserCircle2, HelpCircle, CheckCircle2, Truck, 
+  AlertCircle, Search, Loader2 
 } from 'lucide-react';
 
 // Real Store & Database Integration
@@ -14,11 +16,11 @@ import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit
 /**
  * PAGE: MOBILE HOME DASHBOARD (PREMIUM CARD UI)
  * Features: 
- * - Stark Headerless Navigation
+ * - Stark Headerless Navigation (Pure Typography)
  * - Massively Rounded "Where to?" Floating Action Card
- * - Light-Blue Active Dispatch Radar Card
+ * - Light-Blue Active Dispatch Banner
  * - OrderInfoListCard Paradigm for Recent Activity
- * - Real-time Firestore Sync
+ * - Real-time Firestore Sync for Wallet & Orders
  */
 
 export default function MobileHome() {
@@ -29,11 +31,9 @@ export default function MobileHome() {
   // Real Global State
   const { activeOrder } = useBookingStore();
 
-  // Real-time State
+  // Real-time Data States
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Real Logistics Data States
   const [activeShipmentsCount, setActiveShipmentsCount] = useState(0);
   const [accountBalance, setAccountBalance] = useState(0);
   const [recentActivity, setRecentActivity] = useState([]);
@@ -56,7 +56,7 @@ export default function MobileHome() {
           if (docSnap.exists()) {
             setAccountBalance(docSnap.data().walletBalance || 0);
           }
-        });
+        }, (err) => console.error("Wallet Stream Error:", err));
 
         // STREAM 2: Real-time Logistics & Activity
         const ordersRef = collection(db, 'orders');
@@ -75,7 +75,7 @@ export default function MobileHome() {
             const data = docSnap.data();
             fetchedOrders.push({ id: docSnap.id, ...data });
             
-            // Calculate active pipeline
+            // Calculate active pipeline statuses
             if (['searching', 'assigned', 'picked_up'].includes(data.status)) {
               activeCount++;
             }
@@ -110,20 +110,20 @@ export default function MobileHome() {
     return 'Good evening';
   };
 
-  // Status Icon Formatter
+  // Status Configuration for Dynamic Icons
   const getStatusConfig = (status) => {
     switch(status?.toLowerCase()) {
       case 'searching': 
       case 'assigned': 
-        return { icon: Loader2, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: true };
+        return { icon: Loader2, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: true, label: 'Active' };
       case 'picked_up': 
-        return { icon: Truck, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: false };
+        return { icon: Truck, bg: 'bg-[#BCE3FF]', text: 'text-[#111111]', spin: false, label: 'In Transit' };
       case 'delivered': 
-        return { icon: CheckCircle2, bg: 'bg-gray-100', text: 'text-gray-600', spin: false };
+        return { icon: CheckCircle2, bg: 'bg-gray-100', text: 'text-gray-600', spin: false, label: 'Delivered' };
       case 'cancelled': 
-        return { icon: AlertCircle, bg: 'bg-red-50', text: 'text-red-500', spin: false };
+        return { icon: AlertCircle, bg: 'bg-red-50', text: 'text-red-500', spin: false, label: 'Cancelled' };
       default: 
-        return { icon: Package, bg: 'bg-gray-100', text: 'text-gray-500', spin: false };
+        return { icon: Package, bg: 'bg-gray-100', text: 'text-gray-500', spin: false, label: 'Pending' };
     }
   };
 
@@ -133,37 +133,37 @@ export default function MobileHome() {
   return (
     <div className="min-h-screen bg-[#F2F4F7] text-[#111111] font-sans pb-32 overflow-x-hidden relative">
       
-      {/* SECTION 1: Minimalist Header */}
+      {/* SECTION 1: Stark Header Navigation (Eradicated Legacy Logo) */}
       <motion.div 
-        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
+        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
         className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md"
       >
         <div>
           <h2 className="text-[15px] font-bold text-gray-500 mb-1">{getGreeting()},</h2>
-          <h1 className="text-[32px] font-black tracking-tighter leading-none text-[#111111]">
+          <h1 className="text-[32px] font-black tracking-tighter leading-none">
             {isLoading ? '...' : userName}
           </h1>
         </div>
         <button 
           onClick={() => navigate('/profile-settings')}
-          className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
+          className="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-gray-200 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 transition-all"
         >
           <UserCircle2 size={24} className="text-gray-600" strokeWidth={2} />
         </button>
       </motion.div>
 
-      {/* SECTION 2: Floating "Where to?" Primary Action Card */}
+      {/* SECTION 2: Massively Rounded "Where to?" Action Card */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="px-6 my-6"
       >
         <button 
           onClick={() => navigate('/booking/set-location')}
-          className="w-full bg-white rounded-[32px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-gray-50 flex flex-col gap-4 active:scale-[0.98] transition-transform text-left relative overflow-hidden group"
+          className="w-full bg-white rounded-[32px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-gray-50 flex flex-col gap-4 active:scale-[0.98] transition-transform text-left relative overflow-hidden"
         >
-          <div className="flex items-center justify-between w-full relative z-10">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-[#F6F6F6] rounded-full flex items-center justify-center text-[#111111] shadow-sm">
+              <div className="w-14 h-14 bg-[#F6F6F6] rounded-full flex items-center justify-center text-[#111111] shadow-sm shrink-0">
                 <Search size={24} strokeWidth={2.5} />
               </div>
               <div>
@@ -171,34 +171,32 @@ export default function MobileHome() {
                 <p className="text-[14px] font-bold text-gray-400">Book a new delivery</p>
               </div>
             </div>
-            <div className="w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center text-white shadow-md group-hover:bg-gray-800 transition-colors">
+            <div className="w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center text-white shadow-md">
               <ArrowRight size={20} strokeWidth={3} />
             </div>
           </div>
         </button>
       </motion.div>
 
-      {/* SECTION 3: Active Dispatch / Live Shipments (Light Blue Floating Card Paradigm) */}
+      {/* SECTION 3: Active Dispatch (Uber-Style Floating Pill) */}
       <AnimatePresence>
         {activeShipmentsCount > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0, scale: 0.95 }}
             animate={{ opacity: 1, height: 'auto', scale: 1 }}
             exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            className="px-6 mb-6 overflow-hidden"
+            className="px-6 mb-6"
           >
             <div 
               onClick={() => navigate('/tracking/live')}
               className="bg-[#BCE3FF] rounded-[32px] p-6 shadow-[0_10px_30px_rgba(188,227,255,0.4)] border border-[#A5D5F9] cursor-pointer active:scale-[0.98] transition-transform relative overflow-hidden"
             >
-              {/* Radar pulse effect background */}
               <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 rounded-full animate-ping opacity-75" />
-              
               <div className="flex items-center gap-4 relative z-10">
-                <div className="w-14 h-14 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center text-[#111111] shadow-sm">
+                <div className="w-14 h-14 bg-white/50 backdrop-blur-sm rounded-full flex items-center justify-center text-[#111111] shadow-sm shrink-0">
                   <Activity size={24} strokeWidth={2.5} />
                 </div>
-                <div className="flex-1 text-left">
+                <div className="flex-1">
                   <span className="block text-[20px] font-black text-[#111111] leading-tight tracking-tight mb-1">
                     {activeShipmentsCount} Active {activeShipmentsCount === 1 ? 'Shipment' : 'Shipments'}
                   </span>
@@ -211,9 +209,9 @@ export default function MobileHome() {
         )}
       </AnimatePresence>
 
-      {/* SECTION 4: Quick Actions Grid */}
+      {/* SECTION 4: Quick Action Grid & Wallet */}
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
         className="px-6 mb-8 grid grid-cols-2 gap-4"
       >
         <button 
@@ -223,7 +221,7 @@ export default function MobileHome() {
           <div className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111]">
             <MapPin size={18} strokeWidth={2.5} />
           </div>
-          <span className="text-[15px] font-black text-[#111111] tracking-tight">Saved Places</span>
+          <span className="text-[15px] font-black tracking-tight">Saved Places</span>
         </button>
         
         <button 
@@ -233,27 +231,27 @@ export default function MobileHome() {
           <div className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111]">
             <History size={18} strokeWidth={2.5} />
           </div>
-          <span className="text-[15px] font-black text-[#111111] tracking-tight">Order History</span>
+          <span className="text-[15px] font-black tracking-tight">Orders</span>
         </button>
 
         <button 
-          className="bg-[#111111] p-5 rounded-[28px] shadow-[0_10px_20px_rgba(0,0,0,0.1)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden"
+          className="bg-[#111111] p-6 rounded-[32px] shadow-[0_10px_25px_rgba(0,0,0,0.15)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden"
         >
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full relative z-10">
             <div className="flex flex-col text-left">
               <span className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">Movyra Wallet</span>
-              <span className="text-[32px] font-black text-white leading-none tracking-tighter">
+              <span className="text-[36px] font-black text-white leading-none tracking-tighter">
                 ₹{isLoading ? '...' : accountBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             </div>
-            <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-sm">
-              <Plus size={24} strokeWidth={2.5} />
+            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-sm shadow-inner">
+              <Plus size={28} strokeWidth={2.5} />
             </div>
           </div>
         </button>
       </motion.div>
 
-      {/* SECTION 5: Recent Activity (OrderInfoListCard Paradigm) */}
+      {/* SECTION 5: Recent Activity (OrderInfoListCard Aesthetic) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
         className="px-6"
@@ -263,26 +261,23 @@ export default function MobileHome() {
             Recent Activity
           </span>
           <button onClick={() => navigate('/order-history')} className="text-[14px] font-bold text-[#111111] hover:underline">
-            See All
+            View All
           </button>
         </div>
         
         <div className="space-y-4">
           {isLoading ? (
-            // Skeleton Loaders matching new rounded paradigm
-            [1, 2].map(i => <div key={i} className="h-[100px] bg-white rounded-[32px] animate-pulse border border-gray-50" />)
+            [1, 2].map(i => <div key={i} className="h-[120px] bg-white rounded-[32px] animate-pulse border border-gray-50" />)
           ) : recentActivity.length === 0 ? (
-            // Empty State
             <div className="bg-white rounded-[32px] p-8 text-center border border-gray-50 shadow-[0_4px_15px_rgba(0,0,0,0.03)]">
               <p className="text-[15px] font-bold text-gray-400 leading-relaxed">
-                No recent shipments found. Tap 'Where to?' to book your first delivery.
+                No recent shipments found. Book your first delivery to see updates here.
               </p>
             </div>
           ) : (
-            // Live Data Feed (OrderInfoListCard style)
             recentActivity.map(order => {
               const config = getStatusConfig(order.status);
-              const Icon = config.icon;
+              const StatusIcon = config.icon;
               const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
               const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
               
@@ -293,30 +288,32 @@ export default function MobileHome() {
                   className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 flex flex-col gap-4 cursor-pointer hover:border-gray-200 active:scale-[0.98] transition-all"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 overflow-hidden pr-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${config.bg} ${config.text}`}>
-                        <Icon size={18} strokeWidth={2.5} className={config.spin ? 'animate-spin' : ''} />
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${config.bg} ${config.text}`}>
+                        <StatusIcon size={20} strokeWidth={2.5} className={config.spin ? 'animate-spin' : ''} />
                       </div>
-                      <span className="text-[15px] font-black text-[#111111] tracking-tight truncate">
-                        {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address?.split(',')[0] : order.dropoff?.address?.split(',')[0] || 'Delivery'}
-                      </span>
+                      <div className="overflow-hidden">
+                        <span className="text-[16px] font-black text-[#111111] tracking-tight truncate block">
+                          {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address?.split(',')[0] : order.dropoff?.address?.split(',')[0] || 'Delivery'}
+                        </span>
+                        <span className="text-[12px] font-bold text-gray-400 uppercase tracking-wide">
+                          {order.id.slice(-8).toUpperCase()}
+                        </span>
+                      </div>
                     </div>
-                    <button className="w-8 h-8 rounded-full border border-gray-100 flex items-center justify-center text-gray-400 shrink-0">
-                      <ChevronRight size={16} strokeWidth={2.5} />
-                    </button>
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 ${config.bg} ${config.text}`}>
+                      {config.label}
+                    </span>
                   </div>
                   
-                  <div className="flex items-end justify-between mt-1 pl-[52px]">
-                    <div className="flex-1 pr-4">
-                      <p className={`text-[14px] font-bold leading-tight capitalize ${order.status === 'cancelled' ? 'text-red-500' : 'text-[#111111]'}`}>
-                        {order.status?.replace('_', ' ') || 'Processing'}
-                      </p>
-                      <p className="text-[12px] font-medium text-gray-400 mt-1">
+                  <div className="flex items-end justify-between mt-1">
+                    <div>
+                      <p className="text-[14px] font-bold text-gray-500">
                         {formattedDate} • {order.vehicleType || 'Standard'}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-[20px] font-black text-[#111111] leading-none tracking-tight">
+                      <p className="text-[24px] font-black text-[#111111] leading-none tracking-tight">
                         ₹{order.pricing?.estimatedPrice || order.totalFare || 0}
                       </p>
                     </div>
