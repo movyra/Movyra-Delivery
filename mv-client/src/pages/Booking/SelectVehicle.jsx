@@ -3,22 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Users, Package, Clock, Loader2, ArrowRight, Info } from 'lucide-react';
 
-// Real Store & Services Integration
+// Real Store Integration
 import useBookingStore from '../../store/useBookingStore';
-import { calculateRouteAndETA } from '../../services/googleMaps';
-import { calculateDeliveryFare } from '../../services/payment';
 
 // ============================================================================
 // PAGE: SELECT VEHICLE (STARK MINIMALIST UI)
 // High-contrast vehicle selection grid with Group Delivery pooling, dynamic
-// capacity badges, and real-time Google Maps distance pricing.
+// capacity badges, and real-time OSRM distance pricing.
 // ============================================================================
 
 // Static definitions for vehicle capabilities
 const VEHICLE_SPECS = {
-  'bike': { name: 'Moto', capacity: '20 kg', volume: 'Backpack', etaOffset: 0 },
-  '3wheeler': { name: '3-Wheeler', capacity: '500 kg', volume: 'Small Furniture', etaOffset: 15 },
-  'minitruck': { name: 'Mini Truck', capacity: '1000 kg', volume: '1 BHK Size', etaOffset: 25 }
+  'bike': { name: 'Moto', capacity: '20 kg', volume: 'Backpack', etaOffset: 0, baseFare: 40, perKm: 12 },
+  '3wheeler': { name: '3-Wheeler', capacity: '500 kg', volume: 'Small Furniture', etaOffset: 15, baseFare: 90, perKm: 25 },
+  'minitruck': { name: 'Mini Truck', capacity: '1000 kg', volume: '1 BHK Size', etaOffset: 25, baseFare: 250, perKm: 40 }
 };
 
 export default function SelectVehicle() {
@@ -37,13 +35,15 @@ export default function SelectVehicle() {
   const [livePrices, setLivePrices] = useState({});
 
   // ============================================================================
-  // LOGIC: REAL-TIME DISTANCE & PRICING ENGINE
+  // LOGIC: REAL-TIME DISTANCE (OSRM) & PRICING ENGINE
   // ============================================================================
   useEffect(() => {
     const fetchRealPricing = async () => {
-      // Validate locations exist
-      if (!pickup?.lat || dropoffs.length === 0 || !dropoffs[0]?.lat) {
-        setError('Valid pickup and dropoff locations are required.');
+      // 1. Validate locations exist from Zustand store
+      const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
+      
+      if (!pickup?.lat || validDropoffs.length === 0) {
+        setError('Valid pickup and drop-off locations are required. Please go back and set them.');
         setIsLoading(false);
         return;
       }
@@ -52,55 +52,54 @@ export default function SelectVehicle() {
       setError('');
 
       try {
-        // 1. Calculate Real Distance and ETA via Map Services
-        // Sum the segments (Pickup -> Drop 1 -> Drop 2, etc.)
-        let totalMeters = 0;
-        let totalSeconds = 0;
-        
-        let currentOrigin = pickup;
-        for (const dest of dropoffs) {
-          if (!dest.lat) continue; // Skip empty stops
-          
-          const metrics = await calculateRouteAndETA(currentOrigin, [dest]);
-          if (metrics && metrics[0] && metrics[0].status === 'OK') {
-            totalMeters += metrics[0].distanceValueMeters;
-            totalSeconds += metrics[0].durationInTrafficValueSeconds;
-          }
-          currentOrigin = dest; // Next leg starts from this destination
+        // 2. Fetch Real Distance & ETA via OSRM API (100% Free & Real Data)
+        const coords = [pickup, ...validDropoffs].map(loc => `${loc.lng},${loc.lat}`).join(';');
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=false`);
+        const data = await res.json();
+
+        if (data.code !== 'Ok') {
+          throw new Error('Failed to compute route.');
         }
 
-        const distanceKm = totalMeters / 1000;
-        const durationMins = Math.round(totalSeconds / 60);
+        const distanceKm = data.routes[0].distance / 1000;
+        const durationMins = Math.round(data.routes[0].duration / 60);
+
         setRouteMetrics({ distanceKm, baseDurationMins: durationMins });
 
-        // 2. Calculate Strict Fares via Payment Service
-        const computedPrices = {
-          'bike': calculateDeliveryFare(distanceKm, 'bike'),
-          '3wheeler': calculateDeliveryFare(distanceKm, '3wheeler'),
-          'minitruck': calculateDeliveryFare(distanceKm, 'minitruck')
-        };
+        // 3. Compute Real Dynamic Pricing (₹ INR)
+        // Simulated Surge Pricing (e.g., 1.2x during peak hours, keeping it 1.0 for standard)
+        const currentHour = new Date().getHours();
+        const surgeMultiplier = (currentHour >= 17 && currentHour <= 20) ? 1.25 : 1.0;
+
+        const computedPrices = {};
+        for (const [vType, specs] of Object.entries(VEHICLE_SPECS)) {
+          const rawFare = specs.baseFare + (distanceKm * specs.perKm);
+          computedPrices[vType] = {
+            totalFare: Math.round(rawFare * surgeMultiplier),
+            surgeMultiplier: surgeMultiplier
+          };
+        }
         
         setLivePrices(computedPrices);
 
-        // Auto-select first vehicle if none selected
+        // Auto-select first vehicle if none selected globally
         if (!vehicleType) setVehicle('bike');
 
       } catch (err) {
-        console.error("Pricing Calculation Error:", err);
-        setError('Failed to calculate route pricing. Please try again.');
+        console.error("Pricing Engine Error:", err);
+        setError('Failed to calculate live route metrics. Please check your network connection.');
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRealPricing();
-  }, [pickup, dropoffs, setVehicle, vehicleType]);
+  }, [pickup, dropoffs, vehicleType, setVehicle]);
 
   // ============================================================================
   // HANDLERS
   // ============================================================================
   const handleConfirm = () => {
-    // Commit the final pricing to the global store before moving to review
     if (vehicleType && livePrices[vehicleType]) {
       const baseFareObj = livePrices[vehicleType];
       
@@ -109,12 +108,16 @@ export default function SelectVehicle() {
         ? Math.max(Math.round(baseFareObj.totalFare * 0.8), 20) // 20% off for pooling, min ₹20
         : baseFareObj.totalFare;
 
+      // Commit strictly to Zustand Store
       setPricing({
         estimatedPrice: finalTotal,
         surgeMultiplier: baseFareObj.surgeMultiplier,
-        isGroupDelivery: isGroupDelivery
+        isGroupDelivery: isGroupDelivery,
+        currency: '₹'
       });
-      navigate('/booking/details'); // Navigate to the advanced details screen
+      
+      // Navigate to next booking phase
+      navigate('/booking/details'); 
     }
   };
 
@@ -132,8 +135,8 @@ export default function SelectVehicle() {
         >
           <ChevronLeft size={28} strokeWidth={2.5} />
         </button>
-        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
+        <div className="w-10 h-10 rounded-md overflow-hidden bg-black flex items-center justify-center p-1 shadow-sm">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
         </div>
       </div>
 
@@ -180,7 +183,7 @@ export default function SelectVehicle() {
         {/* Real-time Error Handling */}
         <AnimatePresence>
           {error && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-red-50 text-red-600 p-4 rounded-2xl mb-6 font-bold text-sm flex items-start gap-2">
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl mb-6 font-bold text-sm flex items-start gap-2">
               <Info size={18} className="shrink-0 mt-0.5" /> {error}
             </motion.div>
           )}
@@ -199,6 +202,7 @@ export default function SelectVehicle() {
               const basePrice = livePrices[vType]?.totalFare || 0;
               const displayPrice = isGroupDelivery ? Math.max(Math.round(basePrice * 0.8), 20) : basePrice;
               const displayEta = routeMetrics.baseDurationMins + spec.etaOffset + (isGroupDelivery ? 45 : 0);
+              const isSurging = livePrices[vType]?.surgeMultiplier > 1.0;
 
               return (
                 <motion.div 
@@ -240,7 +244,7 @@ export default function SelectVehicle() {
                       <Clock size={16} strokeWidth={2.5} className="text-gray-400" />
                       {displayEta} mins away
                     </span>
-                    {livePrices[vType]?.surgeMultiplier > 1.0 && (
+                    {isSurging && (
                       <span className="text-[#276EF1] flex items-center gap-1">
                         High Demand
                       </span>
@@ -261,7 +265,7 @@ export default function SelectVehicle() {
           className="w-full flex items-center justify-between px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:shadow-none"
         >
           <span className="flex-1 text-center pl-6">
-            {isLoading ? 'Calculating...' : 'Add Package Details'}
+            {isLoading ? 'Calculating...' : 'Confirm Vehicle'}
           </span>
           {isLoading ? <Loader2 size={24} className="animate-spin text-white" /> : <ArrowRight size={24} className="text-white" />}
         </button>
