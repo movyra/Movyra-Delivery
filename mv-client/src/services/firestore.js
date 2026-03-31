@@ -3,25 +3,25 @@ import {
   collection, 
   addDoc, 
   doc, 
-  setDoc, 
   getDoc, 
   getDocs, 
-  query, 
-  where, 
   serverTimestamp, 
   updateDoc 
 } from 'firebase/firestore';
-import { auth } from './firebaseAuth';
+import { auth } from './firebaseAuth'; // Assumes firebase app is initialized here
 
 // Initialize Firestore instance
 export const db = getFirestore();
+
+// Utility to safely grab the current isolated App ID
+const getAppId = () => typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // ============================================================================
 // SECTION 1: USER PROFILE & B2B MANAGEMENT
 // ============================================================================
 
 /**
- * Updates the authenticated user's profile data, including toggling B2B business profiles.
+ * Updates the authenticated user's profile data.
  * @param {Object} profileData - The data to merge into the user's document.
  */
 export const updateUserProfile = async (profileData) => {
@@ -29,7 +29,8 @@ export const updateUserProfile = async (profileData) => {
   if (!user) throw new Error("Authentication required to update profile.");
 
   try {
-    const userRef = doc(db, 'users', user.uid);
+    // STRICT PATH RULE: Private user data goes to artifacts/appId/users/userId/...
+    const userRef = doc(db, 'artifacts', getAppId(), 'users', user.uid, 'profile', 'data');
     await updateDoc(userRef, {
       ...profileData,
       updatedAt: serverTimestamp()
@@ -53,10 +54,10 @@ export const saveAddressPin = async (addressData) => {
   if (!user) throw new Error("Authentication required to save addresses.");
 
   try {
-    const addressRef = collection(db, 'saved_addresses');
+    // STRICT PATH RULE: Private address book
+    const addressRef = collection(db, 'artifacts', getAppId(), 'users', user.uid, 'saved_addresses');
     const newDoc = await addDoc(addressRef, {
       ...addressData,
-      userId: user.uid,
       createdAt: serverTimestamp()
     });
     return newDoc.id;
@@ -74,11 +75,10 @@ export const fetchUserAddresses = async () => {
   if (!user) throw new Error("Authentication required to fetch addresses.");
 
   try {
-    const addressQuery = query(
-      collection(db, 'saved_addresses'),
-      where("userId", "==", user.uid)
-    );
-    const snapshot = await getDocs(addressQuery);
+    // NO COMPLEX QUERIES RULE: Fetch entire subcollection from the user's private path.
+    const addressRef = collection(db, 'artifacts', getAppId(), 'users', user.uid, 'saved_addresses');
+    const snapshot = await getDocs(addressRef);
+    
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error("Firestore Error [fetchUserAddresses]:", error);
@@ -99,10 +99,10 @@ export const createDispute = async (disputeData) => {
   if (!user) throw new Error("Authentication required to create a dispute.");
 
   try {
-    const disputeRef = collection(db, 'disputes');
+    // Save disputes securely under the user's private subcollection
+    const disputeRef = collection(db, 'artifacts', getAppId(), 'users', user.uid, 'disputes');
     const newTicket = await addDoc(disputeRef, {
       ...disputeData,
-      userId: user.uid,
       status: 'open',
       priority: 'high',
       createdAt: serverTimestamp(),
@@ -127,7 +127,8 @@ export const fetchDriverStats = async (driverId) => {
   if (!driverId) throw new Error("Driver ID is required to fetch stats.");
 
   try {
-    const driverRef = doc(db, 'drivers', driverId);
+    // STRICT PATH RULE: Driver stats are public data
+    const driverRef = doc(db, 'artifacts', getAppId(), 'public', 'data', 'drivers', driverId);
     const driverDoc = await getDoc(driverRef);
     
     if (driverDoc.exists()) {
@@ -161,7 +162,8 @@ export const fetchDriverStats = async (driverId) => {
 export const logSystemError = async (context, error) => {
   try {
     const user = auth.currentUser;
-    const logsRef = collection(db, 'system_logs');
+    // System logs go to a public telemetry bucket (or you could strictly isolate them per user)
+    const logsRef = collection(db, 'artifacts', getAppId(), 'public', 'data', 'system_logs');
     
     await addDoc(logsRef, {
       context,
