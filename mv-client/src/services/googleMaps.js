@@ -12,15 +12,18 @@
 /**
  * Fetches real-time address predictions as the user types using Photon.
  * Photon is highly optimized for autocomplete unlike standard Nominatim.
+ * Supports proximity bias for accurate category searches (Transit, Offices).
  * @param {string} input - The partial address string typed by the user.
+ * @param {number} [lat] - Optional user latitude for local proximity bias.
+ * @param {number} [lng] - Optional user longitude for local proximity bias.
  * @returns {Promise<Array>} - Array of prediction objects.
  */
-export const fetchPlacePredictions = async (input) => {
+export const fetchPlacePredictions = async (input, lat = 20, lng = 79) => {
   if (!input || input.trim() === '') return [];
   
   try {
-    // We add a slight location bias to India (lat: 20, lon: 79) for relevance
-    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(input)}&limit=5&lat=20&lon=79`);
+    // Dynamically applies the user's current GPS coordinates to bias the search results locally.
+    const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(input)}&limit=8&lat=${lat}&lon=${lng}`);
     
     if (!response.ok) throw new Error("Network response was not ok");
     
@@ -33,15 +36,15 @@ export const fetchPlacePredictions = async (input) => {
       const context = [p.city, p.state, p.country].filter(Boolean).join(', ');
       const description = context ? `${name}, ${context}` : name;
       
-      const lng = feature.geometry.coordinates[0];
-      const lat = feature.geometry.coordinates[1];
+      const lngCoord = feature.geometry.coordinates[0];
+      const latCoord = feature.geometry.coordinates[1];
 
       return {
         description: description,
         // Embed lat/lon as the place_id so geocoding is instant later
-        place_id: `${lat},${lng}`,
-        lat: lat,
-        lng: lng
+        place_id: `${latCoord},${lngCoord}`,
+        lat: latCoord,
+        lng: lngCoord
       };
     });
   } catch (error) {
