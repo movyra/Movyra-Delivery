@@ -12,23 +12,28 @@ import {
   Crown, 
   Sparkles,
   User as UserIcon,
-  LifeBuoy
+  LifeBuoy,
+  Bell,
+  Wallet
 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
 import { auth } from '../services/firebaseAuth';
 
-// ============================================================================
-// PAGE: PROFILE & PREMIUM SETTINGS (MOVYRA LIGHT THEME)
-// Replaces the old wallet dashboard with the Premium Membership screen.
-// Features 6 Functional Sections: Auth Engine, Header, Identity Render,
-// Descriptive Text, Large Premium Card, Settings List, and Logout Action.
-// ============================================================================
+/**
+ * PAGE: PROFILE & PREMIUM SETTINGS (PREMIUM CARD UI)
+ * Architecture: Detached 32px rounded cards on #F2F4F7 background.
+ * Features: 
+ * - Isolated Circular Navigation
+ * - Grouped Settings Modules
+ * - Dark-Mode Premium Membership Card
+ * - Functional Firebase Logout
+ */
 
 export default function ProfileSettings() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  // SECTION 1: Secure Authentication Engine
+  // SECTION 1: Functional Logout Logic
   const handleLogout = async () => {
     try {
       await auth.signOut();
@@ -39,153 +44,151 @@ export default function ProfileSettings() {
     }
   };
 
-  // Derive display name from email if name is missing (common in basic auth)
   const displayName = user?.name || user?.email?.split('@')[0] || "Movyra Member";
   const displayEmail = user?.email || "No email linked";
 
   return (
-    <div className="min-h-screen bg-movyra-surface text-gray-900 px-6 pt-12 pb-32 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#F2F4F7] text-[#111111] font-sans relative flex flex-col">
       
-      {/* Background Accent Glow for Premium feel */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-50 rounded-full blur-[100px] pointer-events-none -z-10 opacity-60"></div>
-
-      {/* SECTION 2: Header Navigation */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8 relative z-10"
-      >
+      {/* SECTION 2: Isolated Circular Navigation */}
+      <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md">
         <button 
           onClick={() => navigate('/dashboard-home')} 
-          className="p-2 -ml-2 text-movyra-blue hover:bg-blue-50 rounded-full transition-colors active:scale-95"
+          className="w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
         >
-          <ChevronLeft size={32} />
+          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
-        <h1 className="text-xl font-black tracking-wide">Profile</h1>
-        {/* Strict Real Logo Injection replacing the empty spacer */}
-        <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center overflow-hidden shadow-sm">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-        </div>
-      </motion.div>
+        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] leading-none">
+          Settings
+        </h1>
+      </div>
 
-      {/* SECTION 3: Dynamic Identity Render */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex items-center gap-5 mb-8"
-      >
-        {/* Dynamic Avatar */}
-        <div className="w-20 h-20 rounded-[24px] bg-white border-2 border-gray-100 shadow-sm flex items-center justify-center p-1 relative">
-          <img 
-            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayEmail}`} 
-            alt="User Avatar" 
-            className="w-full h-full rounded-[18px] bg-blue-50"
-          />
-          <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-movyra-blue rounded-full border-4 border-movyra-surface flex items-center justify-center text-white">
-            <Crown size={12} strokeWidth={3} />
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto no-scrollbar px-6 pt-2 pb-32 space-y-4">
         
-        <div className="flex flex-col">
-          <h2 className="text-2xl font-black text-gray-900 tracking-tight capitalize">{displayName}</h2>
-          <p className="text-[13px] font-bold text-gray-400 mt-1">{displayEmail}</p>
-        </div>
-      </motion.div>
-
-      {/* SECTION 4: Descriptive Text Context */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6"
-      >
-        <h3 className="text-lg font-black text-gray-900 mb-2 tracking-wide">Movyra Premium</h3>
-        <p className="text-[13px] text-gray-500 font-medium leading-relaxed pr-4">
-          Enjoy exclusive benefits with your premium membership, including priority sorting, free extended warehouse storage, and 24/7 dedicated routing support.
-        </p>
-      </motion.div>
-
-      {/* SECTION 5: The Large Premium Card Component */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3, type: 'spring', stiffness: 300 }}
-        className="w-full bg-gray-900 rounded-[32px] p-6 mb-10 shadow-[0_20px_40px_rgba(15,23,42,0.15)] relative overflow-hidden text-white"
-      >
-        {/* Ambient Card Decor */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-movyra-blue blur-[60px] opacity-40"></div>
-        <div className="absolute bottom-0 right-0 p-4 opacity-10">
-          <Crown size={100} />
-        </div>
-
-        <div className="relative z-10">
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-              <Sparkles size={14} className="text-movyra-blue" />
-              <span className="text-[11px] font-black uppercase tracking-widest text-blue-100">Active Plan</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col mb-6">
-            <span className="text-4xl font-black tracking-tighter mb-1">Premium.</span>
-            <span className="text-sm font-bold text-gray-400">Renews Oct 24, 2026</span>
-          </div>
-
-          <button className="w-full bg-white text-gray-900 py-3.5 rounded-2xl font-black text-sm active:scale-[0.98] transition-transform">
-            Manage Subscription
-          </button>
-        </div>
-      </motion.div>
-
-      {/* SECTION 6: Settings Menu List */}
-      <motion.div 
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="bg-white rounded-[32px] p-2 flex flex-col gap-1 border border-gray-100 shadow-sm mb-8"
-      >
-        {[ 
-          { i: UserIcon, l: "Account Details", action: null }, 
-          { i: MapPin, l: "Address Book", action: () => navigate('/profile/addresses') }, 
-          { i: CreditCard, l: "Payment Methods", action: null }, 
-          { i: ShieldCheck, l: "Privacy & Security", action: null }, 
-          { i: Settings, l: "App Preferences", action: null },
-          { i: LifeBuoy, l: "Help & Disputes", action: () => navigate('/support/dispute') }
-        ].map((item, idx) => (
-          <button 
-            key={idx} 
-            onClick={item.action}
-            disabled={!item.action}
-            className={`flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-gray-50 active:scale-[0.98] transition-all group ${!item.action ? 'opacity-50 cursor-not-allowed' : ''}`}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-movyra-blue transition-colors">
-                <item.i size={18} strokeWidth={2.5} />
-              </div>
-              <span className="font-bold text-[15px] text-gray-800">{item.l}</span>
-            </div>
-            {item.action && (
-              <ChevronRight size={18} className="text-gray-300 group-hover:text-movyra-blue transition-colors" />
-            )}
-          </button>
-        ))}
-      </motion.div>
-
-      {/* SECTION 7: Functional Logout Sequence */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <button 
-          onClick={handleLogout} 
-          className="w-full bg-red-50 text-red-600 py-5 rounded-3xl font-black tracking-wide flex justify-center items-center gap-2 active:scale-[0.98] transition-all hover:bg-red-100 border border-red-100"
+        {/* SECTION 3: Identity Card */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 flex items-center gap-5"
         >
-          <LogOut size={20} strokeWidth={2.5} />
-          Log Out
-        </button>
-      </motion.div>
+          <div className="w-20 h-20 rounded-[24px] bg-[#F2F4F7] flex items-center justify-center relative border border-gray-100 p-1">
+            <img 
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayEmail}`} 
+              alt="Avatar" 
+              className="w-full h-full rounded-[18px] bg-white"
+            />
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#111111] rounded-full border-4 border-white flex items-center justify-center text-white shadow-sm">
+              <Crown size={12} strokeWidth={3} />
+            </div>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <h2 className="text-[22px] font-black text-[#111111] tracking-tight truncate capitalize">{displayName}</h2>
+            <p className="text-[13px] font-bold text-gray-400 mt-0.5 truncate">{displayEmail}</p>
+          </div>
+        </motion.div>
+
+        {/* SECTION 4: Premium Status Card (Dark Theme) */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-[#111111] rounded-[32px] p-7 shadow-[0_15px_35px_rgba(0,0,0,0.15)] relative overflow-hidden text-white"
+        >
+          {/* Animated Background Element */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#BCE3FF] blur-[80px] opacity-20" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 bg-white/10 w-fit px-3 py-1.5 rounded-full border border-white/10 mb-6">
+              <Sparkles size={14} className="text-[#BCE3FF]" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#BCE3FF]">Exclusive Member</span>
+            </div>
+            
+            <div className="mb-8">
+              <h3 className="text-[36px] font-black tracking-tighter leading-none mb-1">Movyra Plus.</h3>
+              <p className="text-[13px] font-bold text-gray-400">Unlimited priority delivery enabled</p>
+            </div>
+
+            <button className="w-full bg-white text-[#111111] py-4 rounded-[20px] font-black text-[14px] active:scale-[0.98] transition-all shadow-lg">
+              Manage Subscription
+            </button>
+          </div>
+        </motion.div>
+
+        {/* SECTION 5: Core Settings Group */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-white rounded-[32px] p-2 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
+        >
+          {[ 
+            { i: MapPin, l: "Saved Addresses", d: "Manage home & work", action: () => navigate('/profile/addresses') }, 
+            { i: Wallet, l: "Payment Methods", d: "Cards & UPI accounts", action: null }, 
+            { i: Bell, l: "Notifications", d: "Status alerts & promos", action: null },
+            { i: ShieldCheck, l: "Privacy & Security", d: "Biometrics & passwords", action: null }
+          ].map((item, idx) => (
+            <button 
+              key={idx} 
+              onClick={item.action}
+              disabled={!item.action}
+              className={`w-full flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-[#F2F4F7] active:scale-[0.98] transition-all group ${!item.action ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[18px] bg-[#F2F4F7] flex items-center justify-center text-gray-400 group-hover:bg-[#111111] group-hover:text-white transition-colors">
+                  <item.i size={20} strokeWidth={2.5} />
+                </div>
+                <div className="text-left">
+                  <span className="block font-black text-[15px] text-[#111111]">{item.l}</span>
+                  <span className="block font-bold text-[12px] text-gray-400">{item.d}</span>
+                </div>
+              </div>
+              {item.action && (
+                <ChevronRight size={18} className="text-gray-300 group-hover:text-[#111111] transition-colors" />
+              )}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* SECTION 6: Support Group */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          className="bg-white rounded-[32px] p-2 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
+        >
+          {[ 
+            { i: LifeBuoy, l: "Help Center", d: "Support & FAQs", action: () => navigate('/support/dispute') },
+            { i: Settings, l: "App Language", d: "English (Default)", action: null }
+          ].map((item, idx) => (
+            <button 
+              key={idx} 
+              onClick={item.action}
+              disabled={!item.action}
+              className={`w-full flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-[#F2F4F7] active:scale-[0.98] transition-all group ${!item.action ? 'opacity-40 cursor-not-allowed' : ''}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[18px] bg-[#F2F4F7] flex items-center justify-center text-gray-400 group-hover:bg-[#111111] group-hover:text-white transition-colors">
+                  <item.i size={20} strokeWidth={2.5} />
+                </div>
+                <div className="text-left">
+                  <span className="block font-black text-[15px] text-[#111111]">{item.l}</span>
+                  <span className="block font-bold text-[12px] text-gray-400">{item.d}</span>
+                </div>
+              </div>
+              {item.action && (
+                <ChevronRight size={18} className="text-gray-300 group-hover:text-[#111111] transition-colors" />
+              )}
+            </button>
+          ))}
+        </motion.div>
+
+        {/* SECTION 7: Logout Action */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        >
+          <button 
+            onClick={handleLogout} 
+            className="w-full bg-red-50 text-red-600 py-5 rounded-[32px] font-black tracking-wide flex justify-center items-center gap-2 active:scale-[0.98] transition-all border border-red-100 shadow-sm"
+          >
+            <LogOut size={20} strokeWidth={2.5} />
+            Sign Out Account
+          </button>
+        </motion.div>
+        
+      </div>
       
     </div>
   );
