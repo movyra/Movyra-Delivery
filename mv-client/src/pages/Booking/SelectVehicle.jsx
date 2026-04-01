@@ -1,36 +1,128 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { 
-  ChevronLeft, Users, Package, Clock, 
-  Loader2, ArrowRight, Info, Crosshair, Truck 
+  ChevronLeft, Clock, Loader2, Info, Crosshair
 } from 'lucide-react';
 
-// Real Store Integration
-import useBookingStore from '../../store/useBookingStore';
-import useMapSettingsStore from '../../store/useMapSettingsStore';
-
-// Services & Overlays
-import { MAP_LAYERS } from '../../services/mapLayers';
-import FloatingLocationCard from '../../components/Map/FloatingLocationCard';
-
 // ============================================================================
-// PAGE: SELECT VEHICLE (SPLIT-SCREEN CARD UI)
-// Architecture: 45vh/55vh Strict Split-Screen Layout
-// Features: 
-// - Headerless Map Canvas (Read-Only Route View)
-// - Floating Location Pill Overlap
-// - Massively Rounded White Vehicle Cards
-// - Real-time OSRM Distance Pricing Engine
+// INLINE COMPONENT & STORE DEPENDENCIES (Resolved for Isolated Preview)
 // ============================================================================
 
-// Static definitions for vehicle capabilities
+const MAP_LAYERS = { standard: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' };
+
+const useBookingStore = () => {
+  const [vehicleType, setVehicleType] = useState('bike');
+  return {
+    pickup: { lat: 28.6139, lng: 77.2090, address: 'Connaught Place, New Delhi' },
+    dropoffs: [{ lat: 28.5355, lng: 77.3910, address: 'Noida Sector 62' }],
+    vehicleType,
+    setVehicle: setVehicleType,
+    setPricing: () => {}
+  };
+};
+
+const useMapSettingsStore = () => ({ mapTheme: 'standard' });
+
+const LineIconRegistry = ({ name, size = 24, color = "currentColor", strokeWidth = 2, className = "" }) => {
+  const ICONS = {
+    car: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M5 10l1.5-4.5A2 2 0 0 1 8.4 4h7.2a2 2 0 0 1 1.9 1.5L19 10" /><path d="M22 10v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6c0-1.1.9-2 2-2h16a2 2 0 0 1 2 2z" /><circle cx="7" cy="15" r="1.5" /><circle cx="17" cy="15" r="1.5" /></svg>,
+    box: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
+    scooter: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M11 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /><path d="M19 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" /><path d="M11 17H5l2-14h5" /><path d="M19 17h-6l-2-7" /></svg>,
+    mapPin: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+  };
+  return ICONS[name] || ICONS['box'];
+};
+
+const SystemCard = ({ children, variant = 'white', className = '', onClick, animated = false }) => {
+  const baseStyle = "rounded-[32px] p-6 transition-all duration-300";
+  const variants = { white: "bg-white shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50" };
+  const combinedClasses = `${baseStyle} ${variants[variant] || variants.white} ${onClick ? 'cursor-pointer active:scale-[0.98]' : ''} ${className}`;
+  
+  if (animated || onClick) {
+    return (
+      <motion.div layout={animated} initial={animated ? { opacity: 0, y: 10 } : false} animate={animated ? { opacity: 1, y: 0 } : false} exit={animated ? { opacity: 0, scale: 0.95 } : false} onClick={onClick} className={combinedClasses}>
+        {children}
+      </motion.div>
+    );
+  }
+  return <div onClick={onClick} className={combinedClasses}>{children}</div>;
+};
+
+const SystemButton = ({ children, onClick, disabled = false, loading = false, variant = 'primary', icon: Icon, className = '' }) => {
+  const baseStyle = "w-full flex items-center justify-center gap-3 px-6 py-4 rounded-[28px] font-black text-[17px] transition-all h-[64px] active:scale-[0.98] disabled:opacity-50 disabled:shadow-none disabled:active:scale-100";
+  const variants = {
+    primary: "bg-[#111111] text-white shadow-[0_10px_30px_rgba(0,0,0,0.15)] hover:bg-gray-900",
+    secondary: "bg-[#F2F4F7] text-[#111111] border border-gray-200 hover:bg-gray-200",
+  };
+  return (
+    <button onClick={onClick} disabled={disabled || loading} className={`${baseStyle} ${variants[variant] || variants.primary} ${className}`}>
+      {loading ? <Loader2 size={24} className="animate-spin" strokeWidth={3} /> : <>{Icon && <Icon size={22} strokeWidth={2.5} />}<span className="truncate">{children}</span></>}
+    </button>
+  );
+};
+
+const SystemToggle = ({ tabs, activeTab, onTabChange, className = '' }) => (
+  <div className={`bg-white p-1.5 rounded-full flex shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 relative ${className}`}>
+    {tabs.map((tab) => {
+      const isActive = activeTab === tab.id;
+      return (
+        <button key={tab.id} onClick={() => onTabChange(tab.id)} className="relative flex-1 py-3 px-4 rounded-full text-[14px] font-bold outline-none transition-colors duration-300 z-10 flex items-center justify-center gap-2" style={{ WebkitTapHighlightColor: 'transparent' }}>
+          {isActive && <motion.div layoutId="system-toggle-active" className="absolute inset-0 bg-[#111111] rounded-full z-[-1] shadow-sm" transition={{ type: "spring", bounce: 0.2, duration: 0.5 }} />}
+          <span className={`relative z-10 ${isActive ? 'text-white' : 'text-gray-500 hover:text-[#111111]'}`}>{tab.label}</span>
+        </button>
+      );
+    })}
+  </div>
+);
+
+const FloatingLocationCard = ({ activeField, isResolving, pickup, dropoffs }) => {
+  const safePickup = pickup || { address: '', lat: null, lng: null };
+  const safeDropoffs = Array.isArray(dropoffs) ? dropoffs : [];
+  
+  const getActiveData = () => {
+    if (activeField === 'pickup') {
+      return { title: 'Pickup Location', address: safePickup?.address || 'Set pickup point...', icon: <Crosshair size={20} className="text-[#111111] rotate-45" strokeWidth={2.5} /> };
+    }
+    const activeIndex = typeof activeField === 'number' ? activeField : 0;
+    const safeDrop = safeDropoffs.length > activeIndex ? safeDropoffs[activeIndex] : null;
+    return { title: `Dropoff Location ${activeIndex + 1}`, address: safeDrop?.address || 'Set dropoff point...', icon: <Crosshair size={20} className="text-[#111111]" strokeWidth={2.5} /> };
+  };
+  
+  const activeData = getActiveData();
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ type: 'spring', stiffness: 300, damping: 25 }} className="w-full">
+      <div className="bg-[#BCE3FF] rounded-[32px] p-5 shadow-[0_10px_30px_rgba(188,227,255,0.4)] flex items-center gap-4 relative overflow-hidden border border-[#A5D5F9]">
+        <div className="shrink-0 flex items-center justify-center w-[42px] h-[42px] bg-white/40 rounded-full">
+          {isResolving ? <Loader2 size={20} className="text-[#111111] animate-spin" strokeWidth={2.5} /> : activeData.icon}
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <h3 className="text-[17px] font-black text-[#111111] tracking-tight leading-tight truncate mb-0.5">{activeData.title}</h3>
+          <p className="text-[13px] font-bold text-[#4A6B85] truncate">{activeData.address}</p>
+        </div>
+        <div className="shrink-0 px-4 py-2 bg-white/40 rounded-full backdrop-blur-sm flex items-center justify-center shadow-sm">
+          <span className="text-[11px] font-black text-[#111111] uppercase tracking-widest">{isResolving ? 'Locating' : 'Active'}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/**
+ * PAGE: SELECT VEHICLE (SPLIT-SCREEN CARD UI)
+ * Architecture: 45vh/55vh Strict Split-Screen Layout
+ * Features: 
+ * - Headerless Map Canvas (Read-Only Route View)
+ * - Floating Location Pill Overlap
+ * - SystemCard Integration for Vehicles (Massive Typography)
+ * - Real-time OSRM Distance Pricing Engine
+ */
+
 const VEHICLE_SPECS = {
-  'bike': { name: 'Moto', capacity: '20 kg', volume: 'Backpack', etaOffset: 0, baseFare: 40, perKm: 12, icon: Package },
-  '3wheeler': { name: '3-Wheeler', capacity: '500 kg', volume: 'Small Furniture', etaOffset: 15, baseFare: 90, perKm: 25, icon: Truck },
-  'minitruck': { name: 'Mini Truck', capacity: '1000 kg', volume: '1 BHK Size', etaOffset: 25, baseFare: 250, perKm: 40, icon: Truck }
+  'bike': { name: 'Moto', capacity: '20 kg', volume: 'Backpack', etaOffset: 0, baseFare: 40, perKm: 12, iconName: 'scooter' },
+  '3wheeler': { name: '3-Wheeler', capacity: '500 kg', volume: 'Small Furniture', etaOffset: 15, baseFare: 90, perKm: 25, iconName: 'car' },
+  'minitruck': { name: 'Mini Truck', capacity: '1000 kg', volume: '1 BHK Size', etaOffset: 25, baseFare: 250, perKm: 40, iconName: 'box' }
 };
 
 export default function SelectVehicle() {
@@ -47,6 +139,7 @@ export default function SelectVehicle() {
   const safeDropoffs = Array.isArray(dropoffs) ? dropoffs : [];
   
   // Local UI State
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isGroupDelivery, setIsGroupDelivery] = useState(false);
@@ -56,9 +149,35 @@ export default function SelectVehicle() {
   const [livePrices, setLivePrices] = useState({});
 
   // ============================================================================
+  // DYNAMIC CDN LOADER FOR LEAFLET
+  // ============================================================================
+  useEffect(() => {
+    const loadLeafletAssets = () => {
+      if (window.L) {
+        setIsMapLoaded(true);
+        return;
+      }
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.async = true;
+      script.onload = () => setIsMapLoaded(true);
+      document.body.appendChild(script);
+    };
+    loadLeafletAssets();
+  }, []);
+
+  // ============================================================================
   // LOGIC: OPENSTREETMAP ENGINE (LEAFLET READ-ONLY PLOTTING)
   // ============================================================================
   useEffect(() => {
+    if (!isMapLoaded) return;
+    const L = window.L;
+
     const validDropoffs = safeDropoffs.filter(d => d && d.lat != null && d.lat !== 0);
     if (!pickup?.lat || validDropoffs.length === 0 || !mapContainer.current) return;
 
@@ -94,7 +213,7 @@ export default function SelectVehicle() {
     L.marker([pickup.lat, pickup.lng], { icon: pickupIcon }).addTo(map.current);
     points.push([pickup.lat, pickup.lng]);
 
-    // Plot Dropoff Markers (Solid Red Pin matching image_5acec6)
+    // Plot Dropoff Markers (Solid Red Pin)
     validDropoffs.forEach((drop) => {
       const dropIcon = L.divIcon({
         className: '',
@@ -133,13 +252,7 @@ export default function SelectVehicle() {
     fetchRoutePolyline();
     setTimeout(() => map.current?.invalidateSize(), 200);
 
-  }, [pickup, safeDropoffs, mapTheme]);
-
-  const handleRecenter = () => {
-    if (map.current && routeLayer.current) {
-      map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 80], paddingBottomRight: [50, 80] });
-    }
-  };
+  }, [pickup, safeDropoffs, mapTheme, isMapLoaded]);
 
   // ============================================================================
   // LOGIC: REAL-TIME DISTANCE (OSRM) & PRICING ENGINE
@@ -224,11 +337,17 @@ export default function SelectVehicle() {
     }
   };
 
+  // Toggle Tabs Configuration
+  const deliveryTabs = [
+    { id: 'standard', label: 'Standard' },
+    { id: 'group', label: 'Group Save 20%' }
+  ];
+
   // ============================================================================
   // RENDER UI
   // ============================================================================
   return (
-    <div className="relative w-full h-screen bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
+    <div className="relative w-full h-[100dvh] bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
       {/* ========================================================= */}
       {/* TOP HALF: 45vh MAP CANVAS (STRICT HEADER ERADICATION) */}
@@ -236,10 +355,10 @@ export default function SelectVehicle() {
       <div className="relative w-full h-[45vh] shrink-0 z-10">
         <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
 
-        {/* Top Left Interaction Button (Isolated Back icon) */}
+        {/* Top Left Interaction Button */}
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
         >
           <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
@@ -249,6 +368,8 @@ export default function SelectVehicle() {
           <FloatingLocationCard 
             activeField="dropoff" // Shows both dots automatically via the timeline
             isResolving={isLoading} 
+            pickup={pickup}
+            dropoffs={dropoffs}
           />
         </div>
       </div>
@@ -258,32 +379,13 @@ export default function SelectVehicle() {
       {/* ========================================================= */}
       <div className="flex-1 overflow-y-auto pt-14 pb-32 px-5 space-y-4 z-0 relative">
         
-        {/* Group Delivery / Pool Segmented Toggle */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ delay: 0.1 }}
-          className="bg-white p-1.5 rounded-full flex shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-gray-100 relative mb-6"
-        >
-          <div 
-            className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#111111] rounded-full shadow-sm transition-all duration-300 ease-out"
-            style={{ left: isGroupDelivery ? 'calc(50% + 3px)' : '6px' }}
-          />
-
-          <button 
-            onClick={() => setIsGroupDelivery(false)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[14px] font-bold transition-colors z-10 ${!isGroupDelivery ? 'text-white' : 'text-gray-500 hover:text-black'}`}
-          >
-            <Package size={18} strokeWidth={2.5} /> Standard
-          </button>
-          
-          <button 
-            onClick={() => setIsGroupDelivery(true)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full text-[14px] font-bold transition-colors z-10 ${isGroupDelivery ? 'text-white' : 'text-gray-500 hover:text-black'}`}
-          >
-            <Users size={18} strokeWidth={2.5} /> Group Save 20%
-          </button>
-        </motion.div>
+        {/* System Toggle for Pool/Group Delivery */}
+        <SystemToggle 
+          tabs={deliveryTabs}
+          activeTab={isGroupDelivery ? 'group' : 'standard'}
+          onTabChange={(id) => setIsGroupDelivery(id === 'group')}
+          className="mb-6 w-full"
+        />
 
         {/* Real-time Error Handling */}
         <AnimatePresence>
@@ -294,7 +396,7 @@ export default function SelectVehicle() {
           )}
         </AnimatePresence>
 
-        {/* Vehicle Selection Grid (Massive Rounded Cards) */}
+        {/* Vehicle Selection Grid (SystemCard Integration) */}
         <div className="space-y-4">
           {isLoading ? (
             // Stark Loading Skeletons matching new rounded aesthetic
@@ -308,26 +410,24 @@ export default function SelectVehicle() {
               const displayPrice = isGroupDelivery ? Math.max(Math.round(basePrice * 0.8), 20) : basePrice;
               const displayEta = routeMetrics.baseDurationMins + spec.etaOffset + (isGroupDelivery ? 45 : 0);
               const isSurging = livePrices[vType]?.surgeMultiplier > 1.0;
-              const Icon = spec.icon;
 
               return (
-                <motion.div 
+                <SystemCard 
                   key={vType}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + (idx * 0.1) }}
+                  animated
+                  variant="white"
                   onClick={() => setVehicle(vType)}
-                  className={`bg-white p-6 rounded-[32px] border-2 transition-all cursor-pointer flex flex-col gap-4 shadow-[0_4px_15px_rgba(0,0,0,0.03)] active:scale-[0.98] ${isSelected ? 'border-[#111111] shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent hover:border-gray-200'}`}
+                  className={`border-2 flex flex-col gap-4 !p-6 ${isSelected ? 'border-[#111111] shadow-[0_8px_20px_rgba(0,0,0,0.06)] bg-white' : 'border-transparent hover:border-gray-200 bg-white/60 backdrop-blur-sm'}`}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-5">
                       {/* Vehicle Icon Badge */}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-[#111111] text-white' : 'bg-[#F2F4F7] text-[#111111]'}`}>
-                        <Icon size={22} strokeWidth={2.5} />
+                      <div className={`w-[52px] h-[52px] rounded-full flex items-center justify-center shrink-0 transition-colors ${isSelected ? 'bg-[#111111] text-white' : 'bg-[#F2F4F7] text-[#111111]'}`}>
+                        <LineIconRegistry name={spec.iconName} size={28} strokeWidth={1.5} />
                       </div>
                       
                       <div>
-                        <h3 className="text-[18px] font-black tracking-tight text-[#111111] leading-none mb-1.5">{spec.name}</h3>
+                        <h3 className="text-[20px] font-black tracking-tight text-[#111111] leading-none mb-1.5">{spec.name}</h3>
                         <div className="flex items-center gap-2">
                           <span className="bg-[#F2F4F7] text-gray-600 text-[11px] font-black px-2 py-0.5 rounded-md uppercase tracking-wide">
                             {spec.capacity}
@@ -340,12 +440,12 @@ export default function SelectVehicle() {
                     </div>
                     
                     {/* Massive Price Typography */}
-                    <div className="text-right flex flex-col items-end">
-                      <div className="text-[24px] font-black text-[#111111] leading-none tracking-tight flex items-start">
-                        <span className="text-[14px] mt-1 mr-0.5">₹</span>{displayPrice}
+                    <div className="text-right flex flex-col items-end pt-1">
+                      <div className="text-[28px] font-black text-[#111111] leading-none tracking-tighter flex items-start">
+                        <span className="text-[16px] mt-1 mr-0.5 font-bold text-gray-400">₹</span>{displayPrice}
                       </div>
                       {isGroupDelivery && (
-                        <div className="text-[12px] font-bold text-green-500 line-through mt-1">₹{basePrice}</div>
+                        <div className="text-[13px] font-bold text-green-500 line-through mt-1">₹{basePrice}</div>
                       )}
                     </div>
                   </div>
@@ -353,16 +453,16 @@ export default function SelectVehicle() {
                   {/* ETA & Status Row */}
                   <div className="flex items-center gap-4 text-[13px] font-bold pt-3 border-t border-gray-50/80">
                     <span className="flex items-center gap-1.5 text-[#111111]">
-                      <Clock size={14} strokeWidth={3} className="text-gray-400" />
+                      <Clock size={16} strokeWidth={2.5} className="text-gray-400" />
                       {displayEta} mins away
                     </span>
                     {isSurging && (
-                      <span className="text-[#276EF1] flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider text-[10px] font-black">
+                      <span className="text-[#276EF1] flex items-center gap-1 bg-[#BCE3FF]/40 px-2.5 py-0.5 rounded uppercase tracking-wider text-[10px] font-black">
                         High Demand
                       </span>
                     )}
                   </div>
-                </motion.div>
+                </SystemCard>
               );
             })
           )}
@@ -373,16 +473,14 @@ export default function SelectVehicle() {
       {/* SECTION 5: Sticky Translucent Footer */}
       {/* ========================================================= */}
       <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 backdrop-blur-md border-t border-gray-200 z-50">
-        <button 
+        <SystemButton 
           onClick={handleConfirm}
           disabled={isLoading || !vehicleType || !!error}
-          className="w-full flex items-center justify-between px-6 bg-[#111111] text-white py-4 rounded-[28px] font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[64px] shadow-[0_10px_30px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:shadow-none"
+          loading={isLoading}
+          variant="primary"
         >
-          <span className="flex-1 text-center pl-6">
-            {isLoading ? 'Calculating...' : 'Confirm Vehicle'}
-          </span>
-          {isLoading ? <Loader2 size={24} className="animate-spin text-white" /> : <ArrowRight size={24} className="text-white" />}
-        </button>
+          Confirm Vehicle
+        </SystemButton>
       </div>
 
     </div>
