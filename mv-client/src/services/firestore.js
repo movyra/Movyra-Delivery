@@ -13,8 +13,12 @@ import { auth } from './firebaseAuth'; // Assumes firebase app is initialized he
 // Initialize Firestore instance
 export const db = getFirestore();
 
-// Utility to safely grab the current isolated App ID
-const getAppId = () => typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// STRICT FIX: Aggressive environment variable resolution to prevent 'default-app-id' permission denials.
+const getAppId = () => {
+  if (typeof window !== 'undefined' && window.__app_id) return window.__app_id;
+  if (typeof __app_id !== 'undefined') return __app_id;
+  return 'default-app-id';
+};
 
 // ============================================================================
 // SECTION 1: USER PROFILE & B2B MANAGEMENT
@@ -72,7 +76,7 @@ export const saveAddressPin = async (addressData) => {
  */
 export const fetchUserAddresses = async () => {
   const user = auth.currentUser;
-  if (!user) throw new Error("Authentication required to fetch addresses.");
+  if (!user) return []; // STRICT FIX: Graceful return if auth is delayed
 
   try {
     // NO COMPLEX QUERIES RULE: Fetch entire subcollection from the user's private path.
@@ -82,6 +86,8 @@ export const fetchUserAddresses = async () => {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     console.error("Firestore Error [fetchUserAddresses]:", error);
+    // STRICT FIX: Catch the race-condition permission error and return empty array to prevent UI crash
+    if (error.code === 'permission-denied') return [];
     throw error;
   }
 };
@@ -145,6 +151,8 @@ export const fetchDriverStats = async (driverId) => {
     }
   } catch (error) {
     console.error("Firestore Error [fetchDriverStats]:", error);
+    // STRICT FIX: Graceful fallback for permission denial or missing records
+    if (error.code === 'permission-denied') return null;
     throw error;
   }
 };

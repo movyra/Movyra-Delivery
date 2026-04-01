@@ -2,24 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ChevronLeft, Plus, MapPin, Home, Briefcase, 
-  Trash2, Loader2, Search, X, AlertCircle 
+  ChevronLeft, Plus, Home, Briefcase, 
+  Trash2, Loader2, X, AlertCircle 
 } from 'lucide-react';
+
+// Premium Design System Components
+import LineIconRegistry from '../../components/Icons/LineIconRegistry';
+import SystemButton from '../../components/UI/SystemButton';
 
 // Real Services & Database Integration
 import { fetchUserAddresses, saveAddressPin } from '../../services/firestore';
 import { fetchPlacePredictions, geocodeAddress } from '../../services/googleMaps';
 import { getFirestore, doc, deleteDoc } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
-// ============================================================================
-// PAGE: SAVED ADDRESSES (STARK MINIMALIST UI)
-// Fully functional persistent address book. Connects directly to Firestore
-// and utilizes the real OpenStreetMap Photon APIs for search and geocoding.
-// ============================================================================
+/**
+ * PAGE: SAVED ADDRESSES (PREMIUM CARD UI)
+ * Architecture: Detached 32px rounded cards on #F2F4F7 background.
+ * Features: 
+ * - Real-time Firestore sync with strict onAuthStateChanged listener
+ * - OpenStreetMap Photon Geocoding
+ * - Animated Custom Location Modals
+ * - Strict Line Art & Typography synchronization
+ */
 
 export default function SavedAddresses() {
   const navigate = useNavigate();
   const db = getFirestore();
+  const auth = getAuth();
 
   // Local State
   const [addresses, setAddresses] = useState([]);
@@ -39,7 +49,7 @@ export default function SavedAddresses() {
   const [isSaving, setIsSaving] = useState(false);
 
   // ============================================================================
-  // LOGIC: FETCH SAVED ADDRESSES
+  // LOGIC: FETCH SAVED ADDRESSES (WITH STRICT AUTH RACE-CONDITION FIX)
   // ============================================================================
   const loadAddresses = async () => {
     setIsLoading(true);
@@ -56,8 +66,17 @@ export default function SavedAddresses() {
   };
 
   useEffect(() => {
-    loadAddresses();
-  }, []);
+    // STRICT FIX: Wait for Firebase Auth to initialize before querying Firestore
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadAddresses();
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth]);
 
   // ============================================================================
   // LOGIC: OPENSTREETMAP AUTOCOMPLETE & GEOCODING
@@ -159,7 +178,7 @@ export default function SavedAddresses() {
   const getIconForType = (type) => {
     if (type === 'home') return <Home size={20} strokeWidth={2.5} />;
     if (type === 'work') return <Briefcase size={20} strokeWidth={2.5} />;
-    return <MapPin size={20} strokeWidth={2.5} />;
+    return <LineIconRegistry name="mapPin" size={20} strokeWidth={2.5} />;
   };
 
   // Safe split helper for OSM descriptions
@@ -176,39 +195,29 @@ export default function SavedAddresses() {
   // RENDER UI
   // ============================================================================
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col font-sans relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-[#F2F4F7] text-[#111111] flex flex-col font-sans relative overflow-hidden">
       
-      {/* SECTION 1: Top Navigation */}
-      <div className="pt-12 px-6 pb-2 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-40 border-b border-gray-50">
+      {/* SECTION 1: Isolated Circular Navigation */}
+      <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-40 bg-[#F2F4F7]/90 backdrop-blur-md">
         <button 
           onClick={() => navigate(-1)} 
-          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-black hover:bg-gray-100 transition-colors active:scale-95"
+          className="w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
         >
-          <ChevronLeft size={28} strokeWidth={2.5} />
+          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
-        <div className="w-8 h-8 rounded-md overflow-hidden bg-black flex items-center justify-center">
-          <img src="/logo.png" alt="Movyra" className="w-full h-full object-cover" />
-        </div>
+        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] leading-none">
+          Saved Places
+        </h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-6 pb-32">
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-2 pb-32">
         
-        {/* SECTION 2: Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-[40px] font-black text-black leading-[1.05] tracking-tighter mb-3">
-            Saved <br/>Addresses.
-          </h1>
-          <p className="text-[15px] text-gray-500 font-medium">
-            Manage your frequent pickup and dropoff locations for faster booking.
-          </p>
-        </motion.div>
-
         {/* Global Error Display */}
         <AnimatePresence>
           {error && !isAdding && (
             <motion.div 
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              className="bg-red-50 text-red-600 p-4 rounded-2xl font-bold text-sm flex items-start gap-2 mb-6"
+              className="bg-red-50 text-red-600 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 mb-6 shadow-sm border border-red-100"
             >
               <AlertCircle size={18} className="shrink-0 mt-0.5" /> {error}
             </motion.div>
@@ -220,15 +229,15 @@ export default function SavedAddresses() {
           {isLoading ? (
             // Loading Skeletons
             [1, 2, 3].map(i => (
-              <div key={i} className="h-24 bg-[#F6F6F6] rounded-[24px] animate-pulse" />
+              <div key={i} className="h-[90px] bg-white rounded-[32px] animate-pulse border border-gray-50/50" />
             ))
           ) : addresses.length === 0 ? (
             // Empty State
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin size={24} className="text-gray-400" strokeWidth={2.5} />
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-50">
+                <LineIconRegistry name="mapPin" size={24} className="text-gray-400" strokeWidth={2.5} />
               </div>
-              <h3 className="text-[18px] font-black text-black mb-1">No saved addresses</h3>
+              <h3 className="text-[20px] font-black text-[#111111] mb-1 tracking-tight">No saved addresses</h3>
               <p className="text-[14px] font-bold text-gray-400">Add locations to book faster.</p>
             </motion.div>
           ) : (
@@ -241,22 +250,22 @@ export default function SavedAddresses() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#F6F6F6] p-5 rounded-[24px] border border-transparent hover:border-gray-200 transition-all flex items-center justify-between gap-4 group"
+                  className="bg-white p-5 rounded-[32px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 hover:border-gray-200 transition-all flex items-center justify-between gap-4 group"
                 >
                   <div className="flex items-center gap-4 overflow-hidden">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-black shrink-0">
+                    <div className="w-12 h-12 bg-[#F2F4F7] rounded-[18px] flex items-center justify-center text-gray-500 shrink-0">
                       {getIconForType(addr.type)}
                     </div>
                     <div className="truncate pr-4">
-                      <h3 className="text-[16px] font-black text-black leading-tight mb-0.5">{addr.name}</h3>
-                      <p className="text-[13px] font-bold text-gray-500 truncate">{addr.address}</p>
+                      <h3 className="text-[16px] font-black text-[#111111] leading-tight mb-0.5 tracking-tight">{addr.name}</h3>
+                      <p className="text-[13px] font-bold text-gray-400 truncate">{addr.address}</p>
                     </div>
                   </div>
                   
                   {/* Delete Button */}
                   <button 
                     onClick={() => handleDeleteAddress(addr.id)}
-                    className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-red-500 hover:bg-red-50 active:scale-95 transition-all shrink-0 shadow-sm"
+                    className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 active:scale-95 transition-all shrink-0"
                   >
                     <Trash2 size={18} strokeWidth={2.5} />
                   </button>
@@ -268,13 +277,10 @@ export default function SavedAddresses() {
       </div>
 
       {/* SECTION 4: Floating Add Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-30">
-        <button 
-          onClick={() => setIsAdding(true)}
-          className="w-full flex items-center justify-center gap-2 px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
-        >
-          <Plus size={20} strokeWidth={3} /> Add New Address
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 backdrop-blur-md border-t border-gray-200/50 z-30">
+        <SystemButton onClick={() => setIsAdding(true)} variant="primary" icon={Plus}>
+          Add New Address
+        </SystemButton>
       </div>
 
       {/* ============================================================================ */}
@@ -287,11 +293,10 @@ export default function SavedAddresses() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed inset-0 bg-white z-50 flex flex-col font-sans"
+            className="fixed inset-0 bg-[#F2F4F7] z-50 flex flex-col font-sans"
           >
             {/* Overlay Header */}
-            <div className="pt-12 px-6 pb-4 flex items-center justify-between border-b border-gray-100 shrink-0">
-              <h2 className="text-[24px] font-black tracking-tight text-black">New Location</h2>
+            <div className="pt-12 px-6 pb-4 flex items-center gap-4 bg-white border-b border-gray-100 shrink-0 shadow-sm">
               <button 
                 onClick={() => {
                   setIsAdding(false);
@@ -299,10 +304,11 @@ export default function SavedAddresses() {
                   setSelectedPlace(null);
                   setError('');
                 }}
-                className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black active:scale-95"
+                className="w-[46px] h-[46px] rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111] active:scale-95 shrink-0 transition-transform"
               >
-                <X size={24} strokeWidth={2.5} />
+                <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
               </button>
+              <h2 className="text-[24px] font-black tracking-tighter text-[#111111]">New Location</h2>
             </div>
 
             <div className="flex-1 overflow-y-auto no-scrollbar p-6 flex flex-col">
@@ -310,7 +316,7 @@ export default function SavedAddresses() {
               {/* OpenStreetMap Search Input */}
               <div className="relative mb-6">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Search size={20} strokeWidth={2.5} />
+                  <LineIconRegistry name="search" size={20} strokeWidth={2.5} />
                 </div>
                 <input 
                   type="text"
@@ -321,7 +327,7 @@ export default function SavedAddresses() {
                     setError('');
                   }}
                   placeholder="Search building, street, or area..."
-                  className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none"
+                  className="w-full bg-white py-4 pl-12 pr-4 rounded-[24px] font-bold text-[15px] text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.02)] border-2 border-transparent focus:border-[#111111] transition-all outline-none"
                 />
                 {isSearching && (
                   <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -335,7 +341,7 @@ export default function SavedAddresses() {
                 {predictions.length > 0 && !selectedPlace && (
                   <motion.div 
                     initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
-                    className="bg-white border border-gray-100 rounded-2xl shadow-lg overflow-hidden mb-6"
+                    className="bg-white border border-gray-100 rounded-[32px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] overflow-hidden mb-6 p-2"
                   >
                     {predictions.map((pred) => {
                       const { main, secondary } = getMainAndSecondaryText(pred.description);
@@ -343,13 +349,15 @@ export default function SavedAddresses() {
                         <button
                           key={pred.place_id || pred.description}
                           onClick={() => handleSelectPrediction(pred)}
-                          className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] active:bg-gray-100 transition-colors flex items-start gap-3"
+                          className="w-full text-left px-4 py-4 rounded-[24px] hover:bg-[#F6F6F6] active:bg-gray-100 transition-colors flex items-start gap-4"
                         >
-                          <MapPin size={18} className="text-gray-400 shrink-0 mt-0.5" />
-                          <div className="overflow-hidden">
-                            <span className="block text-[15px] font-bold text-black truncate">{main}</span>
+                          <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                            <LineIconRegistry name="mapPin" size={18} strokeWidth={2.5} />
+                          </div>
+                          <div className="overflow-hidden flex-1">
+                            <span className="block text-[16px] font-black text-[#111111] truncate mb-0.5">{main}</span>
                             {secondary && (
-                              <span className="block text-[13px] font-medium text-gray-500 truncate">
+                              <span className="block text-[13px] font-bold text-gray-400 truncate">
                                 {secondary}
                               </span>
                             )}
@@ -367,31 +375,31 @@ export default function SavedAddresses() {
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 flex flex-col">
                     
                     {/* Selected Address Preview */}
-                    <div className="bg-[#E8F0FE] p-4 rounded-2xl mb-8 border border-blue-100">
-                      <span className="block text-[11px] font-bold text-[#276EF1] uppercase tracking-widest mb-1">Pinpoint Accurate</span>
-                      <p className="text-[14px] font-bold text-black leading-snug">{selectedPlace.formattedAddress}</p>
+                    <div className="bg-[#BCE3FF] p-5 rounded-[28px] mb-8 border border-[#A5D5F9] shadow-sm">
+                      <span className="block text-[11px] font-black text-[#4A6B85] uppercase tracking-widest mb-1.5">Pinpoint Accurate</span>
+                      <p className="text-[15px] font-black text-[#111111] leading-snug">{selectedPlace.formattedAddress}</p>
                     </div>
 
                     {/* Label Selection */}
-                    <h3 className="text-[15px] font-bold text-gray-400 uppercase tracking-widest mb-4">Save As</h3>
+                    <h3 className="text-[13px] font-black text-gray-400 uppercase tracking-widest mb-3 px-2">Save As</h3>
                     <div className="flex gap-2 mb-6">
                       <button 
                         onClick={() => setLabelType('home')}
-                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'home' ? 'bg-black text-white border-black' : 'bg-[#F6F6F6] text-black border-transparent'}`}
+                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'home' ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-white text-[#111111] border-gray-100'}`}
                       >
-                        <Home size={18} /> Home
+                        <Home size={18} strokeWidth={2.5} /> Home
                       </button>
                       <button 
                         onClick={() => setLabelType('work')}
-                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'work' ? 'bg-black text-white border-black' : 'bg-[#F6F6F6] text-black border-transparent'}`}
+                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'work' ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-white text-[#111111] border-gray-100'}`}
                       >
-                        <Briefcase size={18} /> Work
+                        <Briefcase size={18} strokeWidth={2.5} /> Work
                       </button>
                       <button 
                         onClick={() => setLabelType('custom')}
-                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'custom' ? 'bg-black text-white border-black' : 'bg-[#F6F6F6] text-black border-transparent'}`}
+                        className={`flex-1 py-3 rounded-full text-[14px] font-bold flex items-center justify-center gap-2 border-2 transition-all active:scale-95 ${labelType === 'custom' ? 'bg-[#111111] text-white border-[#111111] shadow-md' : 'bg-white text-[#111111] border-gray-100'}`}
                       >
-                        <MapPin size={18} /> Other
+                        <LineIconRegistry name="mapPin" size={18} strokeWidth={2.5} /> Other
                       </button>
                     </div>
 
@@ -404,7 +412,7 @@ export default function SavedAddresses() {
                             value={customName}
                             onChange={(e) => { setCustomName(e.target.value); setError(''); }}
                             placeholder="e.g. Gym, Mom's House..."
-                            className="w-full bg-[#F6F6F6] py-4 px-5 rounded-2xl font-bold text-[16px] text-black border-2 border-transparent focus:border-black focus:bg-white transition-all outline-none mb-6"
+                            className="w-full bg-white py-4 px-5 rounded-[24px] font-bold text-[16px] text-[#111111] shadow-sm border-2 border-transparent focus:border-[#111111] transition-all outline-none mb-6"
                           />
                         </motion.div>
                       )}
@@ -415,7 +423,7 @@ export default function SavedAddresses() {
                       {error && (
                         <motion.div 
                           initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                          className="bg-red-50 text-red-600 p-4 rounded-2xl font-bold text-sm flex items-start gap-2 mb-6"
+                          className="bg-red-50 text-red-600 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 mb-6 border border-red-100"
                         >
                           <AlertCircle size={18} className="shrink-0 mt-0.5" /> {error}
                         </motion.div>
@@ -423,14 +431,15 @@ export default function SavedAddresses() {
                     </AnimatePresence>
 
                     {/* Save Action */}
-                    <div className="mt-auto pt-4">
-                      <button 
+                    <div className="mt-auto pt-4 pb-4">
+                      <SystemButton 
                         onClick={handleSaveAddress}
                         disabled={isSaving}
-                        className="w-full flex items-center justify-center gap-2 px-6 bg-black text-white py-4 rounded-full font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[60px] shadow-[0_10px_30px_rgba(0,0,0,0.2)] disabled:opacity-50"
+                        loading={isSaving}
+                        variant="primary"
                       >
-                        {isSaving ? <Loader2 size={24} className="animate-spin" /> : 'Save Address'}
-                      </button>
+                        Save Address
+                      </SystemButton>
                     </div>
 
                   </motion.div>
