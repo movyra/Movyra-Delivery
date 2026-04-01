@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ArrowRight, ShieldAlert, Diamond, Clock, Calendar, MessageSquare, PackageOpen, Info } from 'lucide-react';
+import { ChevronLeft, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+
+// Premium Design System Components
+import SystemCard from '../../components/UI/SystemCard';
+import SystemButton from '../../components/UI/SystemButton';
+import LineIconRegistry from '../../components/Icons/LineIconRegistry';
 
 // Real Global Store Integration
 import useBookingStore from '../../store/useBookingStore';
 
 /**
  * PAGE: BOOKING DETAILS & PACKAGE SAFETY (PREMIUM CARD UI)
- * Architecture: Fragmented White Cards on #F2F4F7 background.
+ * Architecture: Fragmented White SystemCards on #F2F4F7 background.
  * Features: 
  * - Seamless Headerless Navigation
- * - Massively Rounded borderless inputs (#F6F6F6)
- * - Animated Safety Toggles
+ * - Massively Rounded borderless inputs (#F6F6F6 backgrounds)
+ * - Animated Safety Toggles using SystemCards
  * - Real-time Scheduling Constraints
  */
 
@@ -92,7 +97,7 @@ export default function BookingDetails() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F2F4F7] text-[#111111] font-sans relative flex flex-col">
+    <div className="min-h-[100dvh] bg-[#F2F4F7] text-[#111111] font-sans relative flex flex-col">
       
       {/* SECTION 1: Isolated Navigation (Headerless Paradigm) */}
       <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md">
@@ -107,18 +112,15 @@ export default function BookingDetails() {
         </h1>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-6 pt-2 pb-32 space-y-4">
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-5 pt-2 pb-32 space-y-4">
         
         {/* SECTION 2: Category Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
-              <PackageOpen size={20} strokeWidth={2.5} />
+        <SystemCard animated variant="white" className="flex flex-col !p-5">
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-11 h-11 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
+              <LineIconRegistry name="box" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[15px] font-black tracking-tight">Item Category</span>
+            <span className="text-[16px] font-black tracking-tight">Item Category</span>
           </div>
           
           <div className="flex flex-wrap gap-2.5">
@@ -129,36 +131,33 @@ export default function BookingDetails() {
                 className={`px-5 py-3 rounded-full text-[14px] font-bold transition-all border-2 active:scale-95 ${
                   itemType === cat 
                     ? 'bg-[#111111] text-white border-[#111111] shadow-md' 
-                    : 'bg-[#F6F6F6] text-[#111111] border-transparent hover:border-gray-200'
+                    : 'bg-[#F6F6F6] text-[#111111] border-transparent hover:bg-white hover:border-gray-200'
                 }`}
               >
                 {cat}
               </button>
             ))}
           </div>
-        </motion.div>
+        </SystemCard>
 
         {/* SECTION 3: Safety Mode Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
-              <ShieldAlert size={20} strokeWidth={2.5} />
+        <SystemCard animated variant="white" className="flex flex-col !p-5">
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-11 h-11 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
+              <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[15px] font-black tracking-tight">Safety Protocol</span>
+            <span className="text-[16px] font-black tracking-tight">Safety Protocol</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setIsFragile(!isFragile)}
-              className={`p-5 rounded-[24px] border-2 flex flex-col gap-3 text-left transition-all ${
-                isFragile ? 'border-[#111111] bg-white shadow-sm' : 'border-transparent bg-[#F6F6F6]'
+              className={`p-5 rounded-[24px] border-2 flex flex-col gap-4 text-left transition-all active:scale-95 ${
+                isFragile ? 'border-[#111111] bg-white shadow-[0_4px_15px_rgba(0,0,0,0.04)]' : 'border-transparent bg-[#F6F6F6] hover:bg-white hover:border-gray-200'
               }`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isFragile ? 'bg-[#111111] text-white' : 'bg-white text-gray-400 shadow-sm'}`}>
-                <ShieldAlert size={20} strokeWidth={2.5} />
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isFragile ? 'bg-[#111111] text-white' : 'bg-white text-gray-400 shadow-sm border border-gray-100'}`}>
+                <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
               </div>
               <div>
                 <span className="block text-[15px] font-black tracking-tight text-[#111111]">Fragile</span>
@@ -168,12 +167,12 @@ export default function BookingDetails() {
 
             <button
               onClick={() => setIsHighValue(!isHighValue)}
-              className={`p-5 rounded-[24px] border-2 flex flex-col gap-3 text-left transition-all ${
-                isHighValue ? 'border-[#111111] bg-white shadow-sm' : 'border-transparent bg-[#F6F6F6]'
+              className={`p-5 rounded-[24px] border-2 flex flex-col gap-4 text-left transition-all active:scale-95 ${
+                isHighValue ? 'border-[#111111] bg-white shadow-[0_4px_15px_rgba(0,0,0,0.04)]' : 'border-transparent bg-[#F6F6F6] hover:bg-white hover:border-gray-200'
               }`}
             >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isHighValue ? 'bg-[#276EF1] text-white' : 'bg-white text-gray-400 shadow-sm'}`}>
-                <Diamond size={20} strokeWidth={2.5} />
+              <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isHighValue ? 'bg-[#276EF1] text-white' : 'bg-white text-gray-400 shadow-sm border border-gray-100'}`}>
+                <LineIconRegistry name="diamond" size={20} strokeWidth={2.5} />
               </div>
               <div>
                 <span className="block text-[15px] font-black tracking-tight text-[#111111]">High Value</span>
@@ -181,21 +180,18 @@ export default function BookingDetails() {
               </div>
             </button>
           </div>
-        </motion.div>
+        </SystemCard>
 
         {/* SECTION 4: Schedule Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
-              <Clock size={20} strokeWidth={2.5} />
+        <SystemCard animated variant="white" className="flex flex-col !p-5">
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-11 h-11 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
+              <LineIconRegistry name="clock" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[15px] font-black tracking-tight">Pickup Schedule</span>
+            <span className="text-[16px] font-black tracking-tight">Pickup Schedule</span>
           </div>
 
-          <div className="bg-[#F6F6F6] p-1.5 rounded-full flex relative mb-4">
+          <div className="bg-[#F6F6F6] p-1.5 rounded-full flex relative mb-2">
             <div 
               className="absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#111111] rounded-full shadow-sm transition-all duration-300 ease-out"
               style={{ left: isScheduledLater ? 'calc(50% + 3px)' : '6px' }}
@@ -218,18 +214,18 @@ export default function BookingDetails() {
             {isScheduledLater && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                className="flex gap-3 overflow-hidden mt-4"
+                className="flex gap-3 overflow-hidden mt-3"
               >
-                <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] border-2 border-transparent focus-within:border-[#111111] focus-within:bg-white transition-all">
-                  <Calendar size={18} className="text-gray-400 mr-2 shrink-0" />
+                <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] transition-all">
+                  <span className="text-gray-400 mr-3 shrink-0"><LineIconRegistry name="calendar" size={18} /></span>
                   <input 
                     type="date" min={todayISO} value={scheduleDate}
                     onChange={(e) => { setScheduleDate(e.target.value); setError(''); }}
                     className="w-full bg-transparent font-bold text-[14px] text-[#111111] focus:outline-none"
                   />
                 </div>
-                <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] border-2 border-transparent focus-within:border-[#111111] focus-within:bg-white transition-all">
-                  <Clock size={18} className="text-gray-400 mr-2 shrink-0" />
+                <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] transition-all">
+                  <span className="text-gray-400 mr-3 shrink-0"><LineIconRegistry name="clock" size={18} /></span>
                   <input 
                     type="time" value={scheduleTime}
                     onChange={(e) => { setScheduleTime(e.target.value); setError(''); }}
@@ -239,21 +235,18 @@ export default function BookingDetails() {
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </SystemCard>
 
         {/* SECTION 5: Notes Card */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="bg-white rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50"
-        >
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
-              <MessageSquare size={20} strokeWidth={2.5} />
+        <SystemCard animated variant="white" className="flex flex-col !p-5">
+          <div className="flex items-center gap-4 mb-5">
+            <div className="w-11 h-11 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#111111]">
+              <LineIconRegistry name="message" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[15px] font-black tracking-tight">Driver Instructions</span>
+            <span className="text-[16px] font-black tracking-tight">Driver Instructions</span>
           </div>
 
-          <div className="flex items-start px-5 py-4 rounded-[24px] bg-[#F6F6F6] border-2 border-transparent focus-within:border-[#111111] focus-within:bg-white transition-all">
+          <div className="flex items-start px-5 py-5 rounded-[24px] bg-[#F6F6F6] transition-all">
             <textarea
               value={driverNotes}
               onChange={(e) => setDriverNotes(e.target.value)}
@@ -261,16 +254,17 @@ export default function BookingDetails() {
               className="w-full text-[15px] font-bold text-[#111111] placeholder:text-gray-400 focus:outline-none bg-transparent resize-none min-h-[100px]"
             />
           </div>
-        </motion.div>
+        </SystemCard>
 
         {/* Real-time Error Notification */}
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
-              className="bg-red-50 border border-red-100 text-red-600 p-5 rounded-[24px] font-bold text-[14px] flex items-start gap-3 shadow-sm"
+              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 shadow-sm"
             >
-              <Info size={18} className="shrink-0 mt-0.5" /> {error}
+              <AlertCircle size={18} className="shrink-0 mt-0.5" />
+              <p className="leading-snug">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -279,13 +273,14 @@ export default function BookingDetails() {
 
       {/* SECTION 6: Sticky Action Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 backdrop-blur-md border-t border-gray-200 z-50">
-        <button 
+        <SystemButton 
           onClick={handleContinue}
-          className="w-full flex items-center justify-between px-6 bg-[#111111] text-white py-4 rounded-[28px] font-bold text-[17px] hover:bg-gray-900 active:scale-[0.98] transition-all h-[64px] shadow-[0_10px_30px_rgba(0,0,0,0.15)]"
+          variant="primary"
+          icon={ArrowRight}
+          className="flex-row-reverse"
         >
-          <span className="flex-1 text-center pl-6">Review Pricing</span>
-          <ArrowRight size={24} className="text-white" strokeWidth={3} />
-        </button>
+          Review Pricing
+        </SystemButton>
       </div>
 
     </div>
