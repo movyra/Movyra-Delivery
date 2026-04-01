@@ -3,9 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Crosshair, X, 
-  Briefcase, Loader2, Search, AlertCircle, 
-  MapPin, Train, Star, Clock, Mic, Wand2, User, Phone, FileText, Check
+  Briefcase, Loader2, AlertCircle, 
+  Train, Star, Clock, Mic, Wand2, User, Phone, FileText, Check
 } from 'lucide-react';
+
+// Premium Design System Components
+import LineIconRegistry from '../../components/Icons/LineIconRegistry';
+import SystemButton from '../../components/UI/SystemButton';
 
 // Real Store Integrations
 import useBookingStore from '../../store/useBookingStore';
@@ -26,8 +30,9 @@ import LocationInputCards from '../../components/Map/LocationInputCards';
  * - 45vh/55vh Strict Split-Screen Layout
  * - Absolute Header & Logo Eradication
  * - Overlapping Floating Location Blue Card
- * - Isolated Circular Map Controls
+ * - Isolated Circular Map Controls using LineIconRegistry
  * - Auto-Fitting Bounds & Polyline Snapping
+ * - Strict Null-Safety for Array Iterations
  */
 
 const CATEGORY_CHIPS = [
@@ -186,7 +191,7 @@ export default function SetLocation() {
     if (pickup?.lat && activeField !== 'pickup') {
       const pickupIcon = L.divIcon({
         className: '',
-        html: `<div class="w-4 h-4 bg-white rounded-full border-4 border-red-500 shadow-md ring-2 ring-white hover:scale-125 transition-transform cursor-pointer"></div>`,
+        html: `<div class="w-4 h-4 bg-white rounded-full border-[4px] border-[#111111] shadow-md hover:scale-125 transition-transform cursor-pointer"></div>`,
         iconSize: [16, 16],
         iconAnchor: [8, 8]
       });
@@ -195,10 +200,11 @@ export default function SetLocation() {
     }
 
     dropoffs.forEach((drop, idx) => {
-      if (drop.lat && activeField !== idx) {
+      // STRICT NULL CHECK ADDED
+      if (drop && drop.lat && activeField !== idx) {
         const dropIcon = L.divIcon({
           className: '',
-          html: `<div class="w-6 h-6 bg-[#111111] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition-transform cursor-pointer">${idx + 1}</div>`,
+          html: `<div class="w-6 h-6 bg-[#FF3B30] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-[0_4px_12px_rgba(255,59,48,0.5)] hover:scale-110 transition-transform cursor-pointer">${idx + 1}</div>`,
           iconSize: [24, 24],
           iconAnchor: [12, 12]
         });
@@ -233,7 +239,8 @@ export default function SetLocation() {
     const fetchRoute = async () => {
       if (!map.current || !window.L) return;
       const L = window.L;
-      const validDropoffs = dropoffs.filter(d => d.lat !== null && d.lat !== 0);
+      // STRICT NULL CHECK ALREADY PRESENT HERE
+      const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
 
       if (pickup?.lat && validDropoffs.length > 0) {
         const isSameLocation = validDropoffs.some(d => 
@@ -267,14 +274,14 @@ export default function SetLocation() {
             
             // Highly visible polyline responsive to theme
             routeLayer.current = L.polyline(routeCoords, {
-              color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#000000',
+              color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#111111',
               weight: 5,
               opacity: 0.9,
               lineJoin: 'round',
               interactive: true
             }).addTo(map.current);
 
-            // FEATURE: Map Auto-Fitting (Zoom out to see the entire route cleanly in the 45vh map area)
+            // FEATURE: Map Auto-Fitting
             if (!programmaticMoveRef.current) {
               programmaticMoveRef.current = true;
               map.current.fitBounds(routeLayer.current.getBounds(), {
@@ -322,7 +329,8 @@ export default function SetLocation() {
   // AUTO-ROUTE OPTIMIZATION (OSRM Trip API)
   // ============================================================================
   const handleOptimizeRoute = async () => {
-    const validDropoffs = dropoffs.filter(d => d.lat !== null && d.lat !== 0);
+    // STRICT NULL CHECK ALREADY PRESENT HERE
+    const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
     if (validDropoffs.length < 2 || !pickup?.lat) return;
 
     setIsOptimizing(true);
@@ -412,7 +420,7 @@ export default function SetLocation() {
   };
 
   return (
-    <div className="relative w-full h-screen bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
+    <div className="relative w-full h-[100dvh] bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
       {/* ========================================================= */}
       {/* TOP HALF: 45vh MAP CANVAS (STRICT HEADER ERADICATION) */}
@@ -420,46 +428,46 @@ export default function SetLocation() {
       <div className="relative w-full h-[45vh] shrink-0 z-10">
         <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
 
-        {/* Top Left Interaction Button (Isolated Back icon) */}
+        {/* Top Left Interaction Button */}
         <button 
           onClick={() => navigate(-1)} 
-          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+          className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
         >
           <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
 
-        {/* Top Right Interaction Button (Search icon matching image) */}
+        {/* Top Right Interaction Button (Custom Line Art Search) */}
         <button 
           onClick={() => setIsSearchOpen(true)} 
-          className="absolute top-12 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+          className="absolute top-12 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
         >
-          <Search size={20} strokeWidth={2.5} />
+          <LineIconRegistry name="search" size={20} strokeWidth={2.5} />
         </button>
 
         {/* Current Location Quick Action */}
         <button 
           onClick={() => fetchCurrentLocation()} 
           disabled={isLocating} 
-          className="absolute top-28 right-6 z-[2000] w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all disabled:opacity-50"
+          className="absolute top-28 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all disabled:opacity-50"
         >
-          {isLocating ? <Loader2 size={18} className="animate-spin" /> : <Crosshair size={18} strokeWidth={2.5} />}
+          {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
         </button>
 
         {/* DRAGGABLE CENTER TARGET PIN */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
             {activeField === 'pickup' ? (
-              <div className="w-5 h-5 bg-[#FF3B30] rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] relative z-10 border-[3px] border-white" />
+              <div className="w-5 h-5 bg-white border-[4px] border-[#111111] rounded-full shadow-md relative z-10" />
             ) : (
-              <div className="w-6 h-6 bg-[#111111] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-xl relative z-10">
+              <div className="w-6 h-6 bg-[#FF3B30] text-white text-[11px] font-black rounded-full flex items-center justify-center border-2 border-white shadow-[0_4px_12px_rgba(255,59,48,0.5)] relative z-10">
                 {activeField + 1}
               </div>
             )}
-            {(isDragging || isResolvingAddress) && <div className="absolute w-12 h-12 bg-black/10 rounded-full animate-ping" />}
+            {(isDragging || isResolvingAddress) && <div className="absolute w-12 h-12 bg-[#111111]/10 rounded-full animate-ping" />}
           </div>
         </div>
 
-        {/* OVERLAPPING FLOATING CARD (Matches the blue 'JET' pill from image) */}
+        {/* OVERLAPPING FLOATING CARD */}
         <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
           <FloatingLocationCard activeField={activeField} isResolving={isResolvingAddress} />
         </div>
@@ -480,29 +488,32 @@ export default function SetLocation() {
         {/* Action Controls */}
         <div className="pt-2 space-y-3">
           {routeError && (
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-[20px] font-bold text-[13px] flex items-start gap-2">
+            <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 shadow-sm">
               <AlertCircle size={16} className="shrink-0 mt-0.5" /> {routeError}
             </div>
           )}
 
-          {dropoffs.length > 1 && dropoffs.filter(d => d.lat).length > 1 && (
-            <button 
+          {/* STRICT NULL CHECK ADDED HERE TO PREVENT CRASH */}
+          {dropoffs.length > 1 && dropoffs.filter(d => d && d.lat).length > 1 && (
+            <SystemButton 
               onClick={handleOptimizeRoute} 
               disabled={isOptimizing} 
-              className="w-full bg-white border border-gray-200 text-black py-3.5 rounded-[24px] font-bold text-[15px] shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              loading={isOptimizing}
+              variant="secondary"
+              icon={Wand2}
             >
-              {isOptimizing ? <Loader2 size={18} className="animate-spin" /> : <Wand2 size={18} strokeWidth={2.5} />}
               Optimize Sequence
-            </button>
+            </SystemButton>
           )}
 
-          <button 
+          {/* STRICT NULL CHECK ADDED HERE TO PREVENT CRASH */}
+          <SystemButton 
             onClick={() => navigate('/booking/select-vehicle')} 
-            disabled={!pickup?.lat || dropoffs.some(d => !d.lat) || !!routeError} 
-            className="w-full bg-[#111111] text-white py-4 rounded-[28px] font-bold text-[16px] active:scale-[0.98] transition-all shadow-[0_10px_20px_rgba(0,0,0,0.1)] disabled:opacity-50 flex items-center justify-center gap-2 min-h-[60px]"
+            disabled={!pickup?.lat || dropoffs.some(d => !d || !d.lat) || !!routeError} 
+            variant="primary"
           >
             Confirm Route {routeDistance && !routeError && <span className="text-gray-400 font-medium ml-1">• {routeDistance}</span>}
-          </button>
+          </SystemButton>
         </div>
       </div>
 
@@ -511,44 +522,44 @@ export default function SetLocation() {
       {/* ========================================================= */}
       <AnimatePresence>
         {isSearchOpen && (
-          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-0 bg-white z-[10000] flex flex-col font-sans">
-            <div className="pt-12 px-6 pb-4 flex items-center gap-4 border-b border-gray-100 shrink-0 shadow-sm">
-              <button onClick={() => setIsSearchOpen(false)} className="w-10 h-10 rounded-full bg-[#F6F6F6] flex items-center justify-center text-black active:scale-95 shrink-0 transition-transform">
-                <ChevronLeft size={24} strokeWidth={2.5} />
+          <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="fixed inset-0 bg-[#F2F4F7] z-[10000] flex flex-col font-sans">
+            <div className="pt-12 px-6 pb-4 flex items-center gap-4 bg-white border-b border-gray-100 shrink-0 shadow-sm">
+              <button onClick={() => setIsSearchOpen(false)} className="w-[46px] h-[46px] rounded-full bg-[#F6F6F6] flex items-center justify-center text-[#111111] active:scale-95 shrink-0 transition-transform">
+                <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
               </button>
               <div className="flex-1 relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Search size={20} strokeWidth={2.5} />
+                  <LineIconRegistry name="search" size={20} strokeWidth={2.5} />
                 </div>
                 <input 
                   type="text" 
                   autoFocus 
                   value={searchQuery} 
                   onChange={(e) => setSearchQuery(e.target.value)} 
-                  placeholder={activeField === 'pickup' ? "Search location..." : "Where to drop off?"} 
-                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-12 rounded-[20px] font-bold text-[15px] text-black outline-none" 
+                  placeholder={activeField === 'pickup' ? "Search pickup location..." : "Where to drop off?"} 
+                  className="w-full bg-[#F6F6F6] py-3.5 pl-12 pr-12 rounded-[24px] font-bold text-[15px] text-[#111111] outline-none focus:bg-gray-100 transition-colors" 
                 />
-                <button onClick={startVoiceSearch} className={`absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
+                <button onClick={startVoiceSearch} className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse bg-red-50' : 'text-gray-400 hover:text-[#111111] hover:bg-gray-200'}`}>
                   <Mic size={18} strokeWidth={2.5} />
                 </button>
               </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-6 bg-[#FAFAFA]">
+            <div className="flex-1 overflow-y-auto p-6 bg-[#F2F4F7]">
               {isListening && (
                 <div className="text-center py-8 text-gray-500 font-bold animate-pulse">Listening for address...</div>
               )}
               
               {!isListening && predictions.length > 0 && (
-                <div className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden">
+                <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden p-2">
                   {predictions.map((pred, i) => (
-                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-5 py-4 border-b border-gray-50 last:border-0 hover:bg-[#F6F6F6] flex items-start gap-3 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
-                        <MapPin size={16} strokeWidth={2.5} />
+                    <button key={i} onClick={() => handleSelectPrediction(pred)} className="w-full text-left px-4 py-4 rounded-[24px] hover:bg-[#F6F6F6] flex items-start gap-4 transition-colors">
+                      <div className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                        <LineIconRegistry name="mapPin" size={18} strokeWidth={2.5} />
                       </div>
-                      <div className="overflow-hidden">
-                        <span className="block text-[15px] font-bold text-black truncate">{pred.description.split(',')[0]}</span>
-                        <span className="block text-[13px] font-medium text-gray-500 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
+                      <div className="overflow-hidden flex-1">
+                        <span className="block text-[16px] font-black text-[#111111] truncate mb-0.5">{pred.description.split(',')[0]}</span>
+                        <span className="block text-[13px] font-bold text-gray-400 truncate">{pred.description.split(',').slice(1).join(',').trim()}</span>
                       </div>
                     </button>
                   ))}
@@ -558,8 +569,8 @@ export default function SetLocation() {
               {!isListening && predictions.length === 0 && searchQuery.length < 3 && (
                 <div className="flex flex-wrap gap-2">
                   {CATEGORY_CHIPS.map(chip => (
-                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="px-4 py-2.5 bg-white shadow-sm border border-gray-100 rounded-[20px] text-[13px] font-bold text-black flex items-center gap-2 active:scale-95 transition-all">
-                      <chip.icon size={14} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
+                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="px-5 py-3 bg-white shadow-sm border border-gray-100 rounded-full text-[14px] font-bold text-[#111111] flex items-center gap-2 active:scale-95 transition-all">
+                      <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
                     </button>
                   ))}
                 </div>
@@ -576,65 +587,66 @@ export default function SetLocation() {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[11000] flex items-end justify-center p-4"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[11000] flex items-end justify-center p-4 pb-8"
           >
             <motion.div 
               initial={{ y: '100%' }} 
               animate={{ y: 0 }} 
               exit={{ y: '100%' }} 
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white w-full max-w-lg rounded-[32px] p-6 shadow-2xl relative"
+              className="bg-white w-full max-w-lg rounded-[40px] p-8 shadow-2xl relative"
             >
-              <button onClick={() => setSelectedPin(null)} className="absolute right-6 top-6 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 active:scale-95 transition-all">
-                <X size={20} strokeWidth={2.5} />
+              <button onClick={() => setSelectedPin(null)} className="absolute right-6 top-6 w-[46px] h-[46px] bg-[#F6F6F6] rounded-full flex items-center justify-center text-[#111111] hover:bg-gray-200 active:scale-95 transition-all">
+                <X size={24} strokeWidth={2.5} />
               </button>
               
-              <h2 className="text-[24px] font-black text-black mb-1">
+              <h2 className="text-[28px] font-black text-[#111111] mb-1 tracking-tighter">
                 {selectedPin === 'pickup' ? 'Pickup Details' : `Dropoff ${selectedPin + 1} Details`}
               </h2>
-              <p className="text-[14px] font-medium text-gray-500 mb-6 truncate pr-12">
+              <p className="text-[14px] font-bold text-gray-400 mb-8 truncate pr-16">
                 {selectedPin === 'pickup' ? pickup?.address : dropoffs[selectedPin]?.address}
               </p>
 
               <div className="space-y-4 mb-8">
                 <div className="relative">
-                  <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <User size={20} strokeWidth={2.5} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="text" 
                     placeholder="Contact Name" 
                     value={contactForm.name}
                     onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                    className="w-full bg-[#F6F6F6] py-4 pl-14 pr-4 rounded-[24px] font-bold text-[16px] text-[#111111] outline-none border-2 border-transparent focus:border-[#111111] transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Phone size={20} strokeWidth={2.5} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input 
                     type="tel" 
                     placeholder="Phone Number" 
                     value={contactForm.phone}
                     onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all"
+                    className="w-full bg-[#F6F6F6] py-4 pl-14 pr-4 rounded-[24px] font-bold text-[16px] text-[#111111] outline-none border-2 border-transparent focus:border-[#111111] transition-all"
                   />
                 </div>
                 <div className="relative">
-                  <FileText size={18} className="absolute left-4 top-4 text-gray-400" />
+                  <FileText size={20} strokeWidth={2.5} className="absolute left-5 top-5 text-gray-400" />
                   <textarea 
                     placeholder="Delivery Instructions" 
                     rows={3}
                     value={contactForm.notes}
                     onChange={(e) => setContactForm({ ...contactForm, notes: e.target.value })}
-                    className="w-full bg-[#F6F6F6] py-4 pl-12 pr-4 rounded-[20px] font-bold text-[15px] text-black outline-none border-2 border-transparent focus:border-black transition-all resize-none"
+                    className="w-full bg-[#F6F6F6] py-4 pl-14 pr-4 rounded-[24px] font-bold text-[16px] text-[#111111] outline-none border-2 border-transparent focus:border-[#111111] transition-all resize-none"
                   />
                 </div>
               </div>
 
-              <button 
+              <SystemButton 
                 onClick={handleSaveContactInfo}
-                className="w-full bg-[#111111] text-white py-4 rounded-[24px] font-bold text-[17px] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2"
+                variant="primary"
+                icon={Check}
               >
-                <Check size={20} strokeWidth={3} /> Save Details
-              </button>
+                Save Details
+              </SystemButton>
             </motion.div>
           </motion.div>
         )}
