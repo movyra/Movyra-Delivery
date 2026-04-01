@@ -216,7 +216,7 @@ export default function MobileHome() {
             className="px-6 mb-6"
           >
             <div 
-              onClick={() => navigate('/tracking/live')}
+              onClick={() => navigate('/tracking-active')}
               className="bg-[#BCE3FF] rounded-[32px] p-6 shadow-[0_10px_30px_rgba(188,227,255,0.4)] border border-[#A5D5F9] cursor-pointer active:scale-[0.98] transition-transform relative overflow-hidden"
             >
               <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 rounded-full animate-ping opacity-75" />

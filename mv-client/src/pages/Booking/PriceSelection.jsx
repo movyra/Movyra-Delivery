@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import L from 'leaflet';
@@ -195,7 +195,7 @@ export default function PriceSelection() {
         </button>
 
         <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
-          <FloatingLocationCard activeField="dropoff" isResolving={isBroadcasting} />
+          <FloatingLocationCard activeField="dropoff" isResolving={isBroadcasting} pickup={pickup} dropoffs={dropoffs} />
         </div>
       </div>
 
