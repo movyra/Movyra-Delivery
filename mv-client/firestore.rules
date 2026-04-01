@@ -12,48 +12,67 @@ service cloud.firestore {
     }
 
     // ========================================================================
-    // ISOLATED APP ENVIRONMENT
-    // All data is securely scoped within the unique artifacts/appId/ path.
+    // ISOLATED APP ENVIRONMENT (New Structure)
+    // All new API data is securely scoped within the unique artifacts/appId/ path.
     // ========================================================================
     match /artifacts/{appId} {
 
-      // ========================================================================
-      // PRIVATE USER DATA (Address Book, Profile, Disputes, Orders)
-      // Validates that the UID in the path strictly matches the active Auth token.
-      // ========================================================================
       match /users/{userId} {
-        
         // 1. Grant access to the root user identity document
         allow read, write: if request.auth != null && request.auth.uid == userId;
 
-        // 2. Grant access to all 1st-level private subcollections (saved_addresses, disputes, orders)
-        match /{subcollection}/{documentId} {
-          allow read, write: if request.auth != null && request.auth.uid == userId;
-        }
-        
-        // 3. Grant access to 2nd-level nested data (profile/data)
-        match /{subcollection}/{documentId}/{nestedSub}/{nestedDoc} {
+        // 2. Grant access to ALL nested private data using wildcard
+        match /{document=**} {
           allow read, write: if request.auth != null && request.auth.uid == userId;
         }
       }
 
-      // ========================================================================
-      // PUBLIC DATA BUCKET (Marketplace Drivers, Telemetry)
-      // ========================================================================
       match /public/data {
-        
-        // Driver transparency profiles are read-only for authenticated users
+        // Driver transparency profiles are read-only
         match /drivers/{driverId} {
           allow read: if request.auth != null;
           allow write: if false;
         }
 
-        // System telemetry and crash logs are strictly append-only
+        // System telemetry logs are strictly append-only
         match /system_logs/{logId} {
           allow create: if true; 
           allow read, update, delete: if false;
         }
       }
+    }
+
+    // ========================================================================
+    // LEGACY ROOT COLLECTIONS (Bridge for UI Inline Queries)
+    // Prevents MobileHome.jsx and older components from crashing during migration.
+    // ========================================================================
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    match /orders/{orderId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || !('userId' in resource.data));
+    }
+
+    match /saved_addresses/{addressId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /bids/{bidId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /shipments/{shipmentId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+    
+    match /disputes/{disputeId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
     }
   }
 }
