@@ -204,7 +204,7 @@ export default function BookingDetails() {
               onClick={() => setIsScheduledLater(false)}
               className={`flex-1 flex items-center justify-center py-3 rounded-full text-[14px] font-bold transition-colors z-10 ${!isScheduledLater ? 'text-white' : 'text-gray-500 hover:text-black'}`}
             >
-              ASAP
+              Right now
             </button>
             <button 
               onClick={() => setIsScheduledLater(true)}
