@@ -5,7 +5,7 @@ import {
   Package, Send, ArrowRight, Plus, History, 
   Activity, MapPin, Navigation, Clock, ChevronRight, 
   UserCircle2, HelpCircle, CheckCircle2, Truck, 
-  AlertCircle, Search, Loader2 
+  AlertCircle, Loader2 
 } from 'lucide-react';
 
 // Real Store & Database Integration
@@ -13,11 +13,15 @@ import useBookingStore from '../../store/useBookingStore';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
 
+// Premium Design System Components
+import LineIconRegistry from '../../components/Icons/LineIconRegistry';
+
 /**
  * PAGE: MOBILE HOME DASHBOARD (PREMIUM CARD UI)
  * Features: 
  * - Stark Headerless Navigation (Pure Typography)
  * - Massively Rounded "Where to?" Floating Action Card
+ * - Exact 3-Icon Row (Rides, Eats, Scooter)
  * - Light-Blue Active Dispatch Banner
  * - OrderInfoListCard Paradigm for Recent Activity
  * - Real-time Firestore Sync for Wallet & Orders
@@ -152,22 +156,22 @@ export default function MobileHome() {
         </button>
       </motion.div>
 
-      {/* SECTION 2: Massively Rounded "Where to?" Action Card */}
+      {/* SECTION 2: Massively Rounded "Where to?" Action Card & 3-Icon Row */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
         className="px-6 my-6"
       >
         <button 
           onClick={() => navigate('/booking/set-location')}
-          className="w-full bg-white rounded-[32px] p-6 shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-gray-50 flex flex-col gap-4 active:scale-[0.98] transition-transform text-left relative overflow-hidden"
+          className="w-full bg-white rounded-[32px] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex flex-col gap-4 active:scale-[0.98] transition-transform text-left relative overflow-hidden mb-8"
         >
-          <div className="flex items-center justify-between w-full">
+          <div className="flex items-center justify-between w-full relative z-10">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 bg-[#F6F6F6] rounded-full flex items-center justify-center text-[#111111] shadow-sm shrink-0">
-                <Search size={24} strokeWidth={2.5} />
+                <LineIconRegistry name="search" size={24} strokeWidth={2.5} />
               </div>
               <div>
-                <h3 className="text-[22px] font-black text-[#111111] leading-none mb-1.5 tracking-tight">Where to?</h3>
+                <h3 className="text-[24px] font-black text-[#111111] leading-none mb-1.5 tracking-tight">Where to?</h3>
                 <p className="text-[14px] font-bold text-gray-400">Book a new delivery</p>
               </div>
             </div>
@@ -176,6 +180,30 @@ export default function MobileHome() {
             </div>
           </div>
         </button>
+
+        {/* 3-Icon Row (Rides, Eats, Scooter) */}
+        <div className="flex justify-between px-2">
+          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/booking/set-location')}>
+            <div className="w-[72px] h-[72px] bg-gray-200/60 rounded-full flex items-center justify-center shrink-0">
+              <LineIconRegistry name="car" size={36} color="#111111" strokeWidth={1.5} />
+            </div>
+            <span className="text-[14px] font-black tracking-tight text-[#111111]">Rides</span>
+          </div>
+          
+          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+            <div className="w-[72px] h-[72px] bg-gray-200/60 rounded-full flex items-center justify-center shrink-0">
+              <LineIconRegistry name="food" size={36} color="#111111" strokeWidth={1.5} />
+            </div>
+            <span className="text-[14px] font-black tracking-tight text-[#111111]">Eats</span>
+          </div>
+          
+          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
+            <div className="w-[72px] h-[72px] bg-gray-200/60 rounded-full flex items-center justify-center shrink-0">
+              <LineIconRegistry name="scooter" size={36} color="#111111" strokeWidth={1.5} />
+            </div>
+            <span className="text-[14px] font-black tracking-tight text-[#111111]">Scooter</span>
+          </div>
+        </div>
       </motion.div>
 
       {/* SECTION 3: Active Dispatch (Uber-Style Floating Pill) */}
