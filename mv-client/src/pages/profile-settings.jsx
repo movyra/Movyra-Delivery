@@ -9,8 +9,10 @@ import {
 
 // Real Store, Auth & Services Integration
 import useAuthStore from '../store/useAuthStore';
+import usePreferencesStore from '../store/usePreferencesStore';
 import { auth, logoutFromAllDevices } from '../services/firebaseAuth';
 import { notificationService } from '../services/notifications';
+import { t } from '../utils/translations';
 
 // Premium Design System Components
 import SystemCard from '../components/UI/SystemCard';
@@ -21,7 +23,8 @@ import SystemButton from '../components/UI/SystemButton';
  * PAGE: PROFILE & PREMIUM SETTINGS (PREMIUM CARD UI)
  * Architecture: Detached 32px rounded SystemCards on #F2F4F7 background.
  * Features (6+): 
- * - Language & Theme SystemToggles
+ * - Language & Theme SystemToggles (Wired to Zustand Persist)
+ * - Real-time i18n Translation Engine via t() helper
  * - Hardware Push Notification Permission Switch
  * - Hardware Location Services Switch
  * - Multi-Device Global Logout
@@ -33,26 +36,23 @@ const HardwareSwitch = ({ isOn, onToggle, disabled, loading }) => (
   <button
     onClick={onToggle}
     disabled={disabled || loading}
-    className={`w-14 h-8 rounded-full p-1 transition-colors relative flex items-center shadow-inner ${isOn ? 'bg-[#111111]' : 'bg-[#E5E7EB]'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
+    className={`w-14 h-8 rounded-full p-1 transition-colors relative flex items-center shadow-inner ${isOn ? 'bg-[#111111] dark:bg-white' : 'bg-[#E5E7EB] dark:bg-gray-700'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'active:scale-95'}`}
   >
     <motion.div
       layout
-      className={`w-6 h-6 bg-white rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.15)] flex items-center justify-center`}
+      className={`w-6 h-6 bg-white dark:bg-[#111111] rounded-full shadow-[0_2px_8px_rgba(0,0,0,0.15)] flex items-center justify-center`}
       animate={{ x: isOn ? 24 : 0 }}
       transition={{ type: "spring", stiffness: 500, damping: 30 }}
     >
-      {loading && <div className="w-3 h-3 border-2 border-gray-300 border-t-[#111111] rounded-full animate-spin" />}
+      {loading && <div className="w-3 h-3 border-2 border-gray-300 border-t-[#111111] dark:border-t-white rounded-full animate-spin" />}
     </motion.div>
   </button>
 );
 
 export default function ProfileSettings() {
   const { user, logout } = useAuthStore();
+  const { language, setLanguage, theme, setTheme } = usePreferencesStore();
   const navigate = useNavigate();
-
-  // Settings State
-  const [language, setLanguage] = useState('en');
-  const [theme, setTheme] = useState('light');
   
   // Hardware Permissions State
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -83,8 +83,6 @@ export default function ProfileSettings() {
 
   const handlePushToggle = async () => {
     if (pushEnabled) {
-      // Browser notifications cannot be programmatically revoked once granted,
-      // but we update the UI state to reflect an "opt-out" in the database.
       setPushEnabled(false);
       return;
     }
@@ -106,7 +104,6 @@ export default function ProfileSettings() {
       setLocationEnabled(false);
       return;
     }
-    // Trigger prompt
     navigator.geolocation.getCurrentPosition(
       () => setLocationEnabled(true),
       () => setLocationEnabled(false)
@@ -146,7 +143,7 @@ export default function ProfileSettings() {
   const languageTabs = [
     { id: 'en', label: 'English' },
     { id: 'hi', label: 'हिन्दी' },
-    { id: 'es', label: 'Español' }
+    { id: 'mr', label: 'मराठी' }
   ];
 
   const themeTabs = [
@@ -159,45 +156,45 @@ export default function ProfileSettings() {
   // RENDER UI
   // ============================================================================
   return (
-    <div className="min-h-[100dvh] bg-[#F2F4F7] text-[#111111] font-sans relative flex flex-col">
+    <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans relative flex flex-col transition-colors duration-300">
       
       {/* SECTION 1: Isolated Circular Navigation */}
-      <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 backdrop-blur-md">
+      <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md transition-colors duration-300">
         <button 
           onClick={() => navigate('/dashboard-home')} 
-          className="w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
+          className="w-[46px] h-[46px] bg-white dark:bg-[#222222] rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
         >
           <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
-        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] leading-none">
-          Settings
+        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] dark:text-white leading-none">
+          {t('settings.title', language)}
         </h1>
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar px-5 pt-2 pb-32 space-y-4">
         
         {/* SECTION 2: Identity Card */}
-        <SystemCard animated variant="white" className="flex items-center gap-5 !p-5">
-          <div className="w-[72px] h-[72px] rounded-[24px] bg-[#F2F4F7] flex items-center justify-center relative border border-gray-100 p-1">
+        <SystemCard animated variant="white" className="flex items-center gap-5 !p-5 dark:bg-[#222222] dark:border-gray-800 transition-colors">
+          <div className="w-[72px] h-[72px] rounded-[24px] bg-[#F2F4F7] dark:bg-[#333333] flex items-center justify-center relative border border-gray-100 dark:border-gray-700 p-1 transition-colors">
             <img 
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayEmail}`} 
               alt="Avatar" 
-              className="w-full h-full rounded-[18px] bg-white"
+              className="w-full h-full rounded-[18px] bg-white dark:bg-[#111111]"
             />
-            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#111111] rounded-full border-[3px] border-white flex items-center justify-center text-white shadow-sm">
+            <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[#111111] dark:bg-white rounded-full border-[3px] border-white dark:border-[#222222] flex items-center justify-center text-white dark:text-[#111111] shadow-sm transition-colors">
               <Crown size={12} strokeWidth={3} />
             </div>
           </div>
           <div className="flex-1 overflow-hidden">
-            <h2 className="text-[20px] font-black text-[#111111] tracking-tight truncate capitalize leading-none mb-1">{displayName}</h2>
-            <p className="text-[13px] font-bold text-gray-400 truncate">{displayEmail}</p>
+            <h2 className="text-[20px] font-black text-[#111111] dark:text-white tracking-tight truncate capitalize leading-none mb-1 transition-colors">{displayName}</h2>
+            <p className="text-[13px] font-bold text-gray-400 dark:text-gray-500 truncate transition-colors">{displayEmail}</p>
           </div>
         </SystemCard>
 
-        {/* SECTION 3: Premium Status Card (Dark Theme) */}
+        {/* SECTION 3: Premium Status Card (Dark Theme Native) */}
         <motion.div 
           initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="bg-[#111111] rounded-[32px] p-7 shadow-[0_15px_35px_rgba(0,0,0,0.15)] relative overflow-hidden text-white mb-2"
+          className="bg-[#111111] dark:bg-[#1A1A1A] rounded-[32px] p-7 shadow-[0_15px_35px_rgba(0,0,0,0.15)] relative overflow-hidden text-white mb-2 transition-colors border dark:border-[#333333]"
         >
           {/* Animated Background Element */}
           <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#BCE3FF] blur-[80px] opacity-20 pointer-events-none" />
@@ -205,25 +202,25 @@ export default function ProfileSettings() {
           <div className="relative z-10">
             <div className="flex items-center gap-2 bg-white/10 w-fit px-3 py-1.5 rounded-full border border-white/10 mb-6">
               <Sparkles size={14} className="text-[#BCE3FF]" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-[#BCE3FF]">Exclusive Member</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#BCE3FF]">{t('settings.exclusiveMember', language)}</span>
             </div>
             
             <div className="mb-8">
               <h3 className="text-[36px] font-black tracking-tighter leading-none mb-1">Movyra Plus.</h3>
-              <p className="text-[13px] font-bold text-gray-400">Unlimited priority delivery enabled</p>
+              <p className="text-[13px] font-bold text-gray-400">{t('settings.unlimitedPriority', language)}</p>
             </div>
 
             <button className="w-full bg-white text-[#111111] py-4 rounded-[20px] font-black text-[14px] active:scale-[0.98] transition-all shadow-lg hover:bg-gray-50">
-              Manage Subscription
+              {t('settings.manageSubscription', language)}
             </button>
           </div>
         </motion.div>
 
         {/* SECTION 4: System Preferences (Language & Theme) */}
-        <SystemCard animated variant="white" className="!p-5 space-y-5">
+        <SystemCard animated variant="white" className="!p-5 space-y-5 dark:bg-[#222222] dark:border-gray-800 transition-colors">
           <div>
-            <h3 className="text-[13px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Globe size={16} /> Display Language
+            <h3 className="text-[13px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2 transition-colors">
+              <Globe size={16} /> {t('settings.language', language)}
             </h3>
             <SystemToggle 
               tabs={languageTabs}
@@ -232,10 +229,10 @@ export default function ProfileSettings() {
               className="w-full"
             />
           </div>
-          <div className="h-px w-full bg-gray-100" />
+          <div className="h-px w-full bg-gray-100 dark:bg-gray-800 transition-colors" />
           <div>
-            <h3 className="text-[13px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Moon size={16} /> Appearance
+            <h3 className="text-[13px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2 transition-colors">
+              <Moon size={16} /> {t('settings.appearance', language)}
             </h3>
             <SystemToggle 
               tabs={themeTabs}
@@ -247,28 +244,28 @@ export default function ProfileSettings() {
         </SystemCard>
 
         {/* SECTION 5: Hardware Permissions (Push & Location) */}
-        <SystemCard animated variant="white" className="!p-2">
-          <div className="w-full flex items-center justify-between p-4 bg-white rounded-[24px]">
+        <SystemCard animated variant="white" className="!p-2 dark:bg-[#222222] dark:border-gray-800 transition-colors">
+          <div className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#2A2A2A] rounded-[24px] transition-colors">
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors ${pushEnabled ? 'bg-[#111111] text-white' : 'bg-[#F2F4F7] text-gray-400'}`}>
+              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors ${pushEnabled ? 'bg-[#111111] dark:bg-white text-white dark:text-[#111111]' : 'bg-[#F2F4F7] dark:bg-[#333333] text-gray-400'}`}>
                 <Bell size={20} strokeWidth={2.5} />
               </div>
               <div className="text-left">
-                <span className="block font-black text-[15px] text-[#111111] tracking-tight">Push Notifications</span>
-                <span className="block font-bold text-[12px] text-gray-400">Live order & driver alerts</span>
+                <span className="block font-black text-[15px] text-[#111111] dark:text-white tracking-tight transition-colors">{t('settings.pushNotifications', language)}</span>
+                <span className="block font-bold text-[12px] text-gray-400 dark:text-gray-500 transition-colors">{t('settings.pushSub', language)}</span>
               </div>
             </div>
             <HardwareSwitch isOn={pushEnabled} onToggle={handlePushToggle} loading={pushLoading} />
           </div>
 
-          <div className="w-full flex items-center justify-between p-4 bg-white rounded-[24px]">
+          <div className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#2A2A2A] rounded-[24px] mt-1 transition-colors">
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors ${locationEnabled ? 'bg-[#276EF1] text-white' : 'bg-[#F2F4F7] text-gray-400'}`}>
+              <div className={`w-12 h-12 rounded-[18px] flex items-center justify-center transition-colors ${locationEnabled ? 'bg-[#276EF1] text-white' : 'bg-[#F2F4F7] dark:bg-[#333333] text-gray-400'}`}>
                 <MapPin size={20} strokeWidth={2.5} />
               </div>
               <div className="text-left">
-                <span className="block font-black text-[15px] text-[#111111] tracking-tight">Location Services</span>
-                <span className="block font-bold text-[12px] text-gray-400">Precise pickup auto-fill</span>
+                <span className="block font-black text-[15px] text-[#111111] dark:text-white tracking-tight transition-colors">{t('settings.locationServices', language)}</span>
+                <span className="block font-bold text-[12px] text-gray-400 dark:text-gray-500 transition-colors">{t('settings.locationSub', language)}</span>
               </div>
             </div>
             <HardwareSwitch isOn={locationEnabled} onToggle={handleLocationToggle} />
@@ -276,21 +273,21 @@ export default function ProfileSettings() {
         </SystemCard>
 
         {/* SECTION 6: Support Navigation */}
-        <SystemCard animated variant="white" className="!p-2">
+        <SystemCard animated variant="white" className="!p-2 dark:bg-[#222222] dark:border-gray-800 transition-colors">
           <button 
             onClick={() => navigate('/support/dispute')}
-            className="w-full flex items-center justify-between p-4 bg-white rounded-[24px] hover:bg-[#F6F6F6] active:scale-[0.98] transition-all group"
+            className="w-full flex items-center justify-between p-4 bg-white dark:bg-[#2A2A2A] rounded-[24px] hover:bg-[#F6F6F6] dark:hover:bg-[#333333] active:scale-[0.98] transition-all group"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-[18px] bg-[#F2F4F7] flex items-center justify-center text-gray-400 group-hover:bg-[#111111] group-hover:text-white transition-colors">
+              <div className="w-12 h-12 rounded-[18px] bg-[#F2F4F7] dark:bg-[#333333] flex items-center justify-center text-gray-400 group-hover:bg-[#111111] dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-[#111111] transition-colors">
                 <LifeBuoy size={20} strokeWidth={2.5} />
               </div>
               <div className="text-left">
-                <span className="block font-black text-[15px] text-[#111111] tracking-tight">Help Center</span>
-                <span className="block font-bold text-[12px] text-gray-400">Support tickets & FAQs</span>
+                <span className="block font-black text-[15px] text-[#111111] dark:text-white tracking-tight transition-colors">{t('settings.helpCenter', language)}</span>
+                <span className="block font-bold text-[12px] text-gray-400 dark:text-gray-500 transition-colors">{t('settings.helpSub', language)}</span>
               </div>
             </div>
-            <ChevronRight size={18} className="text-gray-300 group-hover:text-[#111111] transition-colors" />
+            <ChevronRight size={18} className="text-gray-300 dark:text-gray-600 group-hover:text-[#111111] dark:group-hover:text-white transition-colors" />
           </button>
         </SystemCard>
 
@@ -301,9 +298,9 @@ export default function ProfileSettings() {
             disabled={isLoggingOut}
             variant="secondary"
             icon={ShieldAlert}
-            className="!text-red-600 !bg-red-50 hover:!bg-red-100 !border-red-100"
+            className="!text-red-600 !bg-red-50 dark:!bg-red-900/20 hover:!bg-red-100 dark:hover:!bg-red-900/40 !border-red-100 dark:!border-red-900/50 transition-colors"
           >
-            Sign out of all devices
+            {t('settings.signOutAll', language)}
           </SystemButton>
           
           <SystemButton 
@@ -312,9 +309,9 @@ export default function ProfileSettings() {
             loading={isLoggingOut}
             variant="secondary"
             icon={LogOut}
-            className="!bg-white border-2 border-gray-100 text-[#111111]"
+            className="!bg-white dark:!bg-[#2A2A2A] border-2 border-gray-100 dark:border-gray-800 text-[#111111] dark:text-white transition-colors"
           >
-            Sign Out
+            {t('settings.signOut', language)}
           </SystemButton>
         </motion.div>
         
