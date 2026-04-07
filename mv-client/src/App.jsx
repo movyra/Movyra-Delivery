@@ -12,6 +12,7 @@ import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import BottomNavBar from './components/Navigation/BottomNavBar';
 import NetworkStatus from './components/UI/NetworkStatus';
 import { useOnboardingStore } from './store/useOnboardingStore';
+import usePreferencesStore from './store/usePreferencesStore';
 
 // ============================================================================
 // PERFORMANCE OPTIMIZATION: React Lazy Loading
@@ -38,12 +39,13 @@ const ShipmentDetail = lazy(() => import('./pages/Tracking/ShipmentDetail'));
 const DeliveryComplete = lazy(() => import('./pages/Tracking/DeliveryComplete'));
 const Rating = lazy(() => import('./pages/Tracking/Rating'));
 
-// Profile, History & Support
+// Profile, History, Business & Support
 const OrderHistory = lazy(() => import('./pages/order-history'));
 const OrderDetails = lazy(() => import('./pages/OrderHistory/OrderDetails'));
 const ProfileSettings = lazy(() => import('./pages/profile-settings'));
 const SavedAddresses = lazy(() => import('./pages/Profile/SavedAddresses'));
 const HelpCenter = lazy(() => import('./pages/Support/HelpCenter'));
+const InvoiceDashboard = lazy(() => import('./pages/Business/InvoiceDashboard'));
 
 // ============================================================================
 // SECTION 0: STRICT GLOBAL ERROR BOUNDARY
@@ -67,17 +69,17 @@ class GlobalErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex-1 flex flex-col items-center justify-center bg-white h-screen min-h-screen z-[999] relative px-6 text-center font-sans">
+        <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#111111] h-screen min-h-screen z-[999] relative px-6 text-center font-sans">
           {/* Strictly no background behind the logo image */}
           <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
           
-          <h1 className="text-[24px] font-black text-black mb-2 tracking-tight">Network Error</h1>
+          <h1 className="text-[24px] font-black text-black dark:text-white mb-2 tracking-tight">Network Error</h1>
           <p className="text-[15px] font-bold text-gray-500 mb-8 max-w-[280px] leading-snug">
             A required module failed to load. Please check your connection and tap to reload.
           </p>
           <button 
             onClick={() => window.location.reload(true)}
-            className="w-full max-w-[280px] bg-black text-white py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
+            className="w-full max-w-[280px] bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
           >
             Tap to Reload
           </button>
@@ -94,13 +96,13 @@ class GlobalErrorBoundary extends Component {
 // Used for both Auth verification AND Lazy-Loading Suspense.
 // ============================================================================
 const GlobalLoadingScreen = () => (
-  <div className="flex-1 flex flex-col items-center justify-center bg-white h-full min-h-screen z-[300] relative">
+  <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#111111] h-full min-h-screen z-[300] relative">
     {/* Strictly no background behind the logo image */}
     <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
     <motion.div 
       animate={{ rotate: 360 }} 
       transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
-      className="w-8 h-8 border-4 border-black border-t-transparent rounded-full shadow-sm" 
+      className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full shadow-sm" 
     />
   </div>
 );
@@ -145,7 +147,7 @@ const MainViewport = ({ authStatus }) => {
   const activeTab = getActiveTab();
 
   return (
-    <div className="flex flex-col h-screen bg-white overflow-hidden font-sans relative">
+    <div className="flex flex-col h-screen bg-white dark:bg-[#111111] overflow-hidden font-sans relative">
       
       {/* SECTION 3: Animated Viewport Controller */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-0">
@@ -194,6 +196,7 @@ const MainViewport = ({ authStatus }) => {
                     <Route path="/order-history" element={<OrderHistory />} />
                     <Route path="/order-history/detail/:id" element={<OrderDetails />} />
                     <Route path="/expense-tracker" element={<OrderHistory />} /> {/* Shares UI with history toggle */}
+                    <Route path="/business/invoices" element={<InvoiceDashboard />} />
                     
                     {/* Profile & Settings Routes */}
                     <Route path="/profile-settings" element={<ProfileSettings />} />
@@ -227,35 +230,58 @@ const MainViewport = ({ authStatus }) => {
 
 // ============================================================================
 // ROOT APPLICATION INJECTION
-// Manages the single source of truth for Authentication Status
+// Manages the single source of truth for Authentication Status and Global Theme
 // ============================================================================
 export default function App() {
   const hasCompletedOnboarding = useOnboardingStore(state => state.hasCompletedOnboarding);
+  const theme = usePreferencesStore(state => state.theme);
   
   // TRI-STATE AUTH LOGIC: loading | authenticated | unauthenticated
   const [authStatus, setAuthStatus] = useState('loading');
 
   // ============================================================================
+  // GLOBAL DOM OBSERVER: THEME ENGINE (DARK MODE INJECTION)
+  // Physically manipulates the <html> tag to trigger Tailwind's dark: modifiers
+  // ============================================================================
+  useEffect(() => {
+    const root = document.documentElement;
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    const applyTheme = () => {
+      if (theme === 'dark' || (theme === 'system' && systemPrefersDark.matches)) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    };
+
+    applyTheme(); // Initial Evaluation
+
+    // Real-time listener for OS-level theme changes (if set to 'system')
+    const listener = () => {
+      if (theme === 'system') applyTheme();
+    };
+    
+    systemPrefersDark.addEventListener('change', listener);
+    return () => systemPrefersDark.removeEventListener('change', listener);
+  }, [theme]);
+
+  // ============================================================================
   // BACKGROUND SYSTEM: VERSION POLLING (CACHE-BUSTING)
-  // Periodically checks version.json. If server version differs from initial load,
-  // forces a hard refresh to instantly deliver updates to the client.
   // ============================================================================
   useEffect(() => {
     let currentVersion = null;
 
     const checkAppVersion = async () => {
       try {
-        // Appends a timestamp to bypass any local/network caching of the JSON file itself
         const response = await fetch(`/version.json?t=${new Date().getTime()}`);
         if (!response.ok) return;
 
         const data = await response.json();
         
         if (!currentVersion) {
-          // Initialize baseline version on first load
           currentVersion = data.version;
         } else if (currentVersion !== data.version) {
-          // A new deployment has occurred
           console.log(`[System Update] New version detected (${data.version}). Forcing hard reload...`);
           window.location.reload(true);
         }
@@ -264,19 +290,13 @@ export default function App() {
       }
     };
 
-    // Initial check on mount
     checkAppVersion();
-
-    // Poll every 2 minutes (120,000 ms)
     const pollInterval = setInterval(checkAppVersion, 120000);
-
     return () => clearInterval(pollInterval);
   }, []);
 
   // Firebase Auth Observer
   useEffect(() => {
-    // Persistent listener that survives path changes. 
-    // Uses the pre-initialized auth instance from the services file.
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthStatus('authenticated');
