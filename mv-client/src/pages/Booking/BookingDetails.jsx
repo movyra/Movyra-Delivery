@@ -11,20 +11,21 @@ import LineIconRegistry from '../../components/Icons/LineIconRegistry';
 // Real Global Store Integration
 import useBookingStore from '../../store/useBookingStore';
 
-// Hardware Features
-import SmartScanner from '../Tracking/SmartScanner';
+// Hardware Features (UPDATED TO CORRECT PATH)
+import SmartScanner from '../../components/Tracking/SmartScanner';
 
 /**
  * PAGE: BOOKING DETAILS & PACKAGE SAFETY (PREMIUM CARD UI)
  * Architecture: Fragmented White SystemCards on #F2F4F7 background.
  * Features (8+): 
- * - Seamless Headerless Navigation
- * - Item Category Selection
- * - Animated Safety Toggles (Fragile / High Value)
- * - Real-time Scheduling Constraints & Mathematics
- * - Driver Instructions / Delivery Notes
- * - FEATURE INJECTION: SmartScanner (Camera Proof of Delivery payload)
- * - DARK MODE: 100% Global compliance wired
+ * 1. Seamless Headerless Navigation with Logo
+ * 2. Dynamic Item Category Selection
+ * 3. Package Photo Proof Integration
+ * 4. Animated Safety Toggles (Fragile / High Value)
+ * 5. Real-time Scheduling Constraints & Mathematics
+ * 6. Driver Instructions / Delivery Notes
+ * 7. FEATURE INJECTION: SmartScanner (Camera Proof of Delivery payload)
+ * 8. Validation Engine & Sticky Action Footer
  */
 
 const ITEM_CATEGORIES = ['Documents', 'Electronics', 'Clothes', 'Groceries', 'Heavy Goods', 'Other'];
@@ -110,17 +111,24 @@ export default function BookingDetails() {
   return (
     <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans relative flex flex-col transition-colors duration-300">
       
-      {/* SECTION 1: Isolated Navigation (Headerless Paradigm) */}
-      <div className="px-6 pt-14 pb-4 flex items-center gap-4 sticky top-0 z-50 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md transition-colors duration-300">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="w-[46px] h-[46px] bg-white dark:bg-[#222222] rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
-        >
-          <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
-        </button>
-        <h1 className="text-[32px] font-black tracking-tighter text-[#111111] dark:text-white leading-none transition-colors">
-          Details
-        </h1>
+      {/* SECTION 1: Isolated Navigation & Logo Injection */}
+      <div className="px-6 pt-14 pb-4 flex items-center justify-between sticky top-0 z-50 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md transition-colors duration-300">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="w-[46px] h-[46px] bg-white dark:bg-[#222222] rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all shrink-0"
+          >
+            <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
+          </button>
+          <h1 className="text-[32px] font-black tracking-tighter text-[#111111] dark:text-white leading-none transition-colors">
+            Details
+          </h1>
+        </div>
+        
+        {/* Strict Logo Injection */}
+        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center overflow-hidden shadow-sm p-1.5 shrink-0">
+          <img src="/logo.png" alt="Movyra Logo" className="w-full h-full object-contain" />
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-5 pt-2 pb-32 space-y-4">
@@ -299,7 +307,7 @@ export default function BookingDetails() {
           </div>
         </SystemCard>
 
-        {/* Real-time Error Notification */}
+        {/* SECTION 7: Real-time Error Notification */}
         <AnimatePresence>
           {error && (
             <motion.div 
@@ -314,7 +322,7 @@ export default function BookingDetails() {
 
       </div>
 
-      {/* SECTION 7: Sticky Action Footer */}
+      {/* SECTION 8: Sticky Action Footer */}
       <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 transition-colors duration-300">
         <SystemButton 
           onClick={handleContinue}
@@ -326,7 +334,7 @@ export default function BookingDetails() {
         </SystemButton>
       </div>
 
-      {/* HARDWARE OVERLAY: SMART SCANNER */}
+      {/* SECTION 9: HARDWARE OVERLAY - SMART SCANNER */}
       <AnimatePresence>
         {isScannerOpen && (
           <SmartScanner 
