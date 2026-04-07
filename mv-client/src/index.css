@@ -8,6 +8,13 @@
     background-color: #F2F4F7; /* Exact requested premium light grey */
   }
 
+  /* NEW: Explicit dark mode root variables to prevent blinding white flashes */
+  .dark {
+    color-scheme: dark;
+    background-color: #111111;
+    color: #F6F6F6;
+  }
+
   body { 
     margin: 0; 
     font-family: "Satoshi", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
@@ -19,6 +26,8 @@
     user-select: none; 
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* NEW: Smooth color transitions for dynamic dark mode toggling */
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
   }
 }
 
@@ -28,19 +37,19 @@
   /* ============================================================================ */
   
   .text-display {
-    @apply text-[40px] md:text-[48px] font-black leading-[1.05] tracking-tighter text-[#111111];
+    @apply text-[40px] md:text-[48px] font-black leading-[1.05] tracking-tighter text-[#111111] dark:text-white;
   }
   
   .text-heading {
-    @apply text-[24px] md:text-[32px] font-black leading-tight tracking-tight text-[#111111];
+    @apply text-[24px] md:text-[32px] font-black leading-tight tracking-tight text-[#111111] dark:text-white;
   }
   
   .text-label {
-    @apply text-[11px] md:text-[12px] font-bold uppercase tracking-widest text-gray-500;
+    @apply text-[11px] md:text-[12px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400;
   }
   
   .text-paragraph {
-    @apply text-[15px] md:text-[16px] font-medium leading-relaxed text-[#4A6B85];
+    @apply text-[15px] md:text-[16px] font-medium leading-relaxed text-[#4A6B85] dark:text-gray-300;
   }
 
   /* Utility to hide scrollbars globally for custom scroll areas */
