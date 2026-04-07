@@ -15,6 +15,8 @@ import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../../services/firebaseAuth';
 import useMapSettingsStore from '../../store/useMapSettingsStore';
+import usePreferencesStore from '../../store/usePreferencesStore';
+import { t } from '../../utils/translations';
 
 // Modular UI Components
 import OrderFloatingStatusCard from '../../components/OrderDetails/OrderFloatingStatusCard';
@@ -26,22 +28,15 @@ import { MAP_LAYERS } from '../../services/mapLayers';
 /**
  * PAGE: ACTIVE SHIPMENT DETAIL (LIVE TRACKING)
  * Architecture: 100vh Immersive Map + Draggable Bottom Sheet
- * Features: 
- * 1. Strict Path Real-time Firestore Sync
- * 2. Draggable bottom sheet for Full-Screen Map exploration
- * 3. Free OSRM Rest API Routing Engine
- * 4. Distance-Variance Algorithm (Route Deviation Detection)
- * 5. Communication & Safety Action Bar
- * 6. Segmented Data Views (Details/Timeline/Receipt)
- * 7. Live Pricing Analytics Chart
- * 8. Dynamic Telemetry Status Card
+ * BUG FIX: Synchronized secure tenant path artifacts/{appId}/users/{userId}/orders/{id}
+ * DARK MODE & i18n: Fully wired global compliance
  */
 
-const TABS = [
-  { id: 'details', label: 'Details' },
-  { id: 'timeline', label: 'Timeline' },
-  { id: 'receipt', label: 'Live Total' }
-];
+const getAppId = () => {
+  if (typeof window !== 'undefined' && window.__app_id) return window.__app_id;
+  if (typeof __app_id !== 'undefined') return __app_id;
+  return 'default-app-id';
+};
 
 export default function ShipmentDetail() {
   const { id } = useParams();
@@ -54,6 +49,7 @@ export default function ShipmentDetail() {
 
   // Global UI Preferences
   const { mapTheme } = useMapSettingsStore();
+  const { language } = usePreferencesStore();
 
   // Local Data & UI State
   const [order, setOrder] = useState(null);
@@ -68,6 +64,12 @@ export default function ShipmentDetail() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [isSafetyOpen, setIsSafetyOpen] = useState(false);
 
+  const TABS = [
+    { id: 'details', label: t('Details', language) || 'Details' },
+    { id: 'timeline', label: t('Timeline', language) || 'Timeline' },
+    { id: 'receipt', label: t('Live Total', language) || 'Live Total' }
+  ];
+
   // ============================================================================
   // FEATURE 1: SECURE REAL-TIME FIRESTORE DATA SYNC
   // ============================================================================
@@ -77,9 +79,9 @@ export default function ShipmentDetail() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = getAppId();
         
-        // STRICT PATHING: artifacts/{appId}/users/{user.uid}/orders/{id}
+        // FIX: STRICT PATHING SYNCHRONIZATION
         const orderRef = doc(db, 'artifacts', appId, 'users', user.uid, 'orders', id);
         
         unsubscribeSnapshot = onSnapshot(orderRef, (docSnap) => {
@@ -87,13 +89,13 @@ export default function ShipmentDetail() {
             setOrder({ id: docSnap.id, ...docSnap.data() });
             setError('');
           } else {
-            setError('Order record not found or has been removed.');
+            setError(t('Order record not found or has been removed.', language));
             setOrder(null);
           }
           setIsLoading(false);
         }, (err) => {
           console.error("Firestore Live Tracking Error:", err);
-          setError('Failed to securely fetch live order details.');
+          setError(t('Failed to securely fetch live order details.', language));
           setIsLoading(false);
         });
       } else {
@@ -106,7 +108,7 @@ export default function ShipmentDetail() {
       if (unsubscribeSnapshot) unsubscribeSnapshot();
       unsubscribeAuth();
     };
-  }, [id, db, navigate]);
+  }, [id, db, navigate, language]);
 
   // ============================================================================
   // DYNAMIC CDN LOADER FOR LEAFLET
@@ -132,16 +134,18 @@ export default function ShipmentDetail() {
   }, []);
 
   // ============================================================================
-  // FEATURE 3 & 4: OPENSTREETMAP ENGINE & DISTANCE-VARIANCE ALGORITHM
+  // FEATURE 3 & 4: OPENSTREETMAP ENGINE & DEVIATION ANALYSIS
   // ============================================================================
   useEffect(() => {
     if (!isMapLoaded || !order || !mapContainer.current) return;
     const L = window.L;
 
+    const isDark = document.documentElement.classList.contains('dark');
+    const activeMapTheme = isDark && mapTheme === 'standard' ? 'dark' : mapTheme;
+
     const pickupLat = order.pickup?.lat || 28.6139;
     const pickupLng = order.pickup?.lng || 77.2090;
 
-    // Initialize Leaflet Map
     if (!map.current) {
       map.current = L.map(mapContainer.current, {
         center: [pickupLat, pickupLng],
@@ -152,8 +156,12 @@ export default function ShipmentDetail() {
         scrollWheelZoom: true,
         touchZoom: true
       });
-      L.tileLayer(MAP_LAYERS[mapTheme] || MAP_LAYERS.standard).addTo(map.current);
     }
+
+    map.current.eachLayer((layer) => {
+      if (layer instanceof L.TileLayer) map.current.removeLayer(layer);
+    });
+    L.tileLayer(MAP_LAYERS[activeMapTheme] || MAP_LAYERS.standard).addTo(map.current);
 
     map.current.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.Polyline) {
@@ -164,15 +172,10 @@ export default function ShipmentDetail() {
     const validDropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
     const points = [];
 
-    // Plot Pickup
     if (order.pickup?.lat) {
       const pickupIcon = L.divIcon({
         className: '',
-        html: `
-          <div class="w-[36px] h-[36px] bg-[#111111] text-white rounded-full shadow-lg flex items-center justify-center border-[3px] border-white">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>
-          </div>
-        `,
+        html: `<div class="w-[36px] h-[36px] bg-[#111111] dark:bg-white text-white dark:text-[#111111] rounded-full shadow-lg flex items-center justify-center border-[3px] border-white dark:border-[#111111] transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg></div>`,
         iconSize: [36, 36],
         iconAnchor: [18, 18]
       });
@@ -180,16 +183,11 @@ export default function ShipmentDetail() {
       points.push([order.pickup.lat, order.pickup.lng]);
     }
 
-    // Plot Dropoffs
     validDropoffs.forEach((drop) => {
       if (drop?.lat) {
         const dropIcon = L.divIcon({
           className: '',
-          html: `
-            <div class="w-[36px] h-[36px] bg-[#FF3B30] text-white rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] flex items-center justify-center border-[3px] border-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
-            </div>
-          `,
+          html: `<div class="w-[36px] h-[36px] bg-[#FF3B30] text-white rounded-full shadow-[0_4px_12px_rgba(255,59,48,0.5)] flex items-center justify-center border-[3px] border-white dark:border-[#111111] transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg></div>`,
           iconSize: [36, 36],
           iconAnchor: [18, 18]
         });
@@ -198,7 +196,6 @@ export default function ShipmentDetail() {
       }
     });
 
-    // Real or Simulated Driver Location
     let driverLat = null;
     let driverLng = null;
 
@@ -210,12 +207,12 @@ export default function ShipmentDetail() {
         className: '',
         html: `
           <div class="flex flex-col items-center transform -translate-y-[20px] relative z-50">
-            <div class="bg-[#111111] text-white px-3 py-1.5 rounded-[10px] text-[12px] font-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] mb-1.5 relative flex items-center gap-1.5 whitespace-nowrap">
+            <div class="bg-[#111111] dark:bg-white text-white dark:text-[#111111] px-3 py-1.5 rounded-[10px] text-[12px] font-black shadow-[0_10px_20px_rgba(0,0,0,0.3)] mb-1.5 relative flex items-center gap-1.5 whitespace-nowrap transition-colors">
               <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-              ${order.selectedBid?.etaMins || '5'} MIN ETA
-              <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#111111] rotate-45"></div>
+              ${order.selectedBid?.etaMins || '5'} ${t('MIN ETA', language)}
+              <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#111111] dark:bg-white rotate-45 transition-colors"></div>
             </div>
-            <div class="w-11 h-11 bg-white rounded-full border-[3px] border-[#111111] shadow-xl flex items-center justify-center text-[#111111]">
+            <div class="w-11 h-11 bg-white dark:bg-[#111111] rounded-full border-[3px] border-[#111111] dark:border-white shadow-xl flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10l1.5-4.5A2 2 0 0 1 8.4 4h7.2a2 2 0 0 1 1.9 1.5L19 10" /><path d="M22 10v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6c0-1.1.9-2 2-2h16a2 2 0 0 1 2 2z" /><circle cx="7" cy="15" r="1.5" /><circle cx="17" cy="15" r="1.5" /></svg>
             </div>
           </div>
@@ -227,90 +224,71 @@ export default function ShipmentDetail() {
       points.push([driverLat, driverLng]);
     }
 
-    // Fetch Free OSRM Route & Perform Deviation Analysis
     if (order.pickup?.lat && validDropoffs.length > 0 && validDropoffs[0].lat) {
       const fetchRoute = async () => {
         try {
           const coords = [order.pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
           const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?geometries=geojson&overview=full`);
-          
-          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
           const data = await res.json();
           
           if (data.code === 'Ok' && map.current) {
             const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-            
             routeLayer.current = L.polyline(routeCoords, {
-              color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#111111', 
+              color: isDark ? '#4dabf7' : '#111111', 
               weight: 5,
               opacity: 0.8,
               lineJoin: 'round'
             }).addTo(map.current);
             
-            // Feature 4: Distance-Variance Algorithm (Deviation Detection)
             if (driverLat && driverLng) {
               const driverLatLng = L.latLng(driverLat, driverLng);
               let minDistance = Infinity;
-              
-              const latlngs = routeLayer.current.getLatLngs();
-              const flatLatLngs = Array.isArray(latlngs[0]) ? latlngs.flat() : latlngs;
-              
-              flatLatLngs.forEach(ll => {
+              const latlngs = routeLayer.current.getLatLngs().flat();
+              latlngs.forEach(ll => {
                 const dist = map.current.distance(driverLatLng, ll);
                 if (dist < minDistance) minDistance = dist;
               });
-              
-              // Trigger deviation alert if driver is more than 500 meters off optimal route
               setRouteDeviation(minDistance > 500);
             }
-
             map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
           }
         } catch (err) {
-          console.warn("Route API failed, gracefully falling back to point bounds.", err.message);
-          if (points.length > 1 && map.current) {
-            map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
-          }
+          if (points.length > 1 && map.current) map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
         }
       };
       fetchRoute();
     } else if (points.length > 1 && map.current) {
       map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
     }
+  }, [order, isMapLoaded, mapTheme, isSheetExpanded, language]);
 
-    setTimeout(() => map.current?.invalidateSize(), 200);
-  }, [order, isMapLoaded, mapTheme, isSheetExpanded]);
-
-  // ============================================================================
-  // HANDLERS & FORMATTING
-  // ============================================================================
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center font-sans">
-        <Loader2 size={40} className="animate-spin text-[#111111] mb-4" />
-        <p className="text-[14px] font-bold text-gray-500 uppercase tracking-widest">Connecting to Live Feed</p>
+      <div className="min-h-screen bg-[#F2F4F7] dark:bg-[#111111] flex flex-col items-center justify-center transition-colors">
+        <Loader2 size={40} className="animate-spin text-[#111111] dark:text-white mb-4" />
+        <p className="text-[14px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{t('Connecting to Live Feed', language)}</p>
       </div>
     );
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-[#F2F4F7] flex flex-col items-center justify-center p-6 text-center font-sans">
+      <div className="min-h-screen bg-[#F2F4F7] dark:bg-[#111111] flex flex-col items-center justify-center p-6 text-center transition-colors">
         <AlertCircle size={48} className="text-red-500 mb-4" strokeWidth={2} />
-        <h1 className="text-[24px] font-black text-[#111111] mb-2">Signal Lost</h1>
-        <p className="text-[15px] font-medium text-gray-500 mb-8">{error}</p>
-        <button onClick={() => navigate(-1)} className="px-8 py-4 bg-[#111111] text-white rounded-full font-bold shadow-lg active:scale-95 transition-transform">Go Back</button>
+        <h1 className="text-[24px] font-black text-[#111111] dark:text-white mb-2">{t('Signal Lost', language)}</h1>
+        <p className="text-[15px] font-medium text-gray-500 dark:text-gray-400 mb-8">{error}</p>
+        <button onClick={() => navigate(-1)} className="px-8 py-4 bg-[#111111] dark:bg-white text-white dark:text-[#111111] rounded-full font-bold shadow-lg active:scale-95 transition-all">{t('Go Back', language)}</button>
       </div>
     );
   }
 
   const getStatusDisplay = (status) => {
     switch(status?.toLowerCase()) {
-      case 'searching': return 'Finding Partner...';
-      case 'assigned': return 'Partner En Route';
-      case 'picked_up': return 'Package In Transit';
-      case 'delivered': return 'Delivery Complete';
-      default: return 'Processing Order...';
+      case 'searching': return t('Finding Partner...', language);
+      case 'assigned': return t('Partner En Route', language);
+      case 'picked_up': return t('Package In Transit', language);
+      case 'delivered': return t('Delivery Complete', language);
+      default: return t('Processing Order...', language);
     }
   };
 
@@ -323,10 +301,6 @@ export default function ShipmentDetail() {
   const handleRecenter = () => {
     if (map.current && routeLayer.current) {
       map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
-    } else if (map.current && order) {
-      const p = order.pickup;
-      const d = dropoffsArray[0];
-      if (p && d) map.current.fitBounds(L.latLngBounds([[p.lat, p.lng], [d.lat, d.lng]]), { padding: [100, 100] });
     }
   };
 
@@ -335,23 +309,19 @@ export default function ShipmentDetail() {
   };
 
   return (
-    <div className="relative w-full h-[100dvh] bg-[#F2F4F7] overflow-hidden font-sans">
+    <div className="relative w-full h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] overflow-hidden font-sans transition-colors duration-300">
       
-      {/* ========================================================= */}
       {/* SECTION 1: 100VH IMMERSIVE MAP CANVAS */}
-      {/* ========================================================= */}
-      <div ref={mapContainer} className="absolute inset-0 z-0 bg-[#e5e7eb]" />
+      <div ref={mapContainer} className="absolute inset-0 z-0 bg-[#e5e7eb] dark:bg-[#222222]" />
 
       <button 
         onClick={() => navigate(-1)} 
-        className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
+        className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white dark:bg-[#222222] rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
       >
         <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
       </button>
 
-      {/* ========================================================= */}
       {/* SECTION 2: DRAGGABLE BOTTOM SHEET & FLOATING UI */}
-      {/* ========================================================= */}
       <motion.div 
         drag="y"
         dragConstraints={{ top: 0, bottom: window.innerHeight * 0.5 }}
@@ -365,21 +335,20 @@ export default function ShipmentDetail() {
         className="absolute bottom-0 left-0 right-0 z-[2000] flex flex-col pointer-events-none"
       >
         
-        {/* Floating Modules (Attached to top of sheet) */}
+        {/* Floating Modules */}
         <div className="px-5 mb-4 pointer-events-auto flex flex-col gap-3">
-          
           <AnimatePresence>
             {routeDeviation && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-red-50 border border-red-100 p-4 rounded-[24px] shadow-lg flex items-center gap-3"
+                className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 p-4 rounded-[24px] shadow-lg flex items-center gap-3 transition-colors"
               >
-                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500 shrink-0">
+                <div className="w-10 h-10 bg-white dark:bg-[#111111] rounded-full flex items-center justify-center text-red-500 shrink-0">
                   <Navigation size={20} strokeWidth={2.5} />
                 </div>
                 <div>
-                  <h4 className="text-[14px] font-black text-[#111111] tracking-tight">Route Deviation</h4>
-                  <p className="text-[12px] font-bold text-red-600">Driver is off the optimal path.</p>
+                  <h4 className="text-[14px] font-black text-[#111111] dark:text-white tracking-tight">{t('Route Deviation', language)}</h4>
+                  <p className="text-[12px] font-bold text-red-600 dark:text-red-400">{t('Driver is off the optimal path.', language)}</p>
                 </div>
               </motion.div>
             )}
@@ -389,44 +358,41 @@ export default function ShipmentDetail() {
             pickupAddress={order.pickup?.address}
             dropoffAddress={dropoffsArray[0]?.address}
             statusText={getStatusDisplay(order.status)}
-            subText="Live Tracking Active"
+            subText={t('Live Tracking Active', language)}
             onActionClick={handleRecenter}
             actionIcon={Crosshair}
           />
         </div>
 
         {/* Expandable Sheet Content */}
-        <div className="bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] pointer-events-auto flex flex-col p-5 h-[65vh] border-t border-gray-100">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] pointer-events-auto flex flex-col p-5 h-[65vh] border-t border-gray-100 dark:border-gray-800 transition-colors">
           
-          {/* SECTION 3: Drag Handle */}
           <div 
             onClick={() => setIsSheetExpanded(!isSheetExpanded)}
-            className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5 cursor-pointer hover:bg-gray-300 transition-colors" 
+            className="w-12 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto mb-5 cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" 
           />
 
-          {/* SECTION 4: ACTION BAR: Communication & Safety */}
           <div className="flex gap-2 mb-5">
             <button 
               onClick={handleCallDriver}
-              className="flex-1 bg-[#F6F6F6] hover:bg-gray-100 text-[#111111] py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
+              className="flex-1 bg-[#F6F6F6] dark:bg-[#2A2A2A] hover:bg-gray-100 dark:hover:bg-[#333333] text-[#111111] dark:text-white py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              <Phone size={18} strokeWidth={2.5} /> Call
+              <Phone size={18} strokeWidth={2.5} /> {t('Call', language)}
             </button>
             <button 
               onClick={() => setIsChatOpen(true)}
-              className="flex-1 bg-[#F6F6F6] hover:bg-gray-100 text-[#111111] py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
+              className="flex-1 bg-[#F6F6F6] dark:bg-[#2A2A2A] hover:bg-gray-100 dark:hover:bg-[#333333] text-[#111111] dark:text-white py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              <MessageCircle size={18} strokeWidth={2.5} /> Chat
+              <MessageCircle size={18} strokeWidth={2.5} /> {t('Chat', language)}
             </button>
             <button 
               onClick={() => setIsSafetyOpen(true)}
-              className="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center transition-all active:scale-95 shadow-sm"
+              className="bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 px-5 py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center transition-all active:scale-95 shadow-sm"
             >
-              <ShieldAlert size={18} strokeWidth={2.5} /> SOS
+              <ShieldAlert size={18} strokeWidth={2.5} /> {t('SOS', language)}
             </button>
           </div>
           
-          {/* SECTION 5: SEGMENTED DATA VIEWS */}
           <OrderSegmentedToggle 
             tabs={TABS} 
             activeTab={activeTab} 
@@ -435,83 +401,78 @@ export default function ShipmentDetail() {
 
           <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
             <AnimatePresence mode="wait">
-              
-              {/* TAB 1: DETAILS */}
               {activeTab === 'details' && (
                 <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
                   <OrderInfoListCard 
                     icon={UserCircle2}
-                    title="Assigned Partner"
-                    subtitle={order.selectedBid?.driverName || "Searching for partner..."}
-                    rightValue={order.selectedBid?.vehicleType || "Auto-Match"}
-                    rightSubValue="Vehicle Class"
+                    title={t('Assigned Partner', language)}
+                    subtitle={order.selectedBid?.driverName || t('Searching for partner...', language)}
+                    rightValue={t(order.selectedBid?.vehicleType || "Auto-Match", language)}
+                    rightSubValue={t('Vehicle Class', language)}
                   />
                   <OrderInfoListCard 
                     icon={Package}
-                    title="Package Configuration"
-                    subtitle={order.packageDetails?.itemType || "Standard Package"}
-                    rightValue={order.packageDetails?.isFragile ? "Fragile" : "Standard"}
-                    rightSubValue="Handling Type"
+                    title={t('Package Configuration', language)}
+                    subtitle={t(order.packageDetails?.itemType || "General Cargo", language)}
+                    rightValue={order.packageDetails?.isFragile ? t("Fragile", language) : t("Standard", language)}
+                    rightSubValue={t('Handling Type', language)}
                     alertMode={order.packageDetails?.isFragile}
                   />
                   {order.packageDetails?.requiresSecureOTP && (
                     <OrderInfoListCard 
                       icon={Diamond}
-                      title="Delivery Authentication"
-                      subtitle="End-to-End Secure OTP"
+                      title={t('Delivery Authentication', language)}
+                      subtitle={t('End-to-End Secure OTP', language)}
                       rightValue={order.packageDetails.secureOTP || "****"}
-                      rightSubValue="Verification PIN"
+                      rightSubValue={t('Verification PIN', language)}
                     />
                   )}
                 </motion.div>
               )}
 
-              {/* TAB 2: TIMELINE */}
               {activeTab === 'timeline' && (
                 <motion.div key="timeline" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
                   <OrderInfoListCard 
                     icon={order.status === 'picked_up' || order.status === 'delivered' ? CheckCircle2 : Clock}
-                    title="Origin Checkpoint"
+                    title={t('Origin Checkpoint', language)}
                     subtitle={order.pickup?.address}
-                    rightValue="Pickup"
-                    rightSubValue={order.status === 'picked_up' || order.status === 'delivered' ? 'Cleared' : 'Pending'}
+                    rightValue={t('Pickup', language)}
+                    rightSubValue={order.status === 'picked_up' || order.status === 'delivered' ? t('Cleared', language) : t('Pending', language)}
                   />
                   {dropoffsArray.map((drop, idx) => (
                     <OrderInfoListCard 
                       key={idx}
                       icon={MapPin}
-                      title={`Destination ${idx + 1}`}
+                      title={`${t('Destination', language)} ${idx + 1}`}
                       subtitle={drop.address}
-                      rightValue="Dropoff"
-                      rightSubValue={order.status === 'delivered' ? 'Cleared' : 'En Route'}
+                      rightValue={t('Dropoff', language)}
+                      rightSubValue={order.status === 'delivered' ? t('Cleared', language) : t('En Route', language)}
                     />
                   ))}
                 </motion.div>
               )}
 
-              {/* TAB 3: RECEIPT / LIVE TOTAL */}
               {activeTab === 'receipt' && (
                 <motion.div key="receipt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
                   <OrderAnalyticsChart 
                     totalValue={totalAmount.toFixed(2)}
                     currency="₹"
-                    dateRange={`Order ID: ${order.id.slice(-8).toUpperCase()}`}
+                    dateRange={`${t('Order ID', language)}: ${order.id.slice(-8).toUpperCase()}`}
                     data={[
-                      { label: 'Base Fare', value: taxableValue.toFixed(2), isActive: false },
-                      { label: 'Taxes', value: (cgst + sgst).toFixed(2), isActive: false },
-                      { label: 'Total', value: totalAmount.toFixed(2), isActive: true }
+                      { label: t('Base Fare', language), value: taxableValue.toFixed(2), isActive: false },
+                      { label: t('Taxes', language), value: (cgst + sgst).toFixed(2), isActive: false },
+                      { label: t('Total', language), value: totalAmount.toFixed(2), isActive: true }
                     ]}
                   />
                   <OrderInfoListCard 
                     icon={Receipt}
-                    title="Payment Status"
-                    subtitle={order.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Pre-Paid / Wallet'}
+                    title={t('Payment Status', language)}
+                    subtitle={order.paymentMethod === 'cash' ? t('Cash on Delivery', language) : t('Pre-Paid / Wallet', language)}
                     rightValue={`₹${totalAmount.toFixed(2)}`}
-                    rightSubValue="Final Amount"
+                    rightSubValue={t('Final Amount', language)}
                   />
                 </motion.div>
               )}
-
             </AnimatePresence>
           </div>
         </div>
