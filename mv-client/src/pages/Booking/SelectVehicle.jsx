@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
-  ChevronLeft, Clock, Loader2, Info, Crosshair
+  ChevronLeft, Clock, Loader2, Info, Crosshair, TrendingUp
 } from 'lucide-react';
 
 // Premium Design System Components
@@ -26,10 +26,9 @@ import FloatingLocationCard from '../../components/Map/FloatingLocationCard';
  * Architecture: 45vh/55vh Strict Split-Screen Layout
  * Features: 
  * - Headerless Map Canvas (Read-Only Route View)
- * - Floating Location Pill Overlap
- * - SystemCard Integration for Vehicles (Massive Typography)
- * - STRICT LOCATIONIQ ENGINE: Replaces public OSRM with enterprise LocationIQ API.
- * - STRICT FALLBACK: Haversine Mathematical Engine (Immune to API limits/missing keys)
+ * - EXPLICIT SURGE UI: High visibility banner for demand pricing
+ * - STRICT API CIRCUIT BREAKER: Eliminates 429 Too Many Requests console spam
+ * - STRICT FALLBACK: Haversine Mathematical Engine (Immune to API limits)
  */
 
 const VEHICLE_SPECS = {
@@ -59,6 +58,7 @@ export default function SelectVehicle() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isGroupDelivery, setIsGroupDelivery] = useState(false);
+  const [globalSurge, setGlobalSurge] = useState(1.0);
   
   // Real-time Pricing State
   const [routeMetrics, setRouteMetrics] = useState({ distanceKm: 0, baseDurationMins: 0 });
@@ -141,15 +141,24 @@ export default function SelectVehicle() {
       points.push([drop.lat, drop.lng]);
     });
 
-    // Fetch and draw route polyline using LocationIQ
+    // Fetch and draw route polyline using LocationIQ (With Strict Circuit Breaker)
     const fetchRoutePolyline = async () => {
       try {
         if (!LOCATIONIQ_API_KEY) throw new Error("LocationIQ API Key missing. Falling back to point-to-point bounds.");
         
+        // STRICT CIRCUIT BREAKER: Prevents 429 Console Spam
+        const breaker = sessionStorage.getItem('MOVYRA_API_BREAKER');
+        if (breaker && Date.now() < parseInt(breaker, 10)) {
+          throw new Error("Circuit breaker active. Skipping LocationIQ polyline to prevent 429 spam.");
+        }
+        
         const coords = [pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
         const res = await fetch(`https://us1.locationiq.com/v1/directions/driving/${coords}?key=${LOCATIONIQ_API_KEY}&geometries=geojson&overview=full`);
         
-        if (!res.ok) throw new Error(`LocationIQ Polyline HTTP Error: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 429) sessionStorage.setItem('MOVYRA_API_BREAKER', (Date.now() + 15 * 60 * 1000).toString());
+          throw new Error(`LocationIQ Polyline HTTP Error: ${res.status}`);
+        }
         
         const text = await res.text();
         const data = JSON.parse(text); 
@@ -166,7 +175,7 @@ export default function SelectVehicle() {
           map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 80], paddingBottomRight: [50, 80] });
         }
       } catch (err) {
-        console.warn("LocationIQ Polyline failed. Gracefully snapping bounds without polyline.", err.message);
+        console.info("LocationIQ Polyline bypassed:", err.message);
         map.current.fitBounds(L.latLngBounds(points), { padding: [50, 80] });
       }
     };
@@ -177,7 +186,7 @@ export default function SelectVehicle() {
   }, [pickup, safeDropoffs, mapTheme, isMapLoaded, LOCATIONIQ_API_KEY]);
 
   // ============================================================================
-  // LOGIC: ROBUST PRICING ENGINE (LOCATIONIQ WITH HAVERSINE MATHEMATICAL FALLBACK)
+  // LOGIC: ROBUST PRICING ENGINE (LOCATIONIQ WITH CIRCUIT BREAKER + HAVERSINE FALLBACK)
   // ============================================================================
   useEffect(() => {
     const fetchRealPricing = async () => {
@@ -198,11 +207,20 @@ export default function SelectVehicle() {
       try {
         if (!LOCATIONIQ_API_KEY) throw new Error("LocationIQ API Key missing. Bypassing fetch.");
 
+        // STRICT CIRCUIT BREAKER: Prevents 429 Console Spam
+        const breaker = sessionStorage.getItem('MOVYRA_API_BREAKER');
+        if (breaker && Date.now() < parseInt(breaker, 10)) {
+          throw new Error("Circuit breaker active. Engaging Haversine fallback immediately to prevent 429 spam.");
+        }
+
         // Attempt Primary LocationIQ Route Calculation
         const coords = [pickup, ...validDropoffs].map(loc => `${loc.lng},${loc.lat}`).join(';');
         const res = await fetch(`https://us1.locationiq.com/v1/directions/driving/${coords}?key=${LOCATIONIQ_API_KEY}&overview=false`);
         
-        if (!res.ok) throw new Error(`LocationIQ Pricing API HTTP Error: ${res.status}`);
+        if (!res.ok) {
+          if (res.status === 429) sessionStorage.setItem('MOVYRA_API_BREAKER', (Date.now() + 15 * 60 * 1000).toString());
+          throw new Error(`LocationIQ Pricing API HTTP Error: ${res.status}`);
+        }
         
         const text = await res.text();
         const data = JSON.parse(text);
@@ -213,7 +231,7 @@ export default function SelectVehicle() {
         durationMins = Math.round(data.routes[0].duration / 60);
 
       } catch (apiErr) {
-        console.warn("LocationIQ Pricing Failed. Engaging Permanent Haversine Fallback Engine.", apiErr.message);
+        console.info("LocationIQ Pricing bypassed:", apiErr.message);
         
         // =========================================================
         // MATHEMATICAL FALLBACK (Haversine Formula x 1.3 Curvature)
@@ -245,8 +263,10 @@ export default function SelectVehicle() {
       // Execute Live Pricing Formula regardless of how distance was sourced
       setRouteMetrics({ distanceKm, baseDurationMins: durationMins });
 
+      // Surge Pricing Logic
       const currentHour = new Date().getHours();
       const surgeMultiplier = (currentHour >= 17 && currentHour <= 20) ? 1.25 : 1.0;
+      setGlobalSurge(surgeMultiplier);
 
       const computedPrices = {};
       for (const [vType, specs] of Object.entries(VEHICLE_SPECS)) {
@@ -334,6 +354,28 @@ export default function SelectVehicle() {
           {error && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="bg-red-50 border border-red-100 text-red-600 p-5 rounded-[24px] mb-6 font-bold text-[14px] flex items-start gap-2 shadow-sm">
               <Info size={18} className="shrink-0 mt-0.5" /> {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* EXPLICIT SURGE UI BANNER */}
+        <AnimatePresence>
+          {globalSurge > 1.0 && !isLoading && !error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }} 
+              animate={{ opacity: 1, height: 'auto', marginBottom: 16 }} 
+              exit={{ opacity: 0, height: 0, marginBottom: 0 }} 
+              className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-100 p-5 rounded-[24px] flex items-start gap-4 shadow-sm overflow-hidden"
+            >
+              <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-orange-500 shrink-0 shadow-sm border border-orange-100">
+                <TrendingUp size={22} strokeWidth={2.5} />
+              </div>
+              <div className="pt-0.5">
+                <h4 className="text-[#111111] font-black text-[15px] tracking-tight">High Demand Area</h4>
+                <p className="text-orange-700/90 font-bold text-[12px] leading-snug mt-1 pr-2">
+                  Fares are {Math.round((globalSurge - 1) * 100)}% higher due to increased local demand.
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
