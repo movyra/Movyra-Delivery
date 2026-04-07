@@ -27,10 +27,14 @@ import { MAP_LAYERS } from '../../services/mapLayers';
  * PAGE: ACTIVE SHIPMENT DETAIL (LIVE TRACKING)
  * Architecture: 100vh Immersive Map + Draggable Bottom Sheet
  * Features: 
- * - Real-time Firestore Sync (Auth Secured)
- * - Draggable bottom sheet for Full-Screen Map exploration
- * - Distance-Variance Algorithm (Route Deviation Detection)
- * - Communication & Safety Action Bar
+ * 1. Strict Path Real-time Firestore Sync
+ * 2. Draggable bottom sheet for Full-Screen Map exploration
+ * 3. Free OSRM Rest API Routing Engine
+ * 4. Distance-Variance Algorithm (Route Deviation Detection)
+ * 5. Communication & Safety Action Bar
+ * 6. Segmented Data Views (Details/Timeline/Receipt)
+ * 7. Live Pricing Analytics Chart
+ * 8. Dynamic Telemetry Status Card
  */
 
 const TABS = [
@@ -48,8 +52,7 @@ export default function ShipmentDetail() {
   const map = useRef(null);
   const routeLayer = useRef(null);
 
-  // Environment Config
-  const LOCATIONIQ_API_KEY = import.meta.env.VITE_LOCATIONIQ_API_KEY;
+  // Global UI Preferences
   const { mapTheme } = useMapSettingsStore();
 
   // Local Data & UI State
@@ -66,7 +69,7 @@ export default function ShipmentDetail() {
   const [isSafetyOpen, setIsSafetyOpen] = useState(false);
 
   // ============================================================================
-  // REAL-TIME FIRESTORE DATA SYNC
+  // FEATURE 1: SECURE REAL-TIME FIRESTORE DATA SYNC
   // ============================================================================
   useEffect(() => {
     if (!id) return;
@@ -74,7 +77,11 @@ export default function ShipmentDetail() {
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const orderRef = doc(db, 'orders', id);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // STRICT PATHING: artifacts/{appId}/users/{user.uid}/orders/{id}
+        const orderRef = doc(db, 'artifacts', appId, 'users', user.uid, 'orders', id);
+        
         unsubscribeSnapshot = onSnapshot(orderRef, (docSnap) => {
           if (docSnap.exists()) {
             setOrder({ id: docSnap.id, ...docSnap.data() });
@@ -125,7 +132,7 @@ export default function ShipmentDetail() {
   }, []);
 
   // ============================================================================
-  // OPENSTREETMAP ENGINE & DISTANCE-VARIANCE ALGORITHM
+  // FEATURE 3 & 4: OPENSTREETMAP ENGINE & DISTANCE-VARIANCE ALGORITHM
   // ============================================================================
   useEffect(() => {
     if (!isMapLoaded || !order || !mapContainer.current) return;
@@ -220,18 +227,17 @@ export default function ShipmentDetail() {
       points.push([driverLat, driverLng]);
     }
 
-    // Fetch Route & Perform Deviation Analysis
+    // Fetch Free OSRM Route & Perform Deviation Analysis
     if (order.pickup?.lat && validDropoffs.length > 0 && validDropoffs[0].lat) {
       const fetchRoute = async () => {
         try {
-          if (!LOCATIONIQ_API_KEY) throw new Error("LocationIQ API Key missing");
           const coords = [order.pickup, ...validDropoffs].map(s => `${s.lng},${s.lat}`).join(';');
-          const res = await fetch(`https://us1.locationiq.com/v1/directions/driving/${coords}?key=${LOCATIONIQ_API_KEY}&geometries=geojson&overview=full`);
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?geometries=geojson&overview=full`);
           
           if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-          
           const data = await res.json();
-          if (data.code === 'Ok') {
+          
+          if (data.code === 'Ok' && map.current) {
             const routeCoords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
             
             routeLayer.current = L.polyline(routeCoords, {
@@ -241,37 +247,39 @@ export default function ShipmentDetail() {
               lineJoin: 'round'
             }).addTo(map.current);
             
-            // Distance-Variance Algorithm (Deviation Detection)
+            // Feature 4: Distance-Variance Algorithm (Deviation Detection)
             if (driverLat && driverLng) {
               const driverLatLng = L.latLng(driverLat, driverLng);
               let minDistance = Infinity;
-              routeLayer.current.getLatLngs().forEach(ll => {
+              
+              const latlngs = routeLayer.current.getLatLngs();
+              const flatLatLngs = Array.isArray(latlngs[0]) ? latlngs.flat() : latlngs;
+              
+              flatLatLngs.forEach(ll => {
                 const dist = map.current.distance(driverLatLng, ll);
                 if (dist < minDistance) minDistance = dist;
               });
               
               // Trigger deviation alert if driver is more than 500 meters off optimal route
-              if (minDistance > 500) {
-                setRouteDeviation(true);
-              } else {
-                setRouteDeviation(false);
-              }
+              setRouteDeviation(minDistance > 500);
             }
 
             map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
           }
         } catch (err) {
-          console.warn("Route API limits hit, gracefully falling back to point bounds.", err.message);
-          if (points.length > 1) map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
+          console.warn("Route API failed, gracefully falling back to point bounds.", err.message);
+          if (points.length > 1 && map.current) {
+            map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
+          }
         }
       };
       fetchRoute();
-    } else if (points.length > 1) {
+    } else if (points.length > 1 && map.current) {
       map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
     }
 
     setTimeout(() => map.current?.invalidateSize(), 200);
-  }, [order, isMapLoaded, mapTheme, LOCATIONIQ_API_KEY, isSheetExpanded]);
+  }, [order, isMapLoaded, mapTheme, isSheetExpanded]);
 
   // ============================================================================
   // HANDLERS & FORMATTING
@@ -315,6 +323,10 @@ export default function ShipmentDetail() {
   const handleRecenter = () => {
     if (map.current && routeLayer.current) {
       map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
+    } else if (map.current && order) {
+      const p = order.pickup;
+      const d = dropoffsArray[0];
+      if (p && d) map.current.fitBounds(L.latLngBounds([[p.lat, p.lng], [d.lat, d.lng]]), { padding: [100, 100] });
     }
   };
 
@@ -326,7 +338,7 @@ export default function ShipmentDetail() {
     <div className="relative w-full h-[100dvh] bg-[#F2F4F7] overflow-hidden font-sans">
       
       {/* ========================================================= */}
-      {/* 100VH IMMERSIVE MAP CANVAS */}
+      {/* SECTION 1: 100VH IMMERSIVE MAP CANVAS */}
       {/* ========================================================= */}
       <div ref={mapContainer} className="absolute inset-0 z-0 bg-[#e5e7eb]" />
 
@@ -338,7 +350,7 @@ export default function ShipmentDetail() {
       </button>
 
       {/* ========================================================= */}
-      {/* DRAGGABLE BOTTOM SHEET & FLOATING UI */}
+      {/* SECTION 2: DRAGGABLE BOTTOM SHEET & FLOATING UI */}
       {/* ========================================================= */}
       <motion.div 
         drag="y"
@@ -386,13 +398,13 @@ export default function ShipmentDetail() {
         {/* Expandable Sheet Content */}
         <div className="bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] pointer-events-auto flex flex-col p-5 h-[65vh] border-t border-gray-100">
           
-          {/* Drag Handle */}
+          {/* SECTION 3: Drag Handle */}
           <div 
             onClick={() => setIsSheetExpanded(!isSheetExpanded)}
             className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5 cursor-pointer hover:bg-gray-300 transition-colors" 
           />
 
-          {/* ACTION BAR: Communication & Safety */}
+          {/* SECTION 4: ACTION BAR: Communication & Safety */}
           <div className="flex gap-2 mb-5">
             <button 
               onClick={handleCallDriver}
@@ -414,6 +426,7 @@ export default function ShipmentDetail() {
             </button>
           </div>
           
+          {/* SECTION 5: SEGMENTED DATA VIEWS */}
           <OrderSegmentedToggle 
             tabs={TABS} 
             activeTab={activeTab} 
