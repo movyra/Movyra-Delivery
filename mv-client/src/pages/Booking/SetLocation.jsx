@@ -16,9 +16,11 @@ import useBookingStore from '../../store/useBookingStore';
 import useLocationStore from '../../store/useLocationStore';
 import useMapSettingsStore from '../../store/useMapSettingsStore';
 
-// Services & Overlays
+// Services, Overlays & DB
 import { MAP_LAYERS } from '../../services/mapLayers';
 import { reverseGeocodeWithCache } from '../../services/geocodeCache';
+import { auth } from '../../services/firebaseAuth';
+import { getFirestore, collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 // New Split-Screen Components (Target UI Image Match)
 import FloatingLocationCard from '../../components/Map/FloatingLocationCard';
@@ -28,11 +30,10 @@ import LocationInputCards from '../../components/Map/LocationInputCards';
  * PAGE: SET LOCATION (SPLIT-SCREEN CARD UI)
  * Features: 
  * - 45vh/55vh Strict Split-Screen Layout
- * - Absolute Header & Logo Eradication
- * - Overlapping Floating Location Blue Card
+ * - HTML5 Geolocation API (Auto-GPS)
+ * - AI Frequent Routes Auto-fill (Firestore History parsing)
  * - Isolated Circular Map Controls using LineIconRegistry
  * - Auto-Fitting Bounds & Polyline Snapping
- * - Strict Null-Safety for Array Iterations
  */
 
 const CATEGORY_CHIPS = [
@@ -50,10 +51,11 @@ export default function SetLocation() {
   const markersGroup = useRef(null);
   const routeLayer = useRef(null);
   const programmaticMoveRef = useRef(false);
+  const db = getFirestore();
   
   // Global States
   const { pickup, dropoffs, setPickup, updateDropoff } = useBookingStore();
-  const { fetchCurrentLocation, currentLocation, isLocating } = useLocationStore();
+  const { currentLocation } = useLocationStore();
   const { mapTheme } = useMapSettingsStore();
 
   // Local UI State
@@ -64,6 +66,8 @@ export default function SetLocation() {
   const [routeError, setRouteError] = useState('');
   
   // Advanced Feature States
+  const [isLocatingLocal, setIsLocatingLocal] = useState(false);
+  const [frequentRoutes, setFrequentRoutes] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [selectedPin, setSelectedPin] = useState(null); 
@@ -106,6 +110,77 @@ export default function SetLocation() {
     };
     loadLeafletAssets();
   }, []);
+
+  // ============================================================================
+  // AI FEATURE: PARSE HISTORICAL ORDERS FOR FREQUENT ROUTES
+  // ============================================================================
+  useEffect(() => {
+    const fetchFrequentRoutes = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        const q = query(collection(db, 'orders'), where('userId', '==', user.uid), limit(25));
+        const snapshot = await getDocs(q);
+        const addressCounts = {};
+        
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const drops = Array.isArray(data.dropoffs) ? data.dropoffs : (data.dropoff ? [data.dropoff] : []);
+          drops.forEach(d => {
+            if (d && d.address && d.address.length > 5) {
+              addressCounts[d.address] = (addressCounts[d.address] || 0) + 1;
+            }
+          });
+        });
+
+        // Sort by frequency and extract top 3 unique routes
+        const sortedRoutes = Object.entries(addressCounts)
+          .sort(([,a], [,b]) => b - a)
+          .map(([address]) => address)
+          .slice(0, 3);
+          
+        setFrequentRoutes(sortedRoutes);
+      } catch (err) {
+        console.error("AI Auto-fill Error (Frequent Routes):", err);
+      }
+    };
+    fetchFrequentRoutes();
+  }, [db]);
+
+  // ============================================================================
+  // NATIVE HTML5 GEOLOCATION API (AUTO-GPS)
+  // ============================================================================
+  const handleLocateMe = () => {
+    if (!navigator.geolocation) {
+      setRouteError("Geolocation is not supported by your browser.");
+      return;
+    }
+    
+    setIsLocatingLocal(true);
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      try {
+        const address = await reverseGeocodeWithCache(latitude, longitude);
+        const locData = { lat: latitude, lng: longitude, address };
+        
+        if (activeField === 'pickup') setPickup(locData);
+        else updateDropoff(activeField, locData);
+        
+        if (map.current) {
+          programmaticMoveRef.current = true;
+          map.current.setView([latitude, longitude], 16);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLocatingLocal(false);
+      }
+    }, (error) => {
+      console.error(error);
+      setIsLocatingLocal(false);
+      setRouteError("Please enable location permissions in your browser settings.");
+    }, { enableHighAccuracy: true, timeout: 10000 });
+  };
 
   // ============================================================================
   // OPENSTREETMAP INITIALIZATION & LOCKED PANNING LOGIC
@@ -161,24 +236,11 @@ export default function SetLocation() {
     setTimeout(() => map.current?.invalidateSize(), 100);
   }, [isMapLoaded, activeField]);
 
-  // Handle Dynamic Map Layer (Theme) Changes
   useEffect(() => {
     if (map.current && tileLayerRef.current) {
       tileLayerRef.current.setUrl(MAP_LAYERS[mapTheme] || MAP_LAYERS.standard);
     }
   }, [mapTheme]);
-
-  // GPS Sync
-  useEffect(() => {
-    if (currentLocation && map.current) {
-      programmaticMoveRef.current = true;
-      map.current.setView([currentLocation.lat, currentLocation.lng], 16);
-      
-      const locData = { lat: currentLocation.lat, lng: currentLocation.lng, address: 'Current Location' };
-      if (activeField === 'pickup') setPickup(locData);
-      else updateDropoff(activeField, locData);
-    }
-  }, [currentLocation]);
 
   // ============================================================================
   // CUSTOM INTERACTIVE MARKERS
@@ -200,7 +262,6 @@ export default function SetLocation() {
     }
 
     dropoffs.forEach((drop, idx) => {
-      // STRICT NULL CHECK ADDED
       if (drop && drop.lat && activeField !== idx) {
         const dropIcon = L.divIcon({
           className: '',
@@ -239,7 +300,6 @@ export default function SetLocation() {
     const fetchRoute = async () => {
       if (!map.current || !window.L) return;
       const L = window.L;
-      // STRICT NULL CHECK ALREADY PRESENT HERE
       const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
 
       if (pickup?.lat && validDropoffs.length > 0) {
@@ -272,7 +332,6 @@ export default function SetLocation() {
 
             if (routeLayer.current) map.current.removeLayer(routeLayer.current);
             
-            // Highly visible polyline responsive to theme
             routeLayer.current = L.polyline(routeCoords, {
               color: ['dark', 'satellite'].includes(mapTheme) ? '#4dabf7' : '#111111',
               weight: 5,
@@ -281,7 +340,6 @@ export default function SetLocation() {
               interactive: true
             }).addTo(map.current);
 
-            // FEATURE: Map Auto-Fitting
             if (!programmaticMoveRef.current) {
               programmaticMoveRef.current = true;
               map.current.fitBounds(routeLayer.current.getBounds(), {
@@ -290,7 +348,6 @@ export default function SetLocation() {
               });
             }
 
-            // FEATURE: Route Snapping
             routeLayer.current.on('click', async (e) => {
               const { lat, lng } = e.latlng;
               const storeState = useBookingStore.getState();
@@ -329,7 +386,6 @@ export default function SetLocation() {
   // AUTO-ROUTE OPTIMIZATION (OSRM Trip API)
   // ============================================================================
   const handleOptimizeRoute = async () => {
-    // STRICT NULL CHECK ALREADY PRESENT HERE
     const validDropoffs = dropoffs.filter(d => d && d.lat !== null && d.lat !== 0);
     if (validDropoffs.length < 2 || !pickup?.lat) return;
 
@@ -423,12 +479,11 @@ export default function SetLocation() {
     <div className="relative w-full h-[100dvh] bg-[#F2F4F7] overflow-hidden font-sans flex flex-col">
       
       {/* ========================================================= */}
-      {/* TOP HALF: 45vh MAP CANVAS (STRICT HEADER ERADICATION) */}
+      {/* TOP HALF: 45vh MAP CANVAS */}
       {/* ========================================================= */}
       <div className="relative w-full h-[45vh] shrink-0 z-10">
         <div ref={mapContainer} className="absolute inset-0 bg-[#e5e7eb]" />
 
-        {/* Top Left Interaction Button */}
         <button 
           onClick={() => navigate(-1)} 
           className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
@@ -436,7 +491,6 @@ export default function SetLocation() {
           <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
         </button>
 
-        {/* Top Right Interaction Button (Custom Line Art Search) */}
         <button 
           onClick={() => setIsSearchOpen(true)} 
           className="absolute top-12 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
@@ -444,16 +498,15 @@ export default function SetLocation() {
           <LineIconRegistry name="search" size={20} strokeWidth={2.5} />
         </button>
 
-        {/* Current Location Quick Action */}
+        {/* SECURE HTML5 GEOLOCATION API BUTTON */}
         <button 
-          onClick={() => fetchCurrentLocation()} 
-          disabled={isLocating} 
+          onClick={handleLocateMe} 
+          disabled={isLocatingLocal} 
           className="absolute top-28 right-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all disabled:opacity-50"
         >
-          {isLocating ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
+          {isLocatingLocal ? <Loader2 size={20} className="animate-spin" /> : <Crosshair size={20} strokeWidth={2.5} />}
         </button>
 
-        {/* DRAGGABLE CENTER TARGET PIN */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex items-center justify-center">
           <div className="relative flex items-center justify-center">
             {activeField === 'pickup' ? (
@@ -467,7 +520,6 @@ export default function SetLocation() {
           </div>
         </div>
 
-        {/* OVERLAPPING FLOATING CARD */}
         <div className="absolute -bottom-8 left-5 right-5 z-[2000]">
           <FloatingLocationCard activeField={activeField} isResolving={isResolvingAddress} />
         </div>
@@ -478,14 +530,12 @@ export default function SetLocation() {
       {/* ========================================================= */}
       <div className="flex-1 overflow-y-auto pt-14 pb-8 px-5 space-y-4 z-0 relative">
         
-        {/* Render Modular Input Cards */}
         <LocationInputCards 
           activeField={activeField} 
           onFocusField={focusField} 
           onOpenSearch={() => setIsSearchOpen(true)} 
         />
 
-        {/* Action Controls */}
         <div className="pt-2 space-y-3">
           {routeError && (
             <div className="bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 shadow-sm">
@@ -493,7 +543,6 @@ export default function SetLocation() {
             </div>
           )}
 
-          {/* STRICT NULL CHECK ADDED HERE TO PREVENT CRASH */}
           {dropoffs.length > 1 && dropoffs.filter(d => d && d.lat).length > 1 && (
             <SystemButton 
               onClick={handleOptimizeRoute} 
@@ -506,7 +555,6 @@ export default function SetLocation() {
             </SystemButton>
           )}
 
-          {/* STRICT NULL CHECK ADDED HERE TO PREVENT CRASH */}
           <SystemButton 
             onClick={() => navigate('/booking/select-vehicle')} 
             disabled={!pickup?.lat || dropoffs.some(d => !d || !d.lat) || !!routeError} 
@@ -518,7 +566,7 @@ export default function SetLocation() {
       </div>
 
       {/* ========================================================= */}
-      {/* SEARCH MODAL WITH VOICE SUPPORT */}
+      {/* SEARCH MODAL WITH VOICE SUPPORT & AI AUTO-FILL */}
       {/* ========================================================= */}
       <AnimatePresence>
         {isSearchOpen && (
@@ -566,13 +614,40 @@ export default function SetLocation() {
                 </div>
               )}
 
+              {/* AI FREQUENT ROUTES INJECTION */}
               {!isListening && predictions.length === 0 && searchQuery.length < 3 && (
-                <div className="flex flex-wrap gap-2">
-                  {CATEGORY_CHIPS.map(chip => (
-                    <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="px-5 py-3 bg-white shadow-sm border border-gray-100 rounded-full text-[14px] font-bold text-[#111111] flex items-center gap-2 active:scale-95 transition-all">
-                      <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
-                    </button>
-                  ))}
+                <div className="space-y-6">
+                  {frequentRoutes.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3 px-1">
+                        <Wand2 size={16} className="text-[#276EF1]" strokeWidth={2.5} />
+                        <span className="text-[12px] font-black text-gray-400 uppercase tracking-widest">AI Suggested Routes</span>
+                      </div>
+                      <div className="bg-white border border-gray-100 rounded-[24px] shadow-sm overflow-hidden p-2">
+                        {frequentRoutes.map((route, i) => (
+                          <button key={i} onClick={() => setSearchQuery(route)} className="w-full text-left px-4 py-3 rounded-[16px] hover:bg-[#F6F6F6] flex items-center gap-3 transition-colors">
+                            <div className="w-8 h-8 rounded-full bg-[#F2F4F7] flex items-center justify-center text-[#276EF1] shrink-0">
+                              <Clock size={16} strokeWidth={2.5} />
+                            </div>
+                            <span className="block text-[14px] font-bold text-[#111111] truncate">{route}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-3 px-1">
+                      <span className="text-[12px] font-black text-gray-400 uppercase tracking-widest">Explore Places</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {CATEGORY_CHIPS.map(chip => (
+                        <button key={chip.id} onClick={() => setSearchQuery(chip.query)} className="px-5 py-3 bg-white shadow-sm border border-gray-100 rounded-full text-[14px] font-bold text-[#111111] flex items-center gap-2 active:scale-95 transition-all">
+                          <chip.icon size={16} className="text-gray-500" strokeWidth={2.5} /> {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -580,7 +655,7 @@ export default function SetLocation() {
         )}
       </AnimatePresence>
 
-      {/* MARKER CONTACT MODAL (Clicking a pin) */}
+      {/* MARKER CONTACT MODAL */}
       <AnimatePresence>
         {selectedPin !== null && (
           <motion.div 
