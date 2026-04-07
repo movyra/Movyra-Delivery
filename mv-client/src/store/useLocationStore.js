@@ -8,7 +8,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 // Features graceful fallbacks to prevent fatal crashes on GPS denial.
 // ============================================================================
 
-// Default safe coordinate fallback (New York City)
+// Default safe coordinate fallback
 const FALLBACK_LOCATION = {
   lat: 40.7128,
   lng: -74.0060,
@@ -68,7 +68,6 @@ const useLocationStore = create(
               });
             },
             (error) => {
-              console.error("GPS Hardware Error:", error);
               let errorMessage = 'Failed to fetch location. Using default.';
               
               switch (error.code) {
@@ -82,6 +81,9 @@ const useLocationStore = create(
                   errorMessage = 'Location request timed out. Using default.';
                   break;
               }
+              
+              // STRICT FIX: Log as info/warn to prevent red console spam
+              console.info("GPS Access Intercepted:", errorMessage);
               
               // Graceful Fallback injection instead of crashing
               set({ 
@@ -97,7 +99,7 @@ const useLocationStore = create(
             }
           );
         } catch (err) {
-          console.error("Unexpected GPS Error:", err);
+          console.warn("Unexpected GPS Error intercepted:", err);
           set({ 
             currentLocation: FALLBACK_LOCATION,
             isLocating: false, 
