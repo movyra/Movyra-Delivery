@@ -6,7 +6,15 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Change to 'prompt' to allow controlled update cycles
+      registerType: 'prompt',
+      // Workbox configuration to force immediate activation and cache purge
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json}']
+      },
       manifest: {
         name: 'Movyra by Bongo',
         short_name: 'Movyra',
@@ -32,7 +40,6 @@ export default defineConfig({
   ],
   optimizeDeps: {
     // Explicitly pre-bundle heavy dependencies to prevent 504 Gateway Timeouts during lazy loading transitions.
-    // Removed 'mapbox-gl' and replaced with 'leaflet' for OpenStreetMap stability.
     include: ['@emailjs/browser', 'leaflet', 'axios', 'framer-motion', 'lucide-react']
   },
   server: {

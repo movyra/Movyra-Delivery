@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -21,14 +21,18 @@ import LineIconRegistry from '../../components/Icons/LineIconRegistry';
 /**
  * PAGE: MOBILE HOME DASHBOARD (PREMIUM CARD UI)
  * Features: 
- * - Stark Headerless Navigation (Pure Typography)
+ * - DUAL-PATH MERGING: Synchronizes Legacy Root and New Secure Tenant paths for activity.
+ * - Stark Headerless Navigation
  * - Massively Rounded "Where to?" Floating Action Card
- * - Exact 3-Icon Row (Rides, Eats, Scooter)
- * - Light-Blue Active Dispatch Banner
- * - OrderInfoListCard Paradigm for Recent Activity
  * - Real-time Firestore Sync for Wallet & Orders
- * - DARK MODE & i18n: 100% Global compliance wired
+ * - DARK MODE & i18n compliant
  */
+
+const getAppId = () => {
+  if (typeof window !== 'undefined' && window.__app_id) return window.__app_id;
+  if (typeof __app_id !== 'undefined') return __app_id;
+  return 'default-app-id';
+};
 
 export default function MobileHome() {
   const navigate = useNavigate();
@@ -42,58 +46,49 @@ export default function MobileHome() {
   // Real-time Data States
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [activeShipmentsCount, setActiveShipmentsCount] = useState(0);
   const [accountBalance, setAccountBalance] = useState(0);
-  const [recentActivity, setRecentActivity] = useState([]);
+  
+  // Dual-Path Data Storage
+  const [secureOrders, setSecureOrders] = useState([]);
+  const [legacyOrders, setLegacyOrders] = useState([]);
 
   // ============================================================================
-  // LOGIC: REAL-TIME FIRESTORE DATA STREAMS
+  // LOGIC: DUAL-PATH REAL-TIME DATA STREAMS
   // ============================================================================
   useEffect(() => {
     let unsubscribeUser;
-    let unsubscribeOrders;
+    let unsubscribeSecure;
+    let unsubscribeLegacy;
 
     const authUnsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         const firstName = user.displayName ? user.displayName.split(' ')[0] : 'User';
+        const appId = getAppId();
         setUserName(firstName);
 
         // STREAM 1: Real-time Wallet Balance
-        const userRef = doc(db, 'artifacts', typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id', 'users', user.uid);
+        const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
         unsubscribeUser = onSnapshot(userRef, (docSnap) => {
           if (docSnap.exists()) {
             setAccountBalance(docSnap.data().walletBalance || 0);
           }
         }, (err) => console.error("Wallet Stream Error:", err));
 
-        // STREAM 2: Real-time Logistics & Activity
-        const ordersRef = collection(db, 'artifacts', typeof window.__app_id !== 'undefined' ? window.__app_id : 'default-app-id', 'users', user.uid, 'orders');
-        const ordersQuery = query(
-          ordersRef, 
-          orderBy('createdAt', 'desc'),
-          limit(5)
-        );
-
-        unsubscribeOrders = onSnapshot(ordersQuery, (snapshot) => {
-          const fetchedOrders = [];
-          let activeCount = 0;
-          
-          snapshot.docs.forEach(docSnap => {
-            const data = docSnap.data();
-            fetchedOrders.push({ id: docSnap.id, ...data });
-            
-            // Calculate active pipeline statuses
-            if (['searching', 'assigned', 'picked_up'].includes(data.status)) {
-              activeCount++;
-            }
-          });
-
-          setRecentActivity(fetchedOrders);
-          setActiveShipmentsCount(activeCount);
+        // STREAM 2: Secure Tenant Orders
+        const secureRef = collection(db, 'artifacts', appId, 'users', user.uid, 'orders');
+        const qSecure = query(secureRef, orderBy('createdAt', 'desc'), limit(5));
+        unsubscribeSecure = onSnapshot(qSecure, (snapshot) => {
+          const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'secure' }));
+          setSecureOrders(docs);
           setIsLoading(false);
-        }, (error) => {
-          console.error("Orders Stream Error:", error);
-          setIsLoading(false);
+        });
+
+        // STREAM 3: Legacy Root Orders (Restore visibility of previous bookings)
+        const legacyRef = collection(db, 'orders');
+        const qLegacy = query(legacyRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5));
+        unsubscribeLegacy = onSnapshot(qLegacy, (snapshot) => {
+          const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'legacy' }));
+          setLegacyOrders(docs);
         });
 
       } else {
@@ -105,9 +100,41 @@ export default function MobileHome() {
     return () => {
       authUnsubscribe();
       if (unsubscribeUser) unsubscribeUser();
-      if (unsubscribeOrders) unsubscribeOrders();
+      if (unsubscribeSecure) unsubscribeSecure();
+      if (unsubscribeLegacy) unsubscribeLegacy();
     };
   }, [auth, db, language]);
+
+  // ============================================================================
+  // COMPOSITE ACTIVITY ENGINE: DEDUPLICATION & METRICS
+  // ============================================================================
+  const { recentActivity, activeShipmentsCount } = useMemo(() => {
+    const combined = [...secureOrders, ...legacyOrders];
+    const uniqueMap = new Map();
+    
+    // Deduplicate by ID
+    combined.forEach(order => {
+      if (!uniqueMap.has(order.id) || order._source === 'secure') {
+        uniqueMap.set(order.id, order);
+      }
+    });
+
+    const deduped = Array.from(uniqueMap.values());
+    
+    // Sort and Limit
+    const sorted = deduped.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+
+    const limited = sorted.slice(0, 5);
+
+    // Calculate Active Pipeline
+    const activeCount = deduped.filter(o => ['searching', 'assigned', 'picked_up'].includes(o.status)).length;
+
+    return { recentActivity: limited, activeShipmentsCount: activeCount };
+  }, [secureOrders, legacyOrders]);
 
   // Dynamic Time Greeting (Translated)
   const getGreeting = () => {
@@ -134,9 +161,6 @@ export default function MobileHome() {
     }
   };
 
-  // ============================================================================
-  // RENDER UI
-  // ============================================================================
   return (
     <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans pb-32 overflow-x-hidden relative transition-colors duration-300">
       
@@ -184,7 +208,6 @@ export default function MobileHome() {
           </div>
         </button>
 
-        {/* 3-Icon Row (Rides, Eats, Scooter) */}
         <div className="flex justify-between px-2 text-[#111111] dark:text-white">
           <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/booking/set-location')}>
             <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
@@ -192,14 +215,12 @@ export default function MobileHome() {
             </div>
             <span className="text-[14px] font-black tracking-tight">{t('Rides', language)}</span>
           </div>
-          
           <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
             <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
               <LineIconRegistry name="food" size={36} color="currentColor" strokeWidth={1.5} />
             </div>
             <span className="text-[14px] font-black tracking-tight">{t('Eats', language)}</span>
           </div>
-          
           <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
             <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
               <LineIconRegistry name="scooter" size={36} color="currentColor" strokeWidth={1.5} />
@@ -209,7 +230,7 @@ export default function MobileHome() {
         </div>
       </motion.div>
 
-      {/* SECTION 3: Active Dispatch (Uber-Style Floating Pill) */}
+      {/* SECTION 3: Active Dispatch Pill */}
       <AnimatePresence>
         {activeShipmentsCount > 0 && (
           <motion.div
@@ -254,7 +275,6 @@ export default function MobileHome() {
           </div>
           <span className="text-[15px] font-black tracking-tight">{t('Saved Places', language)}</span>
         </button>
-        
         <button 
           onClick={() => navigate('/order-history')}
           className="bg-white dark:bg-[#1A1A1A] p-5 rounded-[28px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50 dark:border-[#333333] flex flex-col items-start gap-4 active:scale-95 transition-all text-[#111111] dark:text-white"
@@ -264,10 +284,7 @@ export default function MobileHome() {
           </div>
           <span className="text-[15px] font-black tracking-tight">{t('Orders', language)}</span>
         </button>
-
-        <button 
-          className="bg-[#111111] dark:bg-[#000000] p-6 rounded-[32px] shadow-[0_10px_25px_rgba(0,0,0,0.15)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden dark:border dark:border-[#333333]"
-        >
+        <button className="bg-[#111111] dark:bg-[#000000] p-6 rounded-[32px] shadow-[0_10px_25px_rgba(0,0,0,0.15)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden dark:border dark:border-[#333333]">
           <div className="flex items-center justify-between w-full relative z-10">
             <div className="flex flex-col text-left">
               <span className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('Movyra Wallet', language)}</span>
@@ -282,7 +299,7 @@ export default function MobileHome() {
         </button>
       </motion.div>
 
-      {/* SECTION 5: Recent Activity (OrderInfoListCard Aesthetic) */}
+      {/* SECTION 5: Recent Activity (Dual-Path Merged) */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
         className="px-6"
@@ -309,7 +326,7 @@ export default function MobileHome() {
             recentActivity.map(order => {
               const config = getStatusConfig(order.status);
               const StatusIcon = config.icon;
-              const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+              const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || 0);
               const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
               
               return (
@@ -327,16 +344,20 @@ export default function MobileHome() {
                         <span className="text-[16px] font-black text-[#111111] dark:text-white tracking-tight truncate block transition-colors">
                           {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address?.split(',')[0] : order.dropoff?.address?.split(',')[0] || 'Delivery'}
                         </span>
-                        <span className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide transition-colors">
-                          {order.id.slice(-8).toUpperCase()}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide transition-colors">
+                            {order.id.slice(-8).toUpperCase()}
+                          </span>
+                          {order._source === 'legacy' && (
+                            <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Legacy</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 transition-colors ${config.bg} ${config.text}`}>
                       {config.label}
                     </span>
                   </div>
-                  
                   <div className="flex items-end justify-between mt-1">
                     <div>
                       <p className="text-[14px] font-bold text-gray-500 dark:text-gray-400 transition-colors">
