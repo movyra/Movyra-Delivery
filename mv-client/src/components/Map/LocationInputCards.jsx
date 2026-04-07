@@ -1,16 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Navigation, ArrowDownUp, Plus, X } from 'lucide-react';
+import { Search, Navigation, ArrowDownUp, Plus, X, Camera } from 'lucide-react';
+
+// Real Store, Prefs & Services Integration
 import useBookingStore from '../../store/useBookingStore';
+import usePreferencesStore from '../../store/usePreferencesStore';
+import { t } from '../../utils/translations';
+
+// Hardware Features
+import SmartScanner from '../Tracking/SmartScanner';
 
 /**
  * UI COMPONENT: LOCATION INPUT CARDS
  * Replicates the detached, highly-rounded white cards from the lower half of the reference image.
  * Replaces the old continuous timeline with distinct, premium floating blocks.
  * Implements strict null-safety arrays to prevent undefined 'address' crashes.
+ * DARK MODE & i18n: Fully wired global compliance.
+ * FEATURE INJECTION: SmartScanner (Camera OCR) for physical label reading.
  */
 export default function LocationInputCards({ activeField, onFocusField, onOpenSearch }) {
   const { pickup, dropoffs, setPickup, updateDropoff, removeDropoff, addDropoff } = useBookingStore();
+  const { language } = usePreferencesStore();
+
+  // Hardware Scanner State
+  const [scannerTarget, setScannerTarget] = useState(null); // 'pickup' | number (dropoff index)
 
   // STRICT FAILSAFES: Prevent undefined array mapping crashes
   const safePickup = pickup || { address: '', lat: null, lng: null };
@@ -26,6 +39,19 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
     }
   };
 
+  // OCR Auto-fill Callback
+  const handleScanCapture = (text) => {
+    if (!text) return;
+    if (scannerTarget === 'pickup') {
+      setPickup({ ...safePickup, address: text });
+      onFocusField('pickup');
+    } else if (typeof scannerTarget === 'number') {
+      updateDropoff(scannerTarget, { ...safeDropoffs[scannerTarget], address: text });
+      onFocusField(scannerTarget);
+    }
+    setScannerTarget(null);
+  };
+
   return (
     <div className="w-full flex flex-col gap-3 font-sans relative">
       
@@ -33,30 +59,38 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
       <motion.div 
         whileTap={{ scale: 0.98 }}
         onClick={() => onFocusField('pickup')}
-        className={`bg-white rounded-[32px] p-5 flex items-center gap-4 cursor-pointer transition-all border-2 ${activeField === 'pickup' ? 'border-[#111111] shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.03)]'}`}
+        className={`bg-white dark:bg-[#1A1A1A] rounded-[32px] p-5 flex items-center gap-4 cursor-pointer transition-all border-2 ${activeField === 'pickup' ? 'border-[#111111] dark:border-white shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.03)] dark:border-[#333333]'}`}
       >
-        <div className="w-[46px] h-[46px] rounded-full bg-[#F2F4F7] flex items-center justify-center shrink-0">
-          <Navigation size={20} className="text-black rotate-45" strokeWidth={2.5} />
+        <div className="w-[46px] h-[46px] rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center shrink-0 transition-colors">
+          <Navigation size={20} className="text-[#111111] dark:text-white rotate-45 transition-colors" strokeWidth={2.5} />
         </div>
         <div className="flex-1 overflow-hidden">
-          <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Pickup</span>
-          <span className="block text-[16px] font-black text-black truncate leading-none">
-            {safePickup?.address || 'Where from?'}
+          <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 transition-colors">{t('Pickup', language)}</span>
+          <span className="block text-[16px] font-black text-[#111111] dark:text-white truncate leading-none transition-colors">
+            {safePickup?.address || t('Where from?', language)}
           </span>
         </div>
-        <button 
-          onClick={(e) => { e.stopPropagation(); onFocusField('pickup'); onOpenSearch(); }}
-          className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 transition-colors shrink-0"
-        >
-          <Search size={18} strokeWidth={2.5} />
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button 
+            onClick={(e) => { e.stopPropagation(); setScannerTarget('pickup'); }}
+            className="w-10 h-10 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors"
+          >
+            <Camera size={18} strokeWidth={2.5} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onFocusField('pickup'); onOpenSearch(); }}
+            className="w-10 h-10 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors"
+          >
+            <Search size={18} strokeWidth={2.5} />
+          </button>
+        </div>
       </motion.div>
 
       {/* DETACHED SWAP BUTTON */}
       <div className="relative h-2 flex items-center justify-center -my-1 z-10">
         <button 
           onClick={handleSwapRoute}
-          className="w-[36px] h-[36px] bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center justify-center text-gray-500 hover:text-black active:scale-95 transition-all border border-gray-100"
+          className="w-[36px] h-[36px] bg-white dark:bg-[#222222] rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white active:scale-95 transition-all border border-gray-100 dark:border-gray-800"
         >
           <ArrowDownUp size={16} strokeWidth={2.5} />
         </button>
@@ -75,15 +109,15 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
               exit={{ opacity: 0, scale: 0.95, height: 0 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onFocusField(idx)}
-              className={`bg-white rounded-[32px] p-5 flex items-center gap-4 cursor-pointer transition-all border-2 ${activeField === idx ? 'border-[#111111] shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.03)]'}`}
+              className={`bg-white dark:bg-[#1A1A1A] rounded-[32px] p-5 flex items-center gap-4 cursor-pointer transition-all border-2 ${activeField === idx ? 'border-[#111111] dark:border-white shadow-[0_8px_20px_rgba(0,0,0,0.06)]' : 'border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.03)] dark:border-[#333333]'}`}
             >
-              <div className="w-[46px] h-[46px] rounded-full bg-[#111111] flex items-center justify-center shrink-0 shadow-md">
-                <span className="text-white text-[15px] font-black">{idx + 1}</span>
+              <div className="w-[46px] h-[46px] rounded-full bg-[#111111] dark:bg-white flex items-center justify-center shrink-0 shadow-md transition-colors">
+                <span className="text-white dark:text-[#111111] text-[15px] font-black">{idx + 1}</span>
               </div>
               <div className="flex-1 overflow-hidden">
-                <span className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Dropoff</span>
-                <span className="block text-[16px] font-black text-black truncate leading-none">
-                  {safeDrop?.address || 'Where to?'}
+                <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1 transition-colors">{t('Dropoff', language)}</span>
+                <span className="block text-[16px] font-black text-[#111111] dark:text-white truncate leading-none transition-colors">
+                  {safeDrop?.address || t('Where to?', language)}
                 </span>
               </div>
               
@@ -91,14 +125,20 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
                 {safeDropoffs.length > 1 && (
                   <button 
                     onClick={(e) => { e.stopPropagation(); removeDropoff(idx); onFocusField('pickup'); }}
-                    className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
+                    className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-500 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                   >
                     <X size={18} strokeWidth={2.5} />
                   </button>
                 )}
                 <button 
+                  onClick={(e) => { e.stopPropagation(); setScannerTarget(idx); }}
+                  className="w-10 h-10 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors"
+                >
+                  <Camera size={18} strokeWidth={2.5} />
+                </button>
+                <button 
                   onClick={(e) => { e.stopPropagation(); onFocusField(idx); onOpenSearch(); }}
-                  className="w-10 h-10 rounded-full bg-[#F2F4F7] flex items-center justify-center text-gray-500 hover:text-black hover:bg-gray-200 transition-colors"
+                  className="w-10 h-10 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white hover:bg-gray-200 dark:hover:bg-[#333333] transition-colors"
                 >
                   <Search size={18} strokeWidth={2.5} />
                 </button>
@@ -117,14 +157,25 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
             addDropoff({ address: '', lat: null, lng: null });
             onFocusField(newIndex);
           }}
-          className="bg-white/50 backdrop-blur-sm border-2 border-dashed border-gray-300 rounded-[32px] p-4 flex items-center justify-center gap-3 cursor-pointer hover:bg-white hover:border-gray-400 transition-all text-gray-500 hover:text-black mt-2"
+          className="bg-white/50 dark:bg-[#1A1A1A]/50 backdrop-blur-sm border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-[32px] p-4 flex items-center justify-center gap-3 cursor-pointer hover:bg-white dark:hover:bg-[#222222] hover:border-gray-400 dark:hover:border-gray-500 transition-all text-gray-500 dark:text-gray-400 hover:text-[#111111] dark:hover:text-white mt-2"
         >
-          <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center shrink-0">
-            <Plus size={16} strokeWidth={3} className="text-black" />
+          <div className="w-8 h-8 rounded-full bg-white dark:bg-[#333333] shadow-sm flex items-center justify-center shrink-0 transition-colors">
+            <Plus size={16} strokeWidth={3} className="text-[#111111] dark:text-white transition-colors" />
           </div>
-          <span className="text-[15px] font-bold">Add another stop</span>
+          <span className="text-[15px] font-bold">{t('Add another stop', language)}</span>
         </motion.div>
       )}
+
+      {/* HARDWARE OVERLAY: SMART SCANNER */}
+      <AnimatePresence>
+        {scannerTarget !== null && (
+          <SmartScanner 
+            mode="address" 
+            onCapture={handleScanCapture} 
+            onClose={() => setScannerTarget(null)} 
+          />
+        )}
+      </AnimatePresence>
 
     </div>
   );
