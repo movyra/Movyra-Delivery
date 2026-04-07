@@ -1,12 +1,12 @@
-import React, { useState, useEffect, Suspense, lazy, Component } from 'react';
+import React, { useState, useEffect, Suspense, lazy, Component, useRef } from 'react';
 import { BrowserRouter, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
-// Import initialized auth instance instead of raw getAuth
+// Import initialized auth instance
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebaseAuth';
 
-// SECTION 1: Master Dependencies & Component Injections
+// Master Dependencies & Component Injections
 import MobileAppLayout from './components/MobileAppLayout';
 import OnboardingFlow from './components/Onboarding/OnboardingFlow';
 import BottomNavBar from './components/Navigation/BottomNavBar';
@@ -14,11 +14,7 @@ import NetworkStatus from './components/UI/NetworkStatus';
 import { useOnboardingStore } from './store/useOnboardingStore';
 import usePreferencesStore from './store/usePreferencesStore';
 
-// ============================================================================
-// PERFORMANCE OPTIMIZATION: React Lazy Loading
-// Splitting the bundle to ensure the app loads instantly on weak 3G networks.
-// CRITICAL: Ensure exact case matching for Linux/Codespaces (e.g., Dashboard vs dashboard)
-// ============================================================================
+// React Lazy Loading for Performance
 const MobileLogin = lazy(() => import('./pages/Auth/MobileLogin'));
 const MobileSignup = lazy(() => import('./pages/Auth/MobileSignup'));
 const OTPVerification = lazy(() => import('./pages/Auth/OTPVerification'));
@@ -47,42 +43,22 @@ const SavedAddresses = lazy(() => import('./pages/Profile/SavedAddresses'));
 const HelpCenter = lazy(() => import('./pages/Support/HelpCenter'));
 const InvoiceDashboard = lazy(() => import('./pages/Business/InvoiceDashboard'));
 
-// ============================================================================
-// SECTION 0: STRICT GLOBAL ERROR BOUNDARY
-// Catches Vite chunk load failures (504 Gateway Timeouts) and network drops
-// during dynamic imports, preventing fatal white screens.
-// ============================================================================
+// GLOBAL ERROR BOUNDARY: Prevents fatal white screens during network drops
 class GlobalErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
   }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Global Error Boundary Caught:", error, errorInfo);
-  }
-
+  static getDerivedStateFromError(error) { return { hasError: true }; }
+  componentDidCatch(error, errorInfo) { console.error("Global Error Boundary:", error, errorInfo); }
   render() {
     if (this.state.hasError) {
       return (
         <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#111111] h-screen min-h-screen z-[999] relative px-6 text-center font-sans">
-          {/* Strictly no background behind the logo image */}
-          <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
-          
-          <h1 className="text-[24px] font-black text-black dark:text-white mb-2 tracking-tight">Network Error</h1>
-          <p className="text-[15px] font-bold text-gray-500 mb-8 max-w-[280px] leading-snug">
-            A required module failed to load. Please check your connection and tap to reload.
-          </p>
-          <button 
-            onClick={() => window.location.reload(true)}
-            className="w-full max-w-[280px] bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-bold text-[17px] active:scale-[0.98] transition-transform shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
-          >
-            Tap to Reload
-          </button>
+          <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6" />
+          <h1 className="text-[24px] font-black text-black dark:text-white mb-2">Network Sync Error</h1>
+          <p className="text-[15px] font-bold text-gray-500 mb-8 max-w-[280px]">The update stream was interrupted. Tap below to reconnect.</p>
+          <button onClick={() => window.location.reload(true)} className="w-full max-w-[280px] bg-black dark:bg-white text-white dark:text-black py-4 rounded-full font-bold">Retry Sync</button>
         </div>
       );
     }
@@ -90,51 +66,25 @@ class GlobalErrorBoundary extends Component {
   }
 }
 
-// ============================================================================
-// SHARED LOADING STATE
-// Strictly covers the entire screen to prevent flickering of protected UI.
-// Used for both Auth verification AND Lazy-Loading Suspense.
-// ============================================================================
 const GlobalLoadingScreen = () => (
   <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#111111] h-full min-h-screen z-[300] relative">
-    {/* Strictly no background behind the logo image */}
-    <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6 drop-shadow-sm" />
-    <motion.div 
-      animate={{ rotate: 360 }} 
-      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} 
-      className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full shadow-sm" 
-    />
+    <img src="/logo.png" alt="Movyra" className="w-16 h-16 object-contain mb-6" />
+    <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }} className="w-8 h-8 border-4 border-black dark:border-white border-t-transparent dark:border-t-transparent rounded-full" />
   </div>
 );
 
-// ============================================================================
-// SECTION 7A: ENTERPRISE FIREBASE AUTHENTICATION GUARD (PROTECTED ROUTES)
-// ============================================================================
 const RequireAuthGuard = ({ authStatus }) => {
   if (authStatus === 'loading') return <GlobalLoadingScreen />;
-  return authStatus === 'authenticated' 
-    ? <Outlet /> 
-    : <Navigate to="/auth-login" replace={true} />;
+  return authStatus === 'authenticated' ? <Outlet /> : <Navigate to="/auth-login" replace={true} />;
 };
 
-// ============================================================================
-// SECTION 7B: REVERSE AUTHENTICATION GUARD (GUEST ROUTES)
-// ============================================================================
 const RequireGuestGuard = ({ authStatus }) => {
   if (authStatus === 'loading') return <GlobalLoadingScreen />;
-  return authStatus === 'unauthenticated' 
-    ? <Outlet /> 
-    : <Navigate to="/dashboard-home" replace={true} />;
+  return authStatus === 'unauthenticated' ? <Outlet /> : <Navigate to="/dashboard-home" replace={true} />;
 };
 
-// ============================================================================
-// MAIN VIEWPORT CONTROLLER
-// Handles global auth state, routing, and Bottom NavBar visibility
-// ============================================================================
 const MainViewport = ({ authStatus }) => {
   const location = useLocation();
-  
-  // SECTION 2: Dynamic Navigation Visibility Engine
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === '/' || path === '/dashboard-home') return 'home';
@@ -143,62 +93,39 @@ const MainViewport = ({ authStatus }) => {
     if (path === '/profile-settings') return 'profile';
     return null; 
   };
-
   const activeTab = getActiveTab();
 
   return (
     <div className="flex flex-col h-screen bg-white dark:bg-[#111111] overflow-hidden font-sans relative">
-      
-      {/* SECTION 3: Animated Viewport Controller */}
       <div className="flex-1 overflow-y-auto no-scrollbar relative z-0">
         <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="min-h-full"
-          >
-            {/* Suspense Wrapper for Lazy Loaded Routes */}
+          <motion.div key={location.pathname} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }} className="min-h-full">
             <Suspense fallback={<GlobalLoadingScreen />}>
               <Routes location={location}>
-                
-                {/* GUEST NODE */}
                 <Route element={<RequireGuestGuard authStatus={authStatus} />}>
                   <Route path="/auth-login" element={<MobileLogin />} />
                   <Route path="/auth-signup" element={<MobileSignup />} />
                   <Route path="/auth/otp" element={<OTPVerification />} />
                   <Route path="/auth/set-password" element={<SetPassword />} />
                 </Route>
-                
-                {/* PROTECTED NODE */}
                 <Route element={<RequireAuthGuard authStatus={authStatus} />}>
                   <Route element={<MobileAppLayout title="Movyra" />}>
                     <Route path="/" element={<MobileHome />} />
                     <Route path="/dashboard-home" element={<MobileHome />} />
-                    
-                    {/* Booking Engine Routes */}
                     <Route path="/booking/set-location" element={<SetLocation />} />
                     <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
                     <Route path="/booking/details" element={<BookingDetails />} />
                     <Route path="/booking/price-selection" element={<PriceSelection />} />
                     <Route path="/booking/searching" element={<SearchingDriver />} />
                     <Route path="/booking/review" element={<ReviewOrder />} />
-                    
-                    {/* Tracking & Delivery Routes */}
                     <Route path="/tracking-active" element={<LiveTracking />} />
                     <Route path="/tracking/detail/:id" element={<ShipmentDetail />} />
                     <Route path="/tracking/complete" element={<DeliveryComplete />} />
                     <Route path="/tracking/rating" element={<Rating />} />
-                    
-                    {/* History & Finances */}
                     <Route path="/order-history" element={<OrderHistory />} />
                     <Route path="/order-history/detail/:id" element={<OrderDetails />} />
-                    <Route path="/expense-tracker" element={<OrderHistory />} /> {/* Shares UI with history toggle */}
+                    <Route path="/expense-tracker" element={<OrderHistory />} />
                     <Route path="/business/invoices" element={<InvoiceDashboard />} />
-                    
-                    {/* Profile & Settings Routes */}
                     <Route path="/profile-settings" element={<ProfileSettings />} />
                     <Route path="/profile/addresses" element={<SavedAddresses />} />
                     <Route path="/support/dispute" element={<HelpCenter />} />
@@ -209,17 +136,9 @@ const MainViewport = ({ authStatus }) => {
           </motion.div>
         </AnimatePresence>
       </div>
-      
-      {/* SECTION 5: Global Persistent Bottom Dock Injection */}
       <AnimatePresence>
         {activeTab && (
-          <motion.div
-            initial={{ y: 100 }}
-            animate={{ y: 0 }}
-            exit={{ y: 100 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="absolute bottom-0 left-0 right-0 z-50"
-          >
+          <motion.div initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} transition={{ type: "spring", stiffness: 300, damping: 30 }} className="absolute bottom-0 left-0 right-0 z-50">
             <BottomNavBar activeTab={activeTab} />
           </motion.div>
         )}
@@ -228,25 +147,16 @@ const MainViewport = ({ authStatus }) => {
   );
 };
 
-// ============================================================================
-// ROOT APPLICATION INJECTION
-// Manages the single source of truth for Authentication Status and Global Theme
-// ============================================================================
 export default function App() {
   const hasCompletedOnboarding = useOnboardingStore(state => state.hasCompletedOnboarding);
   const theme = usePreferencesStore(state => state.theme);
-  
-  // TRI-STATE AUTH LOGIC: loading | authenticated | unauthenticated
   const [authStatus, setAuthStatus] = useState('loading');
+  const currentVersionRef = useRef(null);
 
-  // ============================================================================
-  // GLOBAL DOM OBSERVER: THEME ENGINE (DARK MODE INJECTION)
-  // Physically manipulates the <html> tag to trigger Tailwind's dark: modifiers
-  // ============================================================================
+  // THEME ENGINE
   useEffect(() => {
     const root = document.documentElement;
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    
     const applyTheme = () => {
       if (theme === 'dark' || (theme === 'system' && systemPrefersDark.matches)) {
         root.classList.add('dark');
@@ -254,76 +164,56 @@ export default function App() {
         root.classList.remove('dark');
       }
     };
-
-    applyTheme(); // Initial Evaluation
-
-    // Real-time listener for OS-level theme changes (if set to 'system')
-    const listener = () => {
-      if (theme === 'system') applyTheme();
-    };
-    
+    applyTheme();
+    const listener = () => { if (theme === 'system') applyTheme(); };
     systemPrefersDark.addEventListener('change', listener);
     return () => systemPrefersDark.removeEventListener('change', listener);
   }, [theme]);
 
-  // ============================================================================
-  // BACKGROUND SYSTEM: VERSION POLLING (CACHE-BUSTING)
-  // ============================================================================
+  // INSTANT UPDATE WATCHER: Polls every 5 seconds for a version bump
   useEffect(() => {
-    let currentVersion = null;
-
     const checkAppVersion = async () => {
       try {
-        const response = await fetch(`/version.json?t=${new Date().getTime()}`);
+        // Use unique timestamp to bypass all CDN and browser caches strictly
+        const response = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' });
         if (!response.ok) return;
 
         const data = await response.json();
         
-        if (!currentVersion) {
-          currentVersion = data.version;
-        } else if (currentVersion !== data.version) {
-          console.log(`[System Update] New version detected (${data.version}). Forcing hard reload...`);
+        if (!currentVersionRef.current) {
+          currentVersionRef.current = data.version;
+        } else if (currentVersionRef.current !== data.version) {
+          console.log(`[Push Update] Version ${data.version} detected. Force refreshing app...`);
+          // Hard reload strictly bypasses cache to get fresh files
           window.location.reload(true);
         }
-      } catch (error) {
-        console.error("[System Update] Version check failed:", error);
+      } catch (err) {
+        // Silent catch to prevent UI disruption during network flickers
       }
     };
 
+    // Initial check on load
     checkAppVersion();
-    const pollInterval = setInterval(checkAppVersion, 120000);
+    // High-frequency polling (5 seconds) as requested
+    const pollInterval = setInterval(checkAppVersion, 5000);
     return () => clearInterval(pollInterval);
   }, []);
 
-  // Firebase Auth Observer
+  // Auth Observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setAuthStatus('authenticated');
-      } else {
-        setAuthStatus('unauthenticated');
-      }
-    }, (error) => {
-      console.error("Firebase Auth Root Error:", error);
-      setAuthStatus('unauthenticated');
-    });
-
+      setAuthStatus(user ? 'authenticated' : 'unauthenticated');
+    }, () => setAuthStatus('unauthenticated'));
     return () => unsubscribe();
   }, []);
 
-  const handleOnboardingComplete = () => {
-    useOnboardingStore.setState({ hasCompletedOnboarding: true });
-  };
-
-  // STRICT GUARD: Intercept the render cycle if the user has not completed onboarding
   if (!hasCompletedOnboarding) {
-    return <OnboardingFlow onComplete={handleOnboardingComplete} />;
+    return <OnboardingFlow onComplete={() => useOnboardingStore.setState({ hasCompletedOnboarding: true })} />;
   }
   
   return (
     <BrowserRouter>
       <GlobalErrorBoundary>
-        {/* Global Network Resilience Monitor */}
         <NetworkStatus />
         <MainViewport authStatus={authStatus} />
       </GlobalErrorBoundary>

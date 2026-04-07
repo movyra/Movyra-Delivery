@@ -18,7 +18,7 @@
         ]
       },
       {
-        "source": "**/*.@(js|css|webp|png|jpg|jpeg|svg|woff2|woff|ttf)",
+        "source": "**/*.@(webp|png|jpg|jpeg|svg|woff2|woff|ttf)",
         "headers": [
           {
             "key": "Cache-Control",
@@ -27,7 +27,7 @@
         ]
       },
       {
-        "source": "**/index.html",
+        "source": "**/@(index.html|sw.js|version.json|manifest.webmanifest)",
         "headers": [
           {
             "key": "Cache-Control",
