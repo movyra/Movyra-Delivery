@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { motion } from 'framer-motion';
 
 /**
  * UI COMPONENT: SYSTEM CARD
  * The foundational detached card. Enforces the strict 32px border-radius,
  * edge-to-edge padding, and precise drop shadows seen across the design system.
+ * STRICT FIX: Uses forwardRef to support Framer Motion AnimatePresence exit animations.
  */
-export default function SystemCard({ 
+const SystemCard = forwardRef(({ 
   children, 
   variant = 'white', // 'white' | 'black' | 'outline' | 'blue'
   className = '', 
   onClick,
-  animated = false
-}) {
+  animated = false,
+  ...props
+}, ref) => {
   const baseStyle = "rounded-[32px] p-6 transition-all duration-300";
   
   const variants = {
@@ -27,12 +29,14 @@ export default function SystemCard({
   if (animated || onClick) {
     return (
       <motion.div 
+        ref={ref}
         layout={animated}
         initial={animated ? { opacity: 0, y: 10 } : false}
         animate={animated ? { opacity: 1, y: 0 } : false}
         exit={animated ? { opacity: 0, scale: 0.95 } : false}
         onClick={onClick}
         className={combinedClasses}
+        {...props}
       >
         {children}
       </motion.div>
@@ -40,8 +44,13 @@ export default function SystemCard({
   }
 
   return (
-    <div onClick={onClick} className={combinedClasses}>
+    <div ref={ref} onClick={onClick} className={combinedClasses} {...props}>
       {children}
     </div>
   );
-}
+});
+
+// Explicitly setting displayName prevents "Anonymous" component names in React DevTools
+SystemCard.displayName = 'SystemCard';
+
+export default SystemCard;
