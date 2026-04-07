@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { 
   ChevronLeft, MapPin, Clock, Loader2, 
   AlertCircle, CheckCircle2, Package, 
-  ShieldCheck, Diamond, UserCircle2, Crosshair, Receipt
+  ShieldCheck, Diamond, UserCircle2, Crosshair, Receipt,
+  MessageCircle, Phone, ShieldAlert, Navigation
 } from 'lucide-react';
 
 // Real Database & Auth Integration
@@ -22,12 +25,12 @@ import { MAP_LAYERS } from '../../services/mapLayers';
 
 /**
  * PAGE: ACTIVE SHIPMENT DETAIL (LIVE TRACKING)
- * Architecture: 100vh Immersive Map + Bottom Sheet Floating UI
+ * Architecture: 100vh Immersive Map + Draggable Bottom Sheet
  * Features: 
- * - Real-time Firestore Sync (Secured with strict onAuthStateChanged listener)
- * - 100dvh Full-Screen Leaflet Map via Dynamic CDN
- * - DarkTooltipOverlay style custom HTML Map Pins
- * - LocationIQ Polyline Engine with Bounds Padding
+ * - Real-time Firestore Sync (Auth Secured)
+ * - Draggable bottom sheet for Full-Screen Map exploration
+ * - Distance-Variance Algorithm (Route Deviation Detection)
+ * - Communication & Safety Action Bar
  */
 
 const TABS = [
@@ -55,15 +58,20 @@ export default function ShipmentDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('details');
+  const [isSheetExpanded, setIsSheetExpanded] = useState(true);
+
+  // Advanced Security & Communication States
+  const [routeDeviation, setRouteDeviation] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isSafetyOpen, setIsSafetyOpen] = useState(false);
 
   // ============================================================================
-  // REAL-TIME FIRESTORE DATA SYNC (STRICT AUTH RACE-CONDITION FIX)
+  // REAL-TIME FIRESTORE DATA SYNC
   // ============================================================================
   useEffect(() => {
     if (!id) return;
     let unsubscribeSnapshot;
 
-    // STRICT FIX: Wait for Firebase Auth to initialize before listening to the document
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const orderRef = doc(db, 'orders', id);
@@ -94,7 +102,7 @@ export default function ShipmentDetail() {
   }, [id, db, navigate]);
 
   // ============================================================================
-  // DYNAMIC CDN LOADER FOR LEAFLET (Prevents Bundle ReferenceErrors)
+  // DYNAMIC CDN LOADER FOR LEAFLET
   // ============================================================================
   useEffect(() => {
     const loadLeafletAssets = () => {
@@ -117,7 +125,7 @@ export default function ShipmentDetail() {
   }, []);
 
   // ============================================================================
-  // OPENSTREETMAP ENGINE (100vh FULL-SCREEN LEAFLET PLOTTING)
+  // OPENSTREETMAP ENGINE & DISTANCE-VARIANCE ALGORITHM
   // ============================================================================
   useEffect(() => {
     if (!isMapLoaded || !order || !mapContainer.current) return;
@@ -126,7 +134,7 @@ export default function ShipmentDetail() {
     const pickupLat = order.pickup?.lat || 28.6139;
     const pickupLng = order.pickup?.lng || 77.2090;
 
-    // Initialize Leaflet Map once
+    // Initialize Leaflet Map
     if (!map.current) {
       map.current = L.map(mapContainer.current, {
         center: [pickupLat, pickupLng],
@@ -134,13 +142,12 @@ export default function ShipmentDetail() {
         zoomControl: false,
         attributionControl: false,
         dragging: true,
-        scrollWheelZoom: false,
+        scrollWheelZoom: true,
         touchZoom: true
       });
       L.tileLayer(MAP_LAYERS[mapTheme] || MAP_LAYERS.standard).addTo(map.current);
     }
 
-    // Clear existing layers to prevent duplicates on live updates
     map.current.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.Polyline) {
         map.current.removeLayer(layer);
@@ -150,7 +157,7 @@ export default function ShipmentDetail() {
     const validDropoffs = order.dropoffs || (order.dropoff ? [order.dropoff] : []);
     const points = [];
 
-    // Plot Pickup Marker (Dark Premium Icon)
+    // Plot Pickup
     if (order.pickup?.lat) {
       const pickupIcon = L.divIcon({
         className: '',
@@ -166,7 +173,7 @@ export default function ShipmentDetail() {
       points.push([order.pickup.lat, order.pickup.lng]);
     }
 
-    // Plot Dropoff Markers (Static Red Pin)
+    // Plot Dropoffs
     validDropoffs.forEach((drop) => {
       if (drop?.lat) {
         const dropIcon = L.divIcon({
@@ -184,11 +191,13 @@ export default function ShipmentDetail() {
       }
     });
 
-    // Plot Active Driver (DarkTooltipOverlay Engine)
+    // Real or Simulated Driver Location
+    let driverLat = null;
+    let driverLng = null;
+
     if ((order.status === 'assigned' || order.status === 'picked_up') && validDropoffs.length > 0) {
-      // Simulate live driver position slightly offset from dropoff for visualization
-      const driverLat = validDropoffs[0].lat - 0.005;
-      const driverLng = validDropoffs[0].lng - 0.005;
+      driverLat = order.driverLocation?.lat || validDropoffs[0].lat - 0.005;
+      driverLng = order.driverLocation?.lng || validDropoffs[0].lng - 0.005;
       
       const driverIcon = L.divIcon({
         className: '',
@@ -205,13 +214,13 @@ export default function ShipmentDetail() {
           </div>
         `,
         iconSize: [44, 80],
-        iconAnchor: [22, 60] // Anchors the bottom tip of the scooter circle
+        iconAnchor: [22, 60]
       });
       L.marker([driverLat, driverLng], { icon: driverIcon }).addTo(map.current);
       points.push([driverLat, driverLng]);
     }
 
-    // Fetch and draw the Route Polyline via LocationIQ
+    // Fetch Route & Perform Deviation Analysis
     if (order.pickup?.lat && validDropoffs.length > 0 && validDropoffs[0].lat) {
       const fetchRoute = async () => {
         try {
@@ -232,24 +241,40 @@ export default function ShipmentDetail() {
               lineJoin: 'round'
             }).addTo(map.current);
             
-            // Auto-fit with heavy bottom padding to account for the overlapping Bottom Sheet UI
-            map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, 380] });
+            // Distance-Variance Algorithm (Deviation Detection)
+            if (driverLat && driverLng) {
+              const driverLatLng = L.latLng(driverLat, driverLng);
+              let minDistance = Infinity;
+              routeLayer.current.getLatLngs().forEach(ll => {
+                const dist = map.current.distance(driverLatLng, ll);
+                if (dist < minDistance) minDistance = dist;
+              });
+              
+              // Trigger deviation alert if driver is more than 500 meters off optimal route
+              if (minDistance > 500) {
+                setRouteDeviation(true);
+              } else {
+                setRouteDeviation(false);
+              }
+            }
+
+            map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
           }
         } catch (err) {
           console.warn("Route API limits hit, gracefully falling back to point bounds.", err.message);
-          if (points.length > 1) map.current.fitBounds(L.latLngBounds(points), { padding: [50, 380] });
+          if (points.length > 1) map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
         }
       };
       fetchRoute();
     } else if (points.length > 1) {
-      map.current.fitBounds(L.latLngBounds(points), { padding: [50, 380] });
+      map.current.fitBounds(L.latLngBounds(points), { padding: [50, isSheetExpanded ? 380 : 100] });
     }
 
     setTimeout(() => map.current?.invalidateSize(), 200);
-  }, [order, isMapLoaded, mapTheme, LOCATIONIQ_API_KEY]);
+  }, [order, isMapLoaded, mapTheme, LOCATIONIQ_API_KEY, isSheetExpanded]);
 
   // ============================================================================
-  // LOADING & ERROR STATES
+  // HANDLERS & FORMATTING
   // ============================================================================
   if (isLoading) {
     return (
@@ -271,7 +296,6 @@ export default function ShipmentDetail() {
     );
   }
 
-  // Formatting Utilities
   const getStatusDisplay = (status) => {
     switch(status?.toLowerCase()) {
       case 'searching': return 'Finding Partner...';
@@ -290,8 +314,12 @@ export default function ShipmentDetail() {
 
   const handleRecenter = () => {
     if (map.current && routeLayer.current) {
-      map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, 380] });
+      map.current.fitBounds(routeLayer.current.getBounds(), { paddingTopLeft: [50, 100], paddingBottomRight: [50, isSheetExpanded ? 380 : 100] });
     }
+  };
+
+  const handleCallDriver = () => {
+    window.location.href = `tel:${order.selectedBid?.driverPhone || '9999999999'}`;
   };
 
   return (
@@ -302,7 +330,6 @@ export default function ShipmentDetail() {
       {/* ========================================================= */}
       <div ref={mapContainer} className="absolute inset-0 z-0 bg-[#e5e7eb]" />
 
-      {/* Floating Top-Left Back Button */}
       <button 
         onClick={() => navigate(-1)} 
         className="absolute top-12 left-6 z-[2000] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center text-[#111111] shadow-[0_4px_15px_rgba(0,0,0,0.08)] active:scale-95 transition-all"
@@ -311,12 +338,41 @@ export default function ShipmentDetail() {
       </button>
 
       {/* ========================================================= */}
-      {/* BOTTOM SHEET FLOATING OVERLAY */}
+      {/* DRAGGABLE BOTTOM SHEET & FLOATING UI */}
       {/* ========================================================= */}
-      <div className="absolute bottom-0 left-0 right-0 z-[2000] p-5 pb-8 flex flex-col gap-4 pointer-events-none">
+      <motion.div 
+        drag="y"
+        dragConstraints={{ top: 0, bottom: window.innerHeight * 0.5 }}
+        dragElastic={0.2}
+        onDragEnd={(e, info) => {
+          if (info.offset.y > 100) setIsSheetExpanded(false);
+          else if (info.offset.y < -100) setIsSheetExpanded(true);
+        }}
+        animate={{ y: isSheetExpanded ? 0 : window.innerHeight * 0.52 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        className="absolute bottom-0 left-0 right-0 z-[2000] flex flex-col pointer-events-none"
+      >
         
-        {/* Floating Status Engine (Detached) */}
-        <div className="pointer-events-auto">
+        {/* Floating Modules (Attached to top of sheet) */}
+        <div className="px-5 mb-4 pointer-events-auto flex flex-col gap-3">
+          
+          <AnimatePresence>
+            {routeDeviation && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-red-50 border border-red-100 p-4 rounded-[24px] shadow-lg flex items-center gap-3"
+              >
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-red-500 shrink-0">
+                  <Navigation size={20} strokeWidth={2.5} />
+                </div>
+                <div>
+                  <h4 className="text-[14px] font-black text-[#111111] tracking-tight">Route Deviation</h4>
+                  <p className="text-[12px] font-bold text-red-600">Driver is off the optimal path.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <OrderFloatingStatusCard 
             pickupAddress={order.pickup?.address}
             dropoffAddress={dropoffsArray[0]?.address}
@@ -327,101 +383,127 @@ export default function ShipmentDetail() {
           />
         </div>
 
-        {/* Detailed Data Bottom Sheet */}
-        <div className="bg-white rounded-[32px] shadow-[0_10px_40px_rgba(0,0,0,0.12)] pointer-events-auto flex flex-col p-5 max-h-[50vh] overflow-y-auto no-scrollbar border border-gray-100">
+        {/* Expandable Sheet Content */}
+        <div className="bg-white rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.12)] pointer-events-auto flex flex-col p-5 h-[65vh] border-t border-gray-100">
           
-          {/* Segmented Tab Toggles */}
+          {/* Drag Handle */}
+          <div 
+            onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+            className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5 cursor-pointer hover:bg-gray-300 transition-colors" 
+          />
+
+          {/* ACTION BAR: Communication & Safety */}
+          <div className="flex gap-2 mb-5">
+            <button 
+              onClick={handleCallDriver}
+              className="flex-1 bg-[#F6F6F6] hover:bg-gray-100 text-[#111111] py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <Phone size={18} strokeWidth={2.5} /> Call
+            </button>
+            <button 
+              onClick={() => setIsChatOpen(true)}
+              className="flex-1 bg-[#F6F6F6] hover:bg-gray-100 text-[#111111] py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+              <MessageCircle size={18} strokeWidth={2.5} /> Chat
+            </button>
+            <button 
+              onClick={() => setIsSafetyOpen(true)}
+              className="bg-red-50 hover:bg-red-100 text-red-600 px-5 py-3.5 rounded-[20px] font-black text-[14px] flex items-center justify-center transition-all active:scale-95 shadow-sm"
+            >
+              <ShieldAlert size={18} strokeWidth={2.5} /> SOS
+            </button>
+          </div>
+          
           <OrderSegmentedToggle 
             tabs={TABS} 
             activeTab={activeTab} 
             onTabChange={setActiveTab} 
           />
 
-          <AnimatePresence mode="wait">
-            
-            {/* TAB 1: DETAILS */}
-            {activeTab === 'details' && (
-              <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
-                <OrderInfoListCard 
-                  icon={UserCircle2}
-                  title="Assigned Partner"
-                  subtitle={order.selectedBid?.driverName || "Searching for partner..."}
-                  rightValue={order.selectedBid?.vehicleType || "Auto-Match"}
-                  rightSubValue="Vehicle Class"
-                />
-
-                <OrderInfoListCard 
-                  icon={Package}
-                  title="Package Configuration"
-                  subtitle={order.packageDetails?.itemType || "Standard Package"}
-                  rightValue={order.packageDetails?.isFragile ? "Fragile" : "Standard"}
-                  rightSubValue="Handling Type"
-                  alertMode={order.packageDetails?.isFragile}
-                />
-
-                {order.packageDetails?.requiresSecureOTP && (
+          <div className="flex-1 overflow-y-auto no-scrollbar pb-10">
+            <AnimatePresence mode="wait">
+              
+              {/* TAB 1: DETAILS */}
+              {activeTab === 'details' && (
+                <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
                   <OrderInfoListCard 
-                    icon={Diamond}
-                    title="Delivery Authentication"
-                    subtitle="End-to-End Secure OTP"
-                    rightValue={order.packageDetails.secureOTP || "****"}
-                    rightSubValue="Verification PIN"
+                    icon={UserCircle2}
+                    title="Assigned Partner"
+                    subtitle={order.selectedBid?.driverName || "Searching for partner..."}
+                    rightValue={order.selectedBid?.vehicleType || "Auto-Match"}
+                    rightSubValue="Vehicle Class"
                   />
-                )}
-              </motion.div>
-            )}
-
-            {/* TAB 2: TIMELINE */}
-            {activeTab === 'timeline' && (
-              <motion.div key="timeline" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
-                <OrderInfoListCard 
-                  icon={order.status === 'picked_up' || order.status === 'delivered' ? CheckCircle2 : Clock}
-                  title="Origin Checkpoint"
-                  subtitle={order.pickup?.address}
-                  rightValue="Pickup"
-                  rightSubValue={order.status === 'picked_up' || order.status === 'delivered' ? 'Cleared' : 'Pending'}
-                />
-
-                {dropoffsArray.map((drop, idx) => (
                   <OrderInfoListCard 
-                    key={idx}
-                    icon={MapPin}
-                    title={`Destination ${idx + 1}`}
-                    subtitle={drop.address}
-                    rightValue="Dropoff"
-                    rightSubValue={order.status === 'delivered' ? 'Cleared' : 'En Route'}
+                    icon={Package}
+                    title="Package Configuration"
+                    subtitle={order.packageDetails?.itemType || "Standard Package"}
+                    rightValue={order.packageDetails?.isFragile ? "Fragile" : "Standard"}
+                    rightSubValue="Handling Type"
+                    alertMode={order.packageDetails?.isFragile}
                   />
-                ))}
-              </motion.div>
-            )}
+                  {order.packageDetails?.requiresSecureOTP && (
+                    <OrderInfoListCard 
+                      icon={Diamond}
+                      title="Delivery Authentication"
+                      subtitle="End-to-End Secure OTP"
+                      rightValue={order.packageDetails.secureOTP || "****"}
+                      rightSubValue="Verification PIN"
+                    />
+                  )}
+                </motion.div>
+              )}
 
-            {/* TAB 3: RECEIPT / LIVE TOTAL */}
-            {activeTab === 'receipt' && (
-              <motion.div key="receipt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
-                <OrderAnalyticsChart 
-                  totalValue={totalAmount.toFixed(2)}
-                  currency="₹"
-                  dateRange={`Order ID: ${order.id.slice(-8).toUpperCase()}`}
-                  data={[
-                    { label: 'Base Fare', value: taxableValue.toFixed(2), isActive: false },
-                    { label: 'Taxes', value: (cgst + sgst).toFixed(2), isActive: false },
-                    { label: 'Total', value: totalAmount.toFixed(2), isActive: true }
-                  ]}
-                />
+              {/* TAB 2: TIMELINE */}
+              {activeTab === 'timeline' && (
+                <motion.div key="timeline" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
+                  <OrderInfoListCard 
+                    icon={order.status === 'picked_up' || order.status === 'delivered' ? CheckCircle2 : Clock}
+                    title="Origin Checkpoint"
+                    subtitle={order.pickup?.address}
+                    rightValue="Pickup"
+                    rightSubValue={order.status === 'picked_up' || order.status === 'delivered' ? 'Cleared' : 'Pending'}
+                  />
+                  {dropoffsArray.map((drop, idx) => (
+                    <OrderInfoListCard 
+                      key={idx}
+                      icon={MapPin}
+                      title={`Destination ${idx + 1}`}
+                      subtitle={drop.address}
+                      rightValue="Dropoff"
+                      rightSubValue={order.status === 'delivered' ? 'Cleared' : 'En Route'}
+                    />
+                  ))}
+                </motion.div>
+              )}
 
-                <OrderInfoListCard 
-                  icon={Receipt}
-                  title="Payment Status"
-                  subtitle={order.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Pre-Paid / Wallet'}
-                  rightValue={`₹${totalAmount.toFixed(2)}`}
-                  rightSubValue="Final Amount"
-                />
-              </motion.div>
-            )}
+              {/* TAB 3: RECEIPT / LIVE TOTAL */}
+              {activeTab === 'receipt' && (
+                <motion.div key="receipt" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-4 pt-4">
+                  <OrderAnalyticsChart 
+                    totalValue={totalAmount.toFixed(2)}
+                    currency="₹"
+                    dateRange={`Order ID: ${order.id.slice(-8).toUpperCase()}`}
+                    data={[
+                      { label: 'Base Fare', value: taxableValue.toFixed(2), isActive: false },
+                      { label: 'Taxes', value: (cgst + sgst).toFixed(2), isActive: false },
+                      { label: 'Total', value: totalAmount.toFixed(2), isActive: true }
+                    ]}
+                  />
+                  <OrderInfoListCard 
+                    icon={Receipt}
+                    title="Payment Status"
+                    subtitle={order.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Pre-Paid / Wallet'}
+                    rightValue={`₹${totalAmount.toFixed(2)}`}
+                    rightSubValue="Final Amount"
+                  />
+                </motion.div>
+              )}
 
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
+      </motion.div>
+
     </div>
   );
 }
