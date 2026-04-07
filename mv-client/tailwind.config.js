@@ -4,6 +4,9 @@ export default {
   // Strictly scans all source files to ensure real-time utility generation
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
 
+  // ENABLING DYNAMIC CLASS-BASED DARK MODE (FEATURE REQUIREMENT)
+  darkMode: 'class',
+
   theme: {
     extend: {
       // SECTION 2: Master Color Palette (High-Contrast Minimalist Tier)
