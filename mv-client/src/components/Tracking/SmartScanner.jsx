@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Camera, X, RefreshCw, Zap, ZapOff, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, X, RefreshCw, Zap, ZapOff, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
 
 /**
  * COMPONENT: HARDWARE SMART SCANNER
@@ -178,7 +178,7 @@ export default function SmartScanner({ mode = 'proof', onCapture, onClose }) {
       {/* HARDWARE VIDEO STREAM */}
       <div className="flex-1 relative bg-black overflow-hidden flex items-center justify-center">
         {hasPermission === false && (
-          <div className="text-center px-6">
+          <div className="text-center px-6 z-30">
             <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
             <h3 className="text-white text-xl font-black mb-2">Camera Access Denied</h3>
             <p className="text-gray-400 font-bold">Please enable camera permissions in your browser settings to use this feature.</p>
