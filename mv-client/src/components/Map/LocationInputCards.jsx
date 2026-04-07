@@ -7,7 +7,7 @@ import useBookingStore from '../../store/useBookingStore';
 import usePreferencesStore from '../../store/usePreferencesStore';
 import { t } from '../../utils/translations';
 
-// Hardware Features
+// Hardware Features (PATH VERIFIED FOR BUILD SUCCESS)
 import SmartScanner from '../Tracking/SmartScanner';
 
 /**
@@ -39,7 +39,7 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
     }
   };
 
-  // OCR Auto-fill Callback
+  // OCR Auto-fill Callback (Hardware to Store pipe)
   const handleScanCapture = (text) => {
     if (!text) return;
     if (scannerTarget === 'pickup') {

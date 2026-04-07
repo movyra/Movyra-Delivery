@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 // Real Database Integration
-import { getFirestore, collection, query, onSnapshot } from 'firebase/firestore';
+import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 // Real Store & Global Prefs Integration
@@ -24,11 +24,10 @@ import SystemToggle from '../components/UI/SystemToggle';
  * PAGE: ORDER HISTORY & SHIPMENTS (PREMIUM CARD UI)
  * Architecture: Detached 32px rounded SystemCards on #F2F4F7 background.
  * Logic: 
- * - Real-time Firestore sync with strict isolated tenant path
- * - Monthly Business Expense Tracking (B2B Mode)
- * - Dynamic Search & Multi-state filtering
- * - DARK MODE & i18n: Fully wired global compliance
- * - FEATURE INJECTION: Native route to B2B Tax Invoice Dashboard
+ * - DUAL-PATH MERGING: Simultaneously syncs Legacy Root and New Secure Tenant paths.
+ * - Deduplication Engine: Prevents duplicate renders during migration.
+ * - Monthly Business Expense Tracking (B2B Mode).
+ * - DARK MODE & i18n: 100% Global compliance.
  */
 
 const getAppId = () => {
@@ -68,40 +67,48 @@ export default function OrderHistory() {
   ];
 
   // State Management
-  const [orders, setOrders] = useState([]);
+  const [secureOrders, setSecureOrders] = useState([]);
+  const [legacyOrders, setLegacyOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isBusinessMode, setIsBusinessMode] = useState(false);
 
   // ============================================================================
-  // REAL-TIME FIRESTORE DATA SYNC (STRICT AUTH RACE-CONDITION FIX)
+  // FEATURE: DUAL-PATH DATA MERGING ENGINE
   // ============================================================================
   useEffect(() => {
-    let unsubscribeSnapshot;
+    let unsubscribeSecure;
+    let unsubscribeLegacy;
 
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const appId = getAppId();
-        // Strict isolated path to bypass index requirements and ensure security
-        const q = query(collection(db, 'artifacts', appId, 'users', user.uid, 'orders'));
+
+        // PATH 1: New Secure Tenant Path
+        const secureRef = collection(db, 'artifacts', appId, 'users', user.uid, 'orders');
+        const qSecure = query(secureRef);
         
-        unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
-          const fetchedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          
-          // Sort dynamically by creation date (newest first)
-          fetchedOrders.sort((a, b) => {
-            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-            return dateB - dateA;
-          });
-          
-          setOrders(fetchedOrders);
+        unsubscribeSecure = onSnapshot(qSecure, (snapshot) => {
+          const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _source: 'secure' }));
+          setSecureOrders(docs);
           setIsLoading(false);
         }, (err) => {
-          console.error("Firestore Sync Error [OrderHistory]:", err);
+          console.error("Secure Path Sync Error:", err);
           setIsLoading(false);
         });
+
+        // PATH 2: Legacy Root Collection (Restore Previous Bookings)
+        const legacyRef = collection(db, 'orders');
+        const qLegacy = query(legacyRef, where('userId', '==', user.uid));
+        
+        unsubscribeLegacy = onSnapshot(qLegacy, (snapshot) => {
+          const docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), _source: 'legacy' }));
+          setLegacyOrders(docs);
+        }, (err) => {
+          console.error("Legacy Path Sync Error:", err);
+        });
+
       } else {
         setIsLoading(false);
         navigate('/auth-login', { replace: true });
@@ -109,10 +116,35 @@ export default function OrderHistory() {
     });
 
     return () => {
-      if (unsubscribeSnapshot) unsubscribeSnapshot();
+      if (unsubscribeSecure) unsubscribeSecure();
+      if (unsubscribeLegacy) unsubscribeLegacy();
       unsubscribeAuth();
     };
   }, [db, auth, navigate]);
+
+  // ============================================================================
+  // LOGIC: DEDUPLICATION & SORTING
+  // ============================================================================
+  const allOrders = useMemo(() => {
+    const combined = [...secureOrders, ...legacyOrders];
+    
+    // Deduplicate by Order ID (Priority given to Secure Path if double-entry exists)
+    const uniqueMap = new Map();
+    combined.forEach(order => {
+      if (!uniqueMap.has(order.id) || order._source === 'secure') {
+        uniqueMap.set(order.id, order);
+      }
+    });
+
+    const result = Array.from(uniqueMap.values());
+
+    // Master Sort: Newest First
+    return result.sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dateB - dateA;
+    });
+  }, [secureOrders, legacyOrders]);
 
   // Status Configuration UI Matrix (Dark Mode compliant)
   const getStatusConfig = (status) => {
@@ -134,7 +166,7 @@ export default function OrderHistory() {
 
   // Filtering Engine
   const filteredOrders = useMemo(() => {
-    return orders.filter(order => {
+    return allOrders.filter(order => {
       const status = (order.status || '').toLowerCase();
       
       const isCompleted = ['delivered'].includes(status);
@@ -153,13 +185,13 @@ export default function OrderHistory() {
 
       return matchesTab && (orderId.includes(normalizedSearch) || origin.includes(normalizedSearch));
     });
-  }, [orders, activeTab, searchQuery]);
+  }, [allOrders, activeTab, searchQuery]);
 
   // Business Expense Engine
   const currentMonth = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
   const monthlyTotal = useMemo(() => {
     const now = new Date();
-    return orders.reduce((sum, order) => {
+    return allOrders.reduce((sum, order) => {
       const orderDate = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || 0);
       if (orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear()) {
         const price = order.pricing?.estimatedPrice || order.totalFare || 0;
@@ -167,7 +199,7 @@ export default function OrderHistory() {
       }
       return sum;
     }, 0);
-  }, [orders]);
+  }, [allOrders]);
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Unknown Date';
@@ -197,7 +229,6 @@ export default function OrderHistory() {
           </h1>
         </div>
         
-        {/* PREMIUM TRIGGER: Direct Link to B2B Invoice Dashboard */}
         <button 
           onClick={() => navigate('/business/invoices')}
           className="flex items-center gap-2 bg-[#111111] dark:bg-white text-white dark:text-[#111111] px-4 py-2.5 rounded-[20px] font-black text-[13px] active:scale-95 transition-all shadow-sm shrink-0"
@@ -231,8 +262,8 @@ export default function OrderHistory() {
                   currency="₹"
                   dateRange={`Monthly Expense (${currentMonth})`}
                   data={[
-                    { label: 'Active Deliveries', value: orders.filter(o => !['delivered','cancelled','failed'].includes((o.status || '').toLowerCase())).length, isActive: false },
-                    { label: 'Total Orders', value: orders.length, isActive: false },
+                    { label: 'Active Deliveries', value: allOrders.filter(o => !['delivered','cancelled','failed'].includes((o.status || '').toLowerCase())).length, isActive: false },
+                    { label: 'Total Orders', value: allOrders.length, isActive: false },
                     { label: 'Monthly Spend', value: monthlyTotal.toFixed(2), isActive: true }
                   ]}
                 />
@@ -303,9 +334,14 @@ export default function OrderHistory() {
                             </span>
                           </div>
                         </div>
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 transition-colors ${config.bg} ${config.color}`}>
-                          {config.label}
-                        </span>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 transition-colors ${config.bg} ${config.color}`}>
+                            {config.label}
+                          </span>
+                          {order._source === 'legacy' && (
+                            <span className="text-[8px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-tighter">Legacy Booking</span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="h-px w-full bg-gray-50 dark:bg-gray-800 my-1 transition-colors" />

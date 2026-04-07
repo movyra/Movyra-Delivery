@@ -10,8 +10,10 @@ import LineIconRegistry from '../../components/Icons/LineIconRegistry';
 
 // Real Global Store Integration
 import useBookingStore from '../../store/useBookingStore';
+import usePreferencesStore from '../../store/usePreferencesStore';
+import { t } from '../../utils/translations';
 
-// Hardware Features (UPDATED TO CORRECT PATH)
+// Hardware Features (PATH CORRECTED FOR BUILD SUCCESS)
 import SmartScanner from '../../components/Tracking/SmartScanner';
 
 /**
@@ -20,11 +22,11 @@ import SmartScanner from '../../components/Tracking/SmartScanner';
  * Features (8+): 
  * 1. Seamless Headerless Navigation with Logo
  * 2. Dynamic Item Category Selection
- * 3. Package Photo Proof Integration
+ * 3. Package Photo Proof Integration (Hardware Level)
  * 4. Animated Safety Toggles (Fragile / High Value)
  * 5. Real-time Scheduling Constraints & Mathematics
  * 6. Driver Instructions / Delivery Notes
- * 7. FEATURE INJECTION: SmartScanner (Camera Proof of Delivery payload)
+ * 7. SmartScanner Hardware Overlay (Corrected Import Path)
  * 8. Validation Engine & Sticky Action Footer
  */
 
@@ -35,6 +37,7 @@ export default function BookingDetails() {
   
   // Real Global State
   const { packageDetails, scheduling, updatePackageDetails, setScheduling } = useBookingStore();
+  const { language } = usePreferencesStore();
 
   // Local Form State
   const [itemType, setItemType] = useState(packageDetails.itemType || '');
@@ -68,14 +71,14 @@ export default function BookingDetails() {
     setError('');
 
     if (!itemType) {
-      setError('Please select an item category.');
+      setError(t('Please select an item category.', language));
       return;
     }
 
     let finalDateTime = null;
     if (isScheduledLater) {
       if (!scheduleDate || !scheduleTime) {
-        setError('Please provide both date and time for scheduled deliveries.');
+        setError(t('Please provide both date and time for scheduled deliveries.', language));
         return;
       }
       
@@ -83,7 +86,7 @@ export default function BookingDetails() {
       const now = new Date();
       
       if (selectedDateTime.getTime() < now.getTime() + (30 * 60000)) {
-        setError('Scheduled time must be at least 30 minutes from now.');
+        setError(t('Scheduled time must be at least 30 minutes from now.', language));
         return;
       }
       finalDateTime = selectedDateTime.toISOString();
@@ -121,13 +124,13 @@ export default function BookingDetails() {
             <ChevronLeft size={24} strokeWidth={2.5} className="-ml-0.5" />
           </button>
           <h1 className="text-[32px] font-black tracking-tighter text-[#111111] dark:text-white leading-none transition-colors">
-            Details
+            {t('Details', language)}
           </h1>
         </div>
         
-        {/* Strict Logo Injection */}
-        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center overflow-hidden shadow-sm p-1.5 shrink-0">
-          <img src="/logo.png" alt="Movyra Logo" className="w-full h-full object-contain" />
+        {/* Logo Branding */}
+        <div className="w-10 h-10 rounded-lg bg-black dark:bg-white flex items-center justify-center overflow-hidden shadow-sm p-1.5 shrink-0 transition-colors">
+          <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
         </div>
       </div>
 
@@ -139,7 +142,7 @@ export default function BookingDetails() {
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <LineIconRegistry name="box" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Item Category</span>
+            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Item Category', language)}</span>
           </div>
           
           <div className="flex flex-wrap gap-2.5">
@@ -153,7 +156,7 @@ export default function BookingDetails() {
                     : 'bg-[#F6F6F6] dark:bg-[#2A2A2A] text-[#111111] dark:text-white border-transparent hover:bg-white dark:hover:bg-[#333333] hover:border-gray-200 dark:hover:border-gray-700'
                 }`}
               >
-                {cat}
+                {t(cat, language)}
               </button>
             ))}
           </div>
@@ -165,7 +168,7 @@ export default function BookingDetails() {
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <Camera size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Package Photo</span>
+            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Package Photo', language)}</span>
           </div>
 
           {packageImage ? (
@@ -186,7 +189,7 @@ export default function BookingDetails() {
               <div className="w-12 h-12 rounded-full bg-[#F6F6F6] dark:bg-[#333333] flex items-center justify-center text-inherit transition-colors">
                 <Camera size={24} strokeWidth={2.5} />
               </div>
-              <span className="text-[15px] font-bold">Tap to scan package</span>
+              <span className="text-[15px] font-bold">{t('Tap to scan package', language)}</span>
             </button>
           )}
         </SystemCard>
@@ -197,7 +200,7 @@ export default function BookingDetails() {
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Safety Protocol</span>
+            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Safety Protocol', language)}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -211,8 +214,8 @@ export default function BookingDetails() {
                 <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
               </div>
               <div>
-                <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Fragile</span>
-                <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-wide transition-colors">Handle Care</span>
+                <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Fragile', language)}</span>
+                <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-wide transition-colors">{t('Handle Care', language)}</span>
               </div>
             </button>
 
@@ -226,8 +229,8 @@ export default function BookingDetails() {
                 <LineIconRegistry name="diamond" size={20} strokeWidth={2.5} />
               </div>
               <div>
-                <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">High Value</span>
-                <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-wide transition-colors">Secure OTP</span>
+                <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('High Value', language)}</span>
+                <span className="block text-[11px] font-bold text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-wide transition-colors">{t('Secure OTP', language)}</span>
               </div>
             </button>
           </div>
@@ -239,7 +242,7 @@ export default function BookingDetails() {
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <LineIconRegistry name="clock" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Pickup Schedule</span>
+            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Pickup Schedule', language)}</span>
           </div>
 
           <div className="bg-[#F6F6F6] dark:bg-[#222222] p-1.5 rounded-full flex relative mb-2 transition-colors">
@@ -251,13 +254,13 @@ export default function BookingDetails() {
               onClick={() => setIsScheduledLater(false)}
               className={`flex-1 flex items-center justify-center py-3 rounded-full text-[14px] font-bold transition-colors z-10 ${!isScheduledLater ? 'text-white dark:text-[#111111]' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'}`}
             >
-              Right now
+              {t('Right now', language)}
             </button>
             <button 
               onClick={() => setIsScheduledLater(true)}
               className={`flex-1 flex items-center justify-center py-3 rounded-full text-[14px] font-bold transition-colors z-10 ${isScheduledLater ? 'text-white dark:text-[#111111]' : 'text-gray-500 dark:text-gray-400 hover:text-black dark:hover:text-white'}`}
             >
-              Later
+              {t('Later', language)}
             </button>
           </div>
 
@@ -294,14 +297,14 @@ export default function BookingDetails() {
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
               <LineIconRegistry name="message" size={20} strokeWidth={2.5} />
             </div>
-            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">Driver Instructions</span>
+            <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Driver Instructions', language)}</span>
           </div>
 
           <div className="flex items-start px-5 py-5 rounded-[24px] bg-[#F6F6F6] dark:bg-[#222222] transition-colors">
             <textarea
               value={driverNotes}
               onChange={(e) => setDriverNotes(e.target.value)}
-              placeholder="e.g. Ring the bell twice, beware of the gate..."
+              placeholder={t('e.g. Ring the bell twice, beware of the gate...', language)}
               className="w-full text-[15px] font-bold text-[#111111] dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none bg-transparent resize-none min-h-[100px]"
             />
           </div>
@@ -330,7 +333,7 @@ export default function BookingDetails() {
           icon={ArrowRight}
           className="flex-row-reverse"
         >
-          Review Pricing
+          {t('Review Pricing', language)}
         </SystemButton>
       </div>
 
