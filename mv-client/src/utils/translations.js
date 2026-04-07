@@ -2,11 +2,31 @@
  * GLOBAL TRANSLATION ENGINE & DICTIONARY
  * Exports the structured i18n dictionary mapping all UI strings to
  * English (en), Hindi (hi), and Marathi (mr).
- * Includes the `t()` helper function to dynamically fetch active translations.
+ * Fixed: Added missing keys for Navigation and Tracking Status to stop console warnings.
  */
 
 export const translations = {
   en: {
+    // Navigation Keys
+    Home: "Home",
+    Track: "Track",
+    Activity: "Activity",
+    Account: "Account",
+
+    // Tracking Status Keys
+    Searching: "Searching",
+    "En Route": "En Route",
+    "In Transit": "In Transit",
+    "Waking Telemetry": "Waking Telemetry",
+    "No Active Shipments": "No Active Shipments",
+    "You don't have any orders in transit right now.": "You don't have any orders in transit right now.",
+    "Send a Package": "Send a Package",
+    "Order ID": "Order ID",
+    "Call Driver": "Call Driver",
+    "Marketplace Search": "Marketplace Search",
+    "Driver Assigned": "Driver Assigned",
+    "No active shipments": "No active shipments",
+
     common: {
       loading: "Loading...",
       confirm: "Confirm",
@@ -70,6 +90,26 @@ export const translations = {
   },
 
   hi: {
+    // Navigation Keys (Hindi)
+    Home: "होम",
+    Track: "ट्रैक",
+    Activity: "गतिविधि",
+    Account: "खाता",
+
+    // Tracking Status Keys (Hindi)
+    Searching: "खोज रहे हैं",
+    "En Route": "रास्ते में",
+    "In Transit": "पारगमन में",
+    "Waking Telemetry": "टेलीमेट्री सक्रिय हो रही है",
+    "No Active Shipments": "कोई सक्रिय शिपमेंट नहीं",
+    "You don't have any orders in transit right now.": "अभी आपका कोई भी ऑर्डर पारगमन में नहीं है।",
+    "Send a Package": "पैकेज भेजें",
+    "Order ID": "ऑर्डर आईडी",
+    "Call Driver": "ड्राइवर को कॉल करें",
+    "Marketplace Search": "मार्केटप्लेस खोज",
+    "Driver Assigned": "ड्राइवर नियुक्त",
+    "No active shipments": "कोई सक्रिय शिपमेंट नहीं",
+
     common: {
       loading: "लोड हो रहा है...",
       confirm: "पुष्टि करें",
@@ -133,6 +173,26 @@ export const translations = {
   },
 
   mr: {
+    // Navigation Keys (Marathi)
+    Home: "मुख्यपृष्ठ",
+    Track: "ट्रॅक",
+    Activity: "हालचाली",
+    Account: "खाते",
+
+    // Tracking Status Keys (Marathi)
+    Searching: "शोधत आहे",
+    "En Route": "वाटेत आहे",
+    "In Transit": "पारगमनमध्ये",
+    "Waking Telemetry": "टेलीमेट्री सक्रिय होत आहे",
+    "No Active Shipments": "कोणतीही सक्रिय शिपमेंट नाही",
+    "You don't have any orders in transit right now.": "सध्या तुमची कोणतीही ऑर्डर पारगमनमध्ये नाही.",
+    "Send a Package": "पार्सल पाठवा",
+    "Order ID": "ऑर्डर आयडी",
+    "Call Driver": "ड्रायव्हरला कॉल करा",
+    "Marketplace Search": "मार्केटप्लेस शोध",
+    "Driver Assigned": "ड्रायव्हर नियुक्त",
+    "No active shipments": "कोणतीही सक्रिय शिपमेंट नाही",
+
     common: {
       loading: "लोड होत आहे...",
       confirm: "पुष्टी करा",
@@ -198,10 +258,7 @@ export const translations = {
 
 /**
  * Global Translation Hook / Helper Method
- * Extracts the correct nested string based on dot-notation paths.
- * * @param {string} key - e.g., 'settings.title'
- * @param {string} lang - 'en', 'hi', or 'mr' (Defaults to 'en')
- * @returns {string} The translated string or the original key if missing
+ * Extracts the correct nested string based on dot-notation paths or top-level keys.
  */
 export const t = (key, lang = 'en') => {
   if (!key) return '';
@@ -211,8 +268,12 @@ export const t = (key, lang = 'en') => {
   
   for (const k of keys) {
     if (result[k] === undefined) {
+      // Logic for top-level keys like "Home", "Track" etc.
+      if (translations[lang] && translations[lang][key]) return translations[lang][key];
+      if (translations['en'][key]) return translations['en'][key];
+      
       console.warn(`Translation missing for key: ${key} in lang: ${lang}`);
-      return key; // Fallback to raw key if translation is missing
+      return key; // Fallback to raw key
     }
     result = result[k];
   }
