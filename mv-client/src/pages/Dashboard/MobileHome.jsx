@@ -2,10 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Package, Send, ArrowRight, Plus, History, 
-  Activity, MapPin, Navigation, Clock, ChevronRight, 
-  UserCircle2, HelpCircle, CheckCircle2, Truck, 
-  AlertCircle, Loader2 
+  Search, ArrowRight, Clock, ChevronRight, 
+  MapPin, Star, Shield, Car, Package, 
+  Calendar, Key, Plane, Zap, Info, Plus
 } from 'lucide-react';
 
 // Real Store, Prefs & Database Integration
@@ -17,15 +16,16 @@ import { t } from '../../utils/translations';
 
 // Premium Design System Components
 import LineIconRegistry from '../../components/Icons/LineIconRegistry';
+import SystemCard from '../../components/UI/SystemCard';
 
 /**
- * PAGE: MOBILE HOME DASHBOARD (PREMIUM CARD UI)
+ * PAGE: MOBILE HOME DASHBOARD (PREMIUM UBER-STYLE UI)
  * Features: 
- * - DUAL-PATH MERGING: Synchronizes Legacy Root and New Secure Tenant paths for activity.
- * - Stark Headerless Navigation
- * - Massively Rounded "Where to?" Floating Action Card
- * - Real-time Firestore Sync for Wallet & Orders
- * - DARK MODE & i18n compliant
+ * - Contextual Toggle: Switch between 'Rides' and 'Delivery' context.
+ * - Massive Search Card: Exact replica of the "Where to?" pill interaction.
+ * - Suggestions Grid: Horizontal scrolling service registry.
+ * - Promo Carousel: Illustrative "Ways to plan" cards.
+ * - Dual-Path Engine: Restores legacy bookings while syncing new ones.
  */
 
 const getAppId = () => {
@@ -40,15 +40,13 @@ export default function MobileHome() {
   const auth = getAuth();
   
   // Real Global State
-  const { activeOrder } = useBookingStore();
   const { language } = usePreferencesStore();
+  const [activeContext, setActiveContext] = useState('rides'); // 'rides' | 'delivery'
 
   // Real-time Data States
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [accountBalance, setAccountBalance] = useState(0);
-  
-  // Dual-Path Data Storage
   const [secureOrders, setSecureOrders] = useState([]);
   const [legacyOrders, setLegacyOrders] = useState([]);
 
@@ -56,9 +54,7 @@ export default function MobileHome() {
   // LOGIC: DUAL-PATH REAL-TIME DATA STREAMS
   // ============================================================================
   useEffect(() => {
-    let unsubscribeUser;
-    let unsubscribeSecure;
-    let unsubscribeLegacy;
+    let unsubscribeUser, unsubscribeSecure, unsubscribeLegacy;
 
     const authUnsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
@@ -66,31 +62,23 @@ export default function MobileHome() {
         const appId = getAppId();
         setUserName(firstName);
 
-        // STREAM 1: Real-time Wallet Balance
         const userRef = doc(db, 'artifacts', appId, 'users', user.uid);
         unsubscribeUser = onSnapshot(userRef, (docSnap) => {
-          if (docSnap.exists()) {
-            setAccountBalance(docSnap.data().walletBalance || 0);
-          }
-        }, (err) => console.error("Wallet Stream Error:", err));
+          if (docSnap.exists()) setAccountBalance(docSnap.data().walletBalance || 0);
+        });
 
-        // STREAM 2: Secure Tenant Orders
         const secureRef = collection(db, 'artifacts', appId, 'users', user.uid, 'orders');
         const qSecure = query(secureRef, orderBy('createdAt', 'desc'), limit(5));
         unsubscribeSecure = onSnapshot(qSecure, (snapshot) => {
-          const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'secure' }));
-          setSecureOrders(docs);
+          setSecureOrders(snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'secure' })));
           setIsLoading(false);
         });
 
-        // STREAM 3: Legacy Root Orders (Restore visibility of previous bookings)
         const legacyRef = collection(db, 'orders');
         const qLegacy = query(legacyRef, where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(5));
         unsubscribeLegacy = onSnapshot(qLegacy, (snapshot) => {
-          const docs = snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'legacy' }));
-          setLegacyOrders(docs);
+          setLegacyOrders(snapshot.docs.map(d => ({ id: d.id, ...d.data(), _source: 'legacy' })));
         });
-
       } else {
         setUserName(t('Guest', language));
         setIsLoading(false);
@@ -105,278 +93,185 @@ export default function MobileHome() {
     };
   }, [auth, db, language]);
 
-  // ============================================================================
-  // COMPOSITE ACTIVITY ENGINE: DEDUPLICATION & METRICS
-  // ============================================================================
   const { recentActivity, activeShipmentsCount } = useMemo(() => {
     const combined = [...secureOrders, ...legacyOrders];
     const uniqueMap = new Map();
-    
-    // Deduplicate by ID
-    combined.forEach(order => {
-      if (!uniqueMap.has(order.id) || order._source === 'secure') {
-        uniqueMap.set(order.id, order);
-      }
+    combined.forEach(o => { if (!uniqueMap.has(o.id) || o._source === 'secure') uniqueMap.set(o.id, o); });
+    const sorted = Array.from(uniqueMap.values()).sort((a, b) => {
+      const dA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+      const dB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+      return dB - dA;
     });
-
-    const deduped = Array.from(uniqueMap.values());
-    
-    // Sort and Limit
-    const sorted = deduped.sort((a, b) => {
-      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-      return dateB - dateA;
-    });
-
-    const limited = sorted.slice(0, 5);
-
-    // Calculate Active Pipeline
-    const activeCount = deduped.filter(o => ['searching', 'assigned', 'picked_up'].includes(o.status)).length;
-
-    return { recentActivity: limited, activeShipmentsCount: activeCount };
+    const active = sorted.filter(o => ['searching', 'assigned', 'picked_up'].includes(o.status)).length;
+    return { recentActivity: sorted.slice(0, 3), activeShipmentsCount: active };
   }, [secureOrders, legacyOrders]);
 
-  // Dynamic Time Greeting (Translated)
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return t('Good morning', language);
-    if (hour < 18) return t('Good afternoon', language);
-    return t('Good evening', language);
-  };
-
-  // Status Configuration for Dynamic Icons (Dark Mode & i18n compliant)
-  const getStatusConfig = (status) => {
-    switch(status?.toLowerCase()) {
-      case 'searching': 
-      case 'assigned': 
-        return { icon: Loader2, bg: 'bg-[#BCE3FF] dark:bg-[#1A365D]', text: 'text-[#111111] dark:text-[#E2F1FF]', spin: true, label: t('Active', language) };
-      case 'picked_up': 
-        return { icon: Truck, bg: 'bg-[#BCE3FF] dark:bg-[#1A365D]', text: 'text-[#111111] dark:text-[#E2F1FF]', spin: false, label: t('In Transit', language) };
-      case 'delivered': 
-        return { icon: CheckCircle2, bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-600 dark:text-gray-300', spin: false, label: t('Delivered', language) };
-      case 'cancelled': 
-        return { icon: AlertCircle, bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-500 dark:text-red-400', spin: false, label: t('Cancelled', language) };
-      default: 
-        return { icon: Package, bg: 'bg-gray-100 dark:bg-gray-800', text: 'text-gray-500 dark:text-gray-400', spin: false, label: t('Pending', language) };
-    }
-  };
-
   return (
-    <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans pb-32 overflow-x-hidden relative transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-white dark:bg-[#000000] text-[#000000] dark:text-[#FFFFFF] font-sans pb-32 overflow-x-hidden relative transition-colors duration-300">
       
-      {/* SECTION 1: Stark Header Navigation */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="px-6 pt-16 pb-4 flex items-center justify-between sticky top-0 z-50 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md transition-colors duration-300"
-      >
-        <div>
-          <h2 className="text-[15px] font-bold text-gray-500 dark:text-gray-400 mb-1 transition-colors">{getGreeting()},</h2>
-          <h1 className="text-[32px] font-black tracking-tighter leading-none text-[#111111] dark:text-white transition-colors">
-            {isLoading ? '...' : userName}
-          </h1>
-        </div>
+      {/* SECTION 1: CONTEXT TOGGLE HEADER */}
+      <div className="px-6 pt-14 pb-4 flex items-center gap-8 sticky top-0 z-50 bg-white/95 dark:bg-black/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-900 transition-all">
         <button 
-          onClick={() => navigate('/profile-settings')}
-          className="w-[46px] h-[46px] rounded-full bg-white dark:bg-[#222222] flex items-center justify-center border border-gray-200 dark:border-gray-800 shadow-[0_4px_15px_rgba(0,0,0,0.05)] active:scale-95 transition-all shrink-0"
+          onClick={() => setActiveContext('rides')}
+          className={`relative py-2 flex items-center gap-2.5 transition-all ${activeContext === 'rides' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
         >
-          <UserCircle2 size={24} className="text-gray-600 dark:text-gray-300 transition-colors" strokeWidth={2} />
+          <Car size={24} strokeWidth={2.5} />
+          <span className="text-[20px] font-black tracking-tight">{t('Rides', language)}</span>
+          {activeContext === 'rides' && <motion.div layoutId="contextUnderline" className="absolute -bottom-4 left-0 right-0 h-1 bg-black dark:bg-white rounded-full" />}
         </button>
-      </motion.div>
 
-      {/* SECTION 2: Massively Rounded "Where to?" Action Card & 3-Icon Row */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        className="px-6 my-6"
-      >
         <button 
+          onClick={() => setActiveContext('delivery')}
+          className={`relative py-2 flex items-center gap-2.5 transition-all ${activeContext === 'delivery' ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
+        >
+          <Package size={24} strokeWidth={2.5} />
+          <span className="text-[20px] font-black tracking-tight">{t('Delivery', language)}</span>
+          {activeContext === 'delivery' && <motion.div layoutId="contextUnderline" className="absolute -bottom-4 left-0 right-0 h-1 bg-black dark:bg-white rounded-full" />}
+        </button>
+      </div>
+
+      <div className="px-5 pt-6 space-y-8">
+        
+        {/* SECTION 2: MASSIVE SEARCH PILL */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
           onClick={() => navigate('/booking/set-location')}
-          className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-50/50 dark:border-[#333333] rounded-[32px] p-6 shadow-[0_10px_40px_rgba(0,0,0,0.05)] flex flex-col gap-4 active:scale-[0.98] transition-all text-left relative overflow-hidden mb-8"
+          className="w-full bg-[#EEEEEE] dark:bg-[#1A1A1A] rounded-full p-4 flex items-center justify-between cursor-pointer active:scale-[0.98] transition-all shadow-sm"
         >
-          <div className="flex items-center justify-between w-full relative z-10">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-[#F6F6F6] dark:bg-[#2A2A2A] rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-sm shrink-0 transition-colors">
-                <LineIconRegistry name="search" size={24} color="currentColor" strokeWidth={2.5} />
-              </div>
-              <div>
-                <h3 className="text-[24px] font-black text-[#111111] dark:text-white leading-none mb-1.5 tracking-tight transition-colors">{t('Where to?', language)}</h3>
-                <p className="text-[14px] font-bold text-gray-400 dark:text-gray-500 transition-colors">{t('Book a new delivery', language)}</p>
-              </div>
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center">
+              <Search size={24} strokeWidth={3} className="text-black dark:text-white" />
             </div>
-            <div className="w-12 h-12 bg-[#111111] dark:bg-white rounded-full flex items-center justify-center text-white dark:text-[#111111] shadow-md transition-colors shrink-0">
-              <ArrowRight size={20} strokeWidth={3} />
-            </div>
+            <span className="text-[22px] font-black tracking-tight text-[#000000] dark:text-white">
+              {t('Where to?', language)}
+            </span>
           </div>
-        </button>
+          <div className="flex items-center gap-2 bg-white dark:bg-[#2A2A2A] px-4 py-2 rounded-full shadow-sm">
+            <Clock size={16} strokeWidth={2.5} />
+            <span className="text-[14px] font-bold">{t('Now', language)}</span>
+            <ChevronRight size={16} />
+          </div>
+        </motion.div>
 
-        <div className="flex justify-between px-2 text-[#111111] dark:text-white">
-          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform" onClick={() => navigate('/booking/set-location')}>
-            <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
-              <LineIconRegistry name="car" size={36} color="currentColor" strokeWidth={1.5} />
+        {/* SECTION 3: RECENT PLACES (UBER LIST STYLE) */}
+        <div className="space-y-4">
+          {recentActivity.map((place, idx) => (
+            <div key={place.id} className="flex items-center gap-5 group cursor-pointer" onClick={() => navigate(`/tracking/detail/${place.id}`)}>
+              <div className="w-12 h-12 rounded-full bg-[#EEEEEE] dark:bg-[#1A1A1A] flex items-center justify-center shrink-0 group-active:bg-gray-200 transition-colors">
+                <Clock size={20} className="text-black dark:text-white" />
+              </div>
+              <div className="flex-1 border-b border-gray-100 dark:border-gray-900 pb-4">
+                <h4 className="text-[17px] font-bold tracking-tight truncate">
+                  {place.dropoffs ? place.dropoffs[place.dropoffs.length-1]?.address?.split(',')[0] : place.dropoff?.address?.split(',')[0] || 'Previous Place'}
+                </h4>
+                <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 truncate">
+                  {place.id.slice(-8).toUpperCase()} • {t(place.vehicleType || 'Standard', language)}
+                </p>
+              </div>
             </div>
-            <span className="text-[14px] font-black tracking-tight">{t('Rides', language)}</span>
+          ))}
+        </div>
+
+        {/* SECTION 4: SUGGESTIONS GRID (HORIZONTAL SCROLL) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-[20px] font-black tracking-tight">{t('Suggestions', language)}</h3>
+            <button className="text-[14px] font-bold text-gray-500 hover:text-black dark:hover:text-white">{t('See all', language)}</button>
           </div>
-          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-            <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
-              <LineIconRegistry name="food" size={36} color="currentColor" strokeWidth={1.5} />
-            </div>
-            <span className="text-[14px] font-black tracking-tight">{t('Eats', language)}</span>
-          </div>
-          <div className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform">
-            <div className="w-[72px] h-[72px] bg-gray-200/60 dark:bg-gray-800 rounded-full flex items-center justify-center shrink-0 transition-colors">
-              <LineIconRegistry name="scooter" size={36} color="currentColor" strokeWidth={1.5} />
-            </div>
-            <span className="text-[14px] font-black tracking-tight">{t('Scooter', language)}</span>
+          
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
+            {[
+              { label: 'Ride', icon: 'car', color: 'bg-[#EEEEEE]' },
+              { label: 'Package', icon: 'box', color: 'bg-[#EEEEEE]' },
+              { label: 'Reserve', icon: 'calendar', color: 'bg-[#EEEEEE]' },
+              { label: 'Rent', icon: 'key', color: 'bg-[#EEEEEE]' },
+              { label: 'Travel', icon: 'plane', color: 'bg-[#EEEEEE]' }
+            ].map((item) => (
+              <div key={item.label} className="flex flex-col items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform">
+                <div className={`w-[84px] h-[84px] rounded-2xl ${item.color} dark:bg-[#1A1A1A] flex items-center justify-center shadow-sm`}>
+                  <LineIconRegistry name={item.icon} size={42} strokeWidth={1.5} color="currentColor" />
+                </div>
+                <span className="text-[13px] font-black tracking-tight">{t(item.label, language)}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </motion.div>
 
-      {/* SECTION 3: Active Dispatch Pill */}
-      <AnimatePresence>
+        {/* SECTION 5: PROMO BANNER (ILLUSTRATIVE) */}
+        <div className="relative w-full rounded-[24px] bg-[#1F5AF6] p-6 overflow-hidden shadow-lg cursor-pointer group">
+          <div className="relative z-10 space-y-2 max-w-[60%]">
+            <h3 className="text-[22px] font-black text-white leading-tight tracking-tighter">
+              {t('We stand for safety.', language)}
+            </h3>
+            <p className="text-[14px] font-bold text-white/80 group-hover:underline flex items-center gap-1">
+              {t('Safety Tools', language)} <ArrowRight size={14} />
+            </p>
+          </div>
+          <div className="absolute right-0 bottom-0 top-0 w-[45%] opacity-90">
+             <div className="w-full h-full bg-gradient-to-l from-white/10 to-transparent flex items-center justify-center">
+                <Shield size={100} strokeWidth={1} className="text-white/20 -rotate-12" />
+             </div>
+          </div>
+        </div>
+
+        {/* SECTION 6: WAYS TO PLAN (CAROUSEL) */}
+        <div className="space-y-4">
+          <h3 className="text-[20px] font-black tracking-tight">{t('Ways to plan with Movyra', language)}</h3>
+          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-4 -mx-5 px-5">
+            
+            <div className="w-[280px] shrink-0 space-y-3 cursor-pointer">
+              <div className="w-full h-[140px] rounded-[24px] bg-[#91C6F9] relative overflow-hidden">
+                <Plane size={120} className="absolute -bottom-5 -right-5 text-[#BCE3FF] -rotate-12" />
+              </div>
+              <div className="px-1">
+                <h4 className="text-[16px] font-black tracking-tight flex items-center gap-2">
+                  {t('Trip to airport', language)} <ArrowRight size={16} />
+                </h4>
+                <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">
+                  {t('Schedule your pickup up to 90 days in advance.', language)}
+                </p>
+              </div>
+            </div>
+
+            <div className="w-[280px] shrink-0 space-y-3 cursor-pointer">
+              <div className="w-full h-[140px] rounded-[24px] bg-[#FFDAB9] relative overflow-hidden">
+                <Zap size={120} className="absolute -bottom-5 -right-5 text-[#FFE4B5] -rotate-12" />
+              </div>
+              <div className="px-1">
+                <h4 className="text-[16px] font-black tracking-tight flex items-center gap-2">
+                  {t('Go green', language)} <ArrowRight size={16} />
+                </h4>
+                <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">
+                  {t('Help the planet with Movyra Green electric rides.', language)}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* SECTION 7: ACTIVE PIPELINE DOCK (ONLY IF ORDERS ACTIVE) */}
         {activeShipmentsCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, height: 0, scale: 0.95 }}
-            animate={{ opacity: 1, height: 'auto', scale: 1 }}
-            exit={{ opacity: 0, height: 0, scale: 0.95 }}
-            className="px-6 mb-6"
+          <motion.div 
+            initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+            className="fixed bottom-[96px] left-5 right-5 z-[100]"
           >
             <div 
               onClick={() => navigate('/tracking-active')}
-              className="bg-[#BCE3FF] dark:bg-[#1A365D] rounded-[32px] p-6 shadow-[0_10px_30px_rgba(188,227,255,0.4)] dark:shadow-none border border-[#A5D5F9] dark:border-[#2A4365] cursor-pointer active:scale-[0.98] transition-all relative overflow-hidden"
+              className="bg-black dark:bg-white text-white dark:text-black px-6 py-4 rounded-full flex items-center justify-between shadow-2xl active:scale-[0.98] transition-all"
             >
-              <div className="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 bg-white/30 dark:bg-[#BCE3FF]/10 rounded-full animate-ping opacity-75" />
-              <div className="flex items-center gap-4 relative z-10">
-                <div className="w-14 h-14 bg-white/50 dark:bg-[#111111]/30 backdrop-blur-sm rounded-full flex items-center justify-center text-[#111111] dark:text-white shadow-sm shrink-0 transition-colors">
-                  <Activity size={24} strokeWidth={2.5} />
-                </div>
-                <div className="flex-1">
-                  <span className="block text-[20px] font-black text-[#111111] dark:text-white leading-tight tracking-tight mb-1 transition-colors">
-                    {activeShipmentsCount} {t('Active', language)} {activeShipmentsCount === 1 ? t('Shipment', language) : t('Shipments', language)}
-                  </span>
-                  <span className="block text-[13px] font-bold text-[#4A6B85] dark:text-[#E2F1FF] transition-colors">{t('Tap to track live routes', language)}</span>
-                </div>
-                <ChevronRight size={24} className="text-[#111111] dark:text-white transition-colors" strokeWidth={2.5} />
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" />
+                <span className="text-[15px] font-black tracking-tight">
+                  {activeShipmentsCount} {t('Active Trip', language)}
+                </span>
               </div>
+              <ArrowRight size={20} strokeWidth={3} />
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* SECTION 4: Quick Action Grid & Wallet */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-        className="px-6 mb-8 grid grid-cols-2 gap-4"
-      >
-        <button 
-          onClick={() => navigate('/profile/addresses')}
-          className="bg-white dark:bg-[#1A1A1A] p-5 rounded-[28px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50 dark:border-[#333333] flex flex-col items-start gap-4 active:scale-95 transition-all text-[#111111] dark:text-white"
-        >
-          <div className="w-10 h-10 rounded-full bg-[#F6F6F6] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-            <MapPin size={18} strokeWidth={2.5} />
-          </div>
-          <span className="text-[15px] font-black tracking-tight">{t('Saved Places', language)}</span>
-        </button>
-        <button 
-          onClick={() => navigate('/order-history')}
-          className="bg-white dark:bg-[#1A1A1A] p-5 rounded-[28px] shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50 dark:border-[#333333] flex flex-col items-start gap-4 active:scale-95 transition-all text-[#111111] dark:text-white"
-        >
-          <div className="w-10 h-10 rounded-full bg-[#F6F6F6] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-            <History size={18} strokeWidth={2.5} />
-          </div>
-          <span className="text-[15px] font-black tracking-tight">{t('Orders', language)}</span>
-        </button>
-        <button className="bg-[#111111] dark:bg-[#000000] p-6 rounded-[32px] shadow-[0_10px_25px_rgba(0,0,0,0.15)] flex flex-col items-start gap-4 active:scale-95 transition-all col-span-2 relative overflow-hidden dark:border dark:border-[#333333]">
-          <div className="flex items-center justify-between w-full relative z-10">
-            <div className="flex flex-col text-left">
-              <span className="text-[13px] font-bold text-gray-400 uppercase tracking-widest mb-1">{t('Movyra Wallet', language)}</span>
-              <span className="text-[36px] font-black text-white leading-none tracking-tighter">
-                ₹{isLoading ? '...' : accountBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white backdrop-blur-sm shadow-inner shrink-0">
-              <Plus size={28} strokeWidth={2.5} />
-            </div>
-          </div>
-        </button>
-      </motion.div>
-
-      {/* SECTION 5: Recent Activity (Dual-Path Merged) */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-        className="px-6"
-      >
-        <div className="flex items-center justify-between mb-4 px-2">
-          <span className="text-[14px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest transition-colors">
-            {t('Recent Activity', language)}
-          </span>
-          <button onClick={() => navigate('/order-history')} className="text-[14px] font-bold text-[#111111] dark:text-white hover:underline transition-colors">
-            {t('View All', language)}
-          </button>
-        </div>
-        
-        <div className="space-y-4">
-          {isLoading ? (
-            [1, 2].map(i => <div key={i} className="h-[120px] bg-white dark:bg-[#1A1A1A] rounded-[32px] animate-pulse border border-gray-50 dark:border-[#333333] transition-colors" />)
-          ) : recentActivity.length === 0 ? (
-            <div className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 text-center border border-gray-50/50 dark:border-[#333333] shadow-[0_4px_15px_rgba(0,0,0,0.03)] transition-colors">
-              <p className="text-[15px] font-bold text-gray-400 dark:text-gray-500 leading-relaxed transition-colors">
-                {t('No recent shipments found. Book your first delivery to see updates here.', language)}
-              </p>
-            </div>
-          ) : (
-            recentActivity.map(order => {
-              const config = getStatusConfig(order.status);
-              const StatusIcon = config.icon;
-              const dateObj = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt || 0);
-              const formattedDate = dateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-              
-              return (
-                <div 
-                  key={order.id} 
-                  onClick={() => navigate(order.status === 'delivered' || order.status === 'cancelled' ? `/order-history/detail/${order.id}` : `/tracking/detail/${order.id}`)}
-                  className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.03)] border border-gray-50/50 dark:border-[#333333] flex flex-col gap-4 cursor-pointer hover:border-gray-200 dark:hover:border-gray-600 active:scale-[0.98] transition-all"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 transition-colors ${config.bg} ${config.text}`}>
-                        <StatusIcon size={20} strokeWidth={2.5} className={config.spin ? 'animate-spin' : ''} />
-                      </div>
-                      <div className="overflow-hidden">
-                        <span className="text-[16px] font-black text-[#111111] dark:text-white tracking-tight truncate block transition-colors">
-                          {order.dropoffs ? order.dropoffs[order.dropoffs.length-1]?.address?.split(',')[0] : order.dropoff?.address?.split(',')[0] || 'Delivery'}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wide transition-colors">
-                            {order.id.slice(-8).toUpperCase()}
-                          </span>
-                          {order._source === 'legacy' && (
-                            <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[8px] font-bold text-gray-400 uppercase tracking-tighter">Legacy</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shrink-0 transition-colors ${config.bg} ${config.text}`}>
-                      {config.label}
-                    </span>
-                  </div>
-                  <div className="flex items-end justify-between mt-1">
-                    <div>
-                      <p className="text-[14px] font-bold text-gray-500 dark:text-gray-400 transition-colors">
-                        {formattedDate} • {t(order.vehicleType || 'Standard', language)}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[24px] font-black text-[#111111] dark:text-white leading-none tracking-tight transition-colors">
-                        ₹{order.pricing?.estimatedPrice || order.totalFare || 0}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </motion.div>
-
+      </div>
     </div>
   );
 }
