@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ArrowRight, AlertCircle, Loader2, Camera, X } from 'lucide-react';
+import { ChevronLeft, ArrowRight, AlertCircle, Loader2, Camera, X, Box, Shield, Diamond, Clock, MessageSquare } from 'lucide-react';
 
 // Premium Design System Components
 import SystemCard from '../../components/UI/SystemCard';
@@ -13,21 +13,21 @@ import useBookingStore from '../../store/useBookingStore';
 import usePreferencesStore from '../../store/usePreferencesStore';
 import { t } from '../../utils/translations';
 
-// Hardware Features (PATH CORRECTED FOR BUILD SUCCESS)
+// Hardware Features (PATH STRICTLY MAINTAINED FOR BUILD SUCCESS)
 import SmartScanner from '../../components/Tracking/SmartScanner';
 
 /**
  * PAGE: BOOKING DETAILS & PACKAGE SAFETY (PREMIUM CARD UI)
  * Architecture: Fragmented White SystemCards on #F2F4F7 background.
  * Features (8+): 
- * 1. Seamless Headerless Navigation with Logo
- * 2. Dynamic Item Category Selection
- * 3. Package Photo Proof Integration (Hardware Level)
- * 4. Animated Safety Toggles (Fragile / High Value)
- * 5. Real-time Scheduling Constraints & Mathematics
- * 6. Driver Instructions / Delivery Notes
- * 7. SmartScanner Hardware Overlay (Corrected Import Path)
- * 8. Validation Engine & Sticky Action Footer
+ * 1. Build Correction: Absolute-Relative pathing for SmartScanner module.
+ * 2. Headerless Logo Integration: Consistent branding.
+ * 3. Dynamic Item Categories: Real-world logistics classes.
+ * 4. Hardware Photo Verification: Base64 capture pipe.
+ * 5. Safety Protocols: Insured and Fragile handling modes.
+ * 6. Scheduling Logic: Real-time date/time offset validation.
+ * 7. Scrollable Viewport: Optimized for small device visibility.
+ * 8. Dark Mode Sync: 100% theme adaptive.
  */
 
 const ITEM_CATEGORIES = ['Documents', 'Electronics', 'Clothes', 'Groceries', 'Heavy Goods', 'Other'];
@@ -99,7 +99,7 @@ export default function BookingDetails() {
       isHighValue,
       driverNotes: driverNotes.trim(),
       requiresSecureOTP: isHighValue,
-      packageImage // Save the captured base64 hardware payload
+      packageImage 
     });
 
     setScheduling({
@@ -107,14 +107,13 @@ export default function BookingDetails() {
       scheduledDateTime: finalDateTime
     });
 
-    // Proceed to Bidding / Pricing Engine
     navigate('/booking/price-selection');
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans relative flex flex-col transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-[#F6F6F6] font-sans relative flex flex-col transition-colors duration-300 overflow-hidden">
       
-      {/* SECTION 1: Isolated Navigation & Logo Injection */}
+      {/* SECTION 1: Nav Header with Branding */}
       <div className="px-6 pt-14 pb-4 flex items-center justify-between sticky top-0 z-50 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md transition-colors duration-300">
         <div className="flex items-center gap-4">
           <button 
@@ -128,19 +127,20 @@ export default function BookingDetails() {
           </h1>
         </div>
         
-        {/* Logo Branding */}
         <div className="w-10 h-10 rounded-lg bg-black dark:bg-white flex items-center justify-center overflow-hidden shadow-sm p-1.5 shrink-0 transition-colors">
           <img src="/logo.png" alt="Movyra" className="w-full h-full object-contain" />
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-5 pt-2 pb-32 space-y-4">
+      {/* SECTION 2: Scrollable Content Wrapper */}
+      {/* Heavy padding-bottom (pb-44) ensures no cut-off for the last input card */}
+      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col px-5 pt-2 pb-44 space-y-4">
         
-        {/* SECTION 2: Category Card */}
+        {/* Item Selection Card */}
         <SystemCard animated variant="white" className="flex flex-col !p-5 dark:bg-[#1A1A1A] dark:border-[#333333] transition-colors">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-              <LineIconRegistry name="box" size={20} strokeWidth={2.5} />
+              <Box size={20} strokeWidth={2.5} />
             </div>
             <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Item Category', language)}</span>
           </div>
@@ -162,7 +162,7 @@ export default function BookingDetails() {
           </div>
         </SystemCard>
 
-        {/* SECTION 3: Package Photo Proof (HARDWARE INTEGRATION) */}
+        {/* Package Image Verification (Hardware Input) */}
         <SystemCard animated variant="white" className="flex flex-col !p-5 dark:bg-[#1A1A1A] dark:border-[#333333] transition-colors">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
@@ -173,7 +173,7 @@ export default function BookingDetails() {
 
           {packageImage ? (
             <div className="relative rounded-[24px] overflow-hidden border-2 border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all group shadow-sm">
-              <img src={packageImage} alt="Package Proof" className="w-full h-48 object-cover" />
+              <img src={packageImage} alt="Captured Item" className="w-full h-48 object-cover" />
               <button 
                 onClick={() => setPackageImage(null)}
                 className="absolute top-3 right-3 w-10 h-10 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/70 active:scale-95 transition-all"
@@ -194,11 +194,11 @@ export default function BookingDetails() {
           )}
         </SystemCard>
 
-        {/* SECTION 4: Safety Mode Card */}
+        {/* Safety & Protocol Options */}
         <SystemCard animated variant="white" className="flex flex-col !p-5 dark:bg-[#1A1A1A] dark:border-[#333333] transition-colors">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-              <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
+              <Shield size={20} strokeWidth={2.5} />
             </div>
             <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Safety Protocol', language)}</span>
           </div>
@@ -211,7 +211,7 @@ export default function BookingDetails() {
               }`}
             >
               <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isFragile ? 'bg-[#111111] dark:bg-white text-white dark:text-[#111111]' : 'bg-white dark:bg-[#333333] text-gray-400 dark:text-gray-500 shadow-sm border border-gray-100 dark:border-gray-800'}`}>
-                <LineIconRegistry name="shield" size={20} strokeWidth={2.5} />
+                <Shield size={20} strokeWidth={2.5} />
               </div>
               <div>
                 <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Fragile', language)}</span>
@@ -222,11 +222,11 @@ export default function BookingDetails() {
             <button
               onClick={() => setIsHighValue(!isHighValue)}
               className={`p-5 rounded-[24px] border-2 flex flex-col gap-4 text-left transition-all active:scale-95 ${
-                isHighValue ? 'border-[#276EF1] dark:border-[#4dabf7] bg-blue-50/50 dark:bg-[#1A365D]/30 shadow-[0_4px_15px_rgba(0,0,0,0.04)]' : 'border-transparent bg-[#F6F6F6] dark:bg-[#222222] hover:bg-white dark:hover:bg-[#2A2A2A] hover:border-gray-200 dark:hover:border-gray-700'
+                isHighValue ? 'border-[#276EF1] dark:border-[#4dabf7] bg-blue-50/50 dark:bg-[#1A365D]/30 shadow-[0_4px_15_rgba(0,0,0,0.04)]' : 'border-transparent bg-[#F6F6F6] dark:bg-[#222222] hover:bg-white dark:hover:bg-[#2A2A2A] hover:border-gray-200 dark:hover:border-gray-700'
               }`}
             >
               <div className={`w-11 h-11 rounded-full flex items-center justify-center transition-colors ${isHighValue ? 'bg-[#276EF1] dark:bg-[#4dabf7] text-white dark:text-[#111111]' : 'bg-white dark:bg-[#333333] text-gray-400 dark:text-gray-500 shadow-sm border border-gray-100 dark:border-gray-800'}`}>
-                <LineIconRegistry name="diamond" size={20} strokeWidth={2.5} />
+                <Diamond size={20} strokeWidth={2.5} />
               </div>
               <div>
                 <span className="block text-[15px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('High Value', language)}</span>
@@ -236,11 +236,11 @@ export default function BookingDetails() {
           </div>
         </SystemCard>
 
-        {/* SECTION 5: Schedule Card */}
+        {/* Schedule Timing Control */}
         <SystemCard animated variant="white" className="flex flex-col !p-5 dark:bg-[#1A1A1A] dark:border-[#333333] transition-colors">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-              <LineIconRegistry name="clock" size={20} strokeWidth={2.5} />
+              <Clock size={20} strokeWidth={2.5} />
             </div>
             <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Pickup Schedule', language)}</span>
           </div>
@@ -271,7 +271,6 @@ export default function BookingDetails() {
                 className="flex gap-3 overflow-hidden mt-3"
               >
                 <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] dark:bg-[#222222] transition-colors">
-                  <span className="text-gray-400 dark:text-gray-500 mr-3 shrink-0"><LineIconRegistry name="calendar" size={18} /></span>
                   <input 
                     type="date" min={todayISO} value={scheduleDate}
                     onChange={(e) => { setScheduleDate(e.target.value); setError(''); }}
@@ -279,7 +278,6 @@ export default function BookingDetails() {
                   />
                 </div>
                 <div className="flex-1 flex items-center px-4 py-4 rounded-2xl bg-[#F6F6F6] dark:bg-[#222222] transition-colors">
-                  <span className="text-gray-400 dark:text-gray-500 mr-3 shrink-0"><LineIconRegistry name="clock" size={18} /></span>
                   <input 
                     type="time" value={scheduleTime}
                     onChange={(e) => { setScheduleTime(e.target.value); setError(''); }}
@@ -291,11 +289,11 @@ export default function BookingDetails() {
           </AnimatePresence>
         </SystemCard>
 
-        {/* SECTION 6: Notes Card */}
+        {/* Notes input */}
         <SystemCard animated variant="white" className="flex flex-col !p-5 dark:bg-[#1A1A1A] dark:border-[#333333] transition-colors">
           <div className="flex items-center gap-4 mb-5">
             <div className="w-11 h-11 rounded-full bg-[#F2F4F7] dark:bg-[#2A2A2A] flex items-center justify-center text-[#111111] dark:text-white transition-colors">
-              <LineIconRegistry name="message" size={20} strokeWidth={2.5} />
+              <MessageSquare size={20} strokeWidth={2.5} />
             </div>
             <span className="text-[16px] font-black tracking-tight text-[#111111] dark:text-white transition-colors">{t('Driver Instructions', language)}</span>
           </div>
@@ -310,11 +308,11 @@ export default function BookingDetails() {
           </div>
         </SystemCard>
 
-        {/* SECTION 7: Real-time Error Notification */}
+        {/* Validation Errors */}
         <AnimatePresence>
           {error && (
             <motion.div 
-              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
               className="bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 text-red-600 dark:text-red-400 px-5 py-4 rounded-[24px] font-bold text-[13px] flex items-start gap-2 shadow-sm transition-colors"
             >
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
@@ -325,19 +323,19 @@ export default function BookingDetails() {
 
       </div>
 
-      {/* SECTION 8: Sticky Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 transition-colors duration-300">
+      {/* SECTION 8: Sticky Bottom Dock */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 pt-4 bg-[#F2F4F7]/90 dark:bg-[#111111]/90 backdrop-blur-md border-t border-gray-200 dark:border-gray-800 z-40 transition-colors duration-300 pb-safe">
         <SystemButton 
           onClick={handleContinue}
           variant="primary"
           icon={ArrowRight}
-          className="flex-row-reverse"
+          className="flex-row-reverse w-full"
         >
           {t('Review Pricing', language)}
         </SystemButton>
       </div>
 
-      {/* SECTION 9: HARDWARE OVERLAY - SMART SCANNER */}
+      {/* SECTION 9: Scanner Takeover */}
       <AnimatePresence>
         {isScannerOpen && (
           <SmartScanner 

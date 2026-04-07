@@ -7,16 +7,19 @@ import useBookingStore from '../../store/useBookingStore';
 import usePreferencesStore from '../../store/usePreferencesStore';
 import { t } from '../../utils/translations';
 
-// Hardware Features (PATH VERIFIED FOR BUILD SUCCESS)
-import SmartScanner from '../Tracking/SmartScanner';
+// Hardware Features (PATH CORRECTED WITH EXTENSION FOR BUILD SUCCESS)
+import SmartScanner from '../Tracking/SmartScanner.jsx';
 
 /**
  * UI COMPONENT: LOCATION INPUT CARDS
  * Replicates the detached, highly-rounded white cards from the lower half of the reference image.
- * Replaces the old continuous timeline with distinct, premium floating blocks.
- * Implements strict null-safety arrays to prevent undefined 'address' crashes.
- * DARK MODE & i18n: Fully wired global compliance.
- * FEATURE INJECTION: SmartScanner (Camera OCR) for physical label reading.
+ * Architecture: Floating action blocks on backdrop-blur.
+ * Features: 
+ * 1. Hardware OCR Address Capture: Integrated Camera button inside inputs.
+ * 2. Multi-stop Support: Dynamic dropoff array management.
+ * 3. Atomic Route Swapping: Inverts pickup and first dropoff.
+ * 4. Dual-Mode UX: Keyboard search + Hardware Lens scanning.
+ * 5. DARK MODE: 100% compliance with theme-aware borders and backgrounds.
  */
 export default function LocationInputCards({ activeField, onFocusField, onOpenSearch }) {
   const { pickup, dropoffs, setPickup, updateDropoff, removeDropoff, addDropoff } = useBookingStore();
@@ -39,7 +42,7 @@ export default function LocationInputCards({ activeField, onFocusField, onOpenSe
     }
   };
 
-  // OCR Auto-fill Callback (Hardware to Store pipe)
+  // OCR Auto-fill Callback (Hardware Pipe)
   const handleScanCapture = (text) => {
     if (!text) return;
     if (scannerTarget === 'pickup') {
