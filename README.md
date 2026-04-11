@@ -31,4 +31,4 @@ The presence of this code in a public repository does not constitute an open-sou
 
 Unauthorized cloning, forking, or distribution of this repository is actively tracked. Violations of these terms constitute intellectual property theft and will result in immediate Digital Millennium Copyright Act (DMCA) takedown notices and subsequent legal action.
 
-For licensing inquiries, contact legal@movyra.com.
+For licensing inquiries, contact legal.mv@tuta.io.

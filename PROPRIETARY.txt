@@ -1,0 +1,11 @@
+COPYRIGHT (C) 2026 MOVYRA. ALL RIGHTS RESERVED.
+
+PROPRIETARY AND CONFIDENTIAL.
+
+The intellectual and technical concepts contained herein are proprietary to Movyra and are protected by trade secret and copyright law. 
+
+1. NO LICENSE GRANTED: You are not permitted to use, copy, modify, merge, publish, distribute, sublicense, or sell copies of this software.
+2. NO DERIVATIVE WORKS: You may not use this code as a reference to build a competing product.
+3. FORK RESTRICTION: Any fork created from this repository must be immediately deleted. Retaining a copy of this repository on a personal or corporate account is unauthorized.
+
+Dissemination of this information or reproduction of this material is strictly forbidden unless prior written permission is obtained from Movyra Legal.
