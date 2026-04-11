@@ -1,34 +1,39 @@
-# Movyra Delivery Platform By Bongo
+# Movyra by Bongo
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)
+![Firebase](https://img.shields.io/badge/Firebase-10.8.0-FFCA28.svg)
 
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
-![License](https://img.shields.io/badge/license-Proprietary-red)
-![Code Size](https://img.shields.io/badge/code%20size-Obfuscated-darkgray)
-![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Mobile-blue)
-![React](https://img.shields.io/badge/React-18.2-61DAFB?logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?logo=vite&logoColor=white)
-![Firestore](https://img.shields.io/badge/Firestore-Secured-FFCA28?logo=firebase&logoColor=black)
-![Auth](https://img.shields.io/badge/Auth-Firebase-FFCA28?logo=firebase&logoColor=black)
-![SLA](https://img.shields.io/badge/SLA-99.9%25-success)
-![Vulnerabilities](https://img.shields.io/badge/vulnerabilities-0-brightgreen)
-![Security](https://img.shields.io/badge/Security-AES--256-black)
-![Maintained](https://img.shields.io/badge/Maintained%3F-Internal_Only-red)
-![PRs](https://img.shields.io/badge/PRs-Disabled-red)
-![Issues](https://img.shields.io/badge/Issues-Closed-red)
-![Architecture](https://img.shields.io/badge/Architecture-Serverless-blueviolet)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-Active-success)
-![Protection](https://img.shields.io/badge/DMCA-Protected-critical)
-![Access](https://img.shields.io/badge/Access-Restricted-critical)
-![Language](https://img.shields.io/badge/Language-JavaScript-F7DF1E?logo=javascript&logoColor=black)
-![Deployment](https://img.shields.io/badge/Deployment-Automated-0078D7)
+Movyra is an enterprise-grade, real-time logistics and delivery platform engineered by Bongo, an initiative of AnyAstro Techno Pvt Ltd. Designed for high-frequency dispatch, route optimization, and real-time telemetry tracking, Movyra provides a seamless Progressive Web App (PWA) experience for both end-users and fleet drivers.
 
-## Legal Notice and Proprietary Status
+## Core Architecture and Features
+Movyra is built on a modern, decoupled architecture ensuring high availability, offline resilience, and strict data security.
 
-This repository contains compiled, proprietary software owned exclusively by Movyra. All rights reserved. 
+* **Real-Time Telemetry Engine:** Utilizes Leaflet and MapLibre for hardware-accelerated map rendering, coupled with Firebase Firestore real-time listeners for sub-second driver location updates.
+* **Smart Routing and Distance Matrix:** Integrated with OpenStreetMap (Nominatim) for free, rate-limit-resistant geocoding, and OSRM (Open Source Routing Machine) for dynamic route calculation, distance variance detection, and ETA prediction.
+* **Enterprise Security and Authentication:** Secure login via Firebase Authentication with role-based access control (RBAC). Firestore security rules strictly enforce user-scoped data access paths to prevent lateral data breaches.
+* **Offline-First Progressive Web App (PWA):** Aggressive caching strategies using Vite PWA ensure sub-3G network resilience. Core UI shells and map layers are cached locally for instant loads.
+* **Multi-Stop Logistics and Optimization:** Complex routing algorithms supporting up to 5 distinct drop-off points per dispatch, complete with dynamic route swapping and strict coordinate deduplication.
 
-The presence of this code in a public repository does not constitute an open-source release. No license is granted to any individual, corporation, or entity to download, clone, fork, reverse-engineer, modify, or distribute this software.
+## Quick Start Guide
+To set up the Movyra environment on your local machine for development and testing:
 
-## Active Monitoring
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/AnyAstro-Techno/movyra-os.git](https://github.com/AnyAstro-Techno/movyra-os.git)
+    cd movyra-os
+    ```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+3.  **Environment Setup:**
+    Create a `.env.local` file in the root directory and configure your Firebase credentials. Reference `DEPLOYMENT.md` for specific variable requirements.
+4.  **Start the development server:**
+    ```bash
+    npm run dev
+    ```
 
-Unauthorized cloning, forking, or distribution of this repository is actively tracked. Violations of these terms constitute intellectual property theft and will result in immediate Digital Millennium Copyright Act (DMCA) takedown notices and subsequent legal action.
-
-For licensing inquiries, contact legal.mv@tuta.io.
+## Contributing
+We welcome contributions from the developer community. Please review `CONTRIBUTING.md` and our `CODE_OF_CONDUCT.md` prior to submitting a pull request to ensure alignment with our engineering standards.
