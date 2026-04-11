@@ -1,0 +1,136 @@
+/* * ============================================================================
+ * MOVYRA PREMIUM TYPOGRAPHY SYSTEM (UBER-BASE DESIGN)
+ * ============================================================================
+ * This system overrides default browser rendering to enforce a high-fidelity,
+ * application-like typography scale mimicking "Uber Move".
+ */
+
+/* FEATURE 1: PREMIUM FONT INJECTION (INTER) */
+/* Inter provides the closest geometric structure to custom enterprise fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+/* FEATURE 2: VARIABLE TOKEN ENGINE */
+:root {
+  /* Tracking (Letter Spacing) */
+  --tracking-tighter: -0.04em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.02em;
+  --tracking-widest: 0.1em;
+
+  /* Leading (Line Height) */
+  --leading-none: 1;
+  --leading-tight: 1.1;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+}
+
+/* FEATURE 4: ANTI-ALIASING & RENDERING BASE */
+html, body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Prevent text size adjustment after orientation changes in iOS */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* FEATURE 3: FLUID TYPOGRAPHY & HEADER HIERARCHY (WEIGHT 900) */
+/* Implements the stark, heavy headers seen in the 'Where to?' and promo cards */
+.text-uber-title {
+  font-weight: 900;
+  /* Fluid scaling: min 28px, ideal 8vw, max 36px */
+  font-size: clamp(1.75rem, 8vw, 2.25rem);
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-none);
+}
+
+.text-uber-h2 {
+  font-weight: 900;
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+
+.text-uber-h3 {
+  font-weight: 800;
+  font-size: 1.125rem;
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
+}
+
+/* FEATURE 5: BODY & MICROCOPY (WEIGHT 500) */
+/* Enforces highly readable, slightly heavier body text for accessibility */
+.text-uber-body {
+  font-weight: 500;
+  font-size: 0.9375rem; /* 15px */
+  letter-spacing: var(--tracking-normal);
+  line-height: var(--leading-normal);
+}
+
+.text-uber-caption {
+  font-weight: 700;
+  font-size: 0.8125rem; /* 13px */
+  letter-spacing: var(--tracking-wide);
+  line-height: var(--leading-snug);
+}
+
+.text-uber-micro {
+  font-weight: 900;
+  font-size: 0.625rem; /* 10px */
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  line-height: var(--leading-none);
+}
+
+/* FEATURE 6: KEYFRAME TYPOGRAPHY ANIMATIONS */
+/* Text Shimmer for loading states and premium badges */
+@keyframes textShimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-text-shimmer {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    currentColor 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: textShimmer 2.5s linear infinite;
+}
+
+/* Fade Up animation for typography entering the viewport */
+@keyframes textFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-text-fade-up {
+  animation: textFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Respect user's OS-level motion reduction preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-text-shimmer,
+  .animate-text-fade-up {
+    animation: none;
+    transform: none;
+    opacity: 1;
+  }
+}
