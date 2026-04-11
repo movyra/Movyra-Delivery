@@ -21,7 +21,8 @@ const OTPVerification = lazy(() => import('./pages/Auth/OTPVerification'));
 const SetPassword = lazy(() => import('./pages/Auth/SetPassword')); 
 const MobileHome = lazy(() => import('./pages/Dashboard/MobileHome'));
 
-// Core Booking Engine
+// Core Booking Engine & Services (NEW)
+const ServicesCatalog = lazy(() => import('./pages/Services/ServicesCatalog'));
 const SetLocation = lazy(() => import('./pages/Booking/SetLocation'));
 const SelectVehicle = lazy(() => import('./pages/Booking/SelectVehicle'));
 const BookingDetails = lazy(() => import('./pages/Booking/BookingDetails'));
@@ -85,11 +86,14 @@ const RequireGuestGuard = ({ authStatus }) => {
 
 const MainViewport = ({ authStatus }) => {
   const location = useLocation();
+  
+  // ALIGNED WITH UBER-STYLE 4-TAB PARADIGM
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === '/' || path === '/dashboard-home') return 'home';
+    if (path === '/services') return 'services';
     if (path === '/tracking-active') return 'tracking';
-    if (path === '/order-history' || path === '/expense-tracker') return 'history';
+    if (path === '/order-history' || path === '/expense-tracker') return 'activity';
     if (path === '/profile-settings') return 'profile';
     return null; 
   };
@@ -112,6 +116,7 @@ const MainViewport = ({ authStatus }) => {
                   <Route element={<MobileAppLayout title="Movyra" />}>
                     <Route path="/" element={<MobileHome />} />
                     <Route path="/dashboard-home" element={<MobileHome />} />
+                    <Route path="/services" element={<ServicesCatalog />} />
                     <Route path="/booking/set-location" element={<SetLocation />} />
                     <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
                     <Route path="/booking/details" element={<BookingDetails />} />
