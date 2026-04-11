@@ -1,5 +1,3 @@
-# 8. DEPLOYMENT.md
-
 # Deployment Guide for Movyra
 
 This guide outlines the strict procedures required to deploy the Movyra client application to a production environment using Firebase Hosting.
