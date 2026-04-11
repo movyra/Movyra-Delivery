@@ -1,4 +1,30 @@
-# Proprietary License Agreement
-![Status](https://img.shields.io/badge/License-Non--Open--Source-red)
+# 4. LICENSE.md
 
-This software is NOT open-source. Use of this software is restricted to authorized Movyra partners with a signed Master Services Agreement (MSA). No rights are granted to the general public.
+MIT License
+
+Copyright (c) 2026 AnyAstro Techno Pvt Ltd.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+Special Provision regarding "Bongo" and "Movyra" Trademarks:
+While the source code is licensed under MIT, the names "Movyra", "Bongo", and 
+"AnyAstro Techno Pvt Ltd", as well as their associated logos and brand assets, 
+are registered trademarks and may not be used to endorse or promote derived 
+products without explicit prior written permission from AnyAstro Techno Pvt Ltd.
