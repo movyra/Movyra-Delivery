@@ -14,35 +14,38 @@ import NetworkStatus from './components/UI/NetworkStatus';
 import { useOnboardingStore } from './store/useOnboardingStore';
 import usePreferencesStore from './store/usePreferencesStore';
 
-// React Lazy Loading for Performance
-const MobileLogin = lazy(() => import('./pages/Auth/MobileLogin'));
-const MobileSignup = lazy(() => import('./pages/Auth/MobileSignup'));
-const OTPVerification = lazy(() => import('./pages/Auth/OTPVerification'));
-const SetPassword = lazy(() => import('./pages/Auth/SetPassword')); 
-const MobileHome = lazy(() => import('./pages/Dashboard/MobileHome'));
+// NETWORK RESILIENCE ENGINE
+import lazyRetry from './utils/lazyRetry';
+
+// React Lazy Loading for Performance (Wrapped with Retry Logic to prevent 504s)
+const MobileLogin = lazyRetry(() => import('./pages/Auth/MobileLogin'));
+const MobileSignup = lazyRetry(() => import('./pages/Auth/MobileSignup'));
+const OTPVerification = lazyRetry(() => import('./pages/Auth/OTPVerification'));
+const SetPassword = lazyRetry(() => import('./pages/Auth/SetPassword')); 
+const MobileHome = lazyRetry(() => import('./pages/Dashboard/MobileHome'));
 
 // Core Booking Engine & Services (NEW)
-const ServicesCatalog = lazy(() => import('./pages/Services/ServicesCatalog'));
-const SetLocation = lazy(() => import('./pages/Booking/SetLocation'));
-const SelectVehicle = lazy(() => import('./pages/Booking/SelectVehicle'));
-const BookingDetails = lazy(() => import('./pages/Booking/BookingDetails'));
-const PriceSelection = lazy(() => import('./pages/Booking/PriceSelection'));
-const SearchingDriver = lazy(() => import('./pages/Booking/SearchingDriver'));
-const ReviewOrder = lazy(() => import('./pages/Booking/ReviewOrder'));
+const ServicesCatalog = lazyRetry(() => import('./pages/Services/ServicesCatalog'));
+const SetLocation = lazyRetry(() => import('./pages/Booking/SetLocation'));
+const SelectVehicle = lazyRetry(() => import('./pages/Booking/SelectVehicle'));
+const BookingDetails = lazyRetry(() => import('./pages/Booking/BookingDetails'));
+const PriceSelection = lazyRetry(() => import('./pages/Booking/PriceSelection'));
+const SearchingDriver = lazyRetry(() => import('./pages/Booking/SearchingDriver'));
+const ReviewOrder = lazyRetry(() => import('./pages/Booking/ReviewOrder'));
 
 // Tracking & Delivery
-const LiveTracking = lazy(() => import('./pages/Tracking/LiveTracking'));
-const ShipmentDetail = lazy(() => import('./pages/Tracking/ShipmentDetail'));
-const DeliveryComplete = lazy(() => import('./pages/Tracking/DeliveryComplete'));
-const Rating = lazy(() => import('./pages/Tracking/Rating'));
+const LiveTracking = lazyRetry(() => import('./pages/Tracking/LiveTracking'));
+const ShipmentDetail = lazyRetry(() => import('./pages/Tracking/ShipmentDetail'));
+const DeliveryComplete = lazyRetry(() => import('./pages/Tracking/DeliveryComplete'));
+const Rating = lazyRetry(() => import('./pages/Tracking/Rating'));
 
 // Profile, History, Business & Support
-const OrderHistory = lazy(() => import('./pages/order-history'));
-const OrderDetails = lazy(() => import('./pages/OrderHistory/OrderDetails'));
-const ProfileSettings = lazy(() => import('./pages/profile-settings'));
-const SavedAddresses = lazy(() => import('./pages/Profile/SavedAddresses'));
-const HelpCenter = lazy(() => import('./pages/Support/HelpCenter'));
-const InvoiceDashboard = lazy(() => import('./pages/Business/InvoiceDashboard'));
+const OrderHistory = lazyRetry(() => import('./pages/order-history'));
+const OrderDetails = lazyRetry(() => import('./pages/OrderHistory/OrderDetails'));
+const ProfileSettings = lazyRetry(() => import('./pages/profile-settings'));
+const SavedAddresses = lazyRetry(() => import('./pages/Profile/SavedAddresses'));
+const HelpCenter = lazyRetry(() => import('./pages/Support/HelpCenter'));
+const InvoiceDashboard = lazyRetry(() => import('./pages/Business/InvoiceDashboard'));
 
 // GLOBAL ERROR BOUNDARY: Prevents fatal white screens during network drops
 class GlobalErrorBoundary extends Component {
