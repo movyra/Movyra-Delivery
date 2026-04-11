@@ -2,7 +2,7 @@
 
 # Security Policy for Movyra
 
-Security is a foundational pillar for Bongo and the Movyra Logistics OS, an initiative of AnyAstro Techno Pvt Ltd. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
+Security is a foundational pillar for Bongo and the Movyra, an initiative of AnyAstro Techno Pvt Ltd. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
 
 ## Supported Versions
 We actively maintain, patch, and provide security updates for the following release branches of Movyra:
