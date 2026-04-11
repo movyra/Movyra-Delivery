@@ -1,5 +1,14 @@
 # Security Policy
 
+# Vulnerability Disclosure and Security Policy
+![Security](https://img.shields.io/badge/Security-Locked-red)
+
+## Reporting Guidelines
+Direct all vulnerability reports to security@movyra.com. 
+
+## Automated Defense
+This repository contains "Canary Tokens." Attempting to reverse-engineer the build files or scanning for secrets will trigger an automated security alert to our SOC.
+
 ## Supported Versions
 Only the latest production release is supported for security updates. Previous versions are deprecated immediately upon new releases.
 
