@@ -1,19 +1,30 @@
-# Security Policy
+# 2. SECURITY.md
 
-# Vulnerability Disclosure and Security Policy
-![Security](https://img.shields.io/badge/Security-Locked-red)
+# Security Policy for Movyra
 
-## Reporting Guidelines
-Direct all vulnerability reports to security@movyra.com. 
-
-## Automated Defense
-This repository contains "Canary Tokens." Attempting to reverse-engineer the build files or scanning for secrets will trigger an automated security alert to our SOC.
+Security is a foundational pillar for Bongo and the Movyra Logistics OS, an initiative of AnyAstro Techno Pvt Ltd. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
 
 ## Supported Versions
-Only the latest production release is supported for security updates. Previous versions are deprecated immediately upon new releases.
+We actively maintain, patch, and provide security updates for the following release branches of Movyra:
 
-## Reporting a Vulnerability
-Public disclosure of vulnerabilities is strictly prohibited. 
-Do not attempt to open GitHub Issues for security concerns. 
+| Version | Supported          | End of Life (EOL) |
+| ------- | ------------------ | ----------------- |
+| 1.0.x   | Yes                | December 2027     |
+| 0.9.x   | No                 | March 2026        |
+| < 0.9   | No                 | Unsupported       |
 
-Email all security reports, payload analyses, and vulnerability concerns directly to security.mv@tuta.io. Our internal security team will respond within 24 hours to verified reports.
+## Vulnerability Reporting Protocol
+If you discover a security vulnerability within the Movyra ecosystem, please DO NOT open a public GitHub issue or disclose the flaw publicly. Instead, adhere to the following coordinated disclosure process:
+
+1.  **Contact the Security Team:** Send a detailed email to `security.mv@tuta.io` outlining the vulnerability.
+2.  **Provide Technical Context:** Include precise steps to reproduce the issue, the affected version/component, the potential impact, and any proof-of-concept (PoC) code or scripts.
+3.  **PGP Encryption:** If your report contains highly sensitive exploit payloads or customer data snippets, you must encrypt your communication using our public PGP key, available at `https://go.ly/aatpgp`.
+
+## Incident Response and Remediation Timeline
+Our security engineering team follows a strict SLA for addressing reported vulnerabilities:
+* **Acknowledgment:** You will receive a response acknowledging receipt of your report within 24 hours.
+* **Triage and Assessment:** The vulnerability will be assessed to determine its CVSS severity score within 72 hours.
+* **Resolution:** Critical vulnerabilities (e.g., Authentication bypass, Firestore injection, unauthorized telemetry access) will be patched, and a hotfix will be deployed to production within 48 hours of verification.
+
+## Bug Bounty Program
+AnyAstro Techno Pvt Ltd operates a private bug bounty program for Movyra. Meaningful security reports that lead to validated code changes may be eligible for a financial reward. Rewards are evaluated on a case-by-case basis, factoring in the severity, impact, and quality of the report.
