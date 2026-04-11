@@ -2,16 +2,29 @@
  * GLOBAL TRANSLATION ENGINE & DICTIONARY
  * Exports the structured i18n dictionary mapping all UI strings to
  * English (en), Hindi (hi), and Marathi (mr).
- * Fixed: Added missing keys for Navigation and Tracking Status to stop console warnings.
+ * Fixed: Added missing keys for Navigation (Services), UI Redesign, and Tracking Status to stop console warnings.
  */
 
 export const translations = {
   en: {
-    // Navigation Keys
+    // Navigation & Context Keys
     Home: "Home",
     Track: "Track",
     Activity: "Activity",
     Account: "Account",
+    Services: "Services",
+    Rides: "Rides",
+    Delivery: "Delivery",
+
+    // UI Redesign Keys (Uber-Style)
+    Suggestions: "Suggestions",
+    "See all": "See all",
+    "Search for a service": "Search for a service",
+    "Where to?": "Where to?",
+    Details: "Details",
+    Timeline: "Timeline",
+    "Live Total": "Live Total",
+    Message: "Message",
 
     // Tracking Status Keys
     Searching: "Searching",
@@ -90,11 +103,24 @@ export const translations = {
   },
 
   hi: {
-    // Navigation Keys (Hindi)
+    // Navigation & Context Keys (Hindi)
     Home: "होम",
     Track: "ट्रैक",
     Activity: "गतिविधि",
     Account: "खाता",
+    Services: "सेवाएं",
+    Rides: "राइड्स",
+    Delivery: "डिलीवरी",
+
+    // UI Redesign Keys (Hindi)
+    Suggestions: "सुझाव",
+    "See all": "सभी देखें",
+    "Search for a service": "सेवा खोजें",
+    "Where to?": "कहाँ जाना है?",
+    Details: "विवरण",
+    Timeline: "टाइमलाइन",
+    "Live Total": "लाइव टोटल",
+    Message: "संदेश",
 
     // Tracking Status Keys (Hindi)
     Searching: "खोज रहे हैं",
@@ -173,11 +199,24 @@ export const translations = {
   },
 
   mr: {
-    // Navigation Keys (Marathi)
+    // Navigation & Context Keys (Marathi)
     Home: "मुख्यपृष्ठ",
     Track: "ट्रॅक",
     Activity: "हालचाली",
     Account: "खाते",
+    Services: "सेवा",
+    Rides: "राइड्स",
+    Delivery: "डिलिव्हरी",
+
+    // UI Redesign Keys (Marathi)
+    Suggestions: "सूचना",
+    "See all": "सर्व पहा",
+    "Search for a service": "सेवा शोधा",
+    "Where to?": "कुठे जायचे?",
+    Details: "तपशील",
+    Timeline: "टाइमलाइन",
+    "Live Total": "थेट एकूण",
+    Message: "संदेश",
 
     // Tracking Status Keys (Marathi)
     Searching: "शोधत आहे",
@@ -268,7 +307,7 @@ export const t = (key, lang = 'en') => {
   
   for (const k of keys) {
     if (result[k] === undefined) {
-      // Logic for top-level keys like "Home", "Track" etc.
+      // Logic for top-level keys like "Home", "Track", "Services" etc.
       if (translations[lang] && translations[lang][key]) return translations[lang][key];
       if (translations['en'][key]) return translations['en'][key];
       
@@ -280,3 +319,5 @@ export const t = (key, lang = 'en') => {
   
   return result;
 };
+
+export default t;
