@@ -1,5 +1,3 @@
-# 4. LICENSE.md
-
 MIT License
 
 Copyright (c) 2026 AnyAstro Techno Pvt Ltd.
