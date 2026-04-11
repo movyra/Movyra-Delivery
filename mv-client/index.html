@@ -1,1 +1,40 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" /><meta name="theme-color" content="#000000" /><title>Movyra App</title></head><body class="antialiased font-sans bg-[#000000]"><div id="root"></div><script type="module" src="/src/main.jsx"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Strict viewport to prevent zoom and ensure edge-to-edge rendering on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <!-- Dynamic Theme Color for PWA -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#F2F4F7" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#111111" />
+  
+  <title>Movyra</title>
+
+  <!-- 
+    ========================================================================
+    NETWORK STABILITY UPGRADE (CDN OFFLOADING)
+    ========================================================================
+    Reason: Moving Leaflet off the Vite dev server prevents 504 Gateway Timeouts
+    when the cloud IDE is under heavy load. The CDN handles the heavy lifting.
+  -->
+  
+  <!-- Preconnect to CDNs for faster DNS resolution -->
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Inject Leaflet CSS directly -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Inject Leaflet JS directly BEFORE React boots to ensure window.L is available -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+</head>
+<body class="antialiased font-sans bg-[#F2F4F7] dark:bg-[#111111] text-[#111111] dark:text-white transition-colors duration-300" style="overscroll-behavior: none; -webkit-tap-highlight-color: transparent; touch-action: pan-y;">
+  <!-- Application Mount Point -->
+  <div id="root" class="h-screen w-screen overflow-hidden"></div>
+  
+  <!-- Vite Entry -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>
