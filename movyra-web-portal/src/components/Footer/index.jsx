@@ -6,10 +6,11 @@ export default function Footer() {
     <footer className="bg-black text-white pt-24 pb-12 w-full">
       <div className="container mx-auto px-6 md:px-12">
         
-        {/* Top Section: Logo & Socials matching image_a172aa */}
+        {/* Top Section: Logo & Socials */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
           <div className="flex items-center gap-4">
-            <img src="/logo.png" alt="Movyra Logo" className="w-10 h-10 object-contain bg-white rounded-lg p-1" onError={(e) => { e.target.style.display='none'; }} />
+            {/* Removed white background and padding constraints for clean dark integration */}
+            <img src="/logo.png" alt="Movyra Logo" className="w-10 h-10 object-contain" onError={(e) => { e.target.style.display='none'; }} />
             <div className="text-[32px] font-black tracking-tighter">Movyra</div>
           </div>
           <div className="flex gap-1 font-bold text-[15px]">
