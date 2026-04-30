@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, ArrowRight, Clock, ChevronRight, 
   MapPin, Star, Shield, Car, Package, 
-  Calendar, Key, Plane, Zap, Info, Plus, Lock
+  Info, Plus, Lock, CheckCircle, Zap
 } from 'lucide-react';
 
 // Real Store, Prefs & Database Integration
@@ -14,19 +14,14 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, onSnapshot, collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { t } from '../../utils/translations';
 
-// Premium Design System Components
-import LineIconRegistry from '../../components/Icons/LineIconRegistry';
-import SystemCard from '../../components/UI/SystemCard';
-
 /**
- * PAGE: MOBILE HOME DASHBOARD (PREMIUM SUPER-APP UI)
- * Features: 
- * - Contextual Toggle: Switch between 'Rides' and 'Delivery' context.
- * - Massive Search Card: Exact replica of the "Where to?" pill interaction.
- * - Active Launch Modules: Hyper, Shop, Veg, Cloth (Custom SVGs).
- * - Coming Soon Modules: Eats, Porter, Subs (Grayed-out state logic).
- * - Promo Carousel: Safety matrix integrations.
- * - Dual-Path Engine: Restores legacy bookings while syncing new ones.
+ * ============================================================================
+ * MODULE: MOBILE HOME DASHBOARD (PREMIUM SUPER-APP UI)
+ * 12 Real Features: Contextual Delivery/Rides Toggle, Dual-Path Firebase Streams,
+ * Premium Flat-Vector SVGs (No Emojis), Interactive "Coming Soon" Toast Engine,
+ * Dynamic Ride Grids, Active Delivery Grids, Smart Search Pill, Safety Hooks,
+ * Active Pipeline HUD, and Uber-Grade Animations.
+ * ============================================================================
  */
 
 const getAppId = () => {
@@ -36,21 +31,26 @@ const getAppId = () => {
 };
 
 // ============================================================================
-// PIXEL-PERFECT CUSTOM SVG REGISTRY FOR SUPER-APP MODULES
+// PIXEL-PERFECT CUSTOM SVG REGISTRY (FLAT VECTOR PREMIUM STYLE)
+// Strictly utilizing black, white, and monochromatic structural styling
 // ============================================================================
 const CustomModuleIcon = ({ name, className }) => {
   const icons = {
-    hyper: <path strokeLinecap="round" strokeLinejoin="round" d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />,
+    hyper: <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />,
     shop: <path strokeLinecap="round" strokeLinejoin="round" d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10" />,
     veg: <path strokeLinecap="round" strokeLinejoin="round" d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z M12 22v-5" />,
     cloth: <path strokeLinecap="round" strokeLinejoin="round" d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z" />,
     eats: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z M12 11a2 2 0 100-4 2 2 0 000 4z" />,
     porter: <path strokeLinecap="round" strokeLinejoin="round" d="M1 3h15v13H1z M16 8h4l3 3v5h-7V8z M5.5 16a2.5 2.5 0 100 5 2.5 2.5 0 000-5z M19.5 16a2.5 2.5 0 100 5 2.5 2.5 0 000-5z" />,
-    subs: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+    subs: <path strokeLinecap="round" strokeLinejoin="round" d="M12 2v20 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />,
+    car_city: <path strokeLinecap="round" strokeLinejoin="round" d="M5 11l1.5-4.5h11L19 11M3 11h18v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6z M7 15h2 M15 15h2" />,
+    car_intercity: <path strokeLinecap="round" strokeLinejoin="round" d="M4 10l2-6h12l2 6M2 10h20v6a2 2 0 01-2 2H4a2 2 0 01-2-2v-6z M6 14h2.5 M15.5 14H18 M12 3v7" />,
+    moto: <path strokeLinecap="round" strokeLinejoin="round" d="M4 17a3 3 0 100-6 3 3 0 000 6zm16 0a3 3 0 100-6 3 3 0 000 6z M10.5 11.5L14 8h4 M7 14L10 9l3 2.5" />,
+    rental: <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2v4a2 2 0 01-2 2H9a2 2 0 01-2-2V9a2 2 0 012-2h6z M12 11v2 M12 7V5a2 2 0 00-2-2H8 M20 12h-3" />
   };
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
-      {icons[name]}
+      {icons[name] || icons.hyper}
     </svg>
   );
 };
@@ -62,7 +62,8 @@ export default function MobileHome() {
   
   // Real Global State
   const { language } = usePreferencesStore();
-  const [activeContext, setActiveContext] = useState('delivery'); // Defaulting to Delivery for Super-App focus
+  const [activeContext, setActiveContext] = useState('delivery'); // 'delivery' | 'rides'
+  const [lockedToastMsg, setLockedToastMsg] = useState(null);
 
   // Real-time Data States
   const [userName, setUserName] = useState('');
@@ -128,20 +129,33 @@ export default function MobileHome() {
   }, [secureOrders, legacyOrders]);
 
   // ============================================================================
-  // SUPER-APP MODULE DEFINITIONS (10+ ACTIVE & UPCOMING FEATURES)
+  // MODULE DATA ARRAYS
   // ============================================================================
-  const activeModules = [
+  const activeDeliveryModules = [
     { id: 'hyper', label: 'Hyper Delivery', icon: 'hyper', route: '/modules/hyper', color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' },
     { id: 'shop', label: 'Shop Delivery', icon: 'shop', route: '/modules/shop', color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400' },
     { id: 'veg', label: 'Veg & Fruit', icon: 'veg', route: '/modules/veg', color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' },
     { id: 'cloth', label: 'Cloth Try-On', icon: 'cloth', route: '/modules/cloth', color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400' },
   ];
 
-  const comingSoonModules = [
+  const comingSoonDeliveryModules = [
     { id: 'eats', label: 'Bongo Eats', icon: 'eats', route: '/modules/eats' },
     { id: 'porter', label: 'Heavy Logistics', icon: 'porter', route: '/modules/porter' },
     { id: 'subs', label: 'Subscriptions', icon: 'subs', route: '/modules/subs' },
   ];
+
+  // Ride modules are strictly locked with interactive Toast handlers
+  const ridesModules = [
+    { id: 'city', label: 'City Rides', icon: 'car_city', msg: 'City Rides are deploying in Phase 4. Our pricing algorithms are currently learning local routes.' },
+    { id: 'intercity', label: 'Intercity Cabs', icon: 'car_intercity', msg: 'Outstation cabs with negotiated fares are launching soon. Stay tuned.' },
+    { id: 'moto', label: 'Moto Bike', icon: 'moto', msg: 'Moto bike taxis will be available post-beta phase to ensure strict driver safety standards.' },
+    { id: 'rental', label: 'Hourly Rentals', icon: 'rental', msg: 'Hourly rentals with multi-stop routes are coming in Q4 2026.' }
+  ];
+
+  const handleLockedModuleClick = (msg) => {
+    setLockedToastMsg(msg);
+    setTimeout(() => setLockedToastMsg(null), 4000);
+  };
 
   return (
     <div className="min-h-[100dvh] bg-white dark:bg-[#000000] text-[#000000] dark:text-[#FFFFFF] font-sans pb-32 overflow-x-hidden relative transition-colors duration-300">
@@ -190,50 +204,105 @@ export default function MobileHome() {
           </div>
         </motion.div>
 
-        {/* SECTION 3: SUPER-APP MODULES GRID (ACTIVE) */}
-        <div className="space-y-4">
-          <h3 className="text-[20px] font-black tracking-tight">{t('Core Services', language)}</h3>
-          <div className="grid grid-cols-4 gap-3">
-            {activeModules.map((module) => (
-              <div 
-                key={module.id} 
-                onClick={() => navigate(module.route)}
-                className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group"
-              >
-                <div className={`w-full aspect-square rounded-2xl ${module.color} flex items-center justify-center shadow-sm group-hover:shadow-md transition-all`}>
-                  <CustomModuleIcon name={module.icon} className="w-8 h-8" />
+        {/* SECTION 3: DYNAMIC GRID RENDERING (DELIVERY VS RIDES) */}
+        <AnimatePresence mode="wait">
+          {activeContext === 'delivery' ? (
+            <motion.div key="delivery" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-8">
+              
+              {/* Active Delivery Modules */}
+              <div className="space-y-4">
+                <h3 className="text-[20px] font-black tracking-tight">{t('Core Services', language)}</h3>
+                <div className="grid grid-cols-4 gap-3">
+                  {activeDeliveryModules.map((module) => (
+                    <div 
+                      key={module.id} 
+                      onClick={() => navigate(module.route)}
+                      className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform group"
+                    >
+                      <div className={`w-full aspect-square rounded-2xl ${module.color} flex items-center justify-center shadow-sm group-hover:shadow-md transition-all`}>
+                        <CustomModuleIcon name={module.icon} className="w-8 h-8" />
+                      </div>
+                      <span className="text-[12px] font-bold tracking-tight text-center leading-tight">
+                        {t(module.label, language)}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <span className="text-[12px] font-bold tracking-tight text-center leading-tight">
-                  {t(module.label, language)}
-                </span>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* SECTION 4: UPCOMING MODULES GRID (GRAYED OUT) */}
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[20px] font-black tracking-tight text-gray-400 dark:text-gray-600">{t('Coming Soon', language)}</h3>
-            <Lock size={16} className="text-gray-400 dark:text-gray-600" />
-          </div>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
-            {comingSoonModules.map((module) => (
-              <div 
-                key={module.id} 
-                onClick={() => navigate(module.route)}
-                className="flex flex-col items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform opacity-50 grayscale"
-              >
-                <div className="w-[84px] h-[84px] rounded-2xl bg-[#F5F5F5] dark:bg-[#111111] border border-dashed border-gray-300 dark:border-gray-800 flex items-center justify-center">
-                  <CustomModuleIcon name={module.icon} className="w-8 h-8 text-gray-400" />
+              {/* Upcoming Delivery Modules */}
+              <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-900">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-[20px] font-black tracking-tight text-gray-400 dark:text-gray-600">{t('Coming Soon', language)}</h3>
+                  <Lock size={16} className="text-gray-400 dark:text-gray-600" />
                 </div>
-                <span className="text-[13px] font-black tracking-tight text-gray-500">{t(module.label, language)}</span>
+                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 -mx-5 px-5">
+                  {comingSoonDeliveryModules.map((module) => (
+                    <div 
+                      key={module.id} 
+                      onClick={() => navigate(module.route)}
+                      className="flex flex-col items-center gap-3 shrink-0 cursor-pointer active:scale-95 transition-transform opacity-60 hover:opacity-100"
+                    >
+                      <div className="w-[84px] h-[84px] rounded-2xl bg-[#F5F5F5] dark:bg-[#111111] border border-dashed border-gray-300 dark:border-gray-800 flex items-center justify-center">
+                        <CustomModuleIcon name={module.icon} className="w-8 h-8 text-gray-500 dark:text-gray-400" />
+                      </div>
+                      <span className="text-[13px] font-black tracking-tight text-gray-500">{t(module.label, language)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
 
-        {/* SECTION 5: RECENT PLACES (UBER LIST STYLE) */}
+            </motion.div>
+          ) : (
+            <motion.div key="rides" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-8">
+              
+              {/* Rides Grid (Locked Context) */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                   <h3 className="text-[20px] font-black tracking-tight">{t('Ride Network', language)}</h3>
+                   <span className="bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest">Beta</span>
+                </div>
+                <div className="grid grid-cols-4 gap-3">
+                  {ridesModules.map((module) => (
+                    <div 
+                      key={module.id} 
+                      onClick={() => handleLockedModuleClick(module.msg)}
+                      className="flex flex-col items-center gap-2 cursor-pointer active:scale-95 transition-transform"
+                    >
+                      <div className="w-full aspect-square rounded-2xl bg-gray-100 dark:bg-[#1A1A1A] flex items-center justify-center shadow-sm relative overflow-hidden">
+                        <CustomModuleIcon name={module.icon} className="w-8 h-8 text-black dark:text-white" />
+                        <div className="absolute inset-0 bg-white/20 dark:bg-black/20 backdrop-blur-[1px] flex items-center justify-center">
+                           <Lock size={16} className="text-black dark:text-white drop-shadow-md" />
+                        </div>
+                      </div>
+                      <span className="text-[12px] font-bold tracking-tight text-center leading-tight text-gray-500">
+                        {t(module.label, language)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Rides Promo Illustration Banner */}
+              <div className="relative w-full rounded-[24px] bg-black dark:bg-[#1A1A1A] p-6 overflow-hidden shadow-lg border border-gray-800">
+                <div className="relative z-10 space-y-2 max-w-[65%]">
+                  <h3 className="text-[20px] font-black text-white leading-tight tracking-tighter">
+                    {t('Safer rides are coming.', language)}
+                  </h3>
+                  <p className="text-[13px] font-bold text-gray-400">
+                    {t('We are onboarding verified drivers for City and Intercity routing.', language)}
+                  </p>
+                </div>
+                {/* Premium Vector Accent (Replicating uploaded style aesthetics) */}
+                <div className="absolute right-[-20px] bottom-[-20px] w-[140px] h-[140px] bg-white/5 rounded-full blur-2xl pointer-events-none" />
+                <Car size={100} strokeWidth={1} className="absolute right-0 bottom-[-10px] text-white/10 -rotate-12 pointer-events-none" />
+              </div>
+
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* SECTION 4: RECENT PLACES (UBER LIST STYLE) */}
         {recentActivity.length > 0 && (
           <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-900">
             <h3 className="text-[20px] font-black tracking-tight">{t('Recent Activity', language)}</h3>
@@ -255,7 +324,7 @@ export default function MobileHome() {
           </div>
         )}
 
-        {/* SECTION 6: PROMO BANNER (SAFETY MATRIX INTEGRATION) */}
+        {/* SECTION 5: PROMO BANNER (SAFETY MATRIX INTEGRATION) */}
         <div 
           onClick={() => navigate('/safety/guardian')}
           className="relative w-full rounded-[24px] bg-[#111111] dark:bg-[#1A1A1A] p-6 overflow-hidden shadow-lg cursor-pointer group border border-gray-800"
@@ -271,35 +340,57 @@ export default function MobileHome() {
               {t('Setup Guardian Mode', language)} <ArrowRight size={14} />
             </p>
           </div>
-          <div className="absolute right-0 bottom-0 top-0 w-[50%] opacity-90">
+          <div className="absolute right-0 bottom-0 top-0 w-[50%] opacity-90 pointer-events-none">
              <div className="w-full h-full bg-gradient-to-l from-[#1F5AF6]/20 to-transparent flex items-center justify-center">
                 <Shield size={120} strokeWidth={0.5} className="text-white/10 -rotate-12 translate-x-4" />
              </div>
           </div>
         </div>
 
-        {/* SECTION 7: ACTIVE PIPELINE DOCK (ONLY IF ORDERS ACTIVE) */}
-        {activeShipmentsCount > 0 && (
+      </div>
+
+      {/* SECTION 6: INTERACTIVE TOAST ENGINE FOR LOCKED RIDES */}
+      <AnimatePresence>
+        {lockedToastMsg && (
           <motion.div 
-            initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-            className="fixed bottom-[96px] left-5 right-5 z-[100]"
+            initial={{ y: 50, opacity: 0, scale: 0.95 }} 
+            animate={{ y: 0, opacity: 1, scale: 1 }} 
+            exit={{ y: 20, opacity: 0, scale: 0.95 }} 
+            transition={{ type: 'spring', damping: 20 }}
+            className="fixed bottom-28 left-5 right-5 z-[200]"
           >
-            <div 
-              onClick={() => navigate('/tracking-active')}
-              className="bg-black dark:bg-white text-white dark:text-black px-6 py-4 rounded-full flex items-center justify-between shadow-2xl active:scale-[0.98] transition-all"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-[15px] font-black tracking-tight">
-                  {activeShipmentsCount} {t('Active Order', language)}
-                </span>
+            <div className="bg-black dark:bg-white text-white dark:text-black p-4 rounded-2xl shadow-2xl flex items-start gap-3 border border-gray-800 dark:border-gray-200">
+              <Info size={24} className="shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-[14px] font-black tracking-tight mb-1">Service Locked</h4>
+                <p className="text-[13px] font-bold opacity-80 leading-snug">{lockedToastMsg}</p>
               </div>
-              <ArrowRight size={20} strokeWidth={3} />
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
 
-      </div>
+      {/* SECTION 7: ACTIVE PIPELINE DOCK (ONLY IF ORDERS ACTIVE) */}
+      {activeShipmentsCount > 0 && (
+        <motion.div 
+          initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+          className="fixed bottom-[96px] left-5 right-5 z-[100]"
+        >
+          <div 
+            onClick={() => navigate('/tracking-active')}
+            className="bg-black dark:bg-white text-white dark:text-black px-6 py-4 rounded-full flex items-center justify-between shadow-2xl active:scale-[0.98] transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-[15px] font-black tracking-tight">
+                {activeShipmentsCount} {t('Active Order', language)}
+              </span>
+            </div>
+            <ArrowRight size={20} strokeWidth={3} />
+          </div>
+        </motion.div>
+      )}
+
     </div>
   );
 }
