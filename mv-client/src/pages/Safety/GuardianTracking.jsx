@@ -17,11 +17,10 @@ import usePreferencesStore from '../../store/usePreferencesStore';
 /**
  * ============================================================================
  * MODULE: GUARDIAN TRACKING (EMERGENCY COMMAND CENTER)
- * FIX: React-Leaflet <MapContainer> strict child validation.
- * Replaced ALL `&&` conditional renders with explicit `? <Component /> : null`
- * ternary operators. This strictly prevents the React 18 / Leaflet bug where 
- * a boolean 'false' causes a fatal "render2 is not a function" crash inside 
- * the Context Consumer.
+ * FIX: Removed all Fragments (<>) and boolean 'false' evaluations inside the 
+ * <MapContainer>. React-Leaflet requires direct child components or nulls 
+ * to parse context correctly, avoiding the "render2" and "multiple children" 
+ * fatal errors.
  * ============================================================================
  */
 
@@ -162,30 +161,26 @@ export default function GuardianTracking() {
       </div>
 
       <div className="flex-1 relative z-0">
-        {/* FIX: MapContainer children strictly enforce React Fragment and ternary returns to prevent boolean leakage */}
+        {/* STRICT MAP WRAPPER: Direct Children ONLY, No Fragments (<>) */}
         <MapContainer 
           center={[trackedLocation.lat, trackedLocation.lng]} 
           zoom={15} 
           zoomControl={false}
           style={{ height: '100%', width: '100%' }}
         >
-          <>
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-            />
-            <Marker position={[trackedLocation.lat, trackedLocation.lng]} icon={userIcon} />
-            
-            {/* STRICT TERNARY: Never leaks a boolean 'false' to Leaflet */}
-            {trackedPath.length > 1 ? (
-              <Polyline positions={trackedPath} color="red" weight={4} opacity={0.7} />
-            ) : null}
-            
-            {/* STRICT TERNARY: Never leaks a boolean 'false' to Leaflet */}
-            {trackedLocation.accuracy > 0 ? (
-              <Circle center={[trackedLocation.lat, trackedLocation.lng]} radius={trackedLocation.accuracy} pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.1 }} />
-            ) : null}
-          </>
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+          />
+          <Marker position={[trackedLocation.lat, trackedLocation.lng]} icon={userIcon} />
+          
+          {trackedPath.length > 1 ? (
+            <Polyline positions={trackedPath} color="red" weight={4} opacity={0.7} />
+          ) : null}
+          
+          {trackedLocation.accuracy > 0 ? (
+            <Circle center={[trackedLocation.lat, trackedLocation.lng]} radius={trackedLocation.accuracy} pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.1 }} />
+          ) : null}
         </MapContainer>
 
         <div className="absolute top-4 left-4 z-[400]">
