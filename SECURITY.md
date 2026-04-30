@@ -1,5 +1,3 @@
-# 2. SECURITY.md
-
 # Security Policy for Movyra
 
 Security is a foundational pillar for Bongo and the Movyra, an initiative of AnyAstro Techno Pvt Ltd. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
