@@ -7,8 +7,8 @@ import { VitePWA } from 'vite-plugin-pwa';
  * Logic: 
  * 1. registerType 'autoUpdate' handles seamless background transitions.
  * 2. skipWaiting & clientsClaim: Forces the new service worker to take control immediately.
- * 3. optimizeDeps: Pre-bundles heavy libraries to prevent 504 timeouts on cloud servers.
- * 4. build.rollupOptions: Excludes Leaflet from the bundle since it's now loaded via CDN.
+ * 3. optimizeDeps: PRE-BUNDLES Leaflet and React-Leaflet to fix the fatal ESM export crash.
+ * 4. build.rollupOptions: Explicitly bundles map libraries to prevent module fragmentation.
  */
 
 export default defineConfig({
@@ -82,9 +82,7 @@ export default defineConfig({
   ],
   
   optimizeDeps: {
-    // PRE-BUNDLING: This is the PERMANENT FIX for 504 Gateway Timeouts.
-    // Vite will prepare these modules before the server starts, preventing
-    // the "dynamic import discovery" phase that causes server freezes.
+    // PRE-BUNDLING: This is the PERMANENT FIX for 504 Timeouts and the Leaflet ESM Crash.
     include: [
       '@emailjs/browser', 
       'axios', 
@@ -95,25 +93,30 @@ export default defineConfig({
       'firebase/firestore',
       'react-router-dom',
       'clsx',
-      'tailwind-merge'
+      'tailwind-merge',
+      'zustand',
+      'socket.io-client',
+      // CRITICAL FIX: Force Vite to pre-bundle the map dependencies natively
+      'leaflet',
+      'react-leaflet'
     ],
-    // Exclude Leaflet because we are now loading it via CDN in index.html
-    exclude: ['leaflet']
+    // REMOVED: exclude: ['leaflet'] - This was causing the fatal crash
   },
 
   build: {
     // Optimization: Ensure large chunks are split for better caching
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 1500,
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
+          vendor: ['react', 'react-dom', 'react-router-dom', 'zustand'],
           ui: ['framer-motion', 'lucide-react'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          maps: ['leaflet', 'react-leaflet'],
+          socket: ['socket.io-client']
         }
       },
-      // Tell Rollup that Leaflet is external (loaded via CDN)
-      external: ['leaflet']
+      // REMOVED: external: ['leaflet'] - Let Rollup handle the bundle internally
     }
   },
 
