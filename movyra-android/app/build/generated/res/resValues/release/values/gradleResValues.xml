@@ -8,9 +8,9 @@
     <!-- Value from default config. -->
     <bool name="enableSiteSettingsShortcut">true</bool>
     <!-- Value from default config. -->
-    <color name="backgroundColor">#F8FAFF</color>
+    <color name="backgroundColor">#111111</color>
     <!-- Value from default config. -->
-    <color name="colorPrimary">#1E6AF5</color>
+    <color name="colorPrimary">#F2F4F7</color>
     <!-- Value from default config. -->
     <color name="colorPrimaryDark">#000000</color>
     <!-- Value from default config. -->
@@ -40,8 +40,8 @@
     <!-- Value from default config. -->
     <string name="orientation" translatable="false">portrait</string>
     <!-- Value from default config. -->
-    <string name="providerAuthority" translatable="false">com.bongo.movyra.fileprovider</string>
+    <string name="providerAuthority" translatable="false">app.web.movyra_customer_prod.twa.fileprovider</string>
     <!-- Value from default config. -->
-    <string name="webManifestUrl" translatable="false">https://movyra-customer-prod.web.app/manifest.json</string>
+    <string name="webManifestUrl" translatable="false">https://movyra-customer-prod.web.app/manifest.webmanifest</string>
 
 </resources>

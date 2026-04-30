@@ -3,8 +3,8 @@
 # min_api: 21
 # common_typos_disable
 # {"id":"com.android.tools.r8.mapping","version":"2.2"}
-# pg_map_id: 47a951b
-# pg_map_hash: SHA-256 47a951bd0b3df2441375d1e0c505dd5c89ad719c852aad0d1f15fc01a9e4e3af
+# pg_map_id: 8ec61a1
+# pg_map_hash: SHA-256 8ec61a1fab9eb69d9e695114f8021f14df7a81a8ef36d166f2d75bde1ef755d2
 android.support.customtabs.ICustomTabsCallback -> a.a:
 # {"id":"sourceFile","fileName":"ICustomTabsCallback.java"}
     java.lang.String DESCRIPTOR -> a
@@ -28244,16 +28244,16 @@ androidx.versionedparcelable.VersionedParcelParcel -> androidx.versionedparcelab
     1:6:void writeBoolean(boolean):181:181 -> y
 androidx.versionedparcelable.VersionedParcelable -> L.a:
 # {"id":"sourceFile","fileName":"VersionedParcelable.java"}
-com.bongo.movyra.Application -> com.bongo.movyra.Application:
+app.web.movyra_customer_prod.twa.Application -> app.web.movyra_customer_prod.twa.Application:
 # {"id":"sourceFile","fileName":"Application.java"}
     1:4:void <init>():20:20 -> <init>
     1:4:void onCreate():26:26 -> onCreate
-com.bongo.movyra.DelegationService -> com.bongo.movyra.DelegationService:
+app.web.movyra_customer_prod.twa.DelegationService -> app.web.movyra_customer_prod.twa.DelegationService:
 # {"id":"sourceFile","fileName":"DelegationService.java"}
     1:4:void <init>():7:7 -> <init>
     1:3:void onCreate():11:11 -> onCreate
     4:12:void onCreate():14:14 -> onCreate
-com.bongo.movyra.LauncherActivity -> com.bongo.movyra.LauncherActivity:
+app.web.movyra_customer_prod.twa.LauncherActivity -> app.web.movyra_customer_prod.twa.LauncherActivity:
 # {"id":"sourceFile","fileName":"LauncherActivity.java"}
     1:4:void <init>():25:25 -> <init>
     1:5:android.net.Uri getLaunchingUrl():48:48 -> i

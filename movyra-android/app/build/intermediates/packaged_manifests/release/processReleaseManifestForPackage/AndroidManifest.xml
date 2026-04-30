@@ -22,9 +22,9 @@
      the abbreviated format.
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.bongo.movyra"
-    android:versionCode="2"
-    android:versionName="2" >
+    package="app.web.movyra_customer_prod.twa"
+    android:versionCode="1"
+    android:versionName="1" >
 
     <uses-sdk
         android:minSdkVersion="21"
@@ -45,13 +45,13 @@
     </queries>
 
     <permission
-        android:name="com.bongo.movyra.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        android:name="app.web.movyra_customer_prod.twa.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
         android:protectionLevel="signature" />
 
-    <uses-permission android:name="com.bongo.movyra.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+    <uses-permission android:name="app.web.movyra_customer_prod.twa.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 
     <application
-        android:name="com.bongo.movyra.Application"
+        android:name="app.web.movyra_customer_prod.twa.Application"
         android:allowBackup="true"
         android:appComponentFactory="androidx.core.app.CoreComponentFactory"
         android:extractNativeLibs="true"
@@ -86,7 +86,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.bongo.movyra.LauncherActivity"
+            android:name="app.web.movyra_customer_prod.twa.LauncherActivity"
             android:alwaysRetainTaskState="true"
             android:exported="true"
             android:label="@string/launcherName" >
@@ -130,11 +130,11 @@
                 android:name="android.support.customtabs.trusted.FALLBACK_STRATEGY"
                 android:value="@string/fallbackType" />
             <meta-data
+                android:name="android.support.customtabs.trusted.DISPLAY_MODE"
+                android:value="immersive" />
+            <meta-data
                 android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
                 android:value="@string/orientation" />
-            <meta-data
-                android:name="android.support.customtabs.trusted.DISPLAY_OVERRIDE"
-                android:resource="@array/display_override" />
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -168,7 +168,7 @@
         </provider>
 
         <service
-            android:name="com.bongo.movyra.DelegationService"
+            android:name="app.web.movyra_customer_prod.twa.DelegationService"
             android:enabled="@bool/enableNotification"
             android:exported="@bool/enableNotification" >
             <meta-data
@@ -195,7 +195,7 @@
 
         <provider
             android:name="androidx.startup.InitializationProvider"
-            android:authorities="com.bongo.movyra.androidx-startup"
+            android:authorities="app.web.movyra_customer_prod.twa.androidx-startup"
             android:exported="false" >
             <meta-data
                 android:name="androidx.emoji2.text.EmojiCompatInitializer"

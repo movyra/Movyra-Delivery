@@ -1,24 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="display_override">
-    
-      
-        <item>standalone</item>
-      
-    
-      
-        <item>immersive</item>
-      
-    
-      
-        <item>minimal-ui</item>
-      
-    
-    </string-array>
     <bool name="enableNotification">true</bool>
     <bool name="enableSiteSettingsShortcut">true</bool>
-    <color name="backgroundColor">#F8FAFF</color>
-    <color name="colorPrimary">#1E6AF5</color>
+    <color name="backgroundColor">#111111</color>
+    <color name="colorPrimary">#F2F4F7</color>
     <color name="colorPrimaryDark">#000000</color>
     <color name="navigationColor">#000000</color>
     <color name="navigationColorDark">#000000</color>
@@ -44,6 +29,6 @@
     <string name="launchUrl" translatable="false">https://movyra-customer-prod.web.app/</string>
     <string name="launcherName" translatable="false">Movyra</string>
     <string name="orientation" translatable="false">portrait</string>
-    <string name="providerAuthority" translatable="false">com.bongo.movyra.fileprovider</string>
-    <string name="webManifestUrl" translatable="false">https://movyra-customer-prod.web.app/manifest.json</string>
+    <string name="providerAuthority" translatable="false">app.web.movyra_customer_prod.twa.fileprovider</string>
+    <string name="webManifestUrl" translatable="false">https://movyra-customer-prod.web.app/manifest.webmanifest</string>
 </resources>

@@ -21,18 +21,18 @@ plugins {
 }
 
 def twaManifest = [
-    applicationId: 'com.bongo.movyra',
+    applicationId: 'app.web.movyra_customer_prod.twa',
     hostName: 'movyra-customer-prod.web.app', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
     name: 'Movyra by Bongo', // The application name.
     launcherName: 'Movyra', // The name shown on the Android Launcher.
-    themeColor: '#1E6AF5', // The color used for the status bar.
+    themeColor: '#F2F4F7', // The color used for the status bar.
     themeColorDark: '#000000', // The color used for the dark status bar.
     navigationColor: '#000000', // The color used for the navigation bar.
     navigationColorDark: '#000000', // The color used for the dark navbar.
     navigationDividerColor: '#000000', // The navbar divider color.
     navigationDividerColorDark: '#000000', // The dark navbar divider color.
-    backgroundColor: '#F8FAFF', // The color used for the splash screen background.
+    backgroundColor: '#111111', // The color used for the splash screen background.
     enableNotifications: true, // Set to true to enable notification delegation.
     // Every shortcut must include the following fields:
     // - name: String that will show up in the shortcut.
@@ -52,13 +52,13 @@ def twaManifest = [
 
 android {
     compileSdkVersion 36
-    namespace "com.bongo.movyra"
+    namespace "app.web.movyra_customer_prod.twa"
     defaultConfig {
-        applicationId "com.bongo.movyra"
+        applicationId "app.web.movyra_customer_prod.twa"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 2
-        versionName "2"
+        versionCode 1
+        versionName "1"
 
         // The name for the application
         resValue "string", "appName", twaManifest.name
@@ -76,7 +76,7 @@ android {
             // The URL the Web Manifest for the Progressive Web App that the TWA points to. This
             // is used by Chrome OS and Meta Quest to open the Web version of the PWA instead of
             // the TWA, as it will probably give a better user experience for non-mobile devices.
-            resValue "string", "webManifestUrl", 'https://movyra-customer-prod.web.app/manifest.json'
+            resValue "string", "webManifestUrl", 'https://movyra-customer-prod.web.app/manifest.webmanifest'
         
 
         

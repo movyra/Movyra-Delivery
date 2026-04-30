@@ -1,16 +1,16 @@
 {
-  "packageId": "com.bongo.movyra",
+  "packageId": "app.web.movyra_customer_prod.twa",
   "host": "movyra-customer-prod.web.app",
   "name": "Movyra by Bongo",
   "launcherName": "Movyra",
-  "display": "standalone",
-  "themeColor": "#1E6AF5",
+  "display": "fullscreen",
+  "themeColor": "#F2F4F7",
   "themeColorDark": "#000000",
   "navigationColor": "#000000",
   "navigationColorDark": "#000000",
   "navigationDividerColor": "#000000",
   "navigationDividerColorDark": "#000000",
-  "backgroundColor": "#F8FAFF",
+  "backgroundColor": "#111111",
   "enableNotifications": true,
   "startUrl": "/",
   "iconUrl": "https://movyra-customer-prod.web.app/logo.png",
@@ -20,11 +20,11 @@
     "path": "/workspaces/Movyra-Delivery/movyra-android/android.keystore",
     "alias": "android"
   },
-  "appVersionName": "2",
-  "appVersionCode": 2,
+  "appVersionName": "1",
+  "appVersionCode": 1,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
-  "webManifestUrl": "https://movyra-customer-prod.web.app/manifest.json",
+  "webManifestUrl": "https://movyra-customer-prod.web.app/manifest.webmanifest",
   "fallbackType": "customtabs",
   "features": {
     "locationDelegation": {
@@ -46,10 +46,6 @@
   "protocolHandlers": [],
   "fileHandlers": [],
   "launchHandlerClientMode": "",
-  "displayOverride": [
-    "standalone",
-    "fullscreen",
-    "minimal-ui"
-  ],
-  "appVersion": "2"
+  "displayOverride": [],
+  "appVersion": "1"
 }

@@ -22,9 +22,9 @@
 22     the abbreviated format.
 23-->
 24<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-25    package="com.bongo.movyra"
-26    android:versionCode="2"
-27    android:versionName="2" >
+25    package="app.web.movyra_customer_prod.twa"
+26    android:versionCode="1"
+27    android:versionName="1" >
 28
 29    <uses-sdk
 30        android:minSdkVersion="21"
@@ -45,33 +45,33 @@
 38        <intent>
 38-->[com.google.androidbrowserhelper:androidbrowserhelper:2.6.2] /home/codespace/.gradle/caches/8.11.1/transforms/5053e02be90783e54992393be394bb70/transformed/androidbrowserhelper-2.6.2/AndroidManifest.xml:23:9-29:18
 39            <action android:name="android.intent.action.VIEW" />
-39-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:152:17-68
-39-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:152:25-66
+39-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:17-68
+39-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:25-66
 40
 41            <category android:name="android.intent.category.BROWSABLE" />
-41-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:17-77
-41-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:27-75
+41-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:153:17-77
+41-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:153:27-75
 42
 43            <data android:scheme="https" />
-43-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:155:17-158:19
-43-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:155:23-45
+43-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:17-157:19
+43-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:23-45
 44        </intent>
 45    </queries>
 46
 47    <permission
 47-->[androidx.core:core:1.13.0] /home/codespace/.gradle/caches/8.11.1/transforms/a5429f7b20c607b890f08b5283ad4ec0/transformed/core-1.13.0/AndroidManifest.xml:22:5-24:47
-48        android:name="com.bongo.movyra.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+48        android:name="app.web.movyra_customer_prod.twa.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 48-->[androidx.core:core:1.13.0] /home/codespace/.gradle/caches/8.11.1/transforms/a5429f7b20c607b890f08b5283ad4ec0/transformed/core-1.13.0/AndroidManifest.xml:23:9-81
 49        android:protectionLevel="signature" />
 49-->[androidx.core:core:1.13.0] /home/codespace/.gradle/caches/8.11.1/transforms/a5429f7b20c607b890f08b5283ad4ec0/transformed/core-1.13.0/AndroidManifest.xml:24:9-44
 50
-51    <uses-permission android:name="com.bongo.movyra.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+51    <uses-permission android:name="app.web.movyra_customer_prod.twa.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 51-->[androidx.core:core:1.13.0] /home/codespace/.gradle/caches/8.11.1/transforms/a5429f7b20c607b890f08b5283ad4ec0/transformed/core-1.13.0/AndroidManifest.xml:26:5-97
 51-->[androidx.core:core:1.13.0] /home/codespace/.gradle/caches/8.11.1/transforms/a5429f7b20c607b890f08b5283ad4ec0/transformed/core-1.13.0/AndroidManifest.xml:26:22-94
 52
 53    <application
-53-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:35:5-206:19
-54        android:name="com.bongo.movyra.Application"
+53-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:35:5-205:19
+54        android:name="app.web.movyra_customer_prod.twa.Application"
 54-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:36:9-35
 55        android:allowBackup="true"
 55-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:37:9-35
@@ -136,8 +136,8 @@
 86            </intent-filter>
 87        </activity>
 88        <activity
-88-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:79:9-164:20
-89            android:name="com.bongo.movyra.LauncherActivity"
+88-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:79:9-163:20
+89            android:name="app.web.movyra_customer_prod.twa.LauncherActivity"
 89-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:79:19-50
 90            android:alwaysRetainTaskState="true"
 90-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:80:13-49
@@ -224,98 +224,98 @@
 131                android:value="@string/fallbackType" />
 131-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:127:17-53
 132            <meta-data
-132-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:133:13-134:54
-133                android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
-133-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:133:24-92
-134                android:value="@string/orientation" />
-134-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:134:17-52
+132-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:132:13-133:45
+133                android:name="android.support.customtabs.trusted.DISPLAY_MODE"
+133-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:132:24-86
+134                android:value="immersive" />
+134-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:133:17-42
 135            <meta-data
-135-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:139:17-141:66
-136                android:name="android.support.customtabs.trusted.DISPLAY_OVERRIDE"
-136-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:140:21-87
-137                android:resource="@array/display_override" />
-137-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:141:21-63
+135-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:136:13-137:54
+136                android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
+136-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:136:24-92
+137                android:value="@string/orientation" />
+137-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:137:17-52
 138
 139            <intent-filter>
-139-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:146:13-149:29
+139-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:145:13-148:29
 140                <action android:name="android.intent.action.MAIN" />
-140-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:147:17-69
-140-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:147:25-66
+140-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:146:17-69
+140-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:146:25-66
 141
 142                <category android:name="android.intent.category.LAUNCHER" />
-142-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:148:17-77
-142-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:148:27-74
+142-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:147:17-77
+142-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:147:27-74
 143            </intent-filter>
 144            <intent-filter android:autoVerify="true" >
-144-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:13-159:29
-144-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:28-53
+144-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:150:13-158:29
+144-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:150:28-53
 145                <action android:name="android.intent.action.VIEW" />
-145-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:152:17-68
-145-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:152:25-66
+145-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:17-68
+145-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:151:25-66
 146
 147                <category android:name="android.intent.category.DEFAULT" />
 147-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:74:21-80
 147-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:74:31-77
 148                <category android:name="android.intent.category.BROWSABLE" />
-148-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:17-77
-148-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:27-75
+148-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:153:17-77
+148-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:153:27-75
 149
 150                <data
-150-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:155:17-158:19
+150-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:17-157:19
 151                    android:host="@string/hostName"
-151-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:156:21-52
+151-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:155:21-52
 152                    android:scheme="https" />
-152-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:155:23-45
+152-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:154:23-45
 153            </intent-filter>
 154        </activity>
 155        <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity" />
-155-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:166:9-90
-155-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:166:19-87
+155-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:165:9-90
+155-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:165:19-87
 156        <activity
-156-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:168:9-169:62
+156-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:167:9-168:62
 157            android:name="com.google.androidbrowserhelper.trusted.WebViewFallbackActivity"
-157-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:168:19-97
+157-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:167:19-97
 158            android:configChanges="orientation|screenSize" />
-158-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:169:13-59
+158-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:168:13-59
 159
 160        <provider
-160-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:171:9-179:20
+160-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:170:9-178:20
 161            android:name="androidx.core.content.FileProvider"
-161-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:172:13-62
+161-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:171:13-62
 162            android:authorities="@string/providerAuthority"
-162-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:173:13-60
+162-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:172:13-60
 163            android:exported="false"
-163-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:175:13-37
+163-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:174:13-37
 164            android:grantUriPermissions="true" >
-164-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:174:13-47
+164-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:173:13-47
 165            <meta-data
-165-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:176:13-178:53
+165-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:175:13-177:53
 166                android:name="android.support.FILE_PROVIDER_PATHS"
-166-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:177:17-67
+166-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:176:17-67
 167                android:resource="@xml/filepaths" />
-167-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:178:17-50
+167-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:177:17-50
 168        </provider>
 169
 170        <service
-170-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:181:9-196:19
-171            android:name="com.bongo.movyra.DelegationService"
-171-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:182:13-46
+170-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:180:9-195:19
+171            android:name="app.web.movyra_customer_prod.twa.DelegationService"
+171-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:181:13-46
 172            android:enabled="@bool/enableNotification"
-172-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:183:13-55
+172-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:182:13-55
 173            android:exported="@bool/enableNotification" >
-173-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:184:13-56
+173-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:183:13-56
 174            <meta-data
-174-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:187:17-189:73
+174-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:186:17-188:73
 175                android:name="android.support.customtabs.trusted.SMALL_ICON"
-175-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:188:21-81
+175-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:187:21-81
 176                android:resource="@drawable/ic_notification_icon" />
-176-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:189:21-70
+176-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:188:21-70
 177
 178            <intent-filter>
-178-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:192:13-195:29
+178-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:191:13-194:29
 179                <action android:name="android.support.customtabs.trusted.TRUSTED_WEB_ACTIVITY_SERVICE" />
-179-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:193:17-105
-179-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:193:25-103
+179-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:192:17-105
+179-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:192:25-103
 180
 181                <category android:name="android.intent.category.DEFAULT" />
 181-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:74:21-80
@@ -324,11 +324,11 @@
 183        </service>
 184
 185        <activity android:name="com.google.androidbrowserhelper.trusted.NotificationPermissionRequestActivity" />
-185-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:199:13-118
-185-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:199:23-115
+185-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:198:13-118
+185-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:198:23-115
 186        <activity android:name="com.google.androidbrowserhelper.locationdelegation.PermissionRequestActivity" />
-186-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:203:13-204:89
-186-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:203:23-123
+186-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:202:13-203:89
+186-->/workspaces/Movyra-Delivery/movyra-android/app/src/main/AndroidManifest.xml:202:23-123
 187        <activity
 187-->[com.google.android.gms:play-services-base:18.1.0] /home/codespace/.gradle/caches/8.11.1/transforms/02e37f92c71ffadabef41ae6f5feca22/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
 188            android:name="com.google.android.gms.common.api.GoogleApiActivity"
@@ -349,7 +349,7 @@
 196-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.11.1/transforms/5cb7738f5242d8c4e38c8ffa2b265b31/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
 197            android:name="androidx.startup.InitializationProvider"
 197-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.11.1/transforms/5cb7738f5242d8c4e38c8ffa2b265b31/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
-198            android:authorities="com.bongo.movyra.androidx-startup"
+198            android:authorities="app.web.movyra_customer_prod.twa.androidx-startup"
 198-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.11.1/transforms/5cb7738f5242d8c4e38c8ffa2b265b31/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
 199            android:exported="false" >
 199-->[androidx.emoji2:emoji2:1.3.0] /home/codespace/.gradle/caches/8.11.1/transforms/5cb7738f5242d8c4e38c8ffa2b265b31/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37

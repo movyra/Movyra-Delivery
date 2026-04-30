@@ -1,4 +1,4 @@
-com.bongo.movyra
+app.web.movyra_customer_prod.twa
 anim abc_fade_in
 anim abc_fade_out
 anim abc_grow_fade_in_from_bottom
@@ -30,7 +30,6 @@ animator fragment_fade_enter
 animator fragment_fade_exit
 animator fragment_open_enter
 animator fragment_open_exit
-array display_override
 attr actionBarDivider
 attr actionBarItemBackground
 attr actionBarPopupTheme

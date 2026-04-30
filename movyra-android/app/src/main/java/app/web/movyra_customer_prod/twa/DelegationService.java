@@ -1,4 +1,4 @@
-package com.bongo.movyra;
+package app.web.movyra_customer_prod.twa;
 
 
 import com.google.androidbrowserhelper.locationdelegation.LocationDelegationExtraCommandHandler;
