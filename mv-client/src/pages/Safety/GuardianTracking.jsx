@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldAlert, PhoneCall, MapPin, Navigation, 
-  Battery, Wifi, Activity, AlertTriangle, 
-  Clock, Share2, Copy, Mic, StopCircle
+  Battery, Wifi, Activity, Clock, Share2, 
+  Mic, StopCircle
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Polyline, Circle } from 'react-leaflet';
 import L from 'leaflet';
@@ -17,14 +17,14 @@ import usePreferencesStore from '../../store/usePreferencesStore';
 /**
  * ============================================================================
  * MODULE: GUARDIAN TRACKING (EMERGENCY COMMAND CENTER)
- * 12 Real Features: Live Socket.io GPS Telemetry, Real Browser Battery/Network 
- * Polling, Live Audio Stream Visualizer, Haversine Safe Zone Geofencing, 
- * Route Deviation HUD, Incident Event Logger, One-Tap Police Dispatch, 
- * Live Speedometer, and Encrypted Tracking Link Generator.
+ * FIX: React-Leaflet <MapContainer> strict child validation.
+ * Replaced ALL `&&` conditional renders with explicit `? <Component /> : null`
+ * ternary operators. This strictly prevents the React 18 / Leaflet bug where 
+ * a boolean 'false' causes a fatal "render2 is not a function" crash inside 
+ * the Context Consumer.
  * ============================================================================
  */
 
-// Custom Map Marker for the User in Distress
 const userIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -37,36 +37,27 @@ const userIcon = new L.Icon({
 const SOCKET_SERVER_URL = import.meta.env.VITE_SOCKET_SERVER_URL || 'https://api.movyra.com';
 
 export default function GuardianTracking() {
-  const { sessionId } = useParams(); // E.g., /safety/guardian/12345
+  const { sessionId } = useParams();
   const navigate = useNavigate();
   const { language } = usePreferencesStore();
   
-  // Real Architecture Hooks for Local User
-  const { isSOSActive, isSilentSOSActive, deactivateSOS } = useSafetyContext();
+  const { isSOSActive, deactivateSOS } = useSafetyContext();
 
-  // Feature 1: Remote Telemetry State (From Socket)
-  const [trackedLocation, setTrackedLocation] = useState({ lat: 20.5937, lng: 78.9629, accuracy: 0 }); // Default India center
+  const [trackedLocation, setTrackedLocation] = useState({ lat: 20.5937, lng: 78.9629, accuracy: 0 });
   const [trackedPath, setTrackedPath] = useState([]);
   const [speed, setSpeed] = useState(0);
 
-  // Feature 2: Hardware Status State (Battery & Network)
   const [batteryLevel, setBatteryLevel] = useState(100);
   const [isCharging, setIsCharging] = useState(false);
   const [networkType, setNetworkType] = useState('4G');
 
-  // Feature 3: Emergency Logic State
   const [incidentLog, setIncidentLog] = useState([]);
   const [isAudioStreaming, setIsAudioStreaming] = useState(false);
   const [distanceToSafeZone, setDistanceToSafeZone] = useState(null);
   
-  // Socket Ref
   const socketRef = useRef(null);
 
-  // ======================================================================
-  // LOGIC 1: Live Socket.io Telemetry & Event Subscription
-  // ======================================================================
   useEffect(() => {
-    // Connect to the secure tracking room
     socketRef.current = io(SOCKET_SERVER_URL, { transports: ['websocket'] });
     const room = sessionId || 'local_sos_room';
     
@@ -77,7 +68,6 @@ export default function GuardianTracking() {
       setTrackedPath(prev => [...prev, [data.lat, data.lng]]);
       if (data.speed) setSpeed(data.speed);
       
-      // Calculate distance to nearest safe zone (Simulated police station at slightly offset coordinates)
       const dist = calculateDistance(data.lat, data.lng, data.lat + 0.01, data.lng + 0.01);
       setDistanceToSafeZone(dist);
     });
@@ -90,29 +80,21 @@ export default function GuardianTracking() {
       setIsAudioStreaming(status);
     });
 
-    // Auto-log the start of the session
     setIncidentLog([{ time: new Date().toLocaleTimeString(), msg: 'Guardian tracking session initiated.' }]);
 
     return () => socketRef.current.disconnect();
   }, [sessionId]);
 
-  // ======================================================================
-  // LOGIC 2: Real Browser API Integration (Battery & Network)
-  // Polls the actual physical device hardware capabilities if supported
-  // ======================================================================
   useEffect(() => {
-    // Battery Status API
     if ('getBattery' in navigator) {
       navigator.getBattery().then((battery) => {
         setBatteryLevel(Math.round(battery.level * 100));
         setIsCharging(battery.charging);
-        
         battery.addEventListener('levelchange', () => setBatteryLevel(Math.round(battery.level * 100)));
         battery.addEventListener('chargingchange', () => setIsCharging(battery.charging));
       });
     }
 
-    // Network Information API
     if ('connection' in navigator) {
       setNetworkType(navigator.connection.effectiveType.toUpperCase());
       navigator.connection.addEventListener('change', () => {
@@ -121,23 +103,17 @@ export default function GuardianTracking() {
     }
   }, []);
 
-  // ======================================================================
-  // LOGIC 3: Haversine Distance Formula for Safe Zones
-  // ======================================================================
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Earth radius in km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
     return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
   };
 
-  // ======================================================================
-  // LOGIC 4: Direct System Dispatch Handlers
-  // ======================================================================
   const handleCallPolice = () => {
     setIncidentLog(prev => [{ time: new Date().toLocaleTimeString(), msg: 'Dialed Emergency Services (112)' }, ...prev]);
-    window.location.href = 'tel:112'; // Real protocol trigger for India Emergency Number
+    window.location.href = 'tel:112';
   };
 
   const copyTrackingLink = () => {
@@ -149,9 +125,6 @@ export default function GuardianTracking() {
   return (
     <div className="min-h-screen bg-[#111111] text-white font-sans flex flex-col">
       
-      {/* ================================================================ */}
-      {/* HEADER: COMMAND CENTER */}
-      {/* ================================================================ */}
       <div className="bg-red-600 px-5 py-4 flex items-center justify-between shadow-lg z-50">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
@@ -169,9 +142,6 @@ export default function GuardianTracking() {
         </button>
       </div>
 
-      {/* ================================================================ */}
-      {/* HARDWARE HUD & VITAL STATS */}
-      {/* ================================================================ */}
       <div className="grid grid-cols-4 gap-1 p-2 bg-[#1A1A1A] border-b border-gray-800">
         <div className="flex flex-col items-center justify-center p-2">
           <Battery size={18} className={batteryLevel < 20 ? 'text-red-500' : 'text-green-500'} />
@@ -191,31 +161,33 @@ export default function GuardianTracking() {
         </div>
       </div>
 
-      {/* ================================================================ */}
-      {/* LIVE OSM MAP ENGINE */}
-      {/* ================================================================ */}
       <div className="flex-1 relative z-0">
+        {/* FIX: MapContainer children strictly enforce React Fragment and ternary returns to prevent boolean leakage */}
         <MapContainer 
           center={[trackedLocation.lat, trackedLocation.lng]} 
           zoom={15} 
           zoomControl={false}
           style={{ height: '100%', width: '100%' }}
         >
-          {/* Dark Mode OSM Tiles */}
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-          />
-          <Marker position={[trackedLocation.lat, trackedLocation.lng]} icon={userIcon} />
-          {trackedPath.length > 1 && <Polyline positions={trackedPath} color="red" weight={4} opacity={0.7} />}
-          
-          {/* Geofence Accuracy Indicator */}
-          {trackedLocation.accuracy > 0 && (
-            <Circle center={[trackedLocation.lat, trackedLocation.lng]} radius={trackedLocation.accuracy} pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.1 }} />
-          )}
+          <>
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
+            />
+            <Marker position={[trackedLocation.lat, trackedLocation.lng]} icon={userIcon} />
+            
+            {/* STRICT TERNARY: Never leaks a boolean 'false' to Leaflet */}
+            {trackedPath.length > 1 ? (
+              <Polyline positions={trackedPath} color="red" weight={4} opacity={0.7} />
+            ) : null}
+            
+            {/* STRICT TERNARY: Never leaks a boolean 'false' to Leaflet */}
+            {trackedLocation.accuracy > 0 ? (
+              <Circle center={[trackedLocation.lat, trackedLocation.lng]} radius={trackedLocation.accuracy} pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 0.1 }} />
+            ) : null}
+          </>
         </MapContainer>
 
-        {/* Floating Action: Audio Monitor */}
         <div className="absolute top-4 left-4 z-[400]">
           <div className={`px-4 py-2 rounded-full text-[12px] font-black flex items-center gap-2 shadow-lg backdrop-blur-md ${isAudioStreaming ? 'bg-red-500/90 text-white' : 'bg-black/80 text-gray-400 border border-gray-700'}`}>
             <Mic size={16} className={isAudioStreaming ? 'animate-pulse' : ''} />
@@ -223,18 +195,12 @@ export default function GuardianTracking() {
           </div>
         </div>
 
-        {/* Floating Action: Share Link */}
         <button onClick={copyTrackingLink} className="absolute top-4 right-4 z-[400] w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform">
           <Share2 size={20} className="text-white" />
         </button>
       </div>
 
-      {/* ================================================================ */}
-      {/* ACTION DASHBOARD & INCIDENT LOG */}
-      {/* ================================================================ */}
       <div className="h-64 bg-[#111111] border-t border-gray-800 flex flex-col relative z-10">
-        
-        {/* Urgent Action Buttons */}
         <div className="flex gap-2 p-4 border-b border-gray-800">
           <button 
             onClick={handleCallPolice}
@@ -242,17 +208,16 @@ export default function GuardianTracking() {
           >
             <PhoneCall size={20} /> Dial 112 (Police)
           </button>
-          {isSOSActive && (
+          {isSOSActive ? (
             <button 
               onClick={deactivateSOS}
               className="px-6 bg-[#2A2A2A] text-white rounded-xl text-[14px] font-black flex flex-col items-center justify-center active:scale-95 transition-transform"
             >
               <StopCircle size={20} className="mb-1" /> End SOS
             </button>
-          )}
+          ) : null}
         </div>
 
-        {/* Live Incident Log */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           <h3 className="text-[12px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
             <Clock size={14} /> Incident Event Log
@@ -270,7 +235,6 @@ export default function GuardianTracking() {
             ))}
           </AnimatePresence>
         </div>
-
       </div>
     </div>
   );
