@@ -24,7 +24,28 @@ const OTPVerification = lazyRetry(() => import('./pages/Auth/OTPVerification'));
 const SetPassword = lazyRetry(() => import('./pages/Auth/SetPassword')); 
 const MobileHome = lazyRetry(() => import('./pages/Dashboard/MobileHome'));
 
-// Core Booking Engine & Services (NEW)
+// ============================================================================
+// 🚀 SUPER-APP ARCHITECTURE: ACTIVE LAUNCH MODULES (NEW)
+// ============================================================================
+const HyperDashboard = lazyRetry(() => import('./pages/Modules/HyperDelivery/HyperDashboard'));
+const ShopOrdering = lazyRetry(() => import('./pages/Modules/ShopDelivery/ShopOrdering'));
+const FreshnessMarket = lazyRetry(() => import('./pages/Modules/VegFruit/FreshnessMarket'));
+const ClothTryOn = lazyRetry(() => import('./pages/Modules/ClothDelivery/ClothTryOn'));
+
+// ============================================================================
+// ⏳ SUPER-APP ARCHITECTURE: "COMING SOON" PLACEHOLDERS (NEW)
+// ============================================================================
+const ComingSoonEats = lazyRetry(() => import('./pages/Modules/BongoEats/ComingSoonEats'));
+const ComingSoonPorter = lazyRetry(() => import('./pages/Modules/Logistics/ComingSoonPorter'));
+const ComingSoonSubs = lazyRetry(() => import('./pages/Modules/Subscriptions/ComingSoonSubs'));
+
+// ============================================================================
+// 🛡️ SAFETY & NEGOTIATION ENGINES (NEW)
+// ============================================================================
+const LiveBidRoom = lazyRetry(() => import('./pages/Negotiation/LiveBidRoom'));
+const GuardianTracking = lazyRetry(() => import('./pages/Safety/GuardianTracking'));
+
+// Core Booking Engine & Services
 const ServicesCatalog = lazyRetry(() => import('./pages/Services/ServicesCatalog'));
 const SetLocation = lazyRetry(() => import('./pages/Booking/SetLocation'));
 const SelectVehicle = lazyRetry(() => import('./pages/Booking/SelectVehicle'));
@@ -98,6 +119,7 @@ const MainViewport = ({ authStatus }) => {
     if (path === '/tracking-active') return 'tracking';
     if (path === '/order-history' || path === '/expense-tracker') return 'activity';
     if (path === '/profile-settings') return 'profile';
+    // Return null for deep module pages to hide the bottom nav for fullscreen focus
     return null; 
   };
   const activeTab = getActiveTab();
@@ -119,6 +141,23 @@ const MainViewport = ({ authStatus }) => {
                   <Route element={<MobileAppLayout title="Movyra" />}>
                     <Route path="/" element={<MobileHome />} />
                     <Route path="/dashboard-home" element={<MobileHome />} />
+                    
+                    {/* NEW ACTIVE MODULE ROUTES */}
+                    <Route path="/modules/hyper" element={<HyperDashboard />} />
+                    <Route path="/modules/shop" element={<ShopOrdering />} />
+                    <Route path="/modules/veg" element={<FreshnessMarket />} />
+                    <Route path="/modules/cloth" element={<ClothTryOn />} />
+
+                    {/* NEW COMING SOON MODULE ROUTES */}
+                    <Route path="/modules/eats" element={<ComingSoonEats />} />
+                    <Route path="/modules/porter" element={<ComingSoonPorter />} />
+                    <Route path="/modules/subs" element={<ComingSoonSubs />} />
+
+                    {/* NEW NEGOTIATION & SAFETY ROUTES */}
+                    <Route path="/booking/negotiation" element={<LiveBidRoom />} />
+                    <Route path="/safety/guardian" element={<GuardianTracking />} />
+
+                    {/* CORE BOOKING ROUTES */}
                     <Route path="/services" element={<ServicesCatalog />} />
                     <Route path="/booking/set-location" element={<SetLocation />} />
                     <Route path="/booking/select-vehicle" element={<SelectVehicle />} />
