@@ -5,7 +5,7 @@ import {
   Truck, ArrowLeft, Send, Package, 
   Briefcase, ShieldCheck, Share2, CheckCircle, 
   Clock, Zap, Info, ChevronDown, MapPin, 
-  TrendingUp, Box, Layers, MonitorWeight
+  TrendingUp, Box, Layers, Scale
 } from 'lucide-react';
 
 // Real Firebase & Global Integrations
@@ -16,10 +16,8 @@ import { t } from '../../../utils/translations';
 /**
  * ============================================================================
  * MODULE: HEAVY LOGISTICS (COMING SOON HYPE ENGINE)
- * 10 Real Features: Firebase Waitlist Capture, Live Launch Countdown, OS Native
- * Share API, Interactive Weight/Fleet Estimator, Live Fare Calculator,
- * B2B/B2C Mode Toggle, Fleet Info Tabs, Real-Time Validation, FAQ Accordion,
- * and SVG-only iconography (Strictly No Emojis).
+ * FIX: Replaced invalid 'MonitorWeight' icon with valid 'Scale' icon to 
+ * prevent Vite bundler import crashes.
  * ============================================================================
  */
 
@@ -258,7 +256,7 @@ export default function ComingSoonPorter() {
         {/* SECTION 5: INTERACTIVE WEIGHT ESTIMATOR */}
         <div className="bg-white dark:bg-[#111111] p-6 rounded-[24px] shadow-sm border border-gray-100 dark:border-gray-900">
           <h2 className="text-[18px] font-black tracking-tight mb-2 flex items-center gap-2">
-            <MonitorWeight className="text-blue-600" size={20} /> Smart Load Estimator
+            <Scale className="text-blue-600" size={20} /> Smart Load Estimator
           </h2>
           <p className="text-[13px] font-bold text-gray-500 mb-5">Add your items to see how our algorithm automatically suggests the right fleet vehicle.</p>
           
