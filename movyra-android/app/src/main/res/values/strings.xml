@@ -22,22 +22,6 @@
     AndroidManifest values.
   -->
   
-    <string-array name="display_override">
-    
-      
-        <item>standalone</item>
-      
-    
-      
-        <item>immersive</item>
-      
-    
-      
-        <item>minimal-ui</item>
-      
-    
-    </string-array>
-  
 
   <!--
     This variable below expresses the relationship between the app and the site,
