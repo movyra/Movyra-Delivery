@@ -1,84 +1,96 @@
 rules_version = '2';
 
 service cloud.firestore {
-match /databases/{database}/documents {
+  match /databases/{database}/documents {
 
-// ========================================================================
-// GLOBAL DENY
-// Strictly block all access by default to prevent data leaks.
-// ========================================================================
-match /{document=**} {
-  allow read, write: if false;
-}
-
-// ========================================================================
-// ISOLATED APP ENVIRONMENT (New Multi-Tenant Structure)
-// All new API data is securely scoped within artifacts/appId/ path.
-// ========================================================================
-match /artifacts/{appId} {
-
-  match /users/{userId} {
-    // 1. Grant access to the root user identity document
-    allow read, write: if request.auth != null && request.auth.uid == userId;
-
-    // 2. Grant access to ALL nested private data (orders, addresses, profile)
-    // This is critical for resolving the "Invisible Booking" bug.
+    // ========================================================================
+    // GLOBAL DENY
+    // Strictly block all access by default to prevent data leaks.
+    // ========================================================================
     match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ========================================================================
+    // ONBOARDING / EARLY ACCESS (New Addition)
+    // ========================================================================
+    match /early_access/{document} {
+      // Public write restricted to having required fields
+      allow create: if request.resource.data.name != null 
+                    && request.resource.data.phone != null;
+      // Public read allowed for real-time counters on the frontend
+      allow read: if true;
+      // Nobody can modify or delete from frontend
+      allow update, delete: if false; 
+    }
+
+    // ========================================================================
+    // ISOLATED APP ENVIRONMENT (New Multi-Tenant Structure)
+    // All new API data is securely scoped within artifacts/appId/ path.
+    // ========================================================================
+    match /artifacts/{appId} {
+
+      match /users/{userId} {
+        // 1. Grant access to the root user identity document
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        // 2. Grant access to ALL nested private data (orders, addresses, profile)
+        // This is critical for resolving the "Invisible Booking" bug.
+        match /{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
+      }
+
+      match /public/data {
+        // Driver transparency profiles are read-only for authenticated customers
+        match /drivers/{driverId} {
+          allow read: if request.auth != null;
+          allow write: if false;
+        }
+
+        // System telemetry logs are strictly append-only
+        match /system_logs/{logId} {
+          allow create: if true; 
+          allow read, update, delete: if false;
+        }
+      }
+    }
+
+    // ========================================================================
+    // LEGACY ROOT COLLECTIONS (Bridge for Migration)
+    // Allows existing orders and data to remain accessible during transition.
+    // ========================================================================
+    match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-  }
 
-  match /public/data {
-    // Driver transparency profiles are read-only for authenticated customers
-    match /drivers/{driverId} {
-      allow read: if request.auth != null;
-      allow write: if false;
+    match /orders/{orderId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null && (
+        resource.data.userId == request.auth.uid || 
+        !('userId' in resource.data)
+      );
     }
 
-    // System telemetry logs are strictly append-only
-    match /system_logs/{logId} {
-      allow create: if true; 
-      allow read, update, delete: if false;
+    match /saved_addresses/{addressId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
     }
+
+    match /bids/{bidId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /shipments/{shipmentId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
+    match /disputes/{disputeId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if request.auth != null;
+    }
+
   }
-}
-
-// ========================================================================
-// LEGACY ROOT COLLECTIONS (Bridge for Migration)
-// Allows existing orders and data to remain accessible during transition.
-// ========================================================================
-match /users/{userId} {
-  allow read, write: if request.auth != null && request.auth.uid == userId;
-}
-
-match /orders/{orderId} {
-  allow create: if request.auth != null;
-  allow read, update, delete: if request.auth != null && (
-    resource.data.userId == request.auth.uid || 
-    !('userId' in resource.data)
-  );
-}
-
-match /saved_addresses/{addressId} {
-  allow create: if request.auth != null;
-  allow read, update, delete: if request.auth != null;
-}
-
-match /bids/{bidId} {
-  allow create: if request.auth != null;
-  allow read, update, delete: if request.auth != null;
-}
-
-match /shipments/{shipmentId} {
-  allow create: if request.auth != null;
-  allow read, update, delete: if request.auth != null;
-}
-
-match /disputes/{disputeId} {
-  allow create: if request.auth != null;
-  allow read, update, delete: if request.auth != null;
-}
-
-
-}
 }
