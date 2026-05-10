@@ -119,7 +119,7 @@ export default function AboutPage() {
         <TopoBackground />
         <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16 relative z-10">
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="w-full lg:w-1/2">
-            <img src="/logo.png" alt="Movyra" className="h-12 w-auto mb-8" onError={(e) => e.target.style.display = 'none'} />
+            <img src="/" alt="Movyra" className="h-12 w-auto mb-8" onError={(e) => e.target.style.display = 'none'} />
             <h1 className="text-[56px] md:text-[84px] font-black leading-[1.05] tracking-tighter text-black mb-6">
               Movement, <br/> engineered.
             </h1>
