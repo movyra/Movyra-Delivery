@@ -128,7 +128,7 @@ export default function Header() {
             <a href="/" className="flex items-center gap-3">
               <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
               <span className="text-[28px] font-black tracking-tighter text-white hover:text-gray-300 transition-colors">
-                Movyra.
+                Movyra
               </span>
             </a>
             
