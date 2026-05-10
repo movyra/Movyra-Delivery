@@ -5,9 +5,6 @@
   "targets": {
     "movyra-customer-prod": {
       "hosting": {
-        "main": [
-          "movyra"
-        ],
         "client": [
           "movyra-customer-prod"
         ],
@@ -19,8 +16,12 @@
         ],
         "meet": [
           "meetmovyra"
+        ],
+        "main": [
+          "movyra"
         ]
       }
     }
-  }
+  },
+  "etags": {}
 }
