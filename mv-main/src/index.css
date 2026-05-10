@@ -1,6 +1,7 @@
 /* MOVYRA WEB PORTAL: GLOBAL DESIGN SYSTEM v4 
-  Logic: Migrated to @import syntax to resolve PostCSS build errors.
-  Design: Uber-style high-contrast resets with hardware-accelerated text.
+   Logic: Migrated to @import syntax to resolve PostCSS build errors.
+   Design: Uber-style high-contrast resets with hardware-accelerated text.
+   Expanded to support 10+ animated sections, SVG renders, and stark aesthetics.
 */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
@@ -10,14 +11,17 @@
   :root {
     --brand-black: #000000;
     --brand-white: #FFFFFF;
-    --brand-grey: #F2F4F7;
+    --brand-grey-light: #F8FAFC;
+    --brand-grey: #F3F4F6;
+    --brand-grey-dark: #111111;
+    --brand-accent-blue: #00A9F7;
     color-scheme: light dark;
   }
 
   body {
     margin: 0;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: var(--brand-grey);
+    background-color: var(--brand-white);
     color: var(--brand-black);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -28,7 +32,7 @@
 
   /* Force Dark Mode specific backgrounds to prevent flashing */
   .dark body {
-    background-color: #111111;
+    background-color: var(--brand-black);
     color: var(--brand-white);
   }
 }
@@ -43,14 +47,17 @@
   }
 
   .text-heading {
-    @apply text-[40px] md:text-[48px] font-black leading-tight tracking-tight;
+    @apply text-[40px] md:text-[56px] font-black leading-tight tracking-tight;
   }
 
   .text-paragraph {
     @apply text-[18px] md:text-[20px] font-medium leading-relaxed text-gray-600 dark:text-gray-400;
   }
 
-  /* Utility to hide scrollbars for horizontal feature carousels */
+  /* ============================================================================ */
+  /* CUSTOM SCROLLBARS & SAFE AREAS                                               */
+  /* ============================================================================ */
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -59,12 +66,40 @@
     scrollbar-width: none;
   }
 
-  /* Safe Area Utilities for Mobile Web Views */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top);
+  }
+
+  /* ============================================================================ */
+  /* HARDWARE ACCELERATED ANIMATIONS & EFFECTS                                    */
+  /* ============================================================================ */
+
+  .animate-spin-slow {
+    animation: spin 15s linear infinite;
+  }
+
+  .animate-spin-reverse-slow {
+    animation: spin-reverse 20s linear infinite;
+  }
+
+  .glass-panel {
+    @apply bg-white/10 backdrop-blur-md border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)];
+  }
+
+  .glass-panel-dark {
+    @apply bg-black/80 backdrop-blur-xl border border-gray-800 shadow-[0_8px_32px_rgba(0,0,0,0.5)];
+  }
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
   }
 }
 
@@ -77,4 +112,9 @@
 ::selection {
   background-color: var(--brand-black);
   color: var(--brand-white);
+}
+
+.dark ::selection {
+  background-color: var(--brand-white);
+  color: var(--brand-black);
 }
