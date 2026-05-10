@@ -1,5 +1,26 @@
 {
   "projects": {
     "default": "movyra-customer-prod"
+  },
+  "targets": {
+    "movyra-customer-prod": {
+      "hosting": {
+        "main": [
+          "movyra"
+        ],
+        "client": [
+          "movyra-customer-prod"
+        ],
+        "join": [
+          "joinmovyra"
+        ],
+        "admin": [
+          "adminmovyra"
+        ],
+        "meet": [
+          "meetmovyra"
+        ]
+      }
+    }
   }
 }
