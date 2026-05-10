@@ -23,6 +23,7 @@ import { WifiOff, Activity, AlertCircle } from 'lucide-react';
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
 import AboutPage from './pages/About';
+import ContactPage from './pages/Contact';
 import CareersPage from './pages/Careers';
 import InvestorsPage from './pages/Investors';
 import NewsroomPage from './pages/Newsroom';
@@ -221,6 +222,7 @@ export default function App() {
           <Routes>
             <Route path='/' element={<AnimatedRoute><HomePage /></AnimatedRoute>} />
             <Route path='/about' element={<AnimatedRoute><AboutPage /></AnimatedRoute>} />
+            <Route path='/contact' element={<AnimatedRoute><ContactPage /></AnimatedRoute>} />
             <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
             <Route path='/investors' element={<AnimatedRoute><InvestorsPage /></AnimatedRoute>} />
             <Route path='/newsroom' element={<AnimatedRoute><NewsroomPage /></AnimatedRoute>} />
