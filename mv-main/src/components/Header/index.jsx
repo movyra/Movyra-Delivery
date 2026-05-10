@@ -128,7 +128,6 @@ export default function Header() {
             <a href="/" className="flex items-center gap-3">
               <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
               <span className="text-[28px] font-black tracking-tighter text-white hover:text-gray-300 transition-colors">
-                Movyra
               </span>
             </a>
             
@@ -278,7 +277,8 @@ export default function Header() {
             className="fixed inset-0 z-[100] bg-black text-white flex flex-col"
           >
             <div className="flex items-center justify-between p-6">
-              <span className="text-[28px] font-black tracking-tighter">Movyra.</span>
+              <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+              <span className="text-[28px] font-black tracking-tighter"></span>
               <div className="flex items-center gap-4">
                 <button onClick={() => setIsMobileMenuOpen(false)} className="text-white hover:bg-white/10 p-2 rounded-full ml-2">
                   <X size={28} strokeWidth={2.5} />

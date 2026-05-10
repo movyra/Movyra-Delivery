@@ -57,7 +57,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-8">
           <a href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
             <img src="/logo.png" alt="Movyra" className="w-10 h-10 object-contain" onError={(e) => e.target.style.display='none'} />
-            <div className="text-[32px] font-black tracking-tighter">Movyra</div>
+            <div className="text-[32px] font-black tracking-tighter">ovyra</div>
           </a>
           <div className="flex gap-1 font-bold text-[15px]">
              <a href="#" className="hover:bg-white/10 px-4 py-2 rounded-full transition-colors">Help Center</a>
