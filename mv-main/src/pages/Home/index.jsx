@@ -284,7 +284,7 @@ export default function Landing() {
           <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
              <div className="w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-white rounded-full flex flex-col items-center justify-center p-12 text-black shadow-[0_0_100px_rgba(255,255,255,0.15)] relative">
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }} className="absolute inset-4 border-2 border-gray-200 border-dashed rounded-full" />
-                <img src="/logo-2.png" alt="Movyra" className="w-20 h-20 mb-6 relative z-10" onError={(e) => e.target.style.display = 'none'} />
+                <img src="/logo-3.png" alt="Movyra" className="w-20 h-20 mb-6 relative z-10" onError={(e) => e.target.style.display = 'none'} />
                 <h3 className="font-black text-[24px] relative z-10 text-center">Fashion at Home</h3>
                 <p className="text-gray-500 font-bold text-sm mt-2 relative z-10 text-center">15-Min Try-On Window</p>
              </div>
