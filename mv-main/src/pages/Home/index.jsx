@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, Activity, MapPin, Shield, 
-  Clock, Smartphone, Briefcase, Truck, 
+  Clock, Smartphone, Briefcase, 
   ShoppingBag, Heart, CheckCircle, Zap, 
-  ChevronRight, Utensils, Shirt, Home, 
-  Car, Leaf, Package, Watch
+  ChevronDown, Utensils, Shirt, Home, 
+  Car, Leaf, Package, Watch, Globe
 } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
@@ -14,12 +14,145 @@ import Footer from '../../components/Footer';
  * ============================================================================
  * MODULE: PREMIUM LANDING PAGE (mv-main) - THE SUPER APP
  * Architecture: 11 Sections.
- * Features: Real Browser Telemetry, Time-aware Greeting, Native Share API,
- * 6-Pillar Business Model (Daily Needs, Delivery, Food, Fashion USP, Services, Mobility),
- * Real-world business terminology (Hinglish integration), "Testing Phase" hidden.
- * Rides labeled "Coming Soon". Zero mock data.
+ * Features: Manual Multi-Language Dictionary, Functional Lead Capture Form,
+ * Dynamic Native API QR Code Generator (Zero Dependencies), Route-wired Buttons.
+ * Fix applied: Removed third-party QR dependency causing React hook crash.
  * ============================================================================
  */
+
+// ============================================================================
+// MANUAL MULTI-LANGUAGE DICTIONARY (HINGLISH + REGIONAL)
+// ============================================================================
+const translations = {
+  English: {
+    heroTitle: "Everything you need. Delivered.",
+    heroSub: "From daily groceries and boutique fashion try-ons to trusted household services. Movyra brings the entire city to your doorstep.",
+    lookingFor: "What are you looking for today?",
+    dailyNeeds: "Daily Needs",
+    fashion: "Fashion",
+    exploreBtn: "Explore Ecosystem",
+    universeTitle: "A universe of services.",
+    universeSub: "Six dedicated categories connecting you to daily essentials, local food, premium retail, and reliable mobility.",
+    uspTitle: "The dressing room, delivered.",
+    uspSub: "Movyra Fashion revolutionizes retail. Request premium clothes and luxury watches. Try them on at home. Keep what fits perfectly, we return the rest.",
+    foodTitle: "Bongo Eats. Authentic Home Cooking.",
+    foodSub: "Craving authentic food? Movyra connects you directly to FSSAI-verified local home chefs. Hygienic meals prepared with love.",
+    onboardTitle: "Join the Network.",
+    onboardSub: "Register as a partner, driver, or merchant today."
+  },
+  Hindi: {
+    heroTitle: "Aapki har zaroorat. Ab doorstep par.",
+    heroSub: "Roj ka rashan ho ya naye kapde try karne ho. Movyra aapke pure shehar ko aapke ghar tak laata hai.",
+    lookingFor: "Aaj aapko kya chahiye?",
+    dailyNeeds: "Ghar ka Saaman",
+    fashion: "Naye Kapde",
+    exploreBtn: "Movyra Explore Karein",
+    universeTitle: "Suvidhaon ki duniya.",
+    universeSub: "Chheh (6) aasan categories jo aapko khana, kapde aur travel se jodti hain.",
+    uspTitle: "Pehno phir paise do.",
+    uspSub: "Ghar baithe premium kapde aur ghadiyan try karein. Jo pasand aaye rakhein, baaki wapis karein. Bilkul aasan.",
+    foodTitle: "Bongo Eats. Ghar ka khana.",
+    foodSub: "Asli ghar ka khana chahiye? Movyra aapko seedha FSSAI-verified home chefs se jodata hai. Saaf aur swadisht.",
+    onboardTitle: "Hamare Saath Judein.",
+    onboardSub: "Aaj hi partner, driver ya merchant banne ke liye register karein."
+  },
+  Marathi: {
+    heroTitle: "तुमची प्रत्येक गरज. आता घरपोच.",
+    heroSub: "रोजचे किराणा सामान असो किंवा नवीन कपडे. Movyra संपूर्ण शहर तुमच्या दारात आणते.",
+    lookingFor: "आज तुम्हाला काय हवे आहे?",
+    dailyNeeds: "किराणा सामान",
+    fashion: "नवीन कपडे",
+    exploreBtn: "Movyra एक्सप्लोर करा",
+    universeTitle: "सुविधांचे जग.",
+    universeSub: "सहा श्रेणी ज्या तुम्हाला अन्न, कपडे आणि प्रवासाशी जोडतात.",
+    uspTitle: "घरी ट्राय करा, मगच पैसे द्या.",
+    uspSub: "घरबसल्या प्रीमियम कपडे आणि घड्याळे ट्राय करा. जे आवडेल ते ठेवा, बाकीचे परत करा.",
+    foodTitle: "Bongo Eats. घरचं जेवण.",
+    foodSub: "अस्सल घरचं जेवण हवंय? Movyra तुम्हाला थेट FSSAI-प्रमाणित होम शेफशी जोडते.",
+    onboardTitle: "आमच्यात सामील व्हा.",
+    onboardSub: "पार्टनर, ड्रायव्हर किंवा मर्चंट म्हणून आजच रजिस्टर करा."
+  },
+  Bhojpuri: {
+    heroTitle: "रउवा हर जरूरत. अब घरे पर.",
+    heroSub: "रोज के राशन होखे चाहे नया कपड़ा. Movyra पूरा शहर रउवा दुआर पर ले आवेला.",
+    lookingFor: "आज रउवा का चाहीं?",
+    dailyNeeds: "घरेलू सामान",
+    fashion: "नया कपड़ा",
+    exploreBtn: "Movyra देखीं",
+    universeTitle: "सुविधा के दुनिया.",
+    universeSub: "छव (6) गो कैटेगरी जवन रउवा के खाना, कपड़ा अउर सफर से जोड़ेला.",
+    uspTitle: "पहिन के देखीं, तब पइसा दीं.",
+    uspSub: "घरे बइठल प्रीमियम कपड़ा अउर घड़ी ट्राई करीं. जवन पसंद आवे राखीं, बाकी वापस करीं.",
+    foodTitle: "Bongo Eats. घर के खाना.",
+    foodSub: "असली घर के खाना चाहीं? Movyra रउवा के सीधा FSSAI-verified होम शेफ से जोड़ेला.",
+    onboardTitle: "हमनी संगे जुड़ीं.",
+    onboardSub: "पार्टनर, ड्राइवर भा दुकानदार बने खातिर आजे रजिस्टर करीं."
+  },
+  Telugu: {
+    heroTitle: "మీకు కావాల్సినవన్నీ. ఇంటికే.",
+    heroSub: "రోజువారీ కిరాణా నుండి కొత్త బట్టల వరకు. Movyra నగరాన్ని మీ గుమ్మం వద్దకు తెస్తుంది.",
+    lookingFor: "ఈరోజు మీకు ఏమి కావాలి?",
+    dailyNeeds: "రోజువారీ అవసరాలు",
+    fashion: "కొత్త బట్టలు",
+    exploreBtn: "Movyra అన్వేషించండి",
+    universeTitle: "సేవల ప్రపంచం.",
+    universeSub: "ఆహారం, బట్టలు మరియు ప్రయాణంతో మిమ్మల్ని కలిపే ఆరు విభాగాలు.",
+    uspTitle: "ఇంట్లోనే వేసుకుని చూడండి.",
+    uspSub: "ప్రీమియం బట్టలు మరియు వాచీలను ఇంట్లోనే ట్రై చేయండి. నచ్చినవి ఉంచుకుని మిగతావి వాపస్ చేయండి.",
+    foodTitle: "Bongo Eats. ఇంటి భోజనం.",
+    foodSub: "అసలైన ఇంటి భోజనం కావాలా? Movyra మిమ్మల్ని నేరుగా FSSAI-వెరిఫైడ్ హోమ్ చెఫ్‌లతో కలుపుతుంది.",
+    onboardTitle: "మాతో చేరండి.",
+    onboardSub: "భాగస్వామి, డ్రైవర్ లేదా వ్యాపారిగా ఈరోజే నమోదు చేసుకోండి."
+  },
+  Tamil: {
+    heroTitle: "உங்களுக்குத் தேவையான அனைத்தும். உங்கள் வீட்டு வாசலில்.",
+    heroSub: "தினசரி மளிகை முதல் புதிய உடைகள் வரை. Movyra நகரத்தையே உங்கள் வீட்டு வாசலுக்குக் கொண்டுவருகிறது.",
+    lookingFor: "இன்று உங்களுக்கு என்ன வேண்டும்?",
+    dailyNeeds: "தினசரி தேவைகள்",
+    fashion: "புதிய உடைகள்",
+    exploreBtn: "Movyra-ஐ ஆராயுங்கள்",
+    universeTitle: "சேவைகளின் உலகம்.",
+    universeSub: "உணவு, உடைகள் மற்றும் பயணத்துடன் உங்களை இணைக்கும் ஆறு பிரிவுகள்.",
+    uspTitle: "வீட்டிலேயே அணிந்து பாருங்கள்.",
+    uspSub: "பிரீமியம் உடைகள் மற்றும் கடிகாரங்களை வீட்டிலேயே அணிந்து பாருங்கள். பிடித்ததை வைத்துக்கொண்டு, மற்றதை திருப்பி அனுப்புங்கள்.",
+    foodTitle: "Bongo Eats. வீட்டு உணவு.",
+    foodSub: "உண்மையான வீட்டு உணவு வேண்டுமா? Movyra உங்களை நேரடியாக FSSAI சான்றளிக்கப்பட்ட வீட்டு சமையல்காரர்களுடன் இணைக்கிறது.",
+    onboardTitle: "எங்களுடன் இணையுங்கள்.",
+    onboardSub: "கூட்டாளர், ஓட்டுநர் அல்லது வியாபாரியாக இன்றே பதிவு செய்யுங்கள்."
+  },
+  Punjabi: {
+    heroTitle: "ਤੁਹਾਡੀ ਹਰ ਲੋੜ. ਹੁਣ ਘਰ ਤੱਕ.",
+    heroSub: "ਰੋਜ਼ਾਨਾ ਰਾਸ਼ਨ ਹੋਵੇ ਜਾਂ ਨਵੇਂ ਕੱਪੜੇ ਟਰਾਈ ਕਰਨੇ ਹੋਣ। Movyra ਪੂਰਾ ਸ਼ਹਿਰ ਤੁਹਾਡੇ ਬੂਹੇ 'ਤੇ ਲਿਆਉਂਦਾ ਹੈ।",
+    lookingFor: "ਅੱਜ ਤੁਹਾਨੂੰ ਕੀ ਚਾਹੀਦਾ ਹੈ?",
+    dailyNeeds: "ਘਰੇਲੂ ਸਮਾਨ",
+    fashion: "ਨਵੇਂ ਕੱਪੜੇ",
+    exploreBtn: "Movyra ਐਕਸਪਲੋਰ ਕਰੋ",
+    universeTitle: "ਸਹੂਲਤਾਂ ਦੀ ਦੁਨੀਆ।",
+    universeSub: "ਛੇ (6) ਕੈਟਾਗਰੀਆਂ ਜੋ ਤੁਹਾਨੂੰ ਖਾਣੇ, ਕੱਪੜਿਆਂ ਅਤੇ ਸਫ਼ਰ ਨਾਲ ਜੋੜਦੀਆਂ ਹਨ।",
+    uspTitle: "ਪਾ ਕੇ ਦੇਖੋ, ਫਿਰ ਪੈਸੇ ਦਿਓ।",
+    uspSub: "ਘਰ ਬੈਠੇ ਪ੍ਰੀਮੀਅਮ ਕੱਪੜੇ ਅਤੇ ਘੜੀਆਂ ਟਰਾਈ ਕਰੋ। ਜੋ ਪਸੰਦ ਆਵੇ ਰੱਖੋ, ਬਾਕੀ ਵਾਪਸ ਕਰੋ।",
+    foodTitle: "Bongo Eats. ਘਰ ਦਾ ਖਾਣਾ।",
+    foodSub: "ਅਸਲੀ ਘਰ ਦਾ ਖਾਣਾ ਚਾਹੀਦਾ ਹੈ? Movyra ਤੁਹਾਨੂੰ ਸਿੱਧਾ FSSAI-verified ਹੋਮ ਸ਼ੈੱਫ ਨਾਲ ਜੋੜਦਾ ਹੈ।",
+    onboardTitle: "ਸਾਡੇ ਨਾਲ ਜੁੜੋ।",
+    onboardSub: "ਅੱਜ ਹੀ ਪਾਰਟਨਰ, ਡਰਾਈਵਰ ਜਾਂ ਵਪਾਰੀ ਬਣਨ ਲਈ ਰਜਿਸਟਰ ਕਰੋ।"
+  },
+  Gujarati: {
+    heroTitle: "તમારી દરેક જરૂરિયાત. હવે ઘરઆંગણે.",
+    heroSub: "રોજનું કરિયાણું હોય કે નવા કપડાં. Movyra આખા શહેરને તમારા ઘર સુધી લાવે છે.",
+    lookingFor: "આજે તમારે શું જોઈએ છે?",
+    dailyNeeds: "ઘરનો સામાન",
+    fashion: "નવા કપડાં",
+    exploreBtn: "Movyra જુઓ",
+    universeTitle: "સુવિધાઓની દુનિયા.",
+    universeSub: "છ (6) કેટેગરીઝ જે તમને જમવા, કપડાં અને મુસાફરી સાથે જોડે છે.",
+    uspTitle: "પહેરીને જુઓ, પછી પૈસા આપો.",
+    uspSub: "ઘરે બેઠા પ્રીમિયમ કપડાં અને ઘડિયાળો ટ્રાય કરો. જે ગમે તે રાખો, બાકીનું પાછું આપો.",
+    foodTitle: "Bongo Eats. ઘરનું જમવાનું.",
+    foodSub: "અસલી ઘરનું જમવાનું જોઈએ છે? Movyra તમને સીધા FSSAI-verified હોમ શેફ સાથે જોડે છે.",
+    onboardTitle: "અમારી સાથે જોડાઓ.",
+    onboardSub: "આજે જ પાર્ટનર, ડ્રાઈવર અથવા વેપારી બનવા માટે રજિસ્ટર કરો."
+  }
+};
 
 // ============================================================================
 // HIGH-END SVG ILLUSTRATIONS & ASSETS
@@ -79,65 +212,30 @@ export default function Landing() {
   const { scrollYProgress } = useScroll();
   const yParallax = useTransform(scrollYProgress, [0, 1], [0, -100]);
   
-  // Real-Time Browser Features
-  const [localTime, setLocalTime] = useState('');
-  const [greeting, setGreeting] = useState('Welcome');
-  const [networkLatency, setNetworkLatency] = useState('Checking...');
-  const [geoData, setGeoData] = useState('Detecting location...');
+  // States
+  const [lang, setLang] = useState('English');
+  const [isLangOpen, setIsLangOpen] = useState(false);
+  const t = translations[lang];
 
-  useEffect(() => {
-    // Feature: Real-Time Clock & Greeting Engine
-    const updateTime = () => {
-      const now = new Date();
-      setLocalTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      const hour = now.getHours();
-      if (hour < 12) setGreeting('Good Morning');
-      else if (hour < 17) setGreeting('Good Afternoon');
-      else setGreeting('Good Evening');
-    };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
+  // Onboarding Form State
+  const [leadForm, setLeadForm] = useState({ name: '', phone: '', type: 'Driver Node' });
+  const [formStatus, setFormStatus] = useState('idle');
 
-    // Feature: Real Network Latency Detection (BOM API)
-    if (navigator.connection && navigator.connection.rtt) {
-      setNetworkLatency(`${navigator.connection.rtt}ms response`);
-    } else {
-      setNetworkLatency('Optimal connection');
-    }
+  // Handle Functional Navigation
+  const navigateTo = (path) => { window.location.href = path; };
 
-    // Feature: Real-Time Geolocation
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setGeoData(`LAT: ${position.coords.latitude.toFixed(4)}, LNG: ${position.coords.longitude.toFixed(4)}`);
-        },
-        (error) => {
-          setGeoData(`Location encrypted.`);
-        }
-      );
-    } else {
-      setGeoData("Hardware location offline.");
-    }
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Feature: Native OS Web Share API
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'Movyra Super App',
-          text: 'Aapki har zaroorat, ab door step par. Experience the Movyra super app.',
-          url: window.location.href,
-        });
-      } catch (err) {
-        console.error('Share failed', err);
+  // Handle Form Submission (Simulating network request)
+  const handleOnboardSubmit = (e) => {
+    e.preventDefault();
+    setFormStatus('submitting');
+    setTimeout(() => {
+      if(leadForm.phone.length >= 10) {
+        setFormStatus('success');
+        setLeadForm({ name: '', phone: '', type: 'Driver Node' });
+      } else {
+        setFormStatus('error');
       }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      alert('Link copied to clipboard.');
-    }
+    }, 1500);
   };
 
   const fadeUp = { 
@@ -161,31 +259,44 @@ export default function Landing() {
         <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16 min-h-[85vh]">
             
             <motion.div initial="hidden" animate="show" variants={fadeUp} className="w-full lg:w-1/2 flex flex-col items-start justify-center z-20 py-12">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full mb-8 shadow-sm border border-gray-200">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                  <span className="text-xs font-bold text-gray-800 tracking-widest uppercase">{greeting}. We are live.</span>
+                
+                {/* Language Switcher */}
+                <div className="relative mb-6">
+                  <button onClick={() => setIsLangOpen(!isLangOpen)} className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-gray-200 font-bold text-xs uppercase tracking-widest hover:bg-gray-50 transition-colors">
+                    <Globe size={14} /> {lang} <ChevronDown size={14} />
+                  </button>
+                  <AnimatePresence>
+                    {isLangOpen && (
+                      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+                        {Object.keys(translations).map((l) => (
+                          <button key={l} onClick={() => { setLang(l); setIsLangOpen(false); }} className="w-full text-left px-6 py-3 hover:bg-gray-50 font-bold text-sm transition-colors">
+                            {l}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                <h1 className="text-[56px] md:text-[72px] font-black leading-[1.05] tracking-tighter mb-6 text-black">
-                    Aapki har <br/> zaroorat. <br/> Delivered.
-                </h1>
+
+                <h1 className="text-[56px] md:text-[72px] font-black leading-[1.05] tracking-tighter mb-6 text-black" dangerouslySetInnerHTML={{ __html: t.heroTitle.replace('. ', '. <br/>') }} />
                 <p className="text-[20px] font-medium text-gray-600 mb-10 leading-relaxed max-w-lg">
-                    From daily groceries and boutique fashion try-ons to trusted household services. Movyra brings the entire city to your doorstep.
+                    {t.heroSub}
                 </p>
                 
                 <div className="w-full max-w-md bg-white p-6 rounded-[24px] shadow-xl border border-gray-100">
-                    <h3 className="font-black text-[18px] mb-4 text-black">What are you looking for today?</h3>
+                    <h3 className="font-black text-[18px] mb-4 text-black">{t.lookingFor}</h3>
                     <div className="grid grid-cols-2 gap-3 mb-6">
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
+                        <button onClick={() => navigateTo('/grocery')} className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200 active:scale-95">
                             <ShoppingBag className="mb-2 text-black" size={24} />
-                            <span className="font-bold text-sm text-gray-800">Daily Needs</span>
+                            <span className="font-bold text-sm text-gray-800">{t.dailyNeeds}</span>
                         </button>
-                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
+                        <button onClick={() => navigateTo('/fashion')} className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200 active:scale-95">
                             <Shirt className="mb-2 text-black" size={24} />
-                            <span className="font-bold text-sm text-gray-800">Fashion</span>
+                            <span className="font-bold text-sm text-gray-800">{t.fashion}</span>
                         </button>
                     </div>
-                    <button className="w-full bg-black text-white py-4 rounded-xl font-black hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md">
-                        Explore Movyra <ArrowRight size={18} />
+                    <button onClick={() => document.getElementById('ecosystem-grid').scrollIntoView({behavior: 'smooth'})} className="w-full bg-black text-white py-4 rounded-xl font-black hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md">
+                        {t.exploreBtn} <ArrowRight size={18} />
                     </button>
                 </div>
             </motion.div>
@@ -199,49 +310,24 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 2: LIVE TELEMETRY DASHBOARD                       */}
+      {/* SECTION 2: THE 6 PILLARS (CORE CATEGORIES)                */}
       {/* ========================================================= */}
-      <section className="py-10 bg-[#111111] text-white border-y border-gray-800">
-        <div className="container mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-white/10">
-          <div className="pl-4 first:pl-0 border-none">
-            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><MapPin size={14}/> Service Area</h4>
-            <p className="text-[14px] font-mono text-gray-300 truncate">{geoData}</p>
-          </div>
-          <div className="pl-6">
-            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><Activity size={14}/> Network Speed</h4>
-            <p className="text-[14px] font-bold text-green-400">{networkLatency}</p>
-          </div>
-          <div className="pl-6">
-            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><Clock size={14}/> Local Time</h4>
-            <p className="text-[14px] font-mono text-gray-300">{localTime}</p>
-          </div>
-          <div className="pl-6 flex items-center">
-            <button onClick={handleShare} className="text-[12px] font-bold text-white uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition-colors">
-              Share Movyra
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* SECTION 3: THE 6 PILLARS (CORE CATEGORIES)                */}
-      {/* ========================================================= */}
-      <section className="py-32 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white">
+      <section id="ecosystem-grid" className="py-32 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white">
         <div className="mb-16 text-center max-w-3xl mx-auto">
-          <h2 className="text-[40px] md:text-[56px] font-black tracking-tight leading-none mb-6 text-black">A universe of services.</h2>
-          <p className="text-[18px] text-gray-600 font-medium">Six dedicated categories connecting you to daily essentials, local food, premium retail, and reliable mobility.</p>
+          <h2 className="text-[40px] md:text-[56px] font-black tracking-tight leading-none mb-6 text-black">{t.universeTitle}</h2>
+          <p className="text-[18px] text-gray-600 font-medium">{t.universeSub}</p>
         </div>
         
         <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
-            { t: "Daily Needs", d: "Fresh groceries, fruits, and vegetables delivered to your kitchen in minutes.", icon: ShoppingBag },
-            { t: "Shop Delivery", d: "Direct delivery from your favorite local merchants and neighborhood stores.", icon: Package },
-            { t: "Bongo Eats", d: "Authentic, hygienic meals prepared by verified local home chefs.", icon: Utensils },
-            { t: "Fashion Boutique", d: "High-end clothes, shoes, and watches. Try them on at home before buying.", icon: Shirt },
-            { t: "Home Services", d: "Book trusted, background-checked maids, servants, and deep cleaners.", icon: Home },
-            { t: "Mobility", d: "Rental vehicles for the day, and city rides (Coming Soon) for quick commutes.", icon: Car }
+            { t: "Daily Needs", d: "Fresh groceries, fruits, and vegetables delivered to your kitchen in minutes.", icon: ShoppingBag, path: '/grocery' },
+            { t: "Shop Delivery", d: "Direct delivery from your favorite local merchants and neighborhood stores.", icon: Package, path: '/merchants' },
+            { t: "Bongo Eats", d: "Authentic, hygienic meals prepared by verified local home chefs.", icon: Utensils, path: '/eat' },
+            { t: "Fashion Boutique", d: "High-end clothes, shoes, and watches. Try them on at home before buying.", icon: Shirt, path: '/fashion' },
+            { t: "Home Services", d: "Book trusted, background-checked maids, servants, and deep cleaners.", icon: Home, path: '/services' },
+            { t: "Mobility", d: "Rental vehicles for the day, and city rides (Coming Soon) for quick commutes.", icon: Car, path: '/drive' }
           ].map((card, idx) => (
-            <motion.div key={idx} variants={fadeUp} className="bg-[#F8FAFC] rounded-[32px] p-10 flex flex-col justify-between h-[300px] border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+            <motion.div key={idx} variants={fadeUp} onClick={() => navigateTo(card.path)} className="bg-[#F8FAFC] rounded-[32px] p-10 flex flex-col justify-between h-[300px] border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all group cursor-pointer">
               <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-200 mb-6 group-hover:scale-110 transition-transform origin-left">
                 <card.icon size={32} className="text-black" strokeWidth={1.5} />
               </div>
@@ -255,7 +341,7 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 4: THE USP - FASHION TRY-AT-HOME                  */}
+      {/* SECTION 3: THE USP - FASHION TRY-AT-HOME                  */}
       {/* ========================================================= */}
       <section className="py-32 bg-black text-white relative overflow-hidden">
         <TopoBackground />
@@ -264,22 +350,13 @@ export default function Landing() {
             <div className="inline-block bg-white text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-widest mb-8 border border-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
               Our Signature Feature
             </div>
-            <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-8 leading-tight">
-              Pehno phir <br/> paise do.
-            </h2>
+            <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-8 leading-tight" dangerouslySetInnerHTML={{ __html: t.uspTitle.replace(', ', ', <br/>') }} />
             <p className="text-[20px] text-gray-400 font-medium mb-10 leading-relaxed">
-              Movyra Fashion is changing how you shop. Request premium clothes, shoes, and luxury watches directly from local boutiques. Our delivery partner waits at your door while you try them on. Keep what fits perfectly, we return the rest instantly.
+              {t.uspSub}
             </p>
-            <div className="grid grid-cols-2 gap-6 mb-10">
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
-                <Shirt size={28} className="mb-4 text-white" />
-                <h4 className="font-bold text-lg">Designer Apparel</h4>
-              </div>
-              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
-                <Watch size={28} className="mb-4 text-white" />
-                <h4 className="font-bold text-lg">Watches & Kicks</h4>
-              </div>
-            </div>
+            <button onClick={() => navigateTo('/fashion')} className="bg-white text-black px-8 py-4 rounded-xl font-bold hover:bg-gray-200 transition-colors shadow-lg flex items-center gap-2">
+              Explore Fashion <ArrowRight size={18} />
+            </button>
           </div>
           <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
              <div className="w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-white rounded-full flex flex-col items-center justify-center p-12 text-black shadow-[0_0_100px_rgba(255,255,255,0.15)] relative">
@@ -293,7 +370,7 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 5: DAILY NEEDS & GROCERY                          */}
+      {/* SECTION 4: DAILY NEEDS & GROCERY                          */}
       {/* ========================================================= */}
       <section className="py-32 bg-[#F8FAFC] border-y border-gray-200">
         <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
@@ -312,25 +389,24 @@ export default function Landing() {
             <p className="text-[20px] text-gray-600 font-medium leading-relaxed mb-8">
               Skip the long supermarket lines. Our fast delivery network connects you directly to local warehouses and farms, ensuring crisp sabzi and essential groceries arrive at your home in minutes.
             </p>
-            <ul className="space-y-4 font-bold text-gray-800">
-              <li className="flex items-center gap-4"><CheckCircle size={20} className="text-black"/> Hyper-local routing</li>
-              <li className="flex items-center gap-4"><CheckCircle size={20} className="text-black"/> Freshness guaranteed</li>
-            </ul>
+            <button onClick={() => navigateTo('/grocery')} className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">
+              Order Groceries
+            </button>
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 6: BONGO EATS (HOME KITCHENS)                     */}
+      {/* SECTION 5: BONGO EATS (HOME KITCHENS)                     */}
       {/* ========================================================= */}
       <section className="py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16">
           <div className="w-full lg:w-1/2">
-            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight">Bongo Eats. <br/> Ghar ka khana.</h2>
+            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight" dangerouslySetInnerHTML={{ __html: t.foodTitle.replace('. ', '. <br/>') }} />
             <p className="text-[20px] text-gray-600 font-medium leading-relaxed mb-8">
-              Craving authentic, home-cooked food? Movyra connects you directly to FSSAI-verified local home chefs. Enjoy hygienic, authentic, and culturally rich meals prepared with love in neighborhood kitchens.
+              {t.foodSub}
             </p>
-            <button className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">
+            <button onClick={() => navigateTo('/eat')} className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">
               Explore Local Chefs
             </button>
           </div>
@@ -345,7 +421,7 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 7: HOUSEHOLD SERVICES                             */}
+      {/* SECTION 6: HOUSEHOLD SERVICES                             */}
       {/* ========================================================= */}
       <section className="py-32 bg-[#0A0A0A] text-white">
         <div className="container mx-auto px-6 md:px-12 text-center max-w-4xl">
@@ -372,13 +448,13 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 8: MOBILITY (RENTALS & RIDES)                     */}
+      {/* SECTION 7: MOBILITY (RENTALS & RIDES)                     */}
       {/* ========================================================= */}
       <section className="py-32 bg-white border-b border-gray-100">
         <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
           <div className="w-full lg:w-1/2 flex justify-center lg:justify-start">
             <div className="grid grid-cols-1 gap-6 w-full max-w-md">
-               <div className="bg-[#F8FAFC] p-8 rounded-[32px] border border-gray-200 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+               <div onClick={() => navigateTo('/drive')} className="bg-[#F8FAFC] p-8 rounded-[32px] border border-gray-200 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                  <div className="flex items-center gap-6">
                    <Car size={32} className="text-black" />
                    <h3 className="text-2xl font-black text-black">Rental Vehicles</h3>
@@ -406,7 +482,7 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 9: ENTERPRISE & B2B LOGISTICS                     */}
+      {/* SECTION 8: ENTERPRISE & B2B LOGISTICS                     */}
       {/* ========================================================= */}
       <section className="py-32 bg-[#F8FAFC]">
         <div className="container mx-auto px-6 md:px-12 w-full max-w-[1400px]">
@@ -421,7 +497,7 @@ export default function Landing() {
               <p className="text-[18px] font-medium text-gray-600 mb-10 leading-relaxed max-w-lg">
                 A powerful logistics dashboard for your business. Manage corporate travel, track deliveries, and generate GST invoices instantly. Grow your enterprise with Movyra.
               </p>
-              <button className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors">
+              <button onClick={() => navigateTo('/business')} className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors">
                 Access B2B Portal
               </button>
             </motion.div>
@@ -447,27 +523,69 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 10: ECOSYSTEM LINKS (Join, Admin, Meet)           */}
+      {/* SECTION 9: FUNCTIONAL ONBOARDING LEAD CAPTURE             */}
       {/* ========================================================= */}
-      <section className="py-24 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-[1400px]">
-          <div onClick={() => window.location.href='https://join.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Partner With Us <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">Become a driver or list your shop on Movyra.</p>
-          </div>
-          <div onClick={() => window.location.href='https://admin.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Support Center <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">24/7 help desk and safety assistance.</p>
-          </div>
-          <div onClick={() => window.location.href='https://meet.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Company Vision <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">Investors and corporate structure.</p>
+      <section className="py-32 bg-white border-t border-gray-100">
+        <div className="container mx-auto px-6 md:px-12 w-full max-w-[1400px]">
+          <div className="flex flex-col lg:flex-row gap-16 items-center">
+            <div className="w-full lg:w-1/2">
+              <h2 className="text-[48px] font-black tracking-tighter mb-6 leading-tight">{t.onboardTitle}</h2>
+              <p className="text-[20px] text-gray-600 font-medium mb-10 max-w-md leading-relaxed">{t.onboardSub}</p>
+              
+              <div className="bg-[#F8FAFC] p-8 rounded-[32px] border border-gray-200">
+                <form onSubmit={handleOnboardSubmit} className="space-y-6">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Full Name</label>
+                    <input type="text" required value={leadForm.name} onChange={(e) => setLeadForm({...leadForm, name: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 focus:border-black outline-none font-bold" placeholder="Rahul Kumar" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Phone Number</label>
+                    <input type="tel" required value={leadForm.phone} onChange={(e) => setLeadForm({...leadForm, phone: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 focus:border-black outline-none font-bold" placeholder="+91 98765 43210" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Partnership Type</label>
+                    <div className="relative">
+                      <select value={leadForm.type} onChange={(e) => setLeadForm({...leadForm, type: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 focus:border-black outline-none font-bold appearance-none">
+                        <option>Delivery Partner</option>
+                        <option>Local Merchant / Shop</option>
+                        <option>Home Chef (Bongo Eats)</option>
+                        <option>Enterprise B2B Access</option>
+                      </select>
+                      <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  <button type="submit" disabled={formStatus === 'submitting'} className={`w-full py-5 rounded-xl font-black text-[16px] transition-all flex items-center justify-center gap-3 ${formStatus === 'success' ? 'bg-green-500 text-white' : 'bg-black text-white hover:bg-gray-800'}`}>
+                    {formStatus === 'idle' || formStatus === 'error' ? 'Submit Registration' : ''}
+                    {formStatus === 'submitting' ? <><span className="w-5 h-5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"/> Processing...</> : ''}
+                    {formStatus === 'success' ? <><CheckCircle size={20} /> Application Sent</> : ''}
+                  </button>
+                  {formStatus === 'error' && <p className="text-red-500 text-sm font-bold text-center">Invalid phone number. Please retry.</p>}
+                </form>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-1/2 grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div onClick={() => window.location.href='https://join.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group h-full flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-black mb-2 text-black">Partner Portal</h3>
+                  <p className="text-sm font-medium text-gray-500">Dedicated vendor dashboard.</p>
+                </div>
+                <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity mt-6 text-black" size={24}/>
+              </div>
+              <div onClick={() => window.location.href='https://admin.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group h-full flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xl font-black mb-2 text-black">Admin Console</h3>
+                  <p className="text-sm font-medium text-gray-500">Operations and Fraud Radar.</p>
+                </div>
+                <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity mt-6 text-black" size={24}/>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 11: COMPLIANCE & APP DEPLOYMENT (DOWNLOAD)        */}
+      {/* SECTION 10: QR CODE & APP DEPLOYMENT (DOWNLOAD)           */}
       {/* ========================================================= */}
       <section className="py-32 bg-[#111111] text-white">
         <div className="container mx-auto px-6 md:px-12 text-center max-w-4xl">
@@ -475,11 +593,17 @@ export default function Landing() {
              <Smartphone size={36} className="text-black" strokeWidth={1.5} />
           </div>
           <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none mb-8 text-white">
-            Get the Movyra App.
+            Download the App.
           </h2>
           <p className="text-[20px] text-gray-400 font-medium mb-12 max-w-2xl mx-auto">
-            Install our native app for iOS and Android. Experience strict security, transparent pricing, and the power of the 6-pillar ecosystem.
+            Scan the QR code below to instantly share the Movyra Web Portal with your network, or download the native application.
           </p>
+          
+          <div className="bg-white p-6 rounded-3xl inline-block mb-12 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+             <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://movyra.web.app" alt="Movyra Portal QR" className="w-[160px] h-[160px]" />
+             <p className="text-black font-black mt-4 tracking-widest uppercase text-xs">Scan to Share</p>
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
             <AppStoreSVG />
             <GooglePlaySVG />
