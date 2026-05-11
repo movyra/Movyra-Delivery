@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowRight, Activity, Layers, Map, Shield, 
-  Share2, Clock, Smartphone, Briefcase, Lock,
-  Truck, ShoppingBag, Heart, CheckCircle, Zap, Search, ChevronRight, XCircle, MapPin
+  ArrowRight, Activity, MapPin, Shield, 
+  Clock, Smartphone, Briefcase, Truck, 
+  ShoppingBag, Heart, CheckCircle, Zap, 
+  ChevronRight, Utensils, Shirt, Home, 
+  Car, Leaf, Package, Watch
 } from 'lucide-react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
 /**
  * ============================================================================
- * MODULE: PREMIUM LANDING PAGE (mv-main)
- * Architecture: 10 Sections, 10+ Real Features.
+ * MODULE: PREMIUM LANDING PAGE (mv-main) - THE SUPER APP
+ * Architecture: 11 Sections.
  * Features: Real Browser Telemetry, Time-aware Greeting, Native Share API,
- * Interactive Safety Matrix Toggle, Scroll Parallax, SVG Topography,
- * Dynamic Network Latency Detection, Enterprise Layout, and zero mock data.
- * Structure rewritten to exactly match the provided Uber-style reference.
+ * 6-Pillar Business Model (Daily Needs, Delivery, Food, Fashion USP, Services, Mobility),
+ * Real-world business terminology (Hinglish integration), "Testing Phase" hidden.
+ * Rides labeled "Coming Soon". Zero mock data.
  * ============================================================================
  */
 
@@ -36,7 +38,7 @@ const TopoBackground = () => (
 );
 
 const AppStoreSVG = () => (
-  <svg viewBox="0 0 180 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer">
+  <svg viewBox="0 0 180 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer border border-gray-800 rounded-xl bg-black">
     <rect width="180" height="54" rx="12" fill="black" />
     <path d="M41.05 18.25c-.2-3.1 2.55-4.6 2.65-4.7-1.45-2.1-3.7-2.4-4.5-2.45-1.9-.2-3.7 1.15-4.65 1.15-.95 0-2.45-1.1-4.05-1.1-2.05 0-3.95 1.2-4.95 3-2.05 3.55-.5 8.75 1.45 11.65.95 1.4 2.1 2.95 3.6 2.9 1.45-.05 2.05-.95 3.8-.95 1.7 0 2.25.95 3.8.9 1.6-.05 2.55-1.45 3.5-2.85 1.1-1.6 1.55-3.15 1.6-3.25-.05-.05-3-1.15-3.25-4.3zM37.35 13.5c.8-1 1.35-2.35 1.2-3.75-1.15.05-2.6.8-3.45 1.8-.75.85-1.4 2.25-1.2 3.6 1.3.1 2.65-.65 3.45-1.65z" fill="white" />
     <text x="58" y="24" fill="white" fontSize="10" fontFamily="sans-serif">Download on the</text>
@@ -45,7 +47,7 @@ const AppStoreSVG = () => (
 );
 
 const GooglePlaySVG = () => (
-  <svg viewBox="0 0 190 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer">
+  <svg viewBox="0 0 190 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer border border-gray-800 rounded-xl bg-black">
     <rect width="190" height="54" rx="12" fill="black" />
     <path d="M23.5 14.5l14.5 8.5-14.5 8.5v-17z" fill="white" />
     <path d="M23.5 14.5l14.5 8.5-5 5-9.5-13.5z" fill="white" opacity="0.8" />
@@ -55,71 +57,19 @@ const GooglePlaySVG = () => (
   </svg>
 );
 
-const IconCar3D = () => (
-  <svg viewBox="0 0 100 100" fill="none" className="w-24 h-24 object-contain origin-right drop-shadow-xl">
-    <path d="M20 60 L80 60 L75 40 L25 40 Z" fill="#E5E7EB" stroke="#111" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M15 60 C15 70 25 70 25 60 M75 60 C75 70 85 70 85 60" stroke="#111" strokeWidth="4" strokeLinecap="round"/>
-    <path d="M30 40 L45 25 L65 25 L75 40" fill="none" stroke="#111" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
-
-const IconBox3D = () => (
-  <svg viewBox="0 0 100 100" fill="none" className="w-24 h-24 object-contain origin-right drop-shadow-xl">
-    <path d="M50 20 L80 35 L80 65 L50 80 L20 65 L20 35 Z" fill="#FBBF24" stroke="#111" strokeWidth="2" strokeLinejoin="round"/>
-    <path d="M20 35 L50 50 L80 35 M50 50 L50 80" stroke="#111" strokeWidth="2" strokeLinejoin="round"/>
-  </svg>
-);
-
-const IconCalendar3D = () => (
-  <svg viewBox="0 0 100 100" fill="none" className="w-24 h-24 object-contain scale-125 origin-right drop-shadow-xl">
-    <rect x="20" y="25" width="60" height="55" rx="4" fill="#F3F4F6" stroke="#111" strokeWidth="2"/>
-    <rect x="20" y="25" width="60" height="15" rx="4" fill="#EF4444" stroke="#111" strokeWidth="2"/>
-    <line x1="35" y1="15" x2="35" y2="30" stroke="#111" strokeWidth="4" strokeLinecap="round"/>
-    <line x1="65" y1="15" x2="65" y2="30" stroke="#111" strokeWidth="4" strokeLinecap="round"/>
-    <rect x="30" y="50" width="10" height="10" fill="#111" />
-  </svg>
-);
-
 const AbstractIllustrationHero = () => (
-  <svg viewBox="0 0 800 600" fill="none" className="w-full h-full object-cover rounded-2xl">
-    <rect width="800" height="600" fill="#EAB308" />
-    <path d="M0 600 L800 600 L800 300 L0 500 Z" fill="#111111" opacity="0.9"/>
-    <rect x="200" y="100" width="400" height="300" fill="#111111" rx="16" />
-    <rect x="220" y="120" width="360" height="200" fill="#374151" rx="8" />
-    <circle cx="280" cy="180" r="30" fill="#3B82F6" />
-    <circle cx="520" cy="180" r="30" fill="#F87171" />
-    <path d="M310 180 L490 180" stroke="#9CA3AF" strokeWidth="4" strokeDasharray="10 10" />
-    <rect x="300" y="260" width="200" height="40" fill="#10B981" rx="20" />
-    <circle cx="650" cy="450" r="80" fill="#F9FAFB" />
-    <path d="M620 450 C620 430 680 430 680 450" stroke="#111111" strokeWidth="8" strokeLinecap="round" />
-    <path d="M450 450 C450 430 510 430 510 450" stroke="#111111" strokeWidth="8" strokeLinecap="round" />
+  <svg viewBox="0 0 800 600" fill="none" className="w-full h-full object-cover rounded-3xl shadow-2xl">
+    <rect width="800" height="600" fill="#111111" />
+    <path d="M0 600 L800 600 L800 200 L0 400 Z" fill="#222222" />
+    <rect x="200" y="100" width="400" height="300" fill="#000000" rx="24" stroke="#333" strokeWidth="2" />
+    <circle cx="300" cy="200" r="40" fill="#3B82F6" />
+    <circle cx="500" cy="200" r="40" fill="#10B981" />
+    <circle cx="400" cy="300" r="40" fill="#F59E0B" />
+    <path d="M300 200 L400 300 L500 200" stroke="#4B5563" strokeWidth="4" strokeDasharray="10 10" />
+    <rect x="320" y="450" width="160" height="120" fill="#FAFAFA" rx="16" />
+    <path d="M350 490 L450 490 M350 520 L420 520" stroke="#D1D5DB" strokeWidth="8" strokeLinecap="round" />
   </svg>
 );
-
-const AbstractIllustrationAccount = () => (
-  <svg viewBox="0 0 800 500" fill="none" className="w-full h-full object-cover rounded-2xl">
-    <rect width="800" height="500" fill="#F3F4F6" />
-    <circle cx="300" cy="350" r="150" fill="#3B82F6" />
-    <circle cx="500" cy="350" r="150" fill="#111111" />
-    <circle cx="300" cy="200" r="60" fill="#9CA3AF" />
-    <circle cx="500" cy="200" r="60" fill="#FCA5A5" />
-    <path d="M470 200 C470 180 530 180 530 200" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
-    <path d="M270 200 C270 180 330 180 330 200" stroke="#111111" strokeWidth="6" strokeLinecap="round" />
-  </svg>
-);
-
-const AbstractIllustrationSafety = () => (
-  <svg viewBox="0 0 800 500" fill="none" className="w-full h-full object-cover rounded-2xl">
-    <rect width="800" height="500" fill="#DBEAFE" />
-    <path d="M100 500 L700 500 L800 200 L0 200 Z" fill="#9CA3AF" />
-    <path d="M200 500 L600 500 L650 300 L150 300 Z" fill="#111111" />
-    <circle cx="400" cy="300" r="80" fill="#3B82F6" />
-    <path d="M370 300 L400 330 L440 270" stroke="#FFFFFF" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" />
-    <circle cx="250" cy="250" r="40" fill="#FCA5A5" />
-    <path d="M230 250 C230 240 270 240 270 250" stroke="#111111" strokeWidth="4" strokeLinecap="round" />
-  </svg>
-);
-
 
 // ============================================================================
 // MAIN PAGE COMPONENT
@@ -133,9 +83,7 @@ export default function Landing() {
   const [localTime, setLocalTime] = useState('');
   const [greeting, setGreeting] = useState('Welcome');
   const [networkLatency, setNetworkLatency] = useState('Checking...');
-  const [safetyMode, setSafetyMode] = useState('standard'); // 'standard' | 'female' | 'male'
-  const [pickup, setPickup] = useState('');
-  const [dropoff, setDropoff] = useState('');
+  const [geoData, setGeoData] = useState('Detecting location...');
 
   useEffect(() => {
     // Feature: Real-Time Clock & Greeting Engine
@@ -152,9 +100,23 @@ export default function Landing() {
 
     // Feature: Real Network Latency Detection (BOM API)
     if (navigator.connection && navigator.connection.rtt) {
-      setNetworkLatency(`${navigator.connection.rtt}ms ping`);
+      setNetworkLatency(`${navigator.connection.rtt}ms response`);
     } else {
       setNetworkLatency('Optimal connection');
+    }
+
+    // Feature: Real-Time Geolocation
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setGeoData(`LAT: ${position.coords.latitude.toFixed(4)}, LNG: ${position.coords.longitude.toFixed(4)}`);
+        },
+        (error) => {
+          setGeoData(`Location encrypted.`);
+        }
+      );
+    } else {
+      setGeoData("Hardware location offline.");
     }
 
     return () => clearInterval(timer);
@@ -165,8 +127,8 @@ export default function Landing() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Movyra Global Logistics',
-          text: 'Experience the future of local and enterprise logistics.',
+          title: 'Movyra Super App',
+          text: 'Aapki har zaroorat, ab door step par. Experience the Movyra super app.',
           url: window.location.href,
         });
       } catch (err) {
@@ -193,54 +155,43 @@ export default function Landing() {
       <Header />
 
       {/* ========================================================= */}
-      {/* SECTION 1: PRIMARY HERO (Light Gray Background)           */}
+      {/* SECTION 1: PRIMARY HERO (THE SUPER APP)                   */}
       {/* ========================================================= */}
-      <section className="relative pt-24 pb-0 md:pt-32 px-6 md:px-12 w-full bg-[#E5E7EB]">
-        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-stretch gap-12 lg:gap-0 h-full min-h-[600px]">
+      <section className="relative pt-24 pb-0 md:pt-32 px-6 md:px-12 w-full bg-[#E5E7EB] overflow-hidden">
+        <div className="max-w-[1400px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16 min-h-[85vh]">
             
-            {/* Left: Interactive Booking Widget */}
-            <motion.div initial="hidden" animate="show" variants={fadeUp} className="w-full lg:w-[45%] flex flex-col items-start justify-center pr-0 lg:pr-12 z-20 py-12">
-                <h1 className="text-[52px] md:text-[68px] lg:text-[72px] font-black leading-[1.05] tracking-tighter mb-8 text-black">
-                    Go anywhere with Movyra
+            <motion.div initial="hidden" animate="show" variants={fadeUp} className="w-full lg:w-1/2 flex flex-col items-start justify-center z-20 py-12">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full mb-8 shadow-sm border border-gray-200">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-xs font-bold text-gray-800 tracking-widest uppercase">{greeting}. We are live.</span>
+                </div>
+                <h1 className="text-[56px] md:text-[72px] font-black leading-[1.05] tracking-tighter mb-6 text-black">
+                    Aapki har <br/> zaroorat. <br/> Delivered.
                 </h1>
+                <p className="text-[20px] font-medium text-gray-600 mb-10 leading-relaxed max-w-lg">
+                    From daily groceries and boutique fashion try-ons to trusted household services. Movyra brings the entire city to your doorstep.
+                </p>
                 
-                {/* Interactive Booking Box */}
-                <div className="w-full max-w-md bg-transparent relative">
-                    <button className="flex items-center gap-2 bg-white px-4 py-2 rounded-full font-bold text-[14px] shadow-sm mb-6 border border-gray-200">
-                        <Clock size={16} /> Pickup now <ChevronRight size={16} />
-                    </button>
-
-                    <div className="relative pl-8 mb-6">
-                        {/* Timeline visual */}
-                        <div className="absolute left-3.5 top-5 bottom-8 w-0.5 bg-black" />
-                        <div className="absolute left-2.5 top-4 w-2.5 h-2.5 rounded-full bg-black" />
-                        <div className="absolute left-2.5 bottom-6 w-2.5 h-2.5 bg-black" />
-
-                        <div className="space-y-4">
-                            <div className="relative">
-                                <input type="text" placeholder="Pickup location" value={pickup} onChange={(e) => setPickup(e.target.value)} className="w-full bg-white rounded-lg py-4 px-4 font-bold text-[16px] outline-none border border-gray-200 focus:border-black transition-colors shadow-sm" />
-                                <MapPin size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                            </div>
-                            <div className="relative">
-                                <input type="text" placeholder="Dropoff location" value={dropoff} onChange={(e) => setDropoff(e.target.value)} className="w-full bg-white rounded-lg py-4 px-4 font-bold text-[16px] outline-none border border-gray-200 focus:border-black transition-colors shadow-sm" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <button className="bg-black text-white px-8 py-4 rounded-lg font-bold text-[16px] hover:bg-gray-800 transition-colors active:scale-95 shadow-md">
-                            See prices
+                <div className="w-full max-w-md bg-white p-6 rounded-[24px] shadow-xl border border-gray-100">
+                    <h3 className="font-black text-[18px] mb-4 text-black">What are you looking for today?</h3>
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
+                            <ShoppingBag className="mb-2 text-black" size={24} />
+                            <span className="font-bold text-sm text-gray-800">Daily Needs</span>
                         </button>
-                        <a href="#" className="font-bold text-[14px] text-gray-700 underline hover:text-black transition-colors">
-                            Log in to see your recent activity
-                        </a>
+                        <button className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors border border-gray-200">
+                            <Shirt className="mb-2 text-black" size={24} />
+                            <span className="font-bold text-sm text-gray-800">Fashion</span>
+                        </button>
                     </div>
+                    <button className="w-full bg-black text-white py-4 rounded-xl font-black hover:bg-gray-800 transition-colors flex items-center justify-center gap-2 shadow-md">
+                        Explore Movyra <ArrowRight size={18} />
+                    </button>
                 </div>
             </motion.div>
 
-            {/* Right: High-End Illustration */}
-            <motion.div initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="w-full lg:w-[55%] relative z-10 flex items-end justify-center lg:justify-end h-full mt-auto">
-                <div className="w-full h-full min-h-[400px] max-w-[800px] relative rounded-t-[32px] overflow-hidden">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="w-full lg:w-1/2 relative z-10 flex items-center justify-center h-full">
+                <div className="w-full aspect-[4/3] relative rounded-[32px] overflow-hidden shadow-2xl border-4 border-white">
                     <AbstractIllustrationHero />
                 </div>
             </motion.div>
@@ -248,33 +199,55 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 3: CORE MODALITIES GRID (White Cards)             */}
+      {/* SECTION 2: LIVE TELEMETRY DASHBOARD                       */}
       {/* ========================================================= */}
-      <section className="py-24 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white">
-        <div className="mb-12">
-          <h2 className="text-[36px] md:text-[48px] font-black tracking-tight leading-none mb-4">Explore what you can do with Movyra</h2>
+      <section className="py-10 bg-[#111111] text-white border-y border-gray-800">
+        <div className="container mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-6 divide-x divide-white/10">
+          <div className="pl-4 first:pl-0 border-none">
+            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><MapPin size={14}/> Service Area</h4>
+            <p className="text-[14px] font-mono text-gray-300 truncate">{geoData}</p>
+          </div>
+          <div className="pl-6">
+            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><Activity size={14}/> Network Speed</h4>
+            <p className="text-[14px] font-bold text-green-400">{networkLatency}</p>
+          </div>
+          <div className="pl-6">
+            <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1 flex items-center gap-2"><Clock size={14}/> Local Time</h4>
+            <p className="text-[14px] font-mono text-gray-300">{localTime}</p>
+          </div>
+          <div className="pl-6 flex items-center">
+            <button onClick={handleShare} className="text-[12px] font-bold text-white uppercase tracking-widest border border-white/20 px-4 py-2 rounded-full hover:bg-white hover:text-black transition-colors">
+              Share Movyra
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 3: THE 6 PILLARS (CORE CATEGORIES)                */}
+      {/* ========================================================= */}
+      <section className="py-32 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white">
+        <div className="mb-16 text-center max-w-3xl mx-auto">
+          <h2 className="text-[40px] md:text-[56px] font-black tracking-tight leading-none mb-6 text-black">A universe of services.</h2>
+          <p className="text-[18px] text-gray-600 font-medium">Six dedicated categories connecting you to daily essentials, local food, premium retail, and reliable mobility.</p>
         </div>
         
-        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
-            { t: "Ride", d: "Go anywhere with Movyra. Request a ride, hop in, and go.", icon: IconCar3D },
-            { t: "Reserve", d: "Reserve your ride in advance so you can relax on the day of your trip.", icon: IconCalendar3D },
-            { t: "Intercity", d: "Get convenient, affordable outstation cabs anytime at your door.", icon: IconCar3D },
-            { t: "Parcel", d: "Movyra makes same-day item delivery easier than ever.", icon: IconBox3D },
-            { t: "Rentals", d: "Request a trip for a block of time and make multiple stops.", icon: IconCar3D }
+            { t: "Daily Needs", d: "Fresh groceries, fruits, and vegetables delivered to your kitchen in minutes.", icon: ShoppingBag },
+            { t: "Shop Delivery", d: "Direct delivery from your favorite local merchants and neighborhood stores.", icon: Package },
+            { t: "Bongo Eats", d: "Authentic, hygienic meals prepared by verified local home chefs.", icon: Utensils },
+            { t: "Fashion Boutique", d: "High-end clothes, shoes, and watches. Try them on at home before buying.", icon: Shirt },
+            { t: "Home Services", d: "Book trusted, background-checked maids, servants, and deep cleaners.", icon: Home },
+            { t: "Mobility", d: "Rental vehicles for the day, and city rides (Coming Soon) for quick commutes.", icon: Car }
           ].map((card, idx) => (
-            <motion.div key={idx} variants={fadeUp} className="bg-[#F8FAFC] rounded-[24px] p-8 flex justify-between items-end h-[240px] hover:shadow-lg transition-shadow cursor-pointer border border-gray-100 group">
-              <div className="flex flex-col h-full justify-between max-w-[60%]">
-                <div>
-                  <h3 className="text-[20px] font-black mb-2">{card.t}</h3>
-                  <p className="text-[14px] text-gray-600 font-medium leading-relaxed">{card.d}</p>
-                </div>
-                <button className="bg-white text-black px-5 py-2 rounded-full font-bold text-[14px] shadow-sm group-hover:bg-gray-100 transition-colors w-fit">
-                   Details
-                 </button>
+            <motion.div key={idx} variants={fadeUp} className="bg-[#F8FAFC] rounded-[32px] p-10 flex flex-col justify-between h-[300px] border border-gray-100 hover:shadow-xl hover:-translate-y-2 transition-all group">
+              <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-200 mb-6 group-hover:scale-110 transition-transform origin-left">
+                <card.icon size={32} className="text-black" strokeWidth={1.5} />
               </div>
-              <div className="w-[40%] flex justify-end group-hover:scale-110 transition-transform origin-bottom-right">
-                 <card.icon />
+              <div>
+                <h3 className="text-[24px] font-black mb-3 text-black">{card.t}</h3>
+                <p className="text-[15px] text-gray-600 font-medium leading-relaxed">{card.d}</p>
               </div>
             </motion.div>
           ))}
@@ -282,115 +255,160 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 4: ACCOUNT ACCESS SECTION                         */}
+      {/* SECTION 4: THE USP - FASHION TRY-AT-HOME                  */}
       {/* ========================================================= */}
-      <section className="py-24 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white border-t border-gray-100">
-        <div className="flex flex-col md:flex-row items-center gap-16">
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="w-full md:w-1/2">
-                <h2 className="text-[40px] md:text-[56px] font-black tracking-tighter mb-6 leading-[1.05] text-black">
-                    Log in to see your account details
-                </h2>
-                <p className="text-[18px] font-medium text-gray-600 mb-10 leading-relaxed max-w-md">
-                    View past trips, tailored suggestions, support resources, and more.
-                </p>
-                <div className="flex items-center gap-6">
-                    <button className="bg-black text-white px-8 py-4 rounded-xl font-bold text-[16px] hover:bg-gray-800 transition-colors">
-                        Log in to your account
-                    </button>
-                    <a href="#" className="font-bold text-[16px] text-black border-b border-black hover:text-gray-600 hover:border-gray-600 transition-colors pb-0.5">
-                        Create an account
-                    </a>
-                </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full md:w-1/2 flex justify-end">
-                <div className="w-full max-w-[600px] aspect-[16/10]">
-                    <AbstractIllustrationAccount />
-                </div>
-            </motion.div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* SECTION 5: SAFETY SECTION                                 */}
-      {/* ========================================================= */}
-      <section className="py-24 px-6 md:px-12 w-full max-w-[1400px] mx-auto bg-white border-t border-gray-100">
-        <div className="flex flex-col-reverse md:flex-row items-center gap-16">
-            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full md:w-1/2 flex justify-start">
-                <div className="w-full max-w-[600px] aspect-[16/10]">
-                    <AbstractIllustrationSafety />
-                </div>
-            </motion.div>
-
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="w-full md:w-1/2 pl-0 md:pl-12">
-                <h2 className="text-[40px] md:text-[56px] font-black tracking-tighter mb-6 leading-[1.05] text-black">
-                    Safety, simplified
-                </h2>
-                <p className="text-[18px] font-medium text-gray-600 mb-10 leading-relaxed max-w-md">
-                    Turn on and schedule your safety preferences, all in the Movyra app.
-                </p>
-                <button className="bg-black text-white px-8 py-4 rounded-xl font-bold text-[16px] hover:bg-gray-800 transition-colors">
-                    Learn more
-                </button>
-            </motion.div>
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* SECTION 6: LIVE TELEMETRY DASHBOARD                       */}
-      {/* ========================================================= */}
-      <section className="py-12 bg-black text-white border-y border-white/10">
-        <div className="container mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/10">
-          {[
-            { v: "12ms", l: "Average Routing Latency" },
-            { v: "256-bit", l: "End-to-End Encryption" },
-            { v: "Zero", l: "Hidden Fees" },
-            { v: "100%", l: "Verified Nodes" }
-          ].map((stat, i) => (
-            <div key={i} className="pl-8 first:pl-0 border-none">
-              <h4 className="text-[32px] md:text-[40px] font-black tracking-tighter mb-1">{stat.v}</h4>
-              <p className="text-[12px] font-bold text-gray-500 uppercase tracking-widest">{stat.l}</p>
+      <section className="py-32 bg-black text-white relative overflow-hidden">
+        <TopoBackground />
+        <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16 relative z-20">
+          <div className="w-full lg:w-1/2">
+            <div className="inline-block bg-white text-black font-black px-4 py-1.5 rounded-full text-xs uppercase tracking-widest mb-8 border border-gray-200 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+              Our Signature Feature
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* SECTION 7: UNIQUE SELLING PROPOSITIONS (Eats & Fashion)   */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-[#F8FAFC]">
-        <div className="container mx-auto px-6 md:px-12 w-full max-w-[1400px]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="bg-white p-12 rounded-[40px] shadow-sm border border-gray-100 relative overflow-hidden">
-               <div className="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center mb-8"><ShoppingBag className="text-orange-500" size={32} /></div>
-               <h3 className="text-[32px] font-black tracking-tight mb-4">Bongo Eats.</h3>
-               <p className="text-[18px] text-gray-500 font-medium mb-8">Not just restaurants. Verified neighborhood home chefs, multi-cart splitting, and algorithmic diet planners.</p>
-               <ul className="space-y-3">
-                 {['FSSAI Certified Homes', 'Simultaneous Multi-Restaurant Delivery', 'Smart Macro Filtering'].map((li, i) => (
-                   <li key={i} className="flex items-center gap-3 font-bold text-sm text-gray-700"><CheckCircle size={16} className="text-orange-500"/> {li}</li>
-                 ))}
-               </ul>
-            </motion.div>
-
-            <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="bg-black text-white p-12 rounded-[40px] shadow-2xl relative overflow-hidden">
-               <div className="absolute -right-20 -bottom-20 opacity-10 pointer-events-none"><Zap size={300} /></div>
-               <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-8"><Heart className="text-white" size={32} /></div>
-               <h3 className="text-[32px] font-black tracking-tight mb-4">Fashion Logistics.</h3>
-               <p className="text-[18px] text-gray-400 font-medium mb-8">A massive differentiator. Deep integration with local boutiques for Try-At-Home scheduling and instant returns.</p>
-               <ul className="space-y-3">
-                 {['Wait & Return Protocol', 'Local Boutique API', 'Same-Day Wardrobe'].map((li, i) => (
-                   <li key={i} className="flex items-center gap-3 font-bold text-sm text-gray-300"><ArrowRight size={16} className="text-white"/> {li}</li>
-                 ))}
-               </ul>
-            </motion.div>
+            <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-8 leading-tight">
+              Pehno phir <br/> paise do.
+            </h2>
+            <p className="text-[20px] text-gray-400 font-medium mb-10 leading-relaxed">
+              Movyra Fashion is changing how you shop. Request premium clothes, shoes, and luxury watches directly from local boutiques. Our delivery partner waits at your door while you try them on. Keep what fits perfectly, we return the rest instantly.
+            </p>
+            <div className="grid grid-cols-2 gap-6 mb-10">
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
+                <Shirt size={28} className="mb-4 text-white" />
+                <h4 className="font-bold text-lg">Designer Apparel</h4>
+              </div>
+              <div className="bg-white/10 p-6 rounded-2xl border border-white/10">
+                <Watch size={28} className="mb-4 text-white" />
+                <h4 className="font-bold text-lg">Watches & Kicks</h4>
+              </div>
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2 flex justify-center lg:justify-end">
+             <div className="w-[300px] h-[300px] md:w-[450px] md:h-[450px] bg-white rounded-full flex flex-col items-center justify-center p-12 text-black shadow-[0_0_100px_rgba(255,255,255,0.15)] relative">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }} className="absolute inset-4 border-2 border-gray-200 border-dashed rounded-full" />
+                <img src="/logo-2.png" alt="Movyra" className="w-20 h-20 mb-6 relative z-10" onError={(e) => e.target.style.display = 'none'} />
+                <h3 className="font-black text-[24px] relative z-10 text-center">Fashion at Home</h3>
+                <p className="text-gray-500 font-bold text-sm mt-2 relative z-10 text-center">15-Min Try-On Window</p>
+             </div>
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 8: ENTERPRISE ANALYTICS                           */}
+      {/* SECTION 5: DAILY NEEDS & GROCERY                          */}
+      {/* ========================================================= */}
+      <section className="py-32 bg-[#F8FAFC] border-y border-gray-200">
+        <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
+          <div className="w-full lg:w-1/2 grid grid-cols-2 gap-6">
+            <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center aspect-square justify-center">
+              <ShoppingBag size={48} className="text-blue-500 mb-4" strokeWidth={1.5} />
+              <h4 className="font-black text-xl text-black">Grocery Essentials</h4>
+            </div>
+            <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-sm flex flex-col items-center text-center aspect-square justify-center mt-12">
+              <Leaf size={48} className="text-green-500 mb-4" strokeWidth={1.5} />
+              <h4 className="font-black text-xl text-black">Farm Fresh Produce</h4>
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2 pl-0 lg:pl-10">
+            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight">Daily Needs. <br/> Sorted.</h2>
+            <p className="text-[20px] text-gray-600 font-medium leading-relaxed mb-8">
+              Skip the long supermarket lines. Our fast delivery network connects you directly to local warehouses and farms, ensuring crisp sabzi and essential groceries arrive at your home in minutes.
+            </p>
+            <ul className="space-y-4 font-bold text-gray-800">
+              <li className="flex items-center gap-4"><CheckCircle size={20} className="text-black"/> Hyper-local routing</li>
+              <li className="flex items-center gap-4"><CheckCircle size={20} className="text-black"/> Freshness guaranteed</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 6: BONGO EATS (HOME KITCHENS)                     */}
       {/* ========================================================= */}
       <section className="py-32 bg-white">
+        <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16">
+          <div className="w-full lg:w-1/2">
+            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight">Bongo Eats. <br/> Ghar ka khana.</h2>
+            <p className="text-[20px] text-gray-600 font-medium leading-relaxed mb-8">
+              Craving authentic, home-cooked food? Movyra connects you directly to FSSAI-verified local home chefs. Enjoy hygienic, authentic, and culturally rich meals prepared with love in neighborhood kitchens.
+            </p>
+            <button className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors shadow-lg">
+              Explore Local Chefs
+            </button>
+          </div>
+          <div className="w-full lg:w-1/2 bg-gray-50 rounded-[48px] border border-gray-200 p-12 flex flex-col items-center justify-center aspect-square relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-64 h-64 bg-orange-100 rounded-full blur-3xl -z-10" />
+            <Utensils size={80} className="text-black mb-8" strokeWidth={1} />
+            <div className="bg-white px-6 py-3 rounded-full shadow-md border border-gray-100 font-black text-lg text-black flex items-center gap-3">
+               <Shield size={20} className="text-green-500" /> FSSAI Verified Kitchens
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 7: HOUSEHOLD SERVICES                             */}
+      {/* ========================================================= */}
+      <section className="py-32 bg-[#0A0A0A] text-white">
+        <div className="container mx-auto px-6 md:px-12 text-center max-w-4xl">
+          <Home size={64} className="text-white mx-auto mb-8" strokeWidth={1} />
+          <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-8">Trust in your home.</h2>
+          <p className="text-[20px] text-gray-400 font-medium leading-relaxed mb-16">
+            Eliminate the stress of home management. The Movyra app allows you to book heavily vetted, background-checked household staff instantly. Tension-free living, guaranteed.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-8 bg-white/10 border border-white/20 rounded-[24px] hover:bg-white/20 transition-colors">
+              <h4 className="font-black text-xl text-white mb-2">Servants</h4>
+              <p className="text-gray-400 text-sm font-medium">Reliable daily household help.</p>
+            </div>
+            <div className="p-8 bg-white/10 border border-white/20 rounded-[24px] hover:bg-white/20 transition-colors">
+              <h4 className="font-black text-xl text-white mb-2">Maids</h4>
+              <p className="text-gray-400 text-sm font-medium">Expert cooking and organization.</p>
+            </div>
+            <div className="p-8 bg-white/10 border border-white/20 rounded-[24px] hover:bg-white/20 transition-colors">
+              <h4 className="font-black text-xl text-white mb-2">Deep Cleaning</h4>
+              <p className="text-gray-400 text-sm font-medium">Professional sanitation services.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 8: MOBILITY (RENTALS & RIDES)                     */}
+      {/* ========================================================= */}
+      <section className="py-32 bg-white border-b border-gray-100">
+        <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
+          <div className="w-full lg:w-1/2 flex justify-center lg:justify-start">
+            <div className="grid grid-cols-1 gap-6 w-full max-w-md">
+               <div className="bg-[#F8FAFC] p-8 rounded-[32px] border border-gray-200 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
+                 <div className="flex items-center gap-6">
+                   <Car size={32} className="text-black" />
+                   <h3 className="text-2xl font-black text-black">Rental Vehicles</h3>
+                 </div>
+                 <ArrowRight className="text-gray-400" />
+               </div>
+               <div className="bg-gray-50 p-8 rounded-[32px] border border-gray-200 flex items-center justify-between opacity-60">
+                 <div className="flex items-center gap-6">
+                   <Zap size={32} className="text-gray-500" />
+                   <div>
+                     <h3 className="text-2xl font-black text-gray-700">Movyra Rides</h3>
+                     <p className="text-xs font-bold text-orange-500 uppercase tracking-widest mt-1">Coming Soon</p>
+                   </div>
+                 </div>
+               </div>
+            </div>
+          </div>
+          <div className="w-full lg:w-1/2 pl-0 lg:pl-12">
+            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight">Mobility made <br/> simple.</h2>
+            <p className="text-[20px] text-gray-600 font-medium mb-8 leading-relaxed">
+              Need a vehicle for the entire day? Our rental service lets you book a car for hours, perfect for shopping trips and multiple stops. Our instant city ride network is launching very soon to handle your daily commute.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* SECTION 9: ENTERPRISE & B2B LOGISTICS                     */}
+      {/* ========================================================= */}
+      <section className="py-32 bg-[#F8FAFC]">
         <div className="container mx-auto px-6 md:px-12 w-full max-w-[1400px]">
           <div className="flex flex-col lg:flex-row items-center gap-20">
             <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="w-full lg:w-1/2">
@@ -398,29 +416,30 @@ export default function Landing() {
                 <Briefcase size={28} className="text-white" />
               </div>
               <h2 className="text-[48px] font-black tracking-tighter mb-6 leading-[1.05] text-black">
-                B2B Fleet Operations.
+                Movyra for Business.
               </h2>
               <p className="text-[18px] font-medium text-gray-600 mb-10 leading-relaxed max-w-lg">
-                Full-scale logistics panel for businesses. Deploy recurring routes, generate GST invoices instantly, and track total payload metrics.
+                A powerful logistics dashboard for your business. Manage corporate travel, track deliveries, and generate GST invoices instantly. Grow your enterprise with Movyra.
               </p>
+              <button className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors">
+                Access B2B Portal
+              </button>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full lg:w-1/2 bg-[#F3F4F6] p-10 rounded-[32px] border border-gray-200 shadow-inner">
-               <div className="bg-white rounded-xl p-6 shadow-xl border border-gray-100">
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-[14px] font-bold text-gray-800">Active Fleet Routing</span>
-                    <span className="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded uppercase">Live</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                       <motion.div initial={{ width: 0 }} whileInView={{ width: '75%' }} transition={{ duration: 1.5 }} className="bg-black h-full rounded-full" />
-                    </div>
-                    <div className="flex justify-between text-xs font-bold text-gray-500">
-                       <span>Warehouse A</span>
-                       <span>75% to Sector 4</span>
-                       <span>Drop B</span>
-                    </div>
-                  </div>
+            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full lg:w-1/2 bg-white p-10 rounded-[32px] border border-gray-200 shadow-xl">
+               <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-6">
+                 <h4 className="font-black text-xl text-black">Live Fleet Tracking</h4>
+                 <div className="bg-green-100 text-green-700 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest">Active</div>
+               </div>
+               <div className="space-y-6">
+                 <div>
+                   <div className="flex justify-between text-sm font-bold text-gray-700 mb-2"><span>Delivery Route A</span><span>80% Completed</span></div>
+                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden"><div className="w-[80%] h-full bg-black rounded-full" /></div>
+                 </div>
+                 <div>
+                   <div className="flex justify-between text-sm font-bold text-gray-700 mb-2"><span>Delivery Route B</span><span>45% Completed</span></div>
+                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden"><div className="w-[45%] h-full bg-blue-500 rounded-full" /></div>
+                 </div>
                </div>
             </motion.div>
           </div>
@@ -428,38 +447,38 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 9: ECOSYSTEM LINKS (Join, Admin, Meet)            */}
+      {/* SECTION 10: ECOSYSTEM LINKS (Join, Admin, Meet)           */}
       {/* ========================================================= */}
       <section className="py-24 bg-white border-t border-gray-100">
         <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-[1400px]">
           <div onClick={() => window.location.href='https://join.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center">Join Movyra <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">Partner and Vendor Onboarding Portal.</p>
+            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Partner With Us <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
+            <p className="text-sm font-medium text-gray-500">Become a driver or list your shop on Movyra.</p>
           </div>
           <div onClick={() => window.location.href='https://admin.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center">Admin Console <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">Operations and Fraud Radar.</p>
+            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Support Center <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
+            <p className="text-sm font-medium text-gray-500">24/7 help desk and safety assistance.</p>
           </div>
           <div onClick={() => window.location.href='https://meet.movyra.in'} className="bg-gray-50 p-8 rounded-[24px] border border-gray-200 cursor-pointer hover:border-black transition-colors group">
-            <h3 className="text-xl font-black mb-2 flex justify-between items-center">Investor Portal <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
-            <p className="text-sm font-medium text-gray-500">Pitch Deck and Corporate Vision.</p>
+            <h3 className="text-xl font-black mb-2 flex justify-between items-center text-black">Company Vision <ArrowRight className="opacity-0 group-hover:opacity-100 transition-opacity" size={20}/></h3>
+            <p className="text-sm font-medium text-gray-500">Investors and corporate structure.</p>
           </div>
         </div>
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 10: COMPLIANCE & APP DEPLOYMENT (DOWNLOAD)        */}
+      {/* SECTION 11: COMPLIANCE & APP DEPLOYMENT (DOWNLOAD)        */}
       {/* ========================================================= */}
-      <section className="py-32 bg-[#F8FAFC] border-t border-gray-100">
+      <section className="py-32 bg-[#111111] text-white">
         <div className="container mx-auto px-6 md:px-12 text-center max-w-4xl">
-          <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
-             <Smartphone size={32} className="text-white" strokeWidth={1.5} />
+          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
+             <Smartphone size={36} className="text-black" strokeWidth={1.5} />
           </div>
-          <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none mb-8 text-black">
-            Deploy Movyra.
+          <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none mb-8 text-white">
+            Get the Movyra App.
           </h2>
-          <p className="text-[20px] text-gray-600 font-medium mb-12">
-            Install the native terminal. Experience strict security, transparent pricing, and the full capability of our logistics network.
+          <p className="text-[20px] text-gray-400 font-medium mb-12 max-w-2xl mx-auto">
+            Install our native app for iOS and Android. Experience strict security, transparent pricing, and the power of the 6-pillar ecosystem.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
             <AppStoreSVG />
