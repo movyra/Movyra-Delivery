@@ -1,26 +1,30 @@
 /**
  * ============================================================================
- * SERVICE: POCKETBASE KYC UPLOAD ENGINE (mv-main)
+ * SERVICE: POCKETBASE KYC UPLOAD PIPELINE (mv-main)
  * Architecture: Pure Data Layer & External SDK Connection
- * Description: Securely connects to Hugging Face PocketBase instance to process
- * real-time multipart/form-data uploads for Vendor KYC documents.
+ * Description: Securely connects to the Hugging Face PocketBase instance to 
+ * process real-time multipart/form-data uploads for Vendor KYC documents.
  * ============================================================================
  */
 
 import PocketBase from 'pocketbase';
 
-// WARNING: Replace this placeholder with your active Hugging Face Space URL
-const POCKETBASE_URL = 'https://your-huggingface-space-name.hf.space';
+// Strictly bind the network endpoint to the secure local environment variable
+const POCKETBASE_URL = import.meta.env.VITE_POCKETBASE_URL;
+
+if (!POCKETBASE_URL) {
+  console.error('Critical System Error: VITE_POCKETBASE_URL environment variable is missing.');
+}
 
 // Initialize the PocketBase client
 const pb = new PocketBase(POCKETBASE_URL);
 
-// Disable auto-cancellation to ensure large document uploads do not abort prematurely
+// Disable auto-cancellation to ensure large document uploads process completely
 pb.autoCancellation(false);
 
 /**
- * Executes a real-time multipart form data upload to PocketBase.
- * * @param {string} userEmail - The registered email of the vendor.
+ * Executes a real-time multipart form data upload to the PocketBase instance.
+ * @param {string} userEmail - The registered email of the vendor.
  * @param {File} gstFile - The selected GST document File object.
  * @param {File} panFile - The selected PAN document File object.
  * @param {File} aadhaarFile - The selected Aadhaar document File object.
@@ -29,15 +33,15 @@ pb.autoCancellation(false);
 export const uploadVendorKYCDocuments = async (userEmail, gstFile, panFile, aadhaarFile) => {
   // 1. Strict Validation Guard (Zero Mock Data Allowed)
   if (!userEmail || !gstFile || !panFile || !aadhaarFile) {
-    console.error('KYC Upload Aborted: Missing required live document files or identifier.');
-    throw new Error('All KYC documents must be provided.');
+    console.error('KYC Upload Aborted: Missing required live document files or tracking identifier.');
+    throw new Error('All official KYC documents must be provided to proceed.');
   }
 
   try {
     // 2. Construct Multipart FormData Payload
     const formData = new FormData();
     
-    // Append tracking identifier
+    // Append tracking identifier and initial status
     formData.append('vendor_email', userEmail);
     formData.append('kyc_status', 'pending');
     
@@ -52,7 +56,7 @@ export const uploadVendorKYCDocuments = async (userEmail, gstFile, panFile, aadh
     return record;
 
   } catch (error) {
-    console.error('Critical Error during PocketBase KYC Upload:', error);
+    console.error('Network Error during PocketBase KYC Upload:', error);
     throw error;
   }
 };
