@@ -128,8 +128,7 @@ export default function SecureAdminGate({ children }) {
           <div className="absolute inset-2 border-b-2 border-r-2 border-white rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           <img src="/logo.png" alt="Movyra" className="w-10 h-10 object-contain animate-glow" onError={(e) => { e.target.style.display='none'; }} />
           {/* Fallback SVG if logo.png is missing */}
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="white" className="absolute"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5h-13L12 6.5z"/></svg>
-        </div>
+          </div>
 
         <h2 className="text-[1.5rem] font-black tracking-widest uppercase mb-8 text-center">
           Authenticating <span className="text-[#0055ff]">Admin</span>

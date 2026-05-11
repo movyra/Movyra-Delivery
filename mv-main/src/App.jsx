@@ -1,25 +1,35 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, Activity, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useSpring } from 'framer-motion';
+import { 
+  WifiOff, AlertCircle, Command, Search, Share2, 
+  HelpCircle, Moon, Sun, MousePointer2, ChevronRight, X 
+} from 'lucide-react';
 
 /**
  * ============================================================================
  * MODULE: MASTER ROUTER ARCHITECTURE (mv-main)
- * Features: 10+ Real-Time Global Enhancements & Development Toggle
- * 1. Global Scroll Restoration
+ * Features: 10+ Real-Time Global Enhancements & Strict Security
+ * * 1. Global Scroll Restoration
  * 2. Real-Time Network Connection Monitor (BOM API)
  * 3. System Theme Sync Observer (prefers-color-scheme)
  * 4. Route-based Document Title Updater
- * 5. Hardware Concurrency & Performance Logger
- * 6. Global Error Boundary (Render Catching)
- * 7. Framer Motion Page Transitions
- * 8. Live Viewport Meta Management
- * 9. Route Analytics Tracker
- * 10. High-End SVG Fallback Loaders
- * 11. IN-DEVELOPMENT MASTER TOGGLE & ROUTE INTERCEPTOR
+ * 5. Global Error Boundary (Render Catching)
+ * 6. Framer Motion Page Transitions
+ * 7. Live Viewport Meta Management
+ * 8. IN-DEVELOPMENT MASTER TOGGLE & ROUTE INTERCEPTOR
+ * 9. STRICT SECURE ADMIN GATEWAY
+ * 10. Global Animated Custom Magnetic Cursor
+ * 11. Global Ambient SVG Node Background
+ * 12. Command Palette Overlay (Cmd+K)
+ * 13. Dynamic Scroll Progress Bar
+ * 14. Floating Glassmorphic Quick Dock
+ * 15. Real-Time Privacy Consent Engine
  * ============================================================================
  */
+
+// --- SECURITY IMPORTS ---
+import SecureAdminGate from './components/Admin/SecureAdminGate';
 
 // --- IN-DEVELOPMENT & ADMIN IMPORTS ---
 import ComingSoon from './pages/ComingSoon';
@@ -75,11 +85,192 @@ import BusinessPage from './pages/Products/Business';
 // ============================================================================
 // MASTER DEVELOPMENT TOGGLE
 // ============================================================================
-const isDevelopmentMode = true; // Set to false to unlock standard routing
+const isDevelopmentMode = true;
 
 // ============================================================================
-// GLOBAL FEATURE COMPONENTS & HOOKS
+// GLOBAL UI ENHANCEMENTS & WRAPPERS (10+ FEATURES)
 // ============================================================================
+
+// Feature 10: Global Custom Magnetic Cursor
+const CustomCursor = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    const updateMousePosition = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    const handleMouseOver = (e) => {
+      if (e.target.tagName.toLowerCase() === 'button' || e.target.tagName.toLowerCase() === 'a' || e.target.closest('button') || e.target.closest('a')) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener('mousemove', updateMousePosition);
+    window.addEventListener('mouseover', handleMouseOver);
+
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+      window.removeEventListener('mouseover', handleMouseOver);
+    };
+  }, []);
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 w-8 h-8 rounded-full pointer-events-none z-[9999] mix-blend-difference hidden md:flex items-center justify-center border-2 border-white"
+      animate={{
+        x: mousePosition.x - 16,
+        y: mousePosition.y - 16,
+        scale: isHovering ? 1.5 : 1,
+        backgroundColor: isHovering ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)',
+      }}
+      transition={{ type: 'spring', stiffness: 500, damping: 28, mass: 0.5 }}
+    >
+      {isHovering && <MousePointer2 size={12} className="text-black" />}
+    </motion.div>
+  );
+};
+
+// Feature 11: Global Ambient SVG Node Background
+const AmbientBackground = () => (
+  <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-[#050505]">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1" fill="rgba(255,255,255,0.05)" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+      <motion.circle 
+        cx="50%" cy="50%" r="40%" 
+        fill="none" stroke="url(#gradient)" strokeWidth="1" strokeOpacity="0.1"
+        animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      />
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#276EF1" />
+          <stop offset="100%" stopColor="#050505" />
+        </linearGradient>
+      </defs>
+    </svg>
+    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#050505] opacity-90" />
+  </div>
+);
+
+// Feature 13: Dynamic Scroll Progress Bar
+const ScrollProgress = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  
+  return (
+    <motion.div
+      className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#276EF1] to-[#ffffff] z-[9998] origin-left"
+      style={{ scaleX }}
+    />
+  );
+};
+
+// Feature 14: Floating Glassmorphic Quick Dock
+const FloatingDock = () => {
+  const [theme, setTheme] = useState('dark');
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  return (
+    <motion.div 
+      initial={{ y: 100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 1, type: 'spring', stiffness: 200 }}
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9990] bg-black/60 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full flex items-center gap-4 shadow-2xl"
+    >
+      <button onClick={toggleTheme} className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+        {theme === 'dark' ? <Sun size={18} strokeWidth={2.5} /> : <Moon size={18} strokeWidth={2.5} />}
+      </button>
+      <div className="w-px h-6 bg-white/10" />
+      <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+        <Share2 size={18} strokeWidth={2.5} />
+      </button>
+      <div className="w-px h-6 bg-white/10" />
+      <button className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/10">
+        <HelpCircle size={18} strokeWidth={2.5} />
+      </button>
+    </motion.div>
+  );
+};
+
+// Feature 12: Command Palette Overlay (Cmd+K)
+const KeyboardCommander = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsOpen((prev) => !prev);
+      }
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-start justify-center pt-[20vh]"
+        >
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+            className="w-full max-w-2xl bg-[#111111] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          >
+            <div className="flex items-center px-4 py-4 border-b border-white/10">
+              <Search size={20} className="text-gray-400 mr-3" />
+              <input 
+                autoFocus 
+                placeholder="Type a command or search..." 
+                className="flex-1 bg-transparent text-white font-bold outline-none text-lg"
+              />
+              <button onClick={() => setIsOpen(false)} className="text-gray-500 hover:text-white p-1 bg-white/5 rounded-md"><X size={16}/></button>
+            </div>
+            <div className="p-2">
+              <div className="px-3 py-2 text-xs font-bold tracking-widest text-gray-500 uppercase">System Actions</div>
+              <button className="w-full text-left px-4 py-3 rounded-xl hover:bg-[#276EF1]/20 text-white font-bold flex items-center gap-3 transition-colors">
+                <Command size={16} className="text-[#276EF1]" /> Authenticate Administrator
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+// Feature 15: Real-Time Privacy Consent Engine
+const PrivacyConsentBanner = () => {
+  const [isVisible, setIsVisible] = useState(true);
+  
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div 
+          initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
+          className="fixed bottom-24 right-6 z-[9980] max-w-sm bg-[#111111] border border-white/10 p-6 rounded-[24px] shadow-2xl"
+        >
+          <h4 className="text-white font-black text-lg mb-2">Privacy Protocol Active</h4>
+          <p className="text-gray-400 text-sm font-medium mb-6 leading-relaxed">Movyra utilizes strict session parameters. By continuing, you agree to our encrypted operations policy.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setIsVisible(false)} className="flex-1 bg-white text-black font-black py-3 rounded-full hover:bg-gray-200 transition-colors">Acknowledge</button>
+            <button onClick={() => setIsVisible(false)} className="flex-1 bg-white/10 text-white font-black py-3 rounded-full hover:bg-white/20 transition-colors">Decline</button>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 
 // Feature 1, 4, 9: Scroll Restoration, Title Updater, & Route Analytics
 const RouteController = () => {
@@ -93,11 +284,7 @@ const RouteController = () => {
     document.title = isDevelopmentMode 
       ? `Movyra | Terminal Initialization` 
       : `Movyra | ${formattedTitle.replace('-', ' ')}`;
-
-    if (window.performance) {
-      const time = Math.round(window.performance.now());
-      console.log(`[Movyra Routing Engine] Navigated to ${location.pathname} at ${time}ms`);
-    }
+      
   }, [location.pathname]);
 
   return null;
@@ -137,8 +324,8 @@ const NetworkMonitor = () => {
   );
 };
 
-// Feature 3, 5, 8: Global Telemetry & System Observers
-const SystemTelemetry = () => {
+// Feature 3, 7: System Observers & Meta Management
+const SystemObservers = () => {
   useEffect(() => {
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleThemeChange = (e) => {
@@ -147,10 +334,6 @@ const SystemTelemetry = () => {
     };
     handleThemeChange(darkModeMediaQuery);
     darkModeMediaQuery.addEventListener('change', handleThemeChange);
-
-    const cores = navigator.hardwareConcurrency || 'Unknown';
-    const ram = navigator.deviceMemory || 'Unknown';
-    console.log(`[Movyra Hardware Engine] Allocated: ${cores} Cores, ${ram}GB RAM limit.`);
 
     const setVh = () => {
       let vh = window.innerHeight * 0.01;
@@ -168,7 +351,7 @@ const SystemTelemetry = () => {
   return null;
 };
 
-// Feature 6: Global Error Boundary (High-End Recovery UI)
+// Feature 5: Global Error Boundary (High-End Recovery UI)
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -194,8 +377,8 @@ class GlobalErrorBoundary extends React.Component {
               <span className="text-[#e53935] font-mono text-[0.8rem] font-bold uppercase tracking-widest block mb-2">Stack Trace Log:</span>
               <p className="text-[#aaaaaa] font-mono text-[0.85rem]">{this.state.error?.toString()}</p>
             </div>
-            <button onClick={() => window.location.reload()} className="bg-white text-black px-10 py-5 rounded-full font-black text-[1.1rem] hover:bg-gray-200 transition-colors shadow-xl">
-              Initiate System Reboot
+            <button onClick={() => window.location.reload()} className="bg-white text-black px-10 py-5 rounded-full font-black text-[1.1rem] hover:bg-gray-200 transition-colors shadow-xl flex items-center justify-center mx-auto gap-2">
+              Initiate System Reboot <ChevronRight size={20} strokeWidth={3} />
             </button>
           </div>
         </div>
@@ -205,7 +388,7 @@ class GlobalErrorBoundary extends React.Component {
   }
 }
 
-// Feature 7 & 10: Page Transition Wrapper & Loader
+// Feature 6: Page Transition Wrapper
 const AnimatedRoute = ({ children }) => {
   return (
     <motion.div
@@ -213,7 +396,7 @@ const AnimatedRoute = ({ children }) => {
       animate={{ opacity: 1, filter: 'blur(0px)' }}
       exit={{ opacity: 0, filter: 'blur(10px)' }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
-      className="w-full min-h-screen flex flex-col"
+      className="w-full min-h-screen flex flex-col relative z-10"
     >
       {children}
     </motion.div>
@@ -228,9 +411,16 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <BrowserRouter>
-        <SystemTelemetry />
+        {/* GLOBAL FEATURE INJECTIONS */}
+        <SystemObservers />
         <NetworkMonitor />
         <RouteController />
+        <CustomCursor />
+        <AmbientBackground />
+        <ScrollProgress />
+        <FloatingDock />
+        <KeyboardCommander />
+        <PrivacyConsentBanner />
 
         <AnimatePresence mode="wait">
           <Routes>
@@ -240,7 +430,16 @@ export default function App() {
               // Intercepts all traffic to the Coming Soon page except Admin
               // ==============================================================
               <>
-                <Route path='/admin' element={<AnimatedRoute><WaitlistDashboard /></AnimatedRoute>} />
+                <Route 
+                  path='/admin' 
+                  element={
+                    <AnimatedRoute>
+                      <SecureAdminGate>
+                        <WaitlistDashboard />
+                      </SecureAdminGate>
+                    </AnimatedRoute>
+                  } 
+                />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
