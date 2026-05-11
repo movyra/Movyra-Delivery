@@ -1,29 +1,27 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { WifiOff, Activity, AlertCircle } from 'lucide-react';
+import { WifiOff, AlertCircle } from 'lucide-react';
 
 /**
  * ============================================================================
  * MODULE: MASTER ROUTER ARCHITECTURE (mv-main)
- * Features: 10+ Real-Time Global Enhancements & Development Toggle
+ * Features: 
  * 1. Global Scroll Restoration
- * 2. Real-Time Network Connection Monitor (BOM API)
- * 3. System Theme Sync Observer (prefers-color-scheme)
+ * 2. Real-Time Network Connection Monitor
+ * 3. System Theme Sync Observer
  * 4. Route-based Document Title Updater
- * 5. Hardware Concurrency & Performance Logger
- * 6. Global Error Boundary (Render Catching)
- * 7. Framer Motion Page Transitions
- * 8. Live Viewport Meta Management
- * 9. Route Analytics Tracker
- * 10. High-End SVG Fallback Loaders
- * 11. IN-DEVELOPMENT MASTER TOGGLE & ROUTE INTERCEPTOR
+ * 5. Global Error Boundary (Pure Black Minimalist UI)
+ * 6. Framer Motion Page Transitions
+ * 7. Live Viewport Meta Management
+ * 8. IN-DEVELOPMENT MASTER TOGGLE & SECURE ROUTE INTERCEPTOR
  * ============================================================================
  */
 
 // --- IN-DEVELOPMENT & ADMIN IMPORTS ---
 import ComingSoon from './pages/ComingSoon';
 import WaitlistDashboard from './pages/Admin/WaitlistDashboard';
+import SecureAdminGate from './components/Admin/SecureAdminGate';
 
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
@@ -81,7 +79,7 @@ const isDevelopmentMode = true; // Set to false to unlock standard routing
 // GLOBAL FEATURE COMPONENTS & HOOKS
 // ============================================================================
 
-// Feature 1, 4, 9: Scroll Restoration, Title Updater, & Route Analytics
+// Feature 1 & 4: Scroll Restoration & Title Updater
 const RouteController = () => {
   const location = useLocation();
 
@@ -91,19 +89,14 @@ const RouteController = () => {
     const path = location.pathname === '/' ? 'Home' : location.pathname.substring(1);
     const formattedTitle = path.charAt(0).toUpperCase() + path.slice(1);
     document.title = isDevelopmentMode 
-      ? `Movyra | Terminal Initialization` 
+      ? `Movyra | Coming Soon` 
       : `Movyra | ${formattedTitle.replace('-', ' ')}`;
-
-    if (window.performance) {
-      const time = Math.round(window.performance.now());
-      console.log(`[Movyra Routing Engine] Navigated to ${location.pathname} at ${time}ms`);
-    }
   }, [location.pathname]);
 
   return null;
 };
 
-// Feature 2: Real-Time Network Monitor (High-End Styling)
+// Feature 2: Real-Time Network Monitor (Minimalist Styling)
 const NetworkMonitor = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -125,20 +118,20 @@ const NetworkMonitor = () => {
           initial={{ y: -100, opacity: 0 }} 
           animate={{ y: 0, opacity: 1 }} 
           exit={{ y: -100, opacity: 0 }}
-          className="fixed top-0 left-0 right-0 z-[9999] bg-[#e53935]/90 backdrop-blur-md text-white py-4 px-6 flex items-center justify-center gap-4 font-mono font-bold text-[0.85rem] uppercase tracking-widest shadow-[0_10px_30px_rgba(229,57,53,0.3)] border-b border-[#ff5252]"
+          className="fixed top-0 left-0 right-0 z-[9999] bg-[#000000] text-white py-4 px-6 flex items-center justify-center gap-4 font-sans font-bold text-[0.85rem] border-b border-[#333333]"
         >
-          <div className="w-8 h-8 rounded-full bg-white text-[#e53935] flex items-center justify-center animate-pulse">
-            <WifiOff size={16} strokeWidth={3} /> 
+          <div className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center animate-pulse">
+            <WifiOff size={14} strokeWidth={3} /> 
           </div>
-          CRITICAL: Grid Connection Severed. Local Operations Only.
+          No internet connection. Displaying offline view.
         </motion.div>
       )}
     </AnimatePresence>
   );
 };
 
-// Feature 3, 5, 8: Global Telemetry & System Observers
-const SystemTelemetry = () => {
+// Feature 3 & 7: System Theme Sync & Viewport Management
+const SystemObservers = () => {
   useEffect(() => {
     const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleThemeChange = (e) => {
@@ -147,10 +140,6 @@ const SystemTelemetry = () => {
     };
     handleThemeChange(darkModeMediaQuery);
     darkModeMediaQuery.addEventListener('change', handleThemeChange);
-
-    const cores = navigator.hardwareConcurrency || 'Unknown';
-    const ram = navigator.deviceMemory || 'Unknown';
-    console.log(`[Movyra Hardware Engine] Allocated: ${cores} Cores, ${ram}GB RAM limit.`);
 
     const setVh = () => {
       let vh = window.innerHeight * 0.01;
@@ -168,7 +157,7 @@ const SystemTelemetry = () => {
   return null;
 };
 
-// Feature 6: Global Error Boundary (High-End Recovery UI)
+// Feature 5: Global Error Boundary (Pure Black Minimalist UI)
 class GlobalErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -178,26 +167,22 @@ class GlobalErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, errorInfo) {
-    console.error("[Movyra React Engine Crash]", error, errorInfo);
+    console.error("Application Error:", error, errorInfo);
   }
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #333333 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
-          <div className="relative z-10">
-            <div className="w-24 h-24 bg-[#e53935]/10 rounded-3xl border border-[#e53935]/30 flex items-center justify-center mx-auto mb-8 shadow-[0_0_40px_rgba(229,57,53,0.3)] animate-pulse">
-              <AlertCircle size={40} className="text-[#e53935]" />
-            </div>
-            <h1 className="text-[3rem] font-black tracking-tighter mb-4 text-white">Rendering Protocol Failed.</h1>
-            <div className="bg-[#111111] border border-[#333333] p-6 rounded-2xl max-w-2xl mx-auto mb-10 text-left">
-              <span className="text-[#e53935] font-mono text-[0.8rem] font-bold uppercase tracking-widest block mb-2">Stack Trace Log:</span>
-              <p className="text-[#aaaaaa] font-mono text-[0.85rem]">{this.state.error?.toString()}</p>
-            </div>
-            <button onClick={() => window.location.reload()} className="bg-white text-black px-10 py-5 rounded-full font-black text-[1.1rem] hover:bg-gray-200 transition-colors shadow-xl">
-              Initiate System Reboot
-            </button>
+        <div className="min-h-screen bg-[#000000] text-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-16 h-16 bg-[#111111] border border-[#333333] rounded-full flex items-center justify-center mx-auto mb-8">
+            <AlertCircle size={28} className="text-white" />
           </div>
+          <h1 className="text-[2.5rem] font-black tracking-tighter mb-4 text-white">System Error.</h1>
+          <p className="text-[#888888] font-sans text-[0.95rem] mb-10 max-w-md mx-auto">
+            An unexpected application error has occurred. Our engineers have been notified.
+          </p>
+          <button onClick={() => window.location.reload()} className="bg-white text-black px-8 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#e0e0e0] transition-colors">
+            Restart Session
+          </button>
         </div>
       );
     }
@@ -205,14 +190,14 @@ class GlobalErrorBoundary extends React.Component {
   }
 }
 
-// Feature 7 & 10: Page Transition Wrapper & Loader
+// Feature 6: Page Transition Wrapper
 const AnimatedRoute = ({ children }) => {
   return (
     <motion.div
-      initial={{ opacity: 0, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, filter: 'blur(10px)' }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="w-full min-h-screen flex flex-col"
     >
       {children}
@@ -228,7 +213,7 @@ export default function App() {
   return (
     <GlobalErrorBoundary>
       <BrowserRouter>
-        <SystemTelemetry />
+        <SystemObservers />
         <NetworkMonitor />
         <RouteController />
 
@@ -240,7 +225,7 @@ export default function App() {
               // Intercepts all traffic to the Coming Soon page except Admin
               // ==============================================================
               <>
-                <Route path='/admin' element={<AnimatedRoute><WaitlistDashboard /></AnimatedRoute>} />
+                <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
