@@ -12,7 +12,17 @@ service cloud.firestore {
     }
 
     // ========================================================================
-    // MOVYRA PITCH DECK LIVE SECTIONS (NEW ADDITIONS)
+    // IN-DEVELOPMENT WAITLIST REGISTRATIONS (NEW ADDITION)
+    // ========================================================================
+    match /pre_registrations/{document} {
+      // Allow public create access so anyone can join the waitlist
+      allow create: if true;
+      // Strictly restrict read, update, and delete access to authorized Admin UID only
+      allow read, update, delete: if request.auth != null && request.auth.uid == 'pKre1icUEnfaZPacHY9oR9MOnhr1';
+    }
+
+    // ========================================================================
+    // MOVYRA PITCH DECK LIVE SECTIONS (Existing)
     // ========================================================================
 
     // 1. Live Vendor Onboarding & Early Tester Signups
