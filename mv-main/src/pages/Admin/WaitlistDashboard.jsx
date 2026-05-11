@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../../firebaseConfig';
+import { db } from '../../firebaseConfig';
 
 export default function WaitlistDashboard() {
   // 1. STATE MANAGEMENT
