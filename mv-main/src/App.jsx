@@ -240,7 +240,7 @@ export default function App() {
               // Intercepts all traffic to the Coming Soon page except Admin
               // ==============================================================
               <>
-                <Route path='/secure-admin-waitlist' element={<AnimatedRoute><WaitlistDashboard /></AnimatedRoute>} />
+                <Route path='/admin' element={<AnimatedRoute><WaitlistDashboard /></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
