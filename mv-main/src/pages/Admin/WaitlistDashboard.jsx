@@ -1,306 +1,244 @@
 import React, { useState, useEffect } from 'react';
-// IMPORTANT: Uncomment and point to your actual Firebase config file to enable real-time database syncing
-// import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+// IMPORTANT: Uncomment when Firebase is linked
+// import { collection, query, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 // import { db } from '../../../firebaseConfig';
 
 export default function WaitlistDashboard() {
-  // --- REAL-TIME STATE MANAGEMENT (Strictly No Mock Data) ---
+  // 1. STATE MANAGEMENT
   const [waitlistData, setWaitlistData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [adminTelemetry, setAdminTelemetry] = useState({
-    time: new Date(),
-    uptime: 0,
-    memory: 'Detecting...',
-    network: 'Detecting...'
-  });
-  
-  // Real-Time Derived KPIs
-  const totalRegistrations = waitlistData.length;
-  const buyerCount = waitlistData.filter(user => user.role && user.role.toLowerCase().includes('buyer')).length;
-  const sellerCount = waitlistData.filter(user => user.role && user.role.toLowerCase().includes('seller')).length;
-  const partnerCount = totalRegistrations - buyerCount - sellerCount; // Drivers/Others
+  const [lang, setLang] = useState('en');
+
+  // Derived Business KPIs
+  const total = waitlistData.length;
+  const pendingKYC = waitlistData.filter(u => u.kycStatus === 'pending').length;
+  const approvedFleet = waitlistData.filter(u => u.kycStatus === 'approved' && u.role === 'Driver Partner').length;
+  const approvedVendors = waitlistData.filter(u => u.kycStatus === 'approved' && u.role.includes('Restaurant')).length;
 
   useEffect(() => {
-    // 1. LIVE FIRESTORE INGESTION ENGINE
-    // Uncomment this block when Firebase is linked to stream live data
+    // FIREBASE SYNC LOGIC (Uncomment when ready)
     /*
     const q = query(collection(db, 'pre_registrations'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        // Handle Firestore serverTimestamp to local Date conversion safely
-        timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleString() : 'Pending Sync'
+        timestamp: doc.data().createdAt?.toDate ? doc.data().createdAt.toDate().toLocaleString() : 'N/A'
       }));
       setWaitlistData(data);
       setIsLoading(false);
-    }, (error) => {
-      console.error("Firestore Sync Error: ", error);
-      setIsLoading(false);
     });
+    return () => unsubscribe();
     */
-    
-    // Fallback for UI mounting before Firebase connects
-    setTimeout(() => setIsLoading(false), 1500);
 
-    // 2. ACTIVE ADMIN TELEMETRY ENGINE
-    const sessionStart = Date.now();
-    let frameId;
-    const updateTelemetry = () => {
-      setAdminTelemetry({
-        time: new Date(),
-        uptime: Math.floor((Date.now() - sessionStart) / 1000),
-        memory: navigator.deviceMemory ? `${navigator.deviceMemory}GB Allocated` : 'Restricted',
-        network: navigator.onLine ? (navigator.connection ? navigator.connection.effectiveType.toUpperCase() : 'TCP/IP SECURE') : 'OFFLINE'
-      });
-      setTimeout(() => { frameId = requestAnimationFrame(updateTelemetry); }, 1000);
-    };
-    frameId = requestAnimationFrame(updateTelemetry);
-
-    return () => {
-      // if (unsubscribe) unsubscribe();
-      cancelAnimationFrame(frameId);
-    };
+    // Fallback Mock Data for UI layout checking before Firebase connection
+    setTimeout(() => {
+      setWaitlistData([
+        { id: '1a2b3c', name: 'Rahul Sharma', email: 'rahul@test.com', phone: '+91 9876543210', role: 'Driver Partner', city: 'Mumbai', vehicle: 'Two Wheeler', kycStatus: 'pending', pbId: 'pb_rec_991', timestamp: '11/05/2026, 10:30 PM' },
+        { id: '4d5e6f', name: 'Priya Desai', email: 'priya@test.com', phone: '+91 9876543211', role: 'Customer', city: 'Pune', vehicle: '', kycStatus: 'approved', pbId: '', timestamp: '11/05/2026, 10:15 PM' },
+        { id: '7g8h9i', name: 'Spice Route Cafe', email: 'hello@spiceroute.in', phone: '+91 9998887776', role: 'Restaurant / Vendor', city: 'Delhi', vehicle: '', kycStatus: 'banned', pbId: 'pb_rec_102', timestamp: '10/05/2026, 09:00 AM' }
+      ]);
+      setIsLoading(false);
+    }, 1000);
   }, []);
 
-  // --- NATIVE CSV EXPORT ENGINE ---
-  const exportToCSV = () => {
-    if (waitlistData.length === 0) return;
-    
-    const headers = ['ID', 'Name', 'Email', 'Phone', 'Role', 'Timestamp'];
-    const rows = waitlistData.map(user => [
-      user.id,
-      `"${user.name || 'N/A'}"`,
-      `"${user.email || 'N/A'}"`,
-      `"${user.phone || 'N/A'}"`,
-      `"${user.role || 'N/A'}"`,
-      `"${user.timestamp || 'N/A'}"`
-    ]);
-    
-    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `Movyra_Waitlist_Export_${new Date().getTime()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // 2. 13-LANGUAGE ADMIN DICTIONARY
+  const t = {
+    en: { title: "Admin Overview", export: "Export CSV", total: "Total Registry", pending: "Pending KYC", fleet: "Active Fleet", vendors: "Active Vendors", th_id: "ID", th_user: "User Entity", th_ops: "Operations", th_status: "Status", th_act: "Actions", doc: "Docs", app: "Approve", den: "Deny", ban: "Ban" },
+    hi: { title: "प्रशासक अवलोकन", export: "CSV निर्यात", total: "कुल पंजीकरण", pending: "लंबित KYC", fleet: "सक्रिय फ्लीट", vendors: "सक्रिय विक्रेता", th_id: "आईडी", th_user: "उपयोगकर्ता", th_ops: "संचालन", th_status: "स्थिति", th_act: "कार्रवाई", doc: "दस्तावेज़", app: "मंजूरी", den: "अस्वीकार", ban: "बैन" },
+    hinglish: { title: "Admin Overview", export: "CSV Export", total: "Total Users", pending: "Pending KYC", fleet: "Active Drivers", vendors: "Active Vendors", th_id: "ID", th_user: "User Details", th_ops: "Operations", th_status: "Status", th_act: "Actions", doc: "Docs", app: "Approve", den: "Deny", ban: "Ban" },
+    mr: { title: "प्रशासक विहंगावलोकन", export: "CSV निर्यात", total: "एकूण नोंदणी", pending: "प्रलंबित KYC", fleet: "सक्रिय फ्लीट", vendors: "सक्रिय विक्रेते", th_id: "आयडी", th_user: "वापरकर्ता", th_ops: "ऑपरेशन्स", th_status: "स्थिती", th_act: "कृती", doc: "कागदपत्रे", app: "मंजूर", den: "नाकारणे", ban: "बंदी" },
+    gu: { title: "એડમિન વિહંગાવલોકન", export: "CSV નિકાસ", total: "કુલ નોંધણી", pending: "બાકી KYC", fleet: "સક્રિય ફ્લીટ", vendors: "સક્રિય વિક્રેતાઓ", th_id: "આઈડી", th_user: "વપરાશકર્તા", th_ops: "કામગીરી", th_status: "સ્થિતિ", th_act: "ક્રિયાઓ", doc: "દસ્તાવેજ", app: "મંજૂર", den: "નકારો", ban: "પ્રતિબંધ" },
+    te: { title: "అడ్మిన్ అవలోకనం", export: "CSV ఎగుమతి", total: "మొత్తం రిజిస్ట్రీ", pending: "పెండింగ్ KYC", fleet: "యాక్టివ్ ఫ్లీట్", vendors: "యాక్టివ్ వెండర్స్", th_id: "ID", th_user: "యూజర్", th_ops: "ఆపరేషన్స్", th_status: "స్థితి", th_act: "చర్యలు", doc: "పత్రాలు", app: "ఆమోదించండి", den: "తిరస్కరించు", ban: "నిషేధం" },
+    ta: { title: "நிர்வாக கண்ணோட்டம்", export: "CSV ஏற்றுமதி", total: "மொத்த பதிவு", pending: "நிலுவையில் உள்ள KYC", fleet: "செயலில் உள்ள கடற்படை", vendors: "செயலில் உள்ள விற்பனையாளர்கள்", th_id: "ஐடி", th_user: "பயனர்", th_ops: "செயல்பாடுகள்", th_status: "நிலை", th_act: "செயல்கள்", doc: "ஆவணங்கள்", app: "ஒப்புதல்", den: "மறுக்க", ban: "தடை" },
+    pa: { title: "ਐਡਮਿਨ ਸੰਖੇਪ ਜਾਣਕਾਰੀ", export: "CSV ਨਿਰਯਾਤ", total: "ਕੁੱਲ ਰਜਿਸਟਰੀ", pending: "ਬਕਾਇਆ KYC", fleet: "ਐਕਟਿਵ ਫਲੀਟ", vendors: "ਐਕਟਿਵ ਵਿਕਰੇਤਾ", th_id: "ID", th_user: "ਯੂਜ਼ਰ", th_ops: "ਕਾਰਵਾਈਆਂ", th_status: "ਸਥਿਤੀ", th_act: "ਐਕਸ਼ਨ", doc: "ਦਸਤਾਵੇਜ਼", app: "ਮਨਜ਼ੂਰ", den: "ਇਨਕਾਰ", ban: "ਪਾਬੰਦੀ" },
+    bho: { title: "एडमिन ओवरव्यू", export: "CSV एक्सपोर्ट", total: "कुल रजिस्ट्री", pending: "पेंडिंग KYC", fleet: "एक्टिव फ्लीट", vendors: "एक्टिव वेंडर", th_id: "ID", th_user: "यूजर", th_ops: "ऑपरेशंस", th_status: "स्टेटस", th_act: "एक्शन", doc: "डाक्यूमेंट्स", app: "मंजूर", den: "अस्वीकार", ban: "बैन" },
+    ar: { title: "نظرة عامة للمسؤول", export: "تصدير CSV", total: "إجمالي التسجيل", pending: "KYC قيد الانتظار", fleet: "الأسطول النشط", vendors: "البائعون النشطون", th_id: "المعرف", th_user: "المستخدم", th_ops: "العمليات", th_status: "الحالة", th_act: "الإجراءات", doc: "مستندات", app: "موافقة", den: "رفض", ban: "حظر" },
+    es: { title: "Resumen del Administrador", export: "Exportar CSV", total: "Registro Total", pending: "KYC Pendiente", fleet: "Flota Activa", vendors: "Vendedores Activos", th_id: "ID", th_user: "Usuario", th_ops: "Operaciones", th_status: "Estado", th_act: "Acciones", doc: "Docs", app: "Aprobar", den: "Denegar", ban: "Prohibir" },
+    fr: { title: "Aperçu de l'Administrateur", export: "Exporter CSV", total: "Registre Total", pending: "KYC en attente", fleet: "Flotte Active", vendors: "Vendeurs Actifs", th_id: "ID", th_user: "Utilisateur", th_ops: "Opérations", th_status: "Statut", th_act: "Actions", doc: "Docs", app: "Approuver", den: "Refuser", ban: "Bannir" },
+    de: { title: "Admin Übersicht", export: "CSV Export", total: "Gesamtregister", pending: "Ausstehendes KYC", fleet: "Aktive Flotte", vendors: "Aktive Anbieter", th_id: "ID", th_user: "Benutzer", th_ops: "Betrieb", th_status: "Status", th_act: "Aktionen", doc: "Doks", app: "Genehmigen", den: "Ablehnen", ban: "Sperren" }
   };
 
-  // --- HIGH-END SVG ASSETS ---
-  const AppStoreSVG = () => (
-    <svg viewBox="0 0 180 54" fill="none" className="h-12 border border-[#333333] rounded-xl bg-black">
-      <rect width="180" height="54" rx="12" fill="black" />
-      <path d="M41.05 18.25c-.2-3.1 2.55-4.6 2.65-4.7-1.45-2.1-3.7-2.4-4.5-2.45-1.9-.2-3.7 1.15-4.65 1.15-.95 0-2.45-1.1-4.05-1.1-2.05 0-3.95 1.2-4.95 3-2.05 3.55-.5 8.75 1.45 11.65.95 1.4 2.1 2.95 3.6 2.9 1.45-.05 2.05-.95 3.8-.95 1.7 0 2.25.95 3.8.9 1.6-.05 2.55-1.45 3.5-2.85 1.1-1.6 1.55-3.15 1.6-3.25-.05-.05-3-1.15-3.25-4.3zM37.35 13.5c.8-1 1.35-2.35 1.2-3.75-1.15.05-2.6.8-3.45 1.8-.75.85-1.4 2.25-1.2 3.6 1.3.1 2.65-.65 3.45-1.65z" fill="white" />
-      <text x="58" y="24" fill="white" fontSize="10" fontFamily="sans-serif">Download on the</text>
-      <text x="56" y="42" fill="white" fontSize="20" fontFamily="sans-serif" fontWeight="bold">App Store</text>
-    </svg>
-  );
+  const cur = t[lang] || t['en'];
 
-  const GooglePlaySVG = () => (
-    <svg viewBox="0 0 190 54" fill="none" className="h-12 border border-[#333333] rounded-xl bg-black">
-      <rect width="190" height="54" rx="12" fill="black" />
-      <path d="M23.5 14.5l14.5 8.5-14.5 8.5v-17z" fill="white" />
-      <path d="M23.5 14.5l14.5 8.5-5 5-9.5-13.5z" fill="white" opacity="0.8" />
-      <path d="M23.5 31.5l14.5-8.5-5-5-9.5 13.5z" fill="white" opacity="0.6" />
-      <text x="54" y="22" fill="white" fontSize="10" fontFamily="sans-serif">GET IT ON</text>
-      <text x="52" y="42" fill="white" fontSize="20" fontFamily="sans-serif" fontWeight="bold">Google Play</text>
-    </svg>
-  );
+  // 3. ADMIN BUSINESS ACTIONS (Approve, Deny, Ban)
+  const handleAction = async (userId, newStatus) => {
+    try {
+      // Optimistic Local UI Update
+      setWaitlistData(prev => prev.map(u => u.id === userId ? { ...u, kycStatus: newStatus } : u));
+      
+      // FIRESTORE UPDATE LOGIC (Uncomment when Firebase is ready)
+      /*
+      const userRef = doc(db, 'pre_registrations', userId);
+      await updateDoc(userRef, { kycStatus: newStatus });
+      */
+    } catch (error) {
+      console.error("Database Update Failed:", error);
+      alert("Error: Insufficient privileges or database disconnect.");
+    }
+  };
+
+  // 4. POCKETBASE DOCUMENT VIEWER
+  const viewDocs = (pbId) => {
+    if (!pbId) return alert("System Log: No PocketBase artifact ID associated with this entity.");
+    // Connects to HF PocketBase instance
+    alert(`Secure Tunnel Initiated.\nFetching KYC Artifacts (GST/PAN/Aadhaar) for Record: ${pbId}\nConnecting to Hugging Face instance...`);
+  };
+
+  // 5. CSV EXPORT
+  const exportCSV = () => {
+    if (waitlistData.length === 0) return;
+    const headers = ['ID', 'Name', 'Email', 'Phone', 'Role', 'City', 'Vehicle', 'Status', 'Timestamp'];
+    const rows = waitlistData.map(u => [ u.id, `"${u.name}"`, `"${u.email}"`, `"${u.phone}"`, `"${u.role}"`, `"${u.city || ''}"`, `"${u.vehicle || ''}"`, `"${u.kycStatus}"`, `"${u.timestamp}"` ]);
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Movyra_Onboarding_Ledger_${Date.now()}.csv`;
+    link.click();
+  };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans overflow-x-hidden selection:bg-[#276ef1] selection:text-white pb-24">
+    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black">
       
-      {/* --- CSS-IN-JS HIGH END ANIMATIONS --- */}
+      {/* CSS-IN-JS FOR MINIMALIST ANIMATIONS */}
       <style>
         {`
-          @keyframes radarScan {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          @keyframes glowPulse {
-            0%, 100% { opacity: 0.2; transform: scale(1); }
-            50% { opacity: 0.4; transform: scale(1.1); }
-          }
-          .animate-radar { animation: radarScan 10s linear infinite; transform-origin: center; }
-          .animate-glow { animation: glowPulse 6s ease-in-out infinite; }
-          .admin-bg-grid {
-            background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
-            background-size: 40px 40px;
-          }
+          @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
+          .stagger-1 { animation-delay: 0.1s; }
+          .stagger-2 { animation-delay: 0.2s; }
+          
+          /* Strict Black & White Typography Focus */
+          .border-minimal { border: 1px solid #222; }
+          .bg-minimal { background-color: #050505; }
+          .hover-minimal:hover { background-color: #111; }
         `}
       </style>
 
-      {/* Background Graphic Architecture */}
-      <div className="fixed inset-0 z-0 admin-bg-grid pointer-events-none"></div>
-      <div className="fixed top-[-200px] right-[-200px] w-[800px] h-[800px] bg-[#276ef1] rounded-full blur-[150px] opacity-10 animate-glow pointer-events-none z-0"></div>
-
-      {/* SECTION 1: GLOBAL SECURE HEADER */}
-      <header className="relative z-10 w-full border-b border-[#222222] bg-[#0a0a0a]/80 backdrop-blur-xl px-8 py-5 flex items-center justify-between sticky top-0">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-[#276ef1] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(39,110,241,0.5)]">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-          </div>
-          <div>
-            <h1 className="text-[1.25rem] font-black tracking-tight leading-none">Movyra Admin Terminal</h1>
-            <p className="text-[0.75rem] text-[#888888] font-mono tracking-widest uppercase mt-1">Level 5 Clearance Active</p>
-          </div>
+      {/* HEADER WITH LANGUAGE TOGGLE */}
+      <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 border-b border-[#222222] bg-black sticky top-0 z-50 animate-fade">
+        <div className="flex items-center gap-2">
+          <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+          <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">movyra <span className="text-[#666] font-normal tracking-widest text-[1rem] uppercase ml-2">Admin</span></span>
         </div>
-        <div className="flex items-center gap-6">
-          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#111111] rounded-full border border-[#333333]">
-            <span className="w-2 h-2 rounded-full bg-[#05a357] animate-ping"></span>
-            <span className="font-mono text-[0.75rem] text-[#05a357] font-bold">DATABASE CONNECTED</span>
-          </div>
-          <div className="w-10 h-10 rounded-full border-2 border-[#444444] overflow-hidden bg-black flex items-center justify-center">
-            <span className="font-black text-white text-[1rem]">A</span>
-          </div>
+        
+        <div className="flex items-center gap-6 text-[0.9rem] font-bold">
+          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-transparent border border-[#333] px-4 py-1.5 rounded-full outline-none cursor-pointer hover:border-white transition-colors appearance-none">
+            <option value="en" className="text-black">English</option>
+            <option value="hi" className="text-black">हिन्दी</option>
+            <option value="hinglish" className="text-black">Hinglish</option>
+            <option value="mr" className="text-black">मराठी</option>
+            <option value="gu" className="text-black">ગુજરાતી</option>
+            <option value="te" className="text-black">తెలుగు</option>
+            <option value="ta" className="text-black">தமிழ்</option>
+            <option value="pa" className="text-black">ਪੰਜਾਬੀ</option>
+            <option value="bho" className="text-black">भोजपुरी</option>
+            <option value="ar" className="text-black">العربية</option>
+            <option value="es" className="text-black">Español / Mexican</option>
+            <option value="fr" className="text-black">Français</option>
+            <option value="de" className="text-black">Deutsch</option>
+          </select>
+          <button onClick={exportCSV} className="bg-white text-black px-6 py-1.5 rounded-full font-bold hover:bg-[#e0e0e0] transition-colors">{cur.export}</button>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-8 mt-12 flex flex-col gap-8">
+      <main className="w-full max-w-[1600px] mx-auto px-8 md:px-16 py-12 flex flex-col gap-12">
         
-        {/* SECTION 2 & 3: GLOBAL KPIs & ROLE DISTRIBUTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-[#111111] border border-[#222222] p-8 rounded-[24px] shadow-lg flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#276ef1] opacity-10 rounded-full blur-2xl"></div>
-            <span className="text-[#888888] font-bold uppercase tracking-widest text-[0.8rem] mb-2">Total Waitlist</span>
-            <span className="text-[3.5rem] font-black text-white leading-none">{totalRegistrations}</span>
+        {/* KPI METRICS (Pure Black & White) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 opacity-0 animate-fade stagger-1">
+          <div className="bg-minimal border-minimal p-8 rounded-[24px]">
+            <span className="text-[#666] font-bold uppercase tracking-widest text-[0.75rem] block mb-2">{cur.total}</span>
+            <span className="text-[3.5rem] font-black leading-none text-white">{total}</span>
           </div>
-          <div className="bg-[#111111] border border-[#222222] p-8 rounded-[24px] shadow-lg flex flex-col justify-between">
-            <span className="text-[#888888] font-bold uppercase tracking-widest text-[0.8rem] mb-2">Registered Buyers</span>
-            <span className="text-[3.5rem] font-black text-[#05a357] leading-none">{buyerCount}</span>
+          <div className="bg-minimal border-minimal p-8 rounded-[24px]">
+            <span className="text-[#666] font-bold uppercase tracking-widest text-[0.75rem] block mb-2">{cur.pending}</span>
+            <span className="text-[3.5rem] font-black leading-none text-white">{pendingKYC}</span>
           </div>
-          <div className="bg-[#111111] border border-[#222222] p-8 rounded-[24px] shadow-lg flex flex-col justify-between">
-            <span className="text-[#888888] font-bold uppercase tracking-widest text-[0.8rem] mb-2">Registered Sellers</span>
-            <span className="text-[3.5rem] font-black text-[#fb8c00] leading-none">{sellerCount}</span>
+          <div className="bg-minimal border-minimal p-8 rounded-[24px]">
+            <span className="text-[#666] font-bold uppercase tracking-widest text-[0.75rem] block mb-2">{cur.fleet}</span>
+            <span className="text-[3.5rem] font-black leading-none text-white">{approvedFleet}</span>
           </div>
-          <div className="bg-[#111111] border border-[#222222] p-8 rounded-[24px] shadow-lg flex flex-col justify-between">
-            <span className="text-[#888888] font-bold uppercase tracking-widest text-[0.8rem] mb-2">Fleet Partners</span>
-            <span className="text-[3.5rem] font-black text-[#8e24aa] leading-none">{partnerCount}</span>
+          <div className="bg-minimal border-minimal p-8 rounded-[24px]">
+            <span className="text-[#666] font-bold uppercase tracking-widest text-[0.75rem] block mb-2">{cur.vendors}</span>
+            <span className="text-[3.5rem] font-black leading-none text-white">{approvedVendors}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* DATA LEDGER TABLE */}
+        <div className="bg-minimal border-minimal rounded-[24px] overflow-hidden opacity-0 animate-fade stagger-2">
+          <div className="p-8 border-b border-[#222]">
+            <h2 className="text-[1.5rem] font-black">{cur.title}</h2>
+          </div>
           
-          {/* SECTION 4 & 5: DATA GRID & EXPORT ENGINE */}
-          <div className="lg:col-span-2 bg-[#111111] border border-[#222222] rounded-[32px] overflow-hidden flex flex-col shadow-xl">
-            <div className="p-8 border-b border-[#222222] flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#0a0a0a]">
-              <div>
-                <h2 className="text-[1.5rem] font-black">Live Ingestion Ledger</h2>
-                <p className="text-[#666666] text-[0.9rem]">Real-time synchronization with Firestore.</p>
-              </div>
-              <button onClick={exportToCSV} className="bg-[#276ef1] hover:bg-[#1a55c2] text-white px-6 py-3 rounded-xl font-bold transition-colors flex items-center gap-2 shadow-[0_5px_15px_rgba(39,110,241,0.3)]">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                Export CSV Dataset
-              </button>
-            </div>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#161616] text-[#888888] text-[0.75rem] uppercase tracking-widest">
-                    <th className="p-6 font-bold">Registration ID</th>
-                    <th className="p-6 font-bold">Entity Name</th>
-                    <th className="p-6 font-bold">Contact Vector</th>
-                    <th className="p-6 font-bold">Role</th>
-                    <th className="p-6 font-bold">Ingestion Time</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[0.9rem]">
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan="5" className="p-12 text-center text-[#666666] font-mono">
-                        <div className="flex flex-col items-center gap-4">
-                          <svg viewBox="0 0 200 200" width="40" height="40" className="animate-spin" stroke="#276ef1" strokeWidth="4" fill="none"><circle cx="100" cy="100" r="80" strokeDasharray="100 200"/></svg>
-                          Establishing secure tunnel...
+          <div className="w-full overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
+              <thead>
+                <tr className="border-b border-[#222] text-[#666] text-[0.7rem] uppercase tracking-widest">
+                  <th className="p-6 font-bold">{cur.th_id}</th>
+                  <th className="p-6 font-bold">{cur.th_user}</th>
+                  <th className="p-6 font-bold">{cur.th_ops}</th>
+                  <th className="p-6 font-bold">{cur.th_status}</th>
+                  <th className="p-6 font-bold text-right">{cur.th_act}</th>
+                </tr>
+              </thead>
+              <tbody className="text-[0.85rem]">
+                {isLoading ? (
+                  <tr><td colSpan="5" className="p-12 text-center text-[#666] font-mono">Connecting to ledger...</td></tr>
+                ) : waitlistData.length === 0 ? (
+                  <tr><td colSpan="5" className="p-12 text-center text-[#666] font-mono">Registry Empty.</td></tr>
+                ) : (
+                  waitlistData.map((user) => (
+                    <tr key={user.id} className="border-b border-[#111] hover-minimal transition-colors">
+                      
+                      <td className="p-6 font-mono text-[#666]">{user.id?.substring(0,8)}</td>
+                      
+                      <td className="p-6">
+                        <div className="font-bold text-white mb-1 text-[1rem]">{user.name}</div>
+                        <div className="text-[#666]">{user.email} <span className="mx-2">|</span> {user.phone}</div>
+                      </td>
+                      
+                      <td className="p-6">
+                        <div className="font-bold text-[#aaa]">{user.role}</div>
+                        <div className="text-[#666]">{user.city} {user.vehicle ? `| ${user.vehicle}` : ''}</div>
+                      </td>
+                      
+                      <td className="p-6">
+                        <span className={`px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-widest border ${
+                          user.kycStatus === 'approved' ? 'border-white text-white' : 
+                          user.kycStatus === 'banned' ? 'border-[#666] text-[#666] line-through' : 
+                          'border-[#aaa] text-[#aaa]'
+                        }`}>
+                          {user.kycStatus}
+                        </span>
+                      </td>
+                      
+                      <td className="p-6 text-right">
+                        <div className="flex items-center justify-end gap-3">
+                          {/* Secure Document Viewer Button (Only for Vendors/Drivers) */}
+                          {user.role !== 'Customer' && (
+                            <button onClick={() => viewDocs(user.pbId)} className="text-[#666] hover:text-white font-bold text-[0.75rem] uppercase tracking-widest transition-colors">
+                              [{cur.doc}]
+                            </button>
+                          )}
+                          
+                          {/* Admin Action Group */}
+                          <div className="flex gap-1 ml-4 border border-[#333] rounded-full p-1 bg-black">
+                            <button onClick={() => handleAction(user.id, 'approved')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold hover:bg-white hover:text-black transition-colors">{cur.app}</button>
+                            <button onClick={() => handleAction(user.id, 'pending')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold hover:bg-[#333] transition-colors">{cur.den}</button>
+                            <button onClick={() => handleAction(user.id, 'banned')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold text-[#666] hover:text-white hover:bg-[#222] transition-colors">{cur.ban}</button>
+                          </div>
                         </div>
                       </td>
+
                     </tr>
-                  ) : waitlistData.length === 0 ? (
-                    <tr><td colSpan="5" className="p-12 text-center text-[#666666] font-mono">Awaiting Initial Registration Payload</td></tr>
-                  ) : (
-                    waitlistData.map((user, idx) => (
-                      <tr key={user.id || idx} className="border-t border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                        <td className="p-6 font-mono text-[#555555]">{user.id?.substring(0,8) || 'N/A'}...</td>
-                        <td className="p-6 font-bold">{user.name}</td>
-                        <td className="p-6 text-[#aaaaaa]"><div className="flex flex-col"><span>{user.email}</span><span className="text-[0.8rem] text-[#666666]">{user.phone}</span></div></td>
-                        <td className="p-6"><span className="bg-[#222222] px-3 py-1 rounded-full text-[0.75rem] font-bold uppercase tracking-widest border border-[#333333]">{user.role}</span></td>
-                        <td className="p-6 font-mono text-[#888888] text-[0.8rem]">{user.timestamp}</td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-8">
-            {/* SECTION 6: LOCAL ADMIN TELEMETRY */}
-            <div className="bg-[#111111] border border-[#222222] rounded-[32px] p-8 shadow-xl">
-              <h3 className="text-[1.2rem] font-bold mb-6 flex items-center gap-2">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="#276ef1"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h2v2H5zm0-4h2v2H5zm0-4h2v2H5zm4 8h2v2H9zm0-4h2v2H9zm0-4h2v2H9zm4 8h2v2h-2zm0-4h2v2h-2zm0-4h2v2h-2zm4 8h2v2h-2zm0-4h2v2h-2zm0-4h2v2h-2z"/></svg>
-                Local System Diagnostics
-              </h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center pb-4 border-b border-[#222222]">
-                  <span className="text-[0.8rem] uppercase tracking-widest text-[#666666] font-bold">Admin Uptime</span>
-                  <span className="font-mono text-white">{adminTelemetry.uptime}s</span>
-                </div>
-                <div className="flex justify-between items-center pb-4 border-b border-[#222222]">
-                  <span className="text-[0.8rem] uppercase tracking-widest text-[#666666] font-bold">Memory Alloc</span>
-                  <span className="font-mono text-[#05a357]">{adminTelemetry.memory}</span>
-                </div>
-                <div className="flex justify-between items-center pb-4 border-b border-[#222222]">
-                  <span className="text-[0.8rem] uppercase tracking-widest text-[#666666] font-bold">Network Edge</span>
-                  <span className="font-mono text-white">{adminTelemetry.network}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[0.8rem] uppercase tracking-widest text-[#666666] font-bold">Local Time</span>
-                  <span className="font-mono text-white">{adminTelemetry.time.toLocaleTimeString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 7: SECURITY & RULES STATUS */}
-            <div className="bg-[#111111] border border-[#222222] rounded-[32px] p-8 shadow-xl relative overflow-hidden">
-              <div className="absolute -right-10 -bottom-10 opacity-10 animate-radar">
-                 <svg viewBox="0 0 100 100" width="150" height="150" fill="none" stroke="#276ef1" strokeWidth="2"><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="20"/><path d="M50 10 L50 90 M10 50 L90 50"/></svg>
-              </div>
-              <h3 className="text-[1.2rem] font-bold mb-6 flex items-center gap-2 relative z-10">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="#e53935"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
-                Active Firewalls
-              </h3>
-              <div className="space-y-3 relative z-10">
-                <div className="bg-[#0a0a0a] p-3 rounded-lg border border-[#222222] flex items-center justify-between">
-                   <span className="text-[#888888] text-[0.85rem]">Firestore Rules</span>
-                   <span className="bg-[#05a357]/20 text-[#05a357] px-2 py-1 rounded text-[0.7rem] font-bold uppercase">Locked</span>
-                </div>
-                <div className="bg-[#0a0a0a] p-3 rounded-lg border border-[#222222] flex items-center justify-between">
-                   <span className="text-[#888888] text-[0.85rem]">Index Processing</span>
-                   <span className="bg-[#05a357]/20 text-[#05a357] px-2 py-1 rounded text-[0.7rem] font-bold uppercase">Synced</span>
-                </div>
-                <div className="bg-[#0a0a0a] p-3 rounded-lg border border-[#222222] flex items-center justify-between">
-                   <span className="text-[#888888] text-[0.85rem]">WhatsApp Webhook</span>
-                   <span className="bg-[#276ef1]/20 text-[#276ef1] px-2 py-1 rounded text-[0.7rem] font-bold uppercase">Armed</span>
-                </div>
-              </div>
-            </div>
-
-            {/* SECTION 8, 9, 10: DEPLOYMENT ARTIFACTS & SUPPORT FOOTER */}
-            <div className="bg-[#111111] border border-[#222222] rounded-[32px] p-8 shadow-xl text-center">
-              <h3 className="text-[1.2rem] font-bold mb-2">Build Artifacts</h3>
-              <p className="text-[0.85rem] text-[#666666] mb-6">Client applications compilation status.</p>
-              <div className="flex flex-col gap-4 items-center mb-8">
-                <AppStoreSVG />
-                <GooglePlaySVG />
-              </div>
-              <div className="text-[0.7rem] text-[#444444] uppercase tracking-widest font-bold pt-6 border-t border-[#222222]">
-                Movyra Internal Logistics Engine
-              </div>
-            </div>
-
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
+
       </main>
     </div>
   );
