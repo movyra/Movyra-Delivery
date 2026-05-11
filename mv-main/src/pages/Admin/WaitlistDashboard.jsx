@@ -108,8 +108,8 @@ export default function WaitlistDashboard() {
       {/* HEADER */}
       <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 border-b border-[#222222] bg-black sticky top-0 z-50 animate-fade">
         <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" width="32" height="32" fill="white"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5h-13L12 6.5z"/></svg>
-          <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">movyra <span className="text-[#666] font-normal tracking-widest text-[1rem] uppercase ml-2">Admin</span></span>
+          <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+          <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra <span className="text-[#666] font-normal tracking-widest text-[1rem] uppercase ml-2">Admin</span></span>
         </div>
         
         <div className="flex items-center gap-6 text-[0.9rem] font-bold">
