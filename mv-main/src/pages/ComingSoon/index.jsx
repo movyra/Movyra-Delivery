@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-// IMPORTANT: Uncomment these imports when Firebase and PocketBase are configured
-// import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-// import { db } from '../../firebaseConfig'; 
-// import { uploadVendorKYCDocuments } from '../../services/pocketbaseService';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebaseConfig'; 
+import { uploadVendorKYCDocuments } from '../../services/pocketbaseService';
 
 export default function ComingSoon() {
   // 1. STATE MANAGEMENT
@@ -128,22 +127,20 @@ export default function ComingSoon() {
       let pbRecordId = 'none';
       
       // Route documents to PocketBase if user is a Vendor/Driver
-      if (formData.role !== 'Customer') {
-        // const record = await uploadVendorKYCDocuments(formData.email, files.gst, files.pan, files.aadhaar);
-        // pbRecordId = record.id;
+      if (formData.role !== 'Buyer' && formData.role !== 'Customer') {
+         const record = await uploadVendorKYCDocuments(formData.email, files.gst, files.pan, files.aadhaar);
+         pbRecordId = record.id;
       }
 
       // Write final registration schema to Firestore
-      /*
       await addDoc(collection(db, 'pre_registrations'), {
         ...formData,
         ...businessData,
         pocketbaseId: pbRecordId,
-        kycStatus: formData.role === 'Customer' ? 'approved' : 'pending',
+        kycStatus: (formData.role === 'Buyer' || formData.role === 'Customer') ? 'approved' : 'pending',
         createdAt: serverTimestamp(),
         source: 'coming_soon_marketing_pivot'
       });
-      */
 
       setStatus('SUCCESS');
     } catch (error) {
@@ -288,7 +285,7 @@ export default function ComingSoon() {
             <div className="animate-fade">
               <h3 className="text-[1.8rem] font-black mb-2 text-white">{currentT.form_title}</h3>
               <p className="text-[#888888] text-[0.9rem] mb-8">{currentT.form_desc}</p>
-              <form onSubmit={(e) => { e.preventDefault(); formData.role === 'Customer' ? handleFinalSubmit(e) : startFaceScan(); }} className="flex flex-col gap-4">
+              <form onSubmit={(e) => { e.preventDefault(); (formData.role === 'Buyer' || formData.role === 'Customer') ? handleFinalSubmit(e) : startFaceScan(); }} className="flex flex-col gap-4">
                 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="w-full sm:w-1/2">
@@ -302,7 +299,7 @@ export default function ComingSoon() {
                 </div>
                 
                 <div>
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_email}</label>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_email}</label>
                   <input required type="email" value={formData.email} onChange={(e)=>setFormData({...formData, email: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
                 </div>
 
@@ -314,7 +311,8 @@ export default function ComingSoon() {
                   <div className="w-full sm:w-1/2">
                     <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_role}</label>
                     <select value={formData.role} onChange={(e)=>setFormData({...formData, role: e.target.value, vehicle: ''})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
-                      <option value="Customer">Buyer / Customer</option>
+                      <option value="Buyer">Buyer / Customer</option>
+                      <option value="Customer">Customer</option>
                       <option value="Driver Partner">Driver Partner</option>
                       <option value="Restaurant / Vendor">Business / Vendor</option>
                     </select>
@@ -322,7 +320,7 @@ export default function ComingSoon() {
                 </div>
 
                 {/* Conditional Business Name for Vendors/Drivers */}
-                {formData.role !== 'Customer' && (
+                {(formData.role !== 'Buyer' && formData.role !== 'Customer') && (
                   <div className="animate-fade">
                     <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-white mb-2">{currentT.form_business}</label>
                     <input required type="text" value={businessData.businessName} onChange={(e)=>setBusinessData({...businessData, businessName: e.target.value})} className="w-full bg-[#111111] border border-white text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
@@ -345,7 +343,7 @@ export default function ComingSoon() {
                 )}
 
                 <button disabled={status === 'SUBMITTING'} type="submit" className="w-full bg-white text-black font-black text-[1.1rem] tracking-tight py-4 rounded-xl mt-4 hover:bg-[#e0e0e0] transition-colors disabled:opacity-50">
-                  {status === 'SUBMITTING' ? 'PROCESSING...' : formData.role === 'Customer' ? currentT.form_submit : currentT.form_kyc_btn}
+                  {status === 'SUBMITTING' ? 'PROCESSING...' : (formData.role === 'Buyer' || formData.role === 'Customer') ? currentT.form_submit : currentT.form_kyc_btn}
                 </button>
               </form>
             </div>
