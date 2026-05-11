@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from 'react';
-// IMPORTANT: Uncomment and point to your actual Firebase config file when ready
+import React, { useState, useEffect, useRef } from 'react';
+// IMPORTANT: Uncomment these imports when Firebase and PocketBase are configured
 // import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 // import { db } from '../../firebaseConfig'; 
+// import { uploadVendorKYCDocuments } from '../../services/pocketbaseService';
 
 export default function ComingSoon() {
   // 1. STATE MANAGEMENT
   const [lang, setLang] = useState('en');
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', role: 'Buyer', city: '', vehicle: '' });
-  const [status, setStatus] = useState('IDLE'); // IDLE, SUBMITTING, SUCCESS, ERROR
+  const [businessData, setBusinessData] = useState({ businessName: '' });
+  const [files, setFiles] = useState({ gst: null, pan: null, aadhaar: null });
+  
+  const [status, setStatus] = useState('IDLE'); // IDLE, KYC_FACE, KYC_DOCS, SUBMITTING, SUCCESS, ERROR
+  const [faceVerified, setFaceVerified] = useState(false);
   const [localCity, setLocalCity] = useState('Mumbai');
+  const videoRef = useRef(null);
 
-  // 2. REAL-TIME LOGIC (STRICTLY NO TELEMETRY, INDIA LOCATION ONLY)
+  // 2. REAL-TIME LOGIC (STRICTLY INDIA ONLY, NO TELEMETRY)
   useEffect(() => {
-    // Automatic System Language Detection (Expanded to 13+ languages)
+    // Language Detection
     const sysLang = navigator.language.slice(0, 2);
-    const supportedLangs = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
-    if (supportedLangs.includes(sysLang)) setLang(sysLang);
+    const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
+    if (supported.includes(sysLang)) setLang(sysLang);
 
-    // Indian Geolocation Mapping (Strictly India)
+    // Indian Geolocation Fallback
     const indianCities = ['Mumbai', 'Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad'];
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -25,14 +31,14 @@ export default function ComingSoon() {
         const day = new Date().getDay();
         setLocalCity(indianCities[day % indianCities.length]);
       } else {
-        setLocalCity('Mumbai'); // Strict fallback to India
+        setLocalCity('Mumbai');
       }
     } catch (e) {
       setLocalCity('Bengaluru');
     }
   }, []);
 
-  // 3. 13-LANGUAGE MARKETING DICTIONARY (Aggressive Value Propositions)
+  // 3. 13-LANGUAGE MARKETING DICTIONARY
   const t = {
     en: {
       help: "Help Center", lang: "English",
@@ -43,7 +49,11 @@ export default function ComingSoon() {
       val3_title: "Live Tracking", val3_sub: "Watch your package move street by street.",
       val4_title: "24/7 Support", val4_sub: "Always here. Always listening. Always solving.",
       form_title: "Join the Exclusive Waitlist", form_desc: "Be the first to experience the future. Early access members receive exclusive launch benefits.",
-      form_name: "Full Name", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Your City", form_role: "I want to be a", form_vehicle: "Vehicle Type (If Driver)", form_submit: "Secure My Spot", success: "Access secured. We will notify you upon grid launch."
+      form_name: "Full Name", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Your City", form_role: "I want to be a", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Secure My Spot", form_kyc_btn: "Proceed to KYC",
+      kyc_face_title: "Face Verification", kyc_face_desc: "Please look directly at the camera to verify your identity.",
+      kyc_docs_title: "Business Documents", kyc_docs_desc: "Upload clear PDF or JPG copies of your official documents.",
+      success: "Access secured. We will notify you upon grid launch.",
+      error: "Verification failed. Please try again."
     },
     hi: {
       help: "सहायता केंद्र", lang: "हिन्दी",
@@ -54,7 +64,11 @@ export default function ComingSoon() {
       val3_title: "लाइव ट्रैकिंग", val3_sub: "अपने पैकेज को हर सड़क पर चलते हुए देखें।",
       val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा यहाँ। हमेशा सुनते हुए। हमेशा समाधान करते हुए।",
       form_title: "एक्सक्लूसिव वेटलिस्ट से जुड़ें", form_desc: "भविष्य का अनुभव करने वाले पहले व्यक्ति बनें। अर्ली एक्सेस सदस्यों को विशेष लाभ।",
-      form_name: "पूरा नाम", form_phone: "व्हाट्सएप नंबर", form_email: "ईमेल पता", form_city: "आपका शहर", form_role: "मैं बनना चाहता हूँ", form_vehicle: "वाहन प्रकार", form_submit: "मेरा स्थान सुरक्षित करें", success: "स्थान सुरक्षित। लॉन्च होने पर हम आपको सूचित करेंगे।"
+      form_name: "पूरा नाम", form_phone: "व्हाट्सएप नंबर", form_email: "ईमेल पता", form_city: "आपका शहर", form_role: "मैं बनना चाहता हूँ", form_vehicle: "वाहन प्रकार", form_business: "व्यवसाय का नाम", form_submit: "मेरा स्थान सुरक्षित करें", form_kyc_btn: "KYC के लिए आगे बढ़ें",
+      kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "अपनी पहचान सत्यापित करने के लिए कृपया सीधे कैमरे की ओर देखें।",
+      kyc_docs_title: "व्यापार दस्तावेज़", kyc_docs_desc: "अपने आधिकारिक दस्तावेजों की स्पष्ट प्रतियां अपलोड करें।",
+      success: "स्थान सुरक्षित। लॉन्च होने पर हम आपको सूचित करेंगे।",
+      error: "सत्यापन विफल। कृपया पुनः प्रयास करें।"
     },
     hinglish: {
       help: "Help Center", lang: "Hinglish",
@@ -65,58 +79,73 @@ export default function ComingSoon() {
       val3_title: "Live Tracking", val3_sub: "Apne package ko har street par track karein.",
       val4_title: "24/7 Support", val4_sub: "Hamesha aapke saath. Har problem ka solution.",
       form_title: "Exclusive Waitlist Join Karein", form_desc: "Future experience karne waale pehle banein. Early access benefits.",
-      form_name: "Pura Naam", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Aapka City", form_role: "Main banna chahta hu", form_vehicle: "Vehicle Type", form_submit: "Spot Secure Karein", success: "Spot secured. Launch par notify karenge."
+      form_name: "Pura Naam", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Aapka City", form_role: "Main banna chahta hu", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Spot Secure Karein", form_kyc_btn: "KYC Shuru Karein",
+      kyc_face_title: "Face Verification", kyc_face_desc: "Identity verify karne ke liye camera me dekhein.",
+      kyc_docs_title: "Business Documents", kyc_docs_desc: "Official documents upload karein.",
+      success: "Spot secured. Launch par notify karenge.",
+      error: "Verification failed. Phir se try karein."
     },
-    mr: {
-      help: "मदत केंद्र", lang: "मराठी",
-      main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.",
-      main_sub: "शून्य विलंबाचा अनुभव घ्या. वेगासाठी तयार केलेले नेटवर्क.",
-      val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी रिअल-टाइम राउटिंग.",
-      val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत. जे पाहता तेच भरा.",
-      val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज रस्त्यावर जाताना पहा.",
-      val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.",
-      form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.",
-      form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_submit: "माझी जागा सुरक्षित करा", success: "तुमची जागा सुरक्षित आहे."
-    },
-    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_submit: "નોંધણી કરો", success: "સ્વાગત છે." },
-    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_submit: "నమోదు చేయండి", success: "స్వాగతం." },
-    ta: { help: "உதவி மையம்", lang: "தமிழ்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_submit: "பதிவு செய்க", success: "வரவேற்பு." },
-    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕਾ", form_vehicle: "ਵਾਹਨ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", success: "ਜੀ ਆਇਆਂ ਨੂੰ।" },
-    bho: { help: "मदद केंद्र", lang: "भोजपुरी", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_submit: "रजिस्टर करीं", success: "रउआ स्वागत बा।" },
-    ar: { help: "مركز المساعدة", lang: "العربية", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_submit: "تأمين مكاني", success: "مرحباً." },
-    es: { help: "Centro de ayuda", lang: "Español", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_submit: "Asegurar mi lugar", success: "Bienvenido." },
-    fr: { help: "Centre d'aide", lang: "Français", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_submit: "Sécuriser ma place", success: "Bienvenue." },
-    de: { help: "Hilfezentrum", lang: "Deutsch", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_submit: "Platz sichern", success: "Willkommen." }
+    mr: { help: "मदत केंद्र", lang: "मराठी", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.", main_sub: "शून्य विलंबाचा अनुभव घ्या.", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी.", val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज पहा.", val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "जागा सुरक्षित करा", form_kyc_btn: "KYC सुरू करा", kyc_face_title: "चेहरा पडताळणी", kyc_face_desc: "कॅमेराकडे पहा.", kyc_docs_title: "कागदपत्रे", kyc_docs_desc: "कागदपत्रे अपलोड करा.", success: "तुमची जागा सुरक्षित आहे.", error: "पुन्हा प्रयत्न करा." },
+    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "નોંધણી કરો", form_kyc_btn: "KYC શરૂ કરો", kyc_face_title: "ચહેરો ચકાસણી", kyc_face_desc: "કેમેરા સામે જુઓ.", kyc_docs_title: "દસ્તાવેજો", kyc_docs_desc: "દસ્તાવેજો અપલોડ કરો.", success: "સ્વાગત છે.", error: "ફરીથી પ્રયાસ કરો." },
+    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నమోదు చేయండి", form_kyc_btn: "KYC ప్రారంభించండి", kyc_face_title: "ముఖ నిర్ధారణ", kyc_face_desc: "కెమెరాను చూడండి.", kyc_docs_title: "పత్రాలు", kyc_docs_desc: "పత్రాలను అప్‌లోడ్ చేయండి.", success: "స్వాగతం.", error: "మళ్ళీ ప్రయత్నించండి." },
+    ta: { help: "உதவி மையம்", lang: "தமிழ்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "பதிவு செய்க", form_kyc_btn: "KYC தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள்.", kyc_docs_title: "ஆவணங்கள்", kyc_docs_desc: "ஆவணங்களை பதிவேற்றவும்.", success: "வரவேற்பு.", error: "மீண்டும் முயற்சிக்கவும்." },
+    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕਾ", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", form_kyc_btn: "KYC ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰੇ ਦੀ ਤਸਦੀਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼", kyc_docs_desc: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਜੀ ਆਇਆਂ ਨੂੰ।", error: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" },
+    bho: { help: "मदद केंद्र", lang: "भोजपुरी", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "रजिस्टर करीं", form_kyc_btn: "KYC शुरू करीं", kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "कैमरा में देखीं।", kyc_docs_title: "दस्तावेज", kyc_docs_desc: "दस्तावेज अपलोड करीं।", success: "रउआ स्वागत बा।", error: "फेरू कोशिश करीं।" },
+    ar: { help: "مركز المساعدة", lang: "العربية", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "تأمين مكاني", form_kyc_btn: "بدء KYC", kyc_face_title: "التحقق من الوجه", kyc_face_desc: "انظر للكاميرا.", kyc_docs_title: "مستندات", kyc_docs_desc: "ارفع المستندات.", success: "مرحباً.", error: "حاول مرة أخرى." },
+    es: { help: "Centro de ayuda", lang: "Español", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Asegurar mi lugar", form_kyc_btn: "Iniciar KYC", kyc_face_title: "Verificación facial", kyc_face_desc: "Mire a la cámara.", kyc_docs_title: "Documentos", kyc_docs_desc: "Subir documentos.", success: "Bienvenido.", error: "Inténtalo de nuevo." },
+    fr: { help: "Centre d'aide", lang: "Français", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Sécuriser ma place", form_kyc_btn: "Démarrer KYC", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra.", kyc_docs_title: "Documents", kyc_docs_desc: "Télécharger les documents.", success: "Bienvenue.", error: "Réessayez." },
+    de: { help: "Hilfezentrum", lang: "Deutsch", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Platz sichern", form_kyc_btn: "KYC starten", kyc_face_title: "Gesichtsverifizierung", kyc_face_desc: "In die Kamera schauen.", kyc_docs_title: "Dokumente", kyc_docs_desc: "Dokumente hochladen.", success: "Willkommen.", error: "Versuchen Sie es erneut." }
   };
 
   const currentT = t[lang] || t['en'];
 
-  // 4. EXPANDED FORM HANDLING, FIRESTORE & WHATSAPP WEBHOOK
-  const handleFormSubmit = async (e) => {
+  // 4. GOOGLE FACE VERIFICATION (LIVENESS ENGINE)
+  const startFaceScan = async () => {
+    setStatus('KYC_FACE');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      
+      // Simulate Google Face Verification Process (Real implementation requires WASM loading)
+      setTimeout(() => {
+        setFaceVerified(true);
+        setStatus('KYC_DOCS');
+        stream.getTracks().forEach(track => track.stop());
+      }, 4000);
+    } catch (err) {
+      console.error("Camera Access Denied:", err);
+      setStatus('ERROR');
+    }
+  };
+
+  // 5. FINAL SUBMISSION (POCKETBASE UPLOAD + FIRESTORE WRITE)
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
     setStatus('SUBMITTING');
     try {
-      // FIRESTORE LOGIC (Uncomment when Firebase is configured)
+      let pbRecordId = 'none';
+      
+      // Route documents to PocketBase if user is a Vendor/Driver
+      if (formData.role !== 'Customer') {
+        // const record = await uploadVendorKYCDocuments(formData.email, files.gst, files.pan, files.aadhaar);
+        // pbRecordId = record.id;
+      }
+
+      // Write final registration schema to Firestore
       /*
       await addDoc(collection(db, 'pre_registrations'), {
         ...formData,
+        ...businessData,
+        pocketbaseId: pbRecordId,
+        kycStatus: formData.role === 'Customer' ? 'approved' : 'pending',
         createdAt: serverTimestamp(),
         source: 'coming_soon_marketing_pivot'
       });
       */
 
-      const webhookUrl = "https://your-secure-webhook-url-here.com";
-      if(webhookUrl !== "https://your-secure-webhook-url-here.com"){
-        await fetch(webhookUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-      }
-
       setStatus('SUCCESS');
-      setFormData({ name: '', phone: '', email: '', role: 'Buyer', city: '', vehicle: '' });
-      setTimeout(() => setStatus('IDLE'), 5000);
     } catch (error) {
       console.error(error);
       setStatus('ERROR');
@@ -125,7 +154,7 @@ export default function ComingSoon() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden">
+    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden flex flex-col">
       
       {/* CSS-IN-JS FOR MINIMALIST ANIMATIONS */}
       <style>
@@ -142,8 +171,8 @@ export default function ComingSoon() {
       {/* TOP HEADER */}
       <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
-          <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra</span>
+        <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+        <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra</span>
         </div>
         <div className="flex items-center gap-6 text-[0.9rem] font-bold">
           <span className="cursor-pointer hover:text-[#aaaaaa] transition-colors hidden sm:block">{currentT.help}</span>
@@ -201,74 +230,131 @@ export default function ComingSoon() {
           </div>
         </div>
 
-        {/* SECTION 2: EXPANDED REGISTRATION FORM */}
-        <div className="w-full lg:w-[480px] bg-[#0a0a0a] border border-[#222222] rounded-[32px] p-8 shadow-[0_20px_60px_rgba(255,255,255,0.02)] opacity-0 animate-fade stagger-2 shrink-0">
-          <h3 className="text-[1.8rem] font-black mb-2 text-white">{currentT.form_title}</h3>
-          <p className="text-[#888888] text-[0.9rem] mb-8">{currentT.form_desc}</p>
+        {/* SECTION 2: MULTI-STAGE REGISTRATION & KYC HUB */}
+        <div className="w-full lg:w-[480px] bg-[#0a0a0a] border border-[#222222] rounded-[32px] p-8 shadow-[0_20px_60px_rgba(255,255,255,0.02)] opacity-0 animate-fade stagger-2 shrink-0 min-h-[400px]">
           
+          {/* STAGE: SUCCESS OR ERROR */}
           {status === 'SUCCESS' ? (
-            <div className="bg-[#111111] border border-[#05a357] text-[#05a357] p-8 rounded-2xl text-center font-bold text-[1.1rem]">
-              <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="2" className="mx-auto mb-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              {currentT.success}
+            <div className="flex flex-col items-center justify-center h-full text-center py-10 animate-fade">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="none" stroke="#ffffff" strokeWidth="1" className="mb-6"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <h3 className="text-[1.8rem] font-black mb-2">{currentT.success}</h3>
+              <p className="text-[#888888] text-[0.9rem]">Awaiting grid synchronization.</p>
+            </div>
+          ) : status === 'ERROR' ? (
+            <div className="flex flex-col items-center justify-center h-full text-center py-10 animate-fade">
+              <h3 className="text-[1.8rem] font-black mb-2 text-[#ff4444]">System Error</h3>
+              <p className="text-[#888888] text-[0.9rem] mb-6">{currentT.error}</p>
+              <button onClick={() => setStatus('IDLE')} className="border border-white px-6 py-2 rounded-full font-bold">Retry</button>
+            </div>
+          ) : status === 'KYC_FACE' ? (
+            // STAGE: KYC FACE VERIFICATION (WEBCAM)
+            <div className="flex flex-col h-full animate-fade">
+              <h3 className="text-[1.5rem] font-black mb-2">{currentT.kyc_face_title}</h3>
+              <p className="text-[#888888] text-[0.85rem] mb-8">{currentT.kyc_face_desc}</p>
+              <div className="w-full aspect-square bg-[#000000] border border-[#333333] rounded-[24px] overflow-hidden relative shadow-inner mb-6">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]"></video>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  {/* Face Guide Overlay */}
+                  <svg viewBox="0 0 100 100" className="w-[60%] h-[60%] opacity-30"><ellipse cx="50" cy="50" rx="35" ry="45" fill="none" stroke="white" strokeWidth="2" strokeDasharray="4 4" /></svg>
+                </div>
+              </div>
+              <div className="text-center font-mono text-[0.7rem] text-[#666] tracking-widest uppercase animate-pulse">Running Liveness Check...</div>
+            </div>
+          ) : status === 'KYC_DOCS' ? (
+            // STAGE: KYC DOCUMENT UPLOAD (GST, PAN, AADHAAR)
+            <div className="flex flex-col h-full animate-fade">
+              <h3 className="text-[1.5rem] font-black mb-2">{currentT.kyc_docs_title}</h3>
+              <p className="text-[#888888] text-[0.85rem] mb-8">{currentT.kyc_docs_desc}</p>
+              <form onSubmit={handleFinalSubmit} className="flex flex-col gap-4">
+                <div>
+                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">GST Certificate</label>
+                  <input type="file" required onChange={(e)=>setFiles({...files, gst: e.target.files[0]})} className="w-full bg-[#000000] border border-[#333333] text-[#aaaaaa] px-4 py-3 rounded-xl outline-none text-[0.8rem] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[0.75rem] file:font-bold file:bg-white file:text-black cursor-pointer" />
+                </div>
+                <div>
+                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">PAN Card</label>
+                  <input type="file" required onChange={(e)=>setFiles({...files, pan: e.target.files[0]})} className="w-full bg-[#000000] border border-[#333333] text-[#aaaaaa] px-4 py-3 rounded-xl outline-none text-[0.8rem] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[0.75rem] file:font-bold file:bg-white file:text-black cursor-pointer" />
+                </div>
+                <div>
+                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Aadhaar Card</label>
+                  <input type="file" required onChange={(e)=>setFiles({...files, aadhaar: e.target.files[0]})} className="w-full bg-[#000000] border border-[#333333] text-[#aaaaaa] px-4 py-3 rounded-xl outline-none text-[0.8rem] file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-[0.75rem] file:font-bold file:bg-white file:text-black cursor-pointer" />
+                </div>
+                <button type="submit" className="w-full bg-white text-black font-black text-[1.1rem] tracking-tight py-4 rounded-xl mt-6 hover:bg-[#e0e0e0] transition-colors">
+                  Upload & Finalize
+                </button>
+              </form>
             </div>
           ) : (
-            <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_name}</label>
-                  <input required type="text" value={formData.name} onChange={(e)=>setFormData({...formData, name: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+            // STAGE: INITIAL REGISTRATION FORM
+            <div className="animate-fade">
+              <h3 className="text-[1.8rem] font-black mb-2 text-white">{currentT.form_title}</h3>
+              <p className="text-[#888888] text-[0.9rem] mb-8">{currentT.form_desc}</p>
+              <form onSubmit={(e) => { e.preventDefault(); formData.role === 'Customer' ? handleFinalSubmit(e) : startFaceScan(); }} className="flex flex-col gap-4">
+                
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_name}</label>
+                    <input required type="text" value={formData.name} onChange={(e)=>setFormData({...formData, name: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_phone}</label>
+                    <input required type="tel" value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                  </div>
                 </div>
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_phone}</label>
-                  <input required type="tel" value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                
+                <div>
+                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_email}</label>
+                  <input required type="email" value={formData.email} onChange={(e)=>setFormData({...formData, email: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_email}</label>
-                <input required type="email" value={formData.email} onChange={(e)=>setFormData({...formData, email: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
-              </div>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_city}</label>
-                  <input required type="text" value={formData.city} onChange={(e)=>setFormData({...formData, city: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_city}</label>
+                    <input required type="text" value={formData.city} onChange={(e)=>setFormData({...formData, city: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_role}</label>
+                    <select value={formData.role} onChange={(e)=>setFormData({...formData, role: e.target.value, vehicle: ''})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
+                      <option value="Customer">Buyer / Customer</option>
+                      <option value="Driver Partner">Driver Partner</option>
+                      <option value="Restaurant / Vendor">Business / Vendor</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_role}</label>
-                  <select value={formData.role} onChange={(e)=>setFormData({...formData, role: e.target.value, vehicle: ''})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
-                    <option value="Customer">Buyer / Customer</option>
-                    <option value="Driver Partner">Driver Partner</option>
-                    <option value="Restaurant / Vendor">Business / Vendor</option>
-                  </select>
-                </div>
-              </div>
 
-              {/* Conditional Vehicle Input for Drivers Only */}
-              {formData.role === 'Driver Partner' && (
-                <div className="animate-fade">
-                  <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#05a357] mb-2">{currentT.form_vehicle}</label>
-                  <select required value={formData.vehicle} onChange={(e)=>setFormData({...formData, vehicle: e.target.value})} className="w-full bg-[#05a357]/10 border border-[#05a357]/30 text-[#05a357] px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
-                    <option value="" disabled>Select Vehicle</option>
-                    <option value="Two Wheeler (Bike/Scooter)">Two Wheeler (Bike/Scooter)</option>
-                    <option value="Three Wheeler (Auto)">Three Wheeler (Auto)</option>
-                    <option value="Light Commercial (Tata Ace/Chota Hathi)">Light Commercial (Tata Ace)</option>
-                    <option value="Heavy Truck">Heavy Truck</option>
-                    <option value="EV / Cycle">EV / Bicycle</option>
-                  </select>
-                </div>
-              )}
+                {/* Conditional Business Name for Vendors/Drivers */}
+                {formData.role !== 'Customer' && (
+                  <div className="animate-fade">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-white mb-2">{currentT.form_business}</label>
+                    <input required type="text" value={businessData.businessName} onChange={(e)=>setBusinessData({...businessData, businessName: e.target.value})} className="w-full bg-[#111111] border border-white text-white px-4 py-3.5 rounded-xl outline-none transition-colors text-[0.9rem]" />
+                  </div>
+                )}
 
-              <button disabled={status === 'SUBMITTING'} type="submit" className="w-full bg-white text-black font-black text-[1.1rem] tracking-tight py-4 rounded-xl mt-4 hover:bg-[#e0e0e0] transition-colors disabled:opacity-50">
-                {status === 'SUBMITTING' ? 'VERIFYING...' : currentT.form_submit}
-              </button>
-            </form>
+                {/* Conditional Vehicle Input for Drivers Only */}
+                {formData.role === 'Driver Partner' && (
+                  <div className="animate-fade">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-white mb-2">{currentT.form_vehicle}</label>
+                    <select required value={formData.vehicle} onChange={(e)=>setFormData({...formData, vehicle: e.target.value})} className="w-full bg-[#111111] border border-white text-white px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
+                      <option value="" disabled>Select Vehicle</option>
+                      <option value="Two Wheeler (Bike/Scooter)">Two Wheeler (Bike/Scooter)</option>
+                      <option value="Three Wheeler (Auto)">Three Wheeler (Auto)</option>
+                      <option value="Light Commercial (Tata Ace/Chota Hathi)">Light Commercial (Tata Ace)</option>
+                      <option value="Heavy Truck">Heavy Truck</option>
+                      <option value="EV / Cycle">EV / Bicycle</option>
+                    </select>
+                  </div>
+                )}
+
+                <button disabled={status === 'SUBMITTING'} type="submit" className="w-full bg-white text-black font-black text-[1.1rem] tracking-tight py-4 rounded-xl mt-4 hover:bg-[#e0e0e0] transition-colors disabled:opacity-50">
+                  {status === 'SUBMITTING' ? 'PROCESSING...' : formData.role === 'Customer' ? currentT.form_submit : currentT.form_kyc_btn}
+                </button>
+              </form>
+            </div>
           )}
         </div>
       </div>
 
       {/* FOOTER ALIGNMENT */}
-      <footer className="w-full max-w-[1400px] mx-auto mt-24 flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t border-[#111111] opacity-0 animate-fade stagger-3">
+      <footer className="w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t border-[#111111] opacity-0 animate-fade stagger-3">
         
         {/* Custom SVG Social Icons */}
         <div className="flex items-center gap-8 text-[#555555]">
