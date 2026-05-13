@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, onAuthStateChanged, signOut } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, updatePassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, googleProvider } from '../../firebaseConfig';
 
 /**
  * ============================================================================
  * COMPONENT: SECURE ADMIN GATE (mv-main)
  * Architecture: Authentication State Machine & Route Wrapper
- * Features: Live Firebase Auth, Targeted Password Resets, Pure Black Minimal UI,
+ * Features: Live Firebase Auth, In-App Password Updates, Pure Black Minimal UI,
  *           Strict 2-Minute Inactivity Session Termination.
  * ============================================================================
  */
@@ -21,10 +21,19 @@ export default function SecureAdminGate({ children }) {
   // States: INITIALIZING, UNAUTHENTICATED, RESET_PROMPT, AUTHENTICATING, GRANTED, DENIED
   
   const [currentUser, setCurrentUser] = useState(null);
+  
+  // Login Form States
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // In-App Password Reset States
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+
   const [verificationStep, setVerificationStep] = useState(0);
 
   const businessSteps = [
@@ -142,18 +151,37 @@ export default function SecureAdminGate({ children }) {
     }
   };
 
-  // 5. PASSWORD RESET HANDLER
-  const handleResetAction = async (triggerEmail) => {
-    if (triggerEmail && currentUser) {
-      try {
-        await sendPasswordResetEmail(auth, currentUser.email);
-        alert(`Security notice sent to ${currentUser.email}. Please check your inbox.`);
-      } catch (err) {
-        console.error(err);
-        alert("System error: Unable to dispatch reset link.");
-      }
+  // 5. IN-APP PASSWORD UPDATE HANDLER
+  const handleDirectPasswordUpdate = async (e) => {
+    e.preventDefault();
+    setResetError('');
+    
+    if (newPassword !== confirmPassword) {
+      return setResetError('Security Check Failed: Passwords do not match.');
     }
-    // Set local flag to bypass prompt on next load
+    if (newPassword.length < 6) {
+      return setResetError('Security Check Failed: Password must be at least 6 characters.');
+    }
+
+    setResetLoading(true);
+    try {
+      await updatePassword(currentUser, newPassword);
+      // Set local flag to bypass prompt on next load
+      localStorage.setItem(`pwd_reset_${currentUser.email}`, 'true');
+      setAuthStatus('AUTHENTICATING');
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'auth/requires-recent-login') {
+        setResetError('Session expired. Please refresh the page, sign in again, and retry.');
+      } else {
+        setResetError('System error: Unable to update credentials.');
+      }
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleSkipReset = () => {
     localStorage.setItem(`pwd_reset_${currentUser.email}`, 'true');
     setAuthStatus('AUTHENTICATING');
   };
@@ -238,28 +266,55 @@ export default function SecureAdminGate({ children }) {
         </div>
       )}
 
-      {/* STATE: RESET PROMPT (Mandatory vs Optional) */}
+      {/* STATE: RESET PROMPT (Strict In-App Form) */}
       {authStatus === 'RESET_PROMPT' && (
         <div className="w-full max-w-[480px] p-10 border border-[#222222] bg-[#050505] rounded-[24px] animate-fade text-center">
           <div className="w-12 h-12 bg-[#0055ff]/10 border border-[#0055ff]/30 text-[#0055ff] rounded-full flex items-center justify-center mx-auto mb-6">
              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
           </div>
           <h2 className="text-[1.5rem] font-black mb-4">Security Requirement</h2>
-          <p className="text-[#888888] text-[0.9rem] mb-8 leading-relaxed">
+          <p className="text-[#888888] text-[0.9rem] mb-6 leading-relaxed">
             {MANDATORY_RESET_EMAILS.includes(currentUser?.email) 
-              ? "As part of our protocol, you are required to reset your administrator password before proceeding to the dashboard."
-              : "You have the option to reset your password for enhanced security, or you may proceed directly to the dashboard."}
+              ? "As part of our protocol, you are required to update your administrator password before proceeding to the dashboard."
+              : "You have the option to update your password for enhanced security, or you may proceed directly to the dashboard."}
           </p>
-          <div className="flex flex-col gap-4">
-            <button onClick={() => handleResetAction(true)} className="w-full bg-[#0055ff] text-white font-bold py-3.5 rounded-lg hover:bg-[#0044cc] transition-colors">
-              Send Reset Link & Proceed
+          
+          {resetError && (
+            <div className="bg-[#111111] border border-[#ff4444]/30 text-[#ff4444] text-[0.8rem] p-3 rounded-lg mb-6 text-center font-bold">
+              {resetError}
+            </div>
+          )}
+
+          <form onSubmit={handleDirectPasswordUpdate} className="flex flex-col gap-4">
+            <input 
+              type="password" 
+              placeholder="New Secure Password" 
+              value={newPassword} 
+              onChange={(e) => setNewPassword(e.target.value)} 
+              required 
+              className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-lg outline-none focus:border-white transition-colors text-[0.9rem] text-left"
+            />
+            <input 
+              type="password" 
+              placeholder="Confirm New Password" 
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)} 
+              required 
+              className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-lg outline-none focus:border-white transition-colors text-[0.9rem] text-left"
+            />
+            <button 
+              type="submit" 
+              disabled={resetLoading}
+              className="w-full bg-[#0055ff] text-white font-bold py-3.5 rounded-lg hover:bg-[#0044cc] transition-colors mt-2 disabled:opacity-50"
+            >
+              {resetLoading ? 'Updating Credentials...' : 'Update Password & Proceed'}
             </button>
             {OPTIONAL_RESET_EMAILS.includes(currentUser?.email) && (
-              <button onClick={() => handleResetAction(false)} className="w-full bg-transparent border border-[#333333] text-white font-bold py-3.5 rounded-lg hover:bg-[#111111] transition-colors">
+              <button type="button" onClick={handleSkipReset} disabled={resetLoading} className="w-full bg-transparent border border-[#333333] text-white font-bold py-3.5 rounded-lg hover:bg-[#111111] transition-colors disabled:opacity-50">
                 Skip & Proceed
               </button>
             )}
-          </div>
+          </form>
         </div>
       )}
 
