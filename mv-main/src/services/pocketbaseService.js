@@ -1,9 +1,9 @@
 /**
  * ============================================================================
- * SERVICE: POCKETBASE KYC UPLOAD PIPELINE (mv-main)
+ * SERVICE: POCKETBASE KYC PIPELINE & ARTIFACT RETRIEVAL (mv-main)
  * Architecture: Pure Data Layer & External SDK Connection
  * Description: Securely connects to the Hugging Face PocketBase instance to 
- * process real-time multipart/form-data uploads for Vendor KYC documents.
+ * process real-time multipart/form-data uploads and retrieve document URLs.
  * ============================================================================
  */
 
@@ -57,6 +57,38 @@ export const uploadVendorKYCDocuments = async (userEmail, gstFile, panFile, aadh
 
   } catch (error) {
     console.error('Network Error during PocketBase KYC Upload:', error);
+    throw error;
+  }
+};
+
+/**
+ * Retrieves the secure public URLs for a registered entity's KYC documents.
+ * @param {string} pbRecordId - The unique PocketBase record identifier stored in Firestore.
+ * @returns {Promise<Object>} - An object containing the exact URLs for GST, PAN, and Aadhaar files.
+ */
+export const getKYCDocumentUrls = async (pbRecordId) => {
+  if (!pbRecordId || pbRecordId === 'none') {
+    throw new Error('Document Retrieval Aborted: Invalid or missing PocketBase Record ID.');
+  }
+
+  try {
+    // 1. Execute precise network query to fetch the specific vendor record
+    const record = await pb.collection('vendor_kyc').getOne(pbRecordId);
+
+    // 2. Utilize the native SDK to construct the secure absolute URLs based on the hashed filenames
+    const gstUrl = pb.files.getUrl(record, record.gst_document);
+    const panUrl = pb.files.getUrl(record, record.pan_document);
+    const aadhaarUrl = pb.files.getUrl(record, record.aadhaar_document);
+
+    return {
+      gstUrl,
+      panUrl,
+      aadhaarUrl,
+      kycStatus: record.kyc_status
+    };
+
+  } catch (error) {
+    console.error('Network Error during PocketBase Document Retrieval:', error);
     throw error;
   }
 };
