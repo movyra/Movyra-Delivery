@@ -10,7 +10,7 @@ export default function WaitlistDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [lang, setLang] = useState('en');
   
-  // Document Viewer State
+  // Document Viewer Modal State
   const [docModalActive, setDocModalActive] = useState(false);
   const [activeDocUrls, setActiveDocUrls] = useState({ gst: null, pan: null, aadhaar: null });
   const [docLoading, setDocLoading] = useState(false);
@@ -30,6 +30,7 @@ export default function WaitlistDashboard() {
       const data = snapshot.docs.map(document => ({
         id: document.id,
         ...document.data(),
+        // Safely parse Firestore timestamps to local readable strings
         timestamp: document.data().createdAt?.toDate ? document.data().createdAt.toDate().toLocaleString() : 'N/A'
       }));
       setWaitlistData(data);
@@ -46,18 +47,28 @@ export default function WaitlistDashboard() {
   const handleSignOut = async () => {
     try {
       await signOut(auth);
-      // SecureAdminGate observer will automatically catch this state change and eject the user
     } catch (error) {
       console.error("Session termination failed:", error);
-      alert("Error: Unable to safely terminate session.");
     }
   };
 
   // 4. 13-LANGUAGE ADMIN DICTIONARY
   const t = {
-    en: { title: "Admin Ledger", export: "Export CSV", logout: "Terminate Session", total: "Total Registry", pending: "Pending KYC", fleet: "Active Fleet", vendors: "Active Vendors", th_id: "ID", th_user: "User Entity", th_ops: "Operations", th_status: "Status", th_act: "Actions", doc: "Docs", app: "Approve", den: "Deny", ban: "Ban", close: "Close Viewer" },
-    hi: { title: "एडमिन लेजर", export: "CSV निर्यात", logout: "सत्र समाप्त करें", total: "कुल पंजीकरण", pending: "लंबित KYC", fleet: "सक्रिय फ्लीट", vendors: "सक्रिय विक्रेता", th_id: "आईडी", th_user: "उपयोगकर्ता", th_ops: "संचालन", th_status: "स्थिति", th_act: "कार्रवाई", doc: "दस्तावेज़", app: "मंजूरी", den: "अस्वीकार", ban: "बैन", close: "बंद करें" }
+    en: { title: "Admin Overview", export: "Export CSV", logout: "Log Out", total: "Total Registry", pending: "Pending KYC", fleet: "Active Fleet", vendors: "Active Vendors", th_id: "ID", th_user: "User Entity", th_ops: "Operations", th_status: "Status", th_act: "Actions", doc: "Docs", app: "Approve", den: "Deny", ban: "Ban", close: "Close Viewer" },
+    hi: { title: "प्रशासक अवलोकन", export: "CSV निर्यात", logout: "लॉग आउट", total: "कुल पंजीकरण", pending: "लंबित KYC", fleet: "सक्रिय फ्लीट", vendors: "सक्रिय विक्रेता", th_id: "आईडी", th_user: "उपयोगकर्ता", th_ops: "संचालन", th_status: "स्थिति", th_act: "कार्रवाई", doc: "दस्तावेज़", app: "मंजूरी", den: "अस्वीकार", ban: "बैन", close: "बंद करें" },
+    hinglish: { title: "Admin Overview", export: "CSV Export", logout: "Log Out", total: "Total Users", pending: "Pending KYC", fleet: "Active Drivers", vendors: "Active Vendors", th_id: "ID", th_user: "User Details", th_ops: "Operations", th_status: "Status", th_act: "Actions", doc: "Docs", app: "Approve", den: "Deny", ban: "Ban", close: "Close Viewer" },
+    mr: { title: "प्रशासक विहंगावलोकन", export: "CSV निर्यात", logout: "लॉग आउट", total: "एकूण नोंदणी", pending: "प्रलंबित KYC", fleet: "सक्रिय फ्लीट", vendors: "सक्रिय विक्रेते", th_id: "आयडी", th_user: "वापरकर्ता", th_ops: "ऑपरेशन्स", th_status: "स्थिती", th_act: "कृती", doc: "कागदपत्रे", app: "मंजूर", den: "नाकारणे", ban: "बंदी", close: "बंद करा" },
+    gu: { title: "એડમિન વિહંગાવલોકન", export: "CSV નિકાસ", logout: "લૉગ આઉટ", total: "કુલ નોંધણી", pending: "બાકી KYC", fleet: "સક્રિય ફ્લીટ", vendors: "સક્રિય વિક્રેતાઓ", th_id: "આઈડી", th_user: "વપરાશકર્તા", th_ops: "કામગીરી", th_status: "સ્થિતિ", th_act: "ક્રિયાઓ", doc: "દસ્તાવેજ", app: "મંજૂર", den: "નકારો", ban: "પ્રતિબંધ", close: "બંધ કરો" },
+    te: { title: "అడ్మిన్ అవలోకనం", export: "CSV ఎగుమతి", logout: "లాగ్ అవుట్", total: "మొత్తం రిజిస్ట్రీ", pending: "పెండింగ్ KYC", fleet: "యాక్టివ్ ఫ్లీట్", vendors: "యాక్టివ్ వెండర్స్", th_id: "ID", th_user: "యూజర్", th_ops: "ఆపరేషన్స్", th_status: "స్థితి", th_act: "చర్యలు", doc: "పత్రాలు", app: "ఆమోదించండి", den: "తిరస్కరించు", ban: "నిషేధం", close: "మూసివేయు" },
+    ta: { title: "நிர்வாக கண்ணோட்டம்", export: "CSV ஏற்றுமதி", logout: "வெளியேறு", total: "மொத்த பதிவு", pending: "நிலுவையில் உள்ள KYC", fleet: "செயலில் உள்ள கடற்படை", vendors: "செயலில் உள்ள விற்பனையாளர்கள்", th_id: "ஐடி", th_user: "பயனர்", th_ops: "செயல்பாடுகள்", th_status: "நிலை", th_act: "செயல்கள்", doc: "ஆவணங்கள்", app: "ஒப்புதல்", den: "மறுக்க", ban: "தடை", close: "மூடு" },
+    pa: { title: "ਐਡਮਿਨ ਸੰਖੇਪ ਜਾਣਕਾਰੀ", export: "CSV ਨਿਰਯਾਤ", logout: "ਲਾਗ ਆਉਟ", total: "ਕੁੱਲ ਰਜਿਸਟਰੀ", pending: "ਬਕਾਇਆ KYC", fleet: "ਐਕਟਿਵ ਫਲੀਟ", vendors: "ਐਕਟਿਵ ਵਿਕਰੇਤਾ", th_id: "ID", th_user: "ਯੂਜ਼ਰ", th_ops: "ਕਾਰਵਾਈਆਂ", th_status: "ਸਥਿਤੀ", th_act: "ਐਕਸ਼ਨ", doc: "ਦਸਤਾਵੇਜ਼", app: "ਮਨਜ਼ੂਰ", den: "ਇਨਕਾਰ", ban: "ਪਾਬੰਦੀ", close: "ਬੰਦ ਕਰੋ" },
+    bho: { title: "एडमिन ओवरव्यू", export: "CSV एक्सपोर्ट", logout: "लॉग आउट", total: "कुल रजिस्ट्री", pending: "पेंडिंग KYC", fleet: "एक्टिव फ्लीट", vendors: "एक्टिव वेंडर", th_id: "ID", th_user: "यूजर", th_ops: "ऑपरेशंस", th_status: "स्टेटस", th_act: "एक्शन", doc: "डाक्यूमेंट्स", app: "मंजूर", den: "अस्वीकार", ban: "बैन", close: "बंद करीं" },
+    ar: { title: "نظرة عامة للمسؤول", export: "تصدير CSV", logout: "تسجيل الخروج", total: "إجمالي التسجيل", pending: "KYC قيد الانتظار", fleet: "الأسطول النشط", vendors: "البائعون النشطون", th_id: "المعرف", th_user: "المستخدم", th_ops: "العمليات", th_status: "الحالة", th_act: "الإجراءات", doc: "مستندات", app: "موافقة", den: "رفض", ban: "حظر", close: "إغلاق" },
+    es: { title: "Resumen del Administrador", export: "Exportar CSV", logout: "Cerrar Sesión", total: "Registro Total", pending: "KYC Pendiente", fleet: "Flota Activa", vendors: "Vendedores Activos", th_id: "ID", th_user: "Usuario", th_ops: "Operaciones", th_status: "Estado", th_act: "Acciones", doc: "Docs", app: "Aprobar", den: "Denegar", ban: "Prohibir", close: "Cerrar" },
+    fr: { title: "Aperçu de l'Administrateur", export: "Exporter CSV", logout: "Se Déconnecter", total: "Registre Total", pending: "KYC en attente", fleet: "Flotte Active", vendors: "Vendeurs Actifs", th_id: "ID", th_user: "Utilisateur", th_ops: "Opérations", th_status: "Statut", th_act: "Actions", doc: "Docs", app: "Approuver", den: "Refuser", ban: "Bannir", close: "Fermer" },
+    de: { title: "Admin Übersicht", export: "CSV Export", logout: "Abmelden", total: "Gesamtregister", pending: "Ausstehendes KYC", fleet: "Aktive Flotte", vendors: "Aktive Anbieter", th_id: "ID", th_user: "Benutzer", th_ops: "Betrieb", th_status: "Status", th_act: "Aktionen", doc: "Doks", app: "Genehmigen", den: "Ablehnen", ban: "Sperren", close: "Schließen" }
   };
+
   const cur = t[lang] || t['en'];
 
   // 5. ADMIN LIVE DATABASE ACTIONS
@@ -73,10 +84,7 @@ export default function WaitlistDashboard() {
 
   // 6. POCKETBASE LIVE DOCUMENT VIEWER
   const viewDocs = async (pbId) => {
-    if (!pbId || pbId === 'none') {
-      alert("System Log: No PocketBase artifact ID associated with this entity.");
-      return;
-    }
+    if (!pbId || pbId === 'none') return alert("System Log: No PocketBase artifact ID associated with this entity.");
     
     setDocModalActive(true);
     setDocLoading(true);
@@ -84,14 +92,10 @@ export default function WaitlistDashboard() {
 
     try {
       const urls = await getKYCDocumentUrls(pbId);
-      setActiveDocUrls({
-        gst: urls.gstUrl,
-        pan: urls.panUrl,
-        aadhaar: urls.aadhaarUrl
-      });
+      setActiveDocUrls({ gst: urls.gstUrl, pan: urls.panUrl, aadhaar: urls.aadhaarUrl });
     } catch (error) {
       console.error("Document fetch failed:", error);
-      setDocError("Failed to establish secure tunnel to Hugging Face instance. Artifacts unavailable.");
+      setDocError("Access Denied: Please verify that the 'view' API rule is unlocked in your Hugging Face PocketBase dashboard.");
     } finally {
       setDocLoading(false);
     }
@@ -129,26 +133,38 @@ export default function WaitlistDashboard() {
           .animate-fade { animation: fadeIn 0.6s ease-out forwards; }
           .stagger-1 { animation-delay: 0.1s; }
           .stagger-2 { animation-delay: 0.2s; }
+          
           .border-minimal { border: 1px solid #222; }
           .bg-minimal { background-color: #050505; }
           .hover-minimal:hover { background-color: #111; }
         `}
       </style>
 
-      {/* SECURE HEADER */}
-      <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 border-b border-[#222222] bg-[#000000] sticky top-0 z-40 animate-fade">
+      {/* HEADER */}
+      <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 border-b border-[#222222] bg-black sticky top-0 z-40 animate-fade">
         <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M12 2L2 22h20L12 2zm0 4.5l6.5 13.5h-13L12 6.5z"/></svg>
-          <span className="font-black text-[1.5rem] tracking-tighter">movyra <span className="text-[#666] font-normal tracking-widest text-[0.8rem] uppercase ml-2">Admin Ledger</span></span>
+          <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+          <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra <span className="text-[#666] font-normal tracking-widest text-[1rem] uppercase ml-2">Admin</span></span>
         </div>
         
-        <div className="flex items-center gap-4 text-[0.85rem] font-bold">
-          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-transparent outline-none cursor-pointer hover:text-[#aaa] transition-colors appearance-none uppercase tracking-widest mr-4">
-            <option value="en" className="text-black">EN</option>
-            <option value="hi" className="text-black">HI</option>
+        <div className="flex items-center gap-6 text-[0.9rem] font-bold">
+          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-transparent border border-[#333] px-4 py-1.5 rounded-full outline-none cursor-pointer hover:border-white transition-colors appearance-none">
+            <option value="en" className="text-black">English</option>
+            <option value="hi" className="text-black">हिन्दी</option>
+            <option value="hinglish" className="text-black">Hinglish</option>
+            <option value="mr" className="text-black">मराठी</option>
+            <option value="gu" className="text-black">ગુજરાતી</option>
+            <option value="te" className="text-black">తెలుగు</option>
+            <option value="ta" className="text-black">தமிழ்</option>
+            <option value="pa" className="text-black">ਪੰਜਾਬੀ</option>
+            <option value="bho" className="text-black">भोजपुरी</option>
+            <option value="ar" className="text-black">العربية</option>
+            <option value="es" className="text-black">Español / Mexican</option>
+            <option value="fr" className="text-black">Français</option>
+            <option value="de" className="text-black">Deutsch</option>
           </select>
-          <button onClick={exportCSV} className="border border-[#333] text-white px-5 py-2 rounded-xl font-bold hover:bg-white hover:text-black transition-colors">{cur.export}</button>
-          <button onClick={handleSignOut} className="bg-[#111] border border-[#ff4444]/30 text-[#ff4444] px-5 py-2 rounded-xl font-bold hover:bg-[#ff4444] hover:text-white transition-colors">{cur.logout}</button>
+          <button onClick={exportCSV} className="bg-white text-black px-6 py-1.5 rounded-full font-bold hover:bg-[#e0e0e0] transition-colors">{cur.export}</button>
+          <button onClick={handleSignOut} className="bg-[#111] border border-[#ff4444]/30 text-[#ff4444] px-6 py-1.5 rounded-full font-bold hover:bg-[#ff4444] hover:text-white transition-colors">{cur.logout}</button>
         </div>
       </header>
 
@@ -176,10 +192,14 @@ export default function WaitlistDashboard() {
 
         {/* LIVE DATA LEDGER TABLE */}
         <div className="bg-minimal border-minimal rounded-[24px] overflow-hidden opacity-0 animate-fade stagger-2">
+          <div className="p-8 border-b border-[#222]">
+            <h2 className="text-[1.5rem] font-black">{cur.title}</h2>
+          </div>
+          
           <div className="w-full overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[1200px]">
+            <table className="w-full text-left border-collapse min-w-[1100px]">
               <thead>
-                <tr className="border-b border-[#222] text-[#666] text-[0.7rem] uppercase tracking-widest bg-[#0a0a0a]">
+                <tr className="border-b border-[#222] text-[#666] text-[0.7rem] uppercase tracking-widest">
                   <th className="p-6 font-bold">{cur.th_id}</th>
                   <th className="p-6 font-bold">{cur.th_user}</th>
                   <th className="p-6 font-bold">{cur.th_ops}</th>
@@ -190,13 +210,13 @@ export default function WaitlistDashboard() {
               <tbody className="text-[0.85rem]">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="5" className="p-16 text-center">
+                    <td colSpan="5" className="p-12 text-center">
                       <div className="w-6 h-6 border-2 border-[#333] border-t-white rounded-full animate-spin mx-auto mb-4"></div>
                       <div className="text-[#666] font-mono uppercase tracking-widest text-[0.7rem]">Syncing live database...</div>
                     </td>
                   </tr>
                 ) : waitlistData.length === 0 ? (
-                  <tr><td colSpan="5" className="p-16 text-center text-[#666] font-mono uppercase tracking-widest">Registry Empty</td></tr>
+                  <tr><td colSpan="5" className="p-12 text-center text-[#666] font-mono">Registry Empty.</td></tr>
                 ) : (
                   waitlistData.map((user) => (
                     <tr key={user.id} className="border-b border-[#111] hover-minimal transition-colors">
@@ -205,21 +225,21 @@ export default function WaitlistDashboard() {
                       
                       <td className="p-6">
                         <div className="font-bold text-white mb-1 text-[1rem] flex items-center gap-2">
-                          {user.name} 
-                          {user.businessName && <span className="text-[0.7rem] font-mono bg-[#222] px-2 py-0.5 rounded text-[#aaa]">{user.businessName}</span>}
+                          {user.name}
+                          {user.businessName && <span className="text-[0.65rem] font-mono bg-[#222] px-2 py-0.5 rounded text-[#aaa] tracking-widest uppercase">{user.businessName}</span>}
                         </div>
                         <div className="text-[#666]">{user.email} <span className="mx-2">|</span> {user.phone}</div>
                       </td>
                       
                       <td className="p-6">
-                        <div className="font-bold text-[#aaa] mb-1">{user.role}</div>
-                        <div className="text-[#666]">{user.city} {user.vehicle ? `| [${user.vehicle}]` : ''}</div>
+                        <div className="font-bold text-[#aaa]">{user.role}</div>
+                        <div className="text-[#666]">{user.city} {user.vehicle ? `| ${user.vehicle}` : ''}</div>
                       </td>
                       
                       <td className="p-6">
-                        <span className={`px-3 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-widest border ${
-                          user.kycStatus === 'approved' ? 'border-white text-white bg-white/5' : 
-                          user.kycStatus === 'banned' ? 'border-[#ff4444] text-[#ff4444] bg-[#ff4444]/5' : 
+                        <span className={`px-3 py-1 rounded-full text-[0.7rem] font-bold uppercase tracking-widest border ${
+                          user.kycStatus === 'approved' ? 'border-white text-white' : 
+                          user.kycStatus === 'banned' ? 'border-[#666] text-[#666] line-through' : 
                           'border-[#aaa] text-[#aaa]'
                         }`}>
                           {user.kycStatus || 'pending'}
@@ -228,19 +248,18 @@ export default function WaitlistDashboard() {
                       
                       <td className="p-6 text-right">
                         <div className="flex items-center justify-end gap-3">
-                          {/* Secure Document Viewer Button (Exclude Consumers) */}
-                          {user.role !== 'Consumer / Buyer' && user.role !== 'Buyer' && user.role !== 'Customer' && (
-                            <button onClick={() => viewDocs(user.pocketbaseId)} className="text-[#888] hover:text-white font-bold text-[0.75rem] uppercase tracking-widest transition-colors flex items-center gap-1">
-                              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                          {/* Secure Document Viewer Button */}
+                          {(!['Buyer', 'Customer', 'Consumer / Buyer'].includes(user.role)) && (
+                            <button onClick={() => viewDocs(user.pocketbaseId)} className="text-[#666] hover:text-white font-bold text-[0.75rem] uppercase tracking-widest transition-colors">
                               [{cur.doc}]
                             </button>
                           )}
                           
                           {/* Admin Live Action Group */}
-                          <div className="flex gap-1 ml-4 border border-[#222] rounded-full p-1 bg-black">
-                            <button onClick={() => handleAction(user.id, 'approved')} className="px-3 py-1.5 rounded-full text-[0.65rem] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-colors">{cur.app}</button>
-                            <button onClick={() => handleAction(user.id, 'pending')} className="px-3 py-1.5 rounded-full text-[0.65rem] font-bold uppercase tracking-widest hover:bg-[#222] transition-colors">{cur.den}</button>
-                            <button onClick={() => handleAction(user.id, 'banned')} className="px-3 py-1.5 rounded-full text-[0.65rem] font-bold uppercase tracking-widest text-[#ff4444] hover:bg-[#ff4444] hover:text-white transition-colors">{cur.ban}</button>
+                          <div className="flex gap-1 ml-4 border border-[#333] rounded-full p-1 bg-black">
+                            <button onClick={() => handleAction(user.id, 'approved')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold hover:bg-white hover:text-black transition-colors">{cur.app}</button>
+                            <button onClick={() => handleAction(user.id, 'pending')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold hover:bg-[#333] transition-colors">{cur.den}</button>
+                            <button onClick={() => handleAction(user.id, 'banned')} className="px-3 py-1 rounded-full text-[0.7rem] font-bold text-[#666] hover:text-white hover:bg-[#222] transition-colors">{cur.ban}</button>
                           </div>
                         </div>
                       </td>
@@ -252,6 +271,7 @@ export default function WaitlistDashboard() {
             </table>
           </div>
         </div>
+
       </main>
 
       {/* MODAL: DOCUMENT VIEWER */}
@@ -260,10 +280,7 @@ export default function WaitlistDashboard() {
           <div className="w-full max-w-[1000px] h-[85vh] bg-[#050505] border border-[#222] rounded-[24px] flex flex-col overflow-hidden shadow-[0_0_100px_rgba(255,255,255,0.05)]">
             
             <div className="p-6 border-b border-[#222] flex items-center justify-between bg-black">
-              <h3 className="font-black text-[1.2rem] flex items-center gap-3">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Compliance Artifact Viewer
-              </h3>
+              <h3 className="font-black text-[1.2rem]">Compliance Artifact Viewer</h3>
               <button onClick={closeDocModal} className="text-[#888] hover:text-white font-bold text-[0.8rem] uppercase tracking-widest transition-colors px-4 py-2 border border-[#333] rounded-lg hover:border-white">
                 {cur.close}
               </button>
@@ -276,9 +293,9 @@ export default function WaitlistDashboard() {
                   <p className="text-[#888] font-mono text-[0.8rem] uppercase tracking-widest">Establishing Secure Tunnel...</p>
                 </div>
               ) : docError ? (
-                <div className="flex flex-col items-center justify-center h-full gap-4 text-[#ff4444]">
-                  <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                  <p className="font-bold">{docError}</p>
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-[#ff4444] text-center max-w-[600px] mx-auto">
+                  <p className="font-bold text-[1.2rem]">Integrity Fault</p>
+                  <p className="text-[0.9rem] leading-relaxed">{docError}</p>
                 </div>
               ) : (
                 <>
