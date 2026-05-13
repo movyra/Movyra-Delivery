@@ -7,7 +7,8 @@ import { auth, googleProvider } from '../../firebaseConfig';
  * ============================================================================
  * COMPONENT: SECURE ADMIN GATE (mv-main)
  * Architecture: Authentication State Machine & Route Wrapper
- * Features: Live Firebase Auth, Targeted Password Resets, Pure Black Minimal UI
+ * Features: Live Firebase Auth, Targeted Password Resets, Pure Black Minimal UI,
+ *           Strict 2-Minute Inactivity Session Termination.
  * ============================================================================
  */
 
@@ -78,7 +79,46 @@ export default function SecureAdminGate({ children }) {
     }
   }, [authStatus]);
 
-  // 3. LOGIN HANDLERS
+  // 3. STRICT 2-MINUTE INACTIVITY OBSERVER
+  useEffect(() => {
+    let inactivityTimer;
+
+    const executeSessionTermination = async () => {
+      console.log('System Notice: Administrator session terminated due to inactivity.');
+      await signOut(auth);
+      // State automatically defaults to UNAUTHENTICATED via the onAuthStateChanged listener
+    };
+
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityTimer);
+      if (authStatus === 'GRANTED') {
+        // Enforce strict 120,000 milliseconds (2 minutes) timeout
+        inactivityTimer = setTimeout(executeSessionTermination, 120000);
+      }
+    };
+
+    if (authStatus === 'GRANTED') {
+      // Initialize the observer upon successful environment access
+      resetInactivityTimer();
+
+      // Bind DOM activity listeners
+      window.addEventListener('mousemove', resetInactivityTimer);
+      window.addEventListener('keydown', resetInactivityTimer);
+      window.addEventListener('scroll', resetInactivityTimer);
+      window.addEventListener('click', resetInactivityTimer);
+
+      return () => {
+        clearTimeout(inactivityTimer);
+        // Unbind DOM activity listeners on component dismount
+        window.removeEventListener('mousemove', resetInactivityTimer);
+        window.removeEventListener('keydown', resetInactivityTimer);
+        window.removeEventListener('scroll', resetInactivityTimer);
+        window.removeEventListener('click', resetInactivityTimer);
+      };
+    }
+  }, [authStatus]);
+
+  // 4. LOGIN HANDLERS
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -102,7 +142,7 @@ export default function SecureAdminGate({ children }) {
     }
   };
 
-  // 4. PASSWORD RESET HANDLER
+  // 5. PASSWORD RESET HANDLER
   const handleResetAction = async (triggerEmail) => {
     if (triggerEmail && currentUser) {
       try {
