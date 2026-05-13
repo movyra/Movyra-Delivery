@@ -21,9 +21,9 @@ service cloud.firestore {
       // Strictly restrict read, update, and delete access to the 3 authorized Admin UIDs only
       // WARNING: Replace the placeholder strings with the actual UIDs from your Firebase Auth Console
       allow read, update, delete: if request.auth != null && request.auth.uid in [
-        'pKre1icUEnfaZPacHY9oR9MOnhr1', 
-        '2pSdVGVzv3NMM38tFKyNItjyQuh2', 
-        'B5cqgYEPPSVz0txSt3MNMEgY9yV2'
+        'oGZkaJTtkISgYS3UyQKhhxANWFa2', 
+        '8zAyPwFZZBfU7MD1NkBDDWbIzXt1', 
+        'REr2KNUjOmWOsUxuvq3YtmlkJsB3'
       ];
     }
 
