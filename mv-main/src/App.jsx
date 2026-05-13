@@ -89,7 +89,7 @@ const RouteController = () => {
     const path = location.pathname === '/' ? 'Home' : location.pathname.substring(1);
     const formattedTitle = path.charAt(0).toUpperCase() + path.slice(1);
     document.title = isDevelopmentMode 
-      ? `Movyra | Coming Soon` 
+      ? `Movyra` 
       : `Movyra | ${formattedTitle.replace('-', ' ')}`;
   }, [location.pathname]);
 
