@@ -226,6 +226,7 @@ export default function App() {
               // ==============================================================
               <>
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
+                <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
