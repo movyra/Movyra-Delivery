@@ -113,6 +113,14 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // GROCERY MODULE ONBOARDING PROFILES (NEW ADDITION)
+    // ========================================================================
+    match /grocery_profiles/{userId} {
+      // Resolves the 403 Permission Denied error during the Orchestrator boot sequence
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // ========================================================================
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // Allows existing orders and data to remain accessible during transition.
     // ========================================================================
@@ -120,6 +128,7 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Keep existing legacy rules below unchanged...
     match /orders/{orderId} {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && (
