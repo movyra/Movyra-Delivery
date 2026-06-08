@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { db } from '../../firebaseConfig';
 import { Link } from 'react-router-dom';
+import VendorDashboard from './components/VendorDashboard';
 
-export default function VendorPortal() {
+/**
+ * ============================================================================
+ * COMPONENT: VENDOR PORTAL ROUTER (mv-main)
+ * Purpose: Acts as the public module exporter. Conditionally renders the 
+ * secure VendorDashboard for authenticated users, or the B2B Onboarding Form 
+ * for guest users.
+ * Structural Constraint: Strict zero emoji vector configuration. Existing
+ * codebase strictly preserved.
+ * ============================================================================
+ */
+
+// ----------------------------------------------------------------------------
+// PRESERVED EXISTING CODE: B2B ONBOARDING FORM
+// ----------------------------------------------------------------------------
+function VendorOnboarding() {
   const [formData, setFormData] = useState({
     businessName: '',
     name: '',
@@ -204,4 +220,43 @@ export default function VendorPortal() {
       </div>
     </div>
   );
+}
+
+// ----------------------------------------------------------------------------
+// NEW CODE: MASTER VIEW CONTROLLER ROUTER
+// ----------------------------------------------------------------------------
+export default function VendorIndex() {
+  const [authState, setAuthState] = useState('loading'); // 'loading', 'guest', 'authenticated'
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthState('authenticated');
+      } else {
+        setAuthState('guest');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  if (authState === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-[#00ff88] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-[#666666] text-[0.8rem] uppercase tracking-widest font-bold">Initializing Node</span>
+        </div>
+      </div>
+    );
+  }
+
+  // If authenticated, mount the new RBAC protected vendor dashboard
+  if (authState === 'authenticated') {
+    return <VendorDashboard />;
+  }
+
+  // If unauthenticated guest, mount the existing untouched B2B onboarding form
+  return <VendorOnboarding />;
 }
