@@ -22,6 +22,8 @@ import { WifiOff, AlertCircle } from 'lucide-react';
 import ComingSoon from './pages/ComingSoon';
 import WaitlistDashboard from './pages/Admin/WaitlistDashboard';
 import SecureAdminGate from './components/Admin/SecureAdminGate';
+import ConsumerPortal from './pages/ConsumerPortal';
+import VendorPortal from './pages/VendorPortal';
 
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
@@ -222,10 +224,12 @@ export default function App() {
             {isDevelopmentMode ? (
               // ==============================================================
               // IN-DEVELOPMENT ROUTES
-              // Intercepts all traffic to the Coming Soon page except Admin
+              // Intercepts all traffic to the Coming Soon page except Admin & Portals
               // ==============================================================
               <>
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
+                <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
+                <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
