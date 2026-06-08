@@ -227,10 +227,11 @@ export default function App() {
               // Intercepts all traffic to the Coming Soon page except Admin & Portals
               // ==============================================================
               <>
-                <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
-                <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
-                <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
-                <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+              <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
+              <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
+              <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
+              <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
+              <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
               // ==============================================================
