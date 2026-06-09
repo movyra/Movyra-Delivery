@@ -9,6 +9,7 @@ import { db } from '../../../firebaseConfig';
  * Purpose: Real-time inventory table for Admins and Vendors.
  * Behavior: Reads, updates, and deletes live Firestore documents. Deep-deletes
  * attached media assets from the external PocketBase server to prevent storage bloat.
+ * Allows editing of storefront destinations for precise customer targeting.
  * Structural Constraint: Strict zero emoji vector configuration. Uses clear business terminology.
  * ============================================================================
  */
@@ -29,7 +30,7 @@ export default function ProductCatalogManager({ role, storeId }) {
   
   // Edit Modal State
   const [editingProduct, setEditingProduct] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', price: 0, weight: '', category: '' });
+  const [editForm, setEditForm] = useState({ name: '', price: 0, weight: '', category: '', storefrontDestination: '' });
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -103,7 +104,8 @@ export default function ProductCatalogManager({ role, storeId }) {
       name: product.name || '',
       price: product.price || 0,
       weight: product.weight || '',
-      category: product.category || ''
+      category: product.category || '',
+      storefrontDestination: product.storefrontDestination || ''
     });
   };
 
@@ -123,6 +125,7 @@ export default function ProductCatalogManager({ role, storeId }) {
         price: Number(editForm.price),
         weight: editForm.weight,
         category: editForm.category,
+        storefrontDestination: editForm.storefrontDestination,
         updatedAt: new Date().toISOString()
       });
       closeEditModal();
@@ -181,6 +184,7 @@ export default function ProductCatalogManager({ role, storeId }) {
               <tr className="bg-[#111111] border-b border-[#222222]">
                 <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap w-[60px]">Photo</th>
                 <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap">Product Details</th>
+                <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap">Destination</th>
                 <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap">Category</th>
                 <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap">Price</th>
                 {role === 'admin' && <th className="p-4 text-[#888888] font-bold text-[0.75rem] uppercase tracking-widest whitespace-nowrap">Store ID</th>}
@@ -210,12 +214,21 @@ export default function ProductCatalogManager({ role, storeId }) {
                       </div>
                     </td>
                     <td className="p-4 align-middle">
+                      <span className={`px-3 py-1 rounded-md text-[0.7rem] font-bold uppercase tracking-widest ${
+                        product.storefrontDestination === 'Veggies & Fruits' ? 'bg-[#00ff88]/10 text-[#00ff88] border border-[#00ff88]/30' : 
+                        product.storefrontDestination === 'Daily Needs' ? 'bg-[#00ccff]/10 text-[#00ccff] border border-[#00ccff]/30' : 
+                        'bg-[#111111] text-[#666666] border border-[#333333]'
+                      }`}>
+                        {product.storefrontDestination || 'Unassigned'}
+                      </span>
+                    </td>
+                    <td className="p-4 align-middle">
                       <span className="bg-[#111111] border border-[#222222] text-[#888888] px-3 py-1 rounded-md text-[0.75rem] font-bold">
                         {product.category || 'Uncategorized'}
                       </span>
                     </td>
                     <td className="p-4 align-middle">
-                      <span className="font-black text-[#00ff88] text-[0.95rem]">{formatINR(product.price)}</span>
+                      <span className="font-black text-white text-[0.95rem]">{formatINR(product.price)}</span>
                     </td>
                     {role === 'admin' && (
                       <td className="p-4 align-middle">
@@ -242,7 +255,7 @@ export default function ProductCatalogManager({ role, storeId }) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={role === 'admin' ? 6 : 5} className="p-12 text-center">
+                  <td colSpan={role === 'admin' ? 7 : 6} className="p-12 text-center">
                     <div className="flex flex-col items-center justify-center text-[#666666]">
                       <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-4 opacity-50"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                       <span className="text-[0.95rem] font-bold">No products found.</span>
@@ -281,6 +294,20 @@ export default function ProductCatalogManager({ role, storeId }) {
                 <div>
                   <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Product Name</label>
                   <input type="text" required value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-[#00ff88] text-[0.9rem]" />
+                </div>
+
+                <div>
+                  <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Storefront Destination</label>
+                  <div className="relative">
+                    <select required value={editForm.storefrontDestination} onChange={e => setEditForm({...editForm, storefrontDestination: e.target.value})} className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-[#00ff88] text-[0.9rem] appearance-none">
+                      <option value="" disabled>Select Destination</option>
+                      <option value="Daily Needs">Daily Needs</option>
+                      <option value="Veggies & Fruits">Veggies & Fruits</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#666666]">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex gap-4">
