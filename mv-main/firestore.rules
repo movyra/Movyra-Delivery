@@ -103,6 +103,13 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // DEDICATED SHOPPER ACCOUNTS (VEGGIES & DAILY NEEDS STOREFRONTS)
+    // ========================================================================
+    match /shopper_accounts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+    }
+
+    // ========================================================================
     // GROCERY MODULE ONBOARDING PROFILES 
     // ========================================================================
     match /grocery_profiles/{userId} {
@@ -119,13 +126,11 @@ service cloud.firestore {
     
     match /stores/{storeId} {
       allow read: if request.auth != null;
-      // Allow vendor to manage their own store configuration, or allow global admin access
       allow write: if (request.auth != null && request.auth.uid == storeId) || isAdmin();
     }
     
     match /products/{productId} {
       allow read: if request.auth != null;
-      // Allow vendor to manage products explicitly linked to their storeId, or allow global admin access
       allow create, update: if (request.auth != null && request.resource.data.storeId == request.auth.uid) || isAdmin();
       allow delete: if (request.auth != null && resource.data.storeId == request.auth.uid) || isAdmin();
     }
