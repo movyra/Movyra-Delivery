@@ -11,6 +11,7 @@ import { db } from '../../../firebaseConfig';
  * integrates PocketBase external image URLs, and writes authenticated 
  * payloads to Firestore.
  * Structural Constraint: Strict zero emoji vector configuration. No simulations.
+ * Uses clear business language without technical jargon.
  * ============================================================================
  */
 
@@ -22,7 +23,7 @@ export default function ProductEntryForm({ role, storeId }) {
     category: '',
     description: '',
     variants: '',
-    imageUrl: '' // NEW: External PocketBase reference link
+    imageUrl: '' // External PocketBase reference link
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +33,7 @@ export default function ProductEntryForm({ role, storeId }) {
   // Real-time API Integration for AI Content Generation
   const generateAIDescription = async () => {
     if (!formData.name || !formData.category) {
-      setSystemFeedback({ status: 'ERROR', message: 'Item Designation and System Category are required for AI generation.' });
+      setSystemFeedback({ status: 'ERROR', message: 'Product Name and Category are required to generate a description.' });
       return;
     }
 
@@ -42,7 +43,7 @@ export default function ProductEntryForm({ role, storeId }) {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {
       setIsGeneratingAI(false);
-      setSystemFeedback({ status: 'ERROR', message: 'VITE_GEMINI_API_KEY environment variable is missing. AI module offline.' });
+      setSystemFeedback({ status: 'ERROR', message: 'AI Assistant is currently offline. Please write a description manually.' });
       return;
     }
 
@@ -57,16 +58,16 @@ export default function ProductEntryForm({ role, storeId }) {
         })
       });
 
-      if (!response.ok) throw new Error("AI Endpoint rejected the connection payload.");
+      if (!response.ok) throw new Error("AI Endpoint connection failed.");
 
       const data = await response.json();
       const generatedText = data.candidates[0].content.parts[0].text.trim();
       
       setFormData(prev => ({ ...prev, description: generatedText }));
-      setSystemFeedback({ status: 'SUCCESS', message: 'AI Content Generated Successfully.' });
+      setSystemFeedback({ status: 'SUCCESS', message: 'Description generated successfully.' });
     } catch (error) {
       console.error("AI Generation Failure:", error);
-      setSystemFeedback({ status: 'ERROR', message: 'AI module failed to process the request. Try writing manually.' });
+      setSystemFeedback({ status: 'ERROR', message: 'AI failed to generate a description. Please try again or write it manually.' });
     } finally {
       setIsGeneratingAI(false);
     }
@@ -75,7 +76,7 @@ export default function ProductEntryForm({ role, storeId }) {
   const handlePublish = async (e) => {
     e.preventDefault();
     if (!storeId) {
-      setSystemFeedback({ status: 'ERROR', message: 'Authentication identity missing. Cannot bind storeId to product.' });
+      setSystemFeedback({ status: 'ERROR', message: 'Your account is not linked to a store. Cannot save product.' });
       return;
     }
 
@@ -104,7 +105,7 @@ export default function ProductEntryForm({ role, storeId }) {
 
       await addDoc(collection(db, 'products'), payload);
 
-      setSystemFeedback({ status: 'SUCCESS', message: 'Item successfully published to the live inventory grid.' });
+      setSystemFeedback({ status: 'SUCCESS', message: 'Product added to your store successfully.' });
       
       // Clear form on success
       setFormData({
@@ -114,7 +115,7 @@ export default function ProductEntryForm({ role, storeId }) {
       setTimeout(() => setSystemFeedback({ status: 'IDLE', message: '' }), 5000);
     } catch (error) {
       console.error("Firestore Write Execution Failure:", error);
-      setSystemFeedback({ status: 'ERROR', message: 'Database write rejected. Verify your permissions.' });
+      setSystemFeedback({ status: 'ERROR', message: 'Failed to add product. Please verify your account permissions.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -125,8 +126,8 @@ export default function ProductEntryForm({ role, storeId }) {
       
       <div className="max-w-[800px] mx-auto w-full">
         <div className="mb-8">
-          <h1 className="text-[2rem] font-black tracking-tight leading-none mb-2">Deploy New Inventory</h1>
-          <p className="text-[#888888] text-[0.95rem]">Initialize structural parameters for a new catalog item.</p>
+          <h1 className="text-[2rem] font-black tracking-tight leading-none mb-2">Add New Product</h1>
+          <p className="text-[#888888] text-[0.95rem]">Fill out the details below to add a new item to your store.</p>
         </div>
 
         <AnimatePresence mode="wait">
@@ -155,7 +156,7 @@ export default function ProductEntryForm({ role, storeId }) {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Item Designation <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Product Name <span className="text-[#ff4444]">*</span></label>
               <input 
                 type="text" 
                 required 
@@ -167,7 +168,7 @@ export default function ProductEntryForm({ role, storeId }) {
             </div>
             
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">System Category <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Category <span className="text-[#ff4444]">*</span></label>
               <div className="relative">
                 <select 
                   required 
@@ -175,7 +176,7 @@ export default function ProductEntryForm({ role, storeId }) {
                   onChange={e => setFormData({...formData, category: e.target.value})} 
                   className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem] appearance-none"
                 >
-                  <option value="" disabled>Select Classification</option>
+                  <option value="" disabled>Select a Category</option>
                   <option value="Produce">Produce</option>
                   <option value="Dairy">Dairy</option>
                   <option value="Meats">Meats</option>
@@ -193,7 +194,7 @@ export default function ProductEntryForm({ role, storeId }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Pricing Structure (INR) <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Price (INR) <span className="text-[#ff4444]">*</span></label>
               <div className="relative">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#888888] font-bold">₹</div>
                 <input 
@@ -210,7 +211,7 @@ export default function ProductEntryForm({ role, storeId }) {
             </div>
 
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Base Unit/Weight <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Weight or Quantity <span className="text-[#ff4444]">*</span></label>
               <input 
                 type="text" 
                 required 
@@ -224,7 +225,7 @@ export default function ProductEntryForm({ role, storeId }) {
 
           <div className="border-t border-[#1c1c1c] pt-6">
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666]">Marketing Description <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666]">Product Description <span className="text-[#ff4444]">*</span></label>
               
               <button 
                 type="button" 
@@ -237,13 +238,13 @@ export default function ProductEntryForm({ role, storeId }) {
                 ) : (
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                 )}
-                {isGeneratingAI ? 'Synthesizing...' : 'Generate via AI'}
+                {isGeneratingAI ? 'Generating...' : 'Auto-Generate Details'}
               </button>
             </div>
             <textarea 
               required
               rows="4"
-              placeholder="Detailed explanation of the product characteristics..."
+              placeholder="Describe the product..."
               value={formData.description} 
               onChange={e => setFormData({...formData, description: e.target.value})} 
               className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem] resize-none" 
@@ -251,19 +252,19 @@ export default function ProductEntryForm({ role, storeId }) {
           </div>
 
           <div>
-            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Product Image URL (Optional)</label>
+            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Image Link (Optional)</label>
             <input 
               type="url" 
-              placeholder="Paste direct PocketBase image link here..."
+              placeholder="Paste image link here..."
               value={formData.imageUrl} 
               onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
               className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
             />
-            <p className="text-[#666666] text-[0.7rem] mt-2">Generate this link via the Image Database tab and paste it here.</p>
+            <p className="text-[#666666] text-[0.7rem] mt-2">Upload an image in the Image Database tab and paste the link here.</p>
           </div>
 
           <div>
-            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Unit Variants (Optional)</label>
+            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Size Options (Optional)</label>
             <input 
               type="text" 
               placeholder="Comma separated (e.g. 250g, 500g, 1Kg)"
@@ -283,7 +284,7 @@ export default function ProductEntryForm({ role, storeId }) {
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <>
-                  Publish Product to Grid
+                  Add to Store
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
                 </>
               )}
