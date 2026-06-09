@@ -4,7 +4,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ========================================================================
-    // GLOBAL SECURITY DEFINITIONS & RBAC (NEW ADDITION)
+    // GLOBAL SECURITY DEFINITIONS & ACCESS CONTROL
     // ========================================================================
     
     // Hardcoded Admin Verification
@@ -145,6 +145,7 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow read, update, delete: if request.auth != null && (
         resource.data.userId == request.auth.uid || 
+        resource.data.storeId == request.auth.uid || 
         !('userId' in resource.data) ||
         isAdmin()
       );
