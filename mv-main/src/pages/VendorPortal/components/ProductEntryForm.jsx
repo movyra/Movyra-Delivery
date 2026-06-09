@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../../firebaseConfig';
@@ -8,8 +8,8 @@ import { db } from '../../../firebaseConfig';
  * COMPONENT: VENDOR PRODUCT ENTRY FORM (mv-main)
  * Purpose: Secure form to inject new inventory items into the global catalog.
  * Behavior: Enforces data validation, calls Gemini REST API for descriptions,
- * integrates PocketBase external image URLs, and writes authenticated 
- * payloads to Firestore.
+ * handles native physical image uploads to PocketBase, and writes authenticated 
+ * payloads to Firestore in a single unified pipeline.
  * Structural Constraint: Strict zero emoji vector configuration. No simulations.
  * Uses clear business language without technical jargon.
  * ============================================================================
@@ -22,9 +22,14 @@ export default function ProductEntryForm({ role, storeId }) {
     weight: '',
     category: '',
     description: '',
-    variants: '',
-    imageUrl: '' // External PocketBase reference link
+    variants: ''
   });
+
+  // Native Image Upload State
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -73,6 +78,58 @@ export default function ProductEntryForm({ role, storeId }) {
     }
   };
 
+  // Drag and Drop Image Handlers
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFileSelection(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processFileSelection(e.target.files[0]);
+    }
+  };
+
+  const processFileSelection = (file) => {
+    if (!file.type.startsWith('image/')) {
+      setSystemFeedback({ status: 'ERROR', message: 'Please select a valid image file (JPG, PNG, WEBP).' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) { // 5MB Limit
+      setSystemFeedback({ status: 'ERROR', message: 'File size exceeds the 5MB limit.' });
+      return;
+    }
+
+    setSelectedFile(file);
+    setSystemFeedback({ status: 'IDLE', message: '' });
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImageSelection = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Unified Publish Pipeline (Upload Image -> Write to Firestore)
   const handlePublish = async (e) => {
     e.preventDefault();
     if (!storeId) {
@@ -84,38 +141,62 @@ export default function ProductEntryForm({ role, storeId }) {
     setSystemFeedback({ status: 'IDLE', message: '' });
 
     try {
-      // Process variants string into an array if provided
+      let finalImageUrl = '';
+
+      // Phase 1: Upload Physical Asset to PocketBase
+      if (selectedFile) {
+        setSystemFeedback({ status: 'IDLE', message: 'Uploading image asset...' });
+        const uploadPayload = new FormData();
+        uploadPayload.append('image_file', selectedFile);
+        uploadPayload.append('product_name', formData.name);
+        uploadPayload.append('vendor_id', storeId);
+
+        const pbResponse = await fetch('https://movyra-mv-main-db-gradio.hf.space/api/collections/product_images/records', {
+          method: 'POST',
+          body: uploadPayload
+        });
+
+        if (!pbResponse.ok) {
+          throw new Error('Image upload rejected by the storage server.');
+        }
+
+        const pbData = await pbResponse.json();
+        finalImageUrl = `https://movyra-mv-main-db-gradio.hf.space/api/files/${pbData.collectionId}/${pbData.id}/${pbData.image_file}`;
+      }
+
+      // Phase 2: Write Complete Payload to Firestore
+      setSystemFeedback({ status: 'IDLE', message: 'Writing to global database...' });
+      
       const variantArray = formData.variants 
         ? formData.variants.split(',').map(v => v.trim()).filter(Boolean) 
         : [];
 
-      const payload = {
+      const dbPayload = {
         name: formData.name,
         price: Number(formData.price),
         weight: formData.weight,
         category: formData.category,
         description: formData.description,
         variants: variantArray,
-        imageUrl: formData.imageUrl, // Integrated Image Database Reference
+        imageUrl: finalImageUrl, 
         storeId: storeId,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         isTodaysChoice: false
       };
 
-      await addDoc(collection(db, 'products'), payload);
+      await addDoc(collection(db, 'products'), dbPayload);
 
       setSystemFeedback({ status: 'SUCCESS', message: 'Product added to your store successfully.' });
       
-      // Clear form on success
-      setFormData({
-        name: '', price: '', weight: '', category: '', description: '', variants: '', imageUrl: ''
-      });
+      // Reset Form State
+      setFormData({ name: '', price: '', weight: '', category: '', description: '', variants: '' });
+      clearImageSelection();
 
       setTimeout(() => setSystemFeedback({ status: 'IDLE', message: '' }), 5000);
     } catch (error) {
-      console.error("Firestore Write Execution Failure:", error);
-      setSystemFeedback({ status: 'ERROR', message: 'Failed to add product. Please verify your account permissions.' });
+      console.error("Pipeline Execution Failure:", error);
+      setSystemFeedback({ status: 'ERROR', message: 'Failed to add product. Please verify your connection and permissions.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -131,7 +212,7 @@ export default function ProductEntryForm({ role, storeId }) {
         </div>
 
         <AnimatePresence mode="wait">
-          {systemFeedback.status !== 'IDLE' && (
+          {systemFeedback.status !== 'IDLE' && systemFeedback.message !== '' && (
             <motion.div 
               initial={{ opacity: 0, y: -10 }} 
               animate={{ opacity: 1, y: 0 }} 
@@ -139,13 +220,17 @@ export default function ProductEntryForm({ role, storeId }) {
               className={`w-full mb-6 p-4 rounded-xl border font-bold text-[0.85rem] flex items-center gap-3 ${
                 systemFeedback.status === 'ERROR' 
                   ? 'bg-[#ff4444]/10 border-[#ff4444]/30 text-[#ff4444]' 
-                  : 'bg-[#00ff88]/10 border-[#00ff88]/30 text-[#00ff88]'
+                  : systemFeedback.status === 'SUCCESS'
+                    ? 'bg-[#00ff88]/10 border-[#00ff88]/30 text-[#00ff88]'
+                    : 'bg-[#111111] border-[#333333] text-white' // Loading state color
               }`}
             >
               {systemFeedback.status === 'ERROR' ? (
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-              ) : (
+              ) : systemFeedback.status === 'SUCCESS' ? (
                 <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              ) : (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               )}
               {systemFeedback.message}
             </motion.div>
@@ -154,6 +239,46 @@ export default function ProductEntryForm({ role, storeId }) {
 
         <form onSubmit={handlePublish} className="w-full bg-[#050505] border border-[#1c1c1c] rounded-2xl p-6 md:p-8 flex flex-col gap-6 shadow-2xl">
           
+          {/* Native Image Uploader Section */}
+          <div className="w-full border-b border-[#1c1c1c] pb-6">
+            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-3">Product Photo (Optional)</label>
+            
+            {!previewUrl ? (
+              <div 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`w-full h-[180px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${
+                  isDragging ? 'border-[#00ff88] bg-[#00ff88]/5' : 'border-[#333333] hover:border-[#666666] bg-[#111111]'
+                }`}
+              >
+                <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke={isDragging ? '#00ff88' : '#666666'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="mb-3 transition-colors duration-300"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <span className="font-bold text-[0.95rem] mb-1 text-white">Click to select or drag and drop</span>
+                <span className="text-[#666666] text-[0.75rem] font-medium">Supported formats: JPG, PNG, WEBP (Max 5MB)</span>
+                <input type="file" ref={fileInputRef} onChange={handleFileSelect} accept="image/jpeg, image/png, image/webp" className="hidden" />
+              </div>
+            ) : (
+              <div className="flex items-center gap-6">
+                <div className="w-[120px] h-[120px] rounded-xl border border-[#333333] overflow-hidden shrink-0 bg-[#111111] flex items-center justify-center relative group">
+                  <img src={previewUrl} alt="Selected Product Preview" className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button type="button" onClick={clearImageSelection} className="bg-[#ff4444] text-white p-2 rounded-full hover:scale-110 transition-transform">
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex flex-col">
+                  <h3 className="font-bold text-[0.95rem] text-white mb-1 truncate max-w-[300px]">{selectedFile?.name}</h3>
+                  <span className="text-[#666666] text-[0.8rem] font-mono mb-3">{(selectedFile?.size / 1024 / 1024).toFixed(2)} MB</span>
+                  <button type="button" onClick={clearImageSelection} className="text-[#ff4444] text-[0.8rem] font-bold hover:text-[#ff6666] transition-colors self-start">
+                    Remove Image
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Product Name <span className="text-[#ff4444]">*</span></label>
@@ -230,7 +355,7 @@ export default function ProductEntryForm({ role, storeId }) {
               <button 
                 type="button" 
                 onClick={generateAIDescription}
-                disabled={isGeneratingAI}
+                disabled={isGeneratingAI || isSubmitting}
                 className="flex items-center gap-1.5 text-[0.75rem] font-bold text-[#00ff88] hover:text-white transition-colors disabled:opacity-50"
               >
                 {isGeneratingAI ? (
@@ -252,18 +377,6 @@ export default function ProductEntryForm({ role, storeId }) {
           </div>
 
           <div>
-            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Image Link (Optional)</label>
-            <input 
-              type="url" 
-              placeholder="Paste image link here..."
-              value={formData.imageUrl} 
-              onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
-              className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
-            />
-            <p className="text-[#666666] text-[0.7rem] mt-2">Upload an image in the Image Database tab and paste the link here.</p>
-          </div>
-
-          <div>
             <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Size Options (Optional)</label>
             <input 
               type="text" 
@@ -281,7 +394,10 @@ export default function ProductEntryForm({ role, storeId }) {
               className="w-full bg-white text-black h-14 rounded-xl font-black tracking-tight text-[1.05rem] hover:bg-[#e0e0e0] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                <>
+                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  Processing Upload...
+                </>
               ) : (
                 <>
                   Add to Store
