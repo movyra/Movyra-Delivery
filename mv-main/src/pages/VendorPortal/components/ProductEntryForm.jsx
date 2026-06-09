@@ -8,7 +8,8 @@ import { db } from '../../../firebaseConfig';
  * COMPONENT: VENDOR PRODUCT ENTRY FORM (mv-main)
  * Purpose: Secure form to inject new inventory items into the global catalog.
  * Behavior: Enforces data validation, calls Gemini REST API for descriptions,
- * and writes authenticated payloads to Firestore.
+ * integrates PocketBase external image URLs, and writes authenticated 
+ * payloads to Firestore.
  * Structural Constraint: Strict zero emoji vector configuration. No simulations.
  * ============================================================================
  */
@@ -20,7 +21,8 @@ export default function ProductEntryForm({ role, storeId }) {
     weight: '',
     category: '',
     description: '',
-    variants: ''
+    variants: '',
+    imageUrl: '' // NEW: External PocketBase reference link
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,10 +95,11 @@ export default function ProductEntryForm({ role, storeId }) {
         category: formData.category,
         description: formData.description,
         variants: variantArray,
-        storeId: storeId, // Securely binds the document to the vendor's RBAC scope
+        imageUrl: formData.imageUrl, // Integrated Image Database Reference
+        storeId: storeId,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        isTodaysChoice: false // Defaults to false, requires admin override to feature
+        isTodaysChoice: false
       };
 
       await addDoc(collection(db, 'products'), payload);
@@ -105,13 +108,13 @@ export default function ProductEntryForm({ role, storeId }) {
       
       // Clear form on success
       setFormData({
-        name: '', price: '', weight: '', category: '', description: '', variants: ''
+        name: '', price: '', weight: '', category: '', description: '', variants: '', imageUrl: ''
       });
 
       setTimeout(() => setSystemFeedback({ status: 'IDLE', message: '' }), 5000);
     } catch (error) {
       console.error("Firestore Write Execution Failure:", error);
-      setSystemFeedback({ status: 'ERROR', message: 'Database write rejected. Verify your RBAC permissions.' });
+      setSystemFeedback({ status: 'ERROR', message: 'Database write rejected. Verify your permissions.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -248,6 +251,18 @@ export default function ProductEntryForm({ role, storeId }) {
           </div>
 
           <div>
+            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Product Image URL (Optional)</label>
+            <input 
+              type="url" 
+              placeholder="Paste direct PocketBase image link here..."
+              value={formData.imageUrl} 
+              onChange={e => setFormData({...formData, imageUrl: e.target.value})} 
+              className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
+            />
+            <p className="text-[#666666] text-[0.7rem] mt-2">Generate this link via the Image Database tab and paste it here.</p>
+          </div>
+
+          <div>
             <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Unit Variants (Optional)</label>
             <input 
               type="text" 
@@ -256,7 +271,6 @@ export default function ProductEntryForm({ role, storeId }) {
               onChange={e => setFormData({...formData, variants: e.target.value})} 
               className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
             />
-            <p className="text-[#666666] text-[0.7rem] mt-2">If provided, the system will render variant selection buttons on the product details view.</p>
           </div>
 
           <div className="pt-4 border-t border-[#1c1c1c]">
