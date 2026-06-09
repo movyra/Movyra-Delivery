@@ -9,7 +9,8 @@ import { db } from '../../../firebaseConfig';
  * Purpose: Secure form to inject new inventory items into the global catalog.
  * Behavior: Enforces data validation, calls Gemini REST API for descriptions,
  * handles native physical image uploads to PocketBase, and writes authenticated 
- * payloads to Firestore in a single unified pipeline.
+ * payloads to Firestore in a single unified pipeline. Assigns specific
+ * storefront destinations for targeted customer routing.
  * Structural Constraint: Strict zero emoji vector configuration. No simulations.
  * Uses clear business language without technical jargon.
  * ============================================================================
@@ -21,6 +22,7 @@ export default function ProductEntryForm({ role, storeId }) {
     price: '',
     weight: '',
     category: '',
+    storefrontDestination: '',
     description: '',
     variants: ''
   });
@@ -180,6 +182,7 @@ export default function ProductEntryForm({ role, storeId }) {
         price: Number(formData.price),
         weight: formData.weight,
         category: formData.category,
+        storefrontDestination: formData.storefrontDestination,
         description: formData.description,
         variants: variantArray,
         imageUrl: finalImageUrl, 
@@ -194,7 +197,7 @@ export default function ProductEntryForm({ role, storeId }) {
       setSystemFeedback({ status: 'SUCCESS', message: 'Product added to your store successfully.' });
       
       // Reset Form State
-      setFormData({ name: '', price: '', weight: '', category: '', description: '', variants: '' });
+      setFormData({ name: '', price: '', weight: '', category: '', storefrontDestination: '', description: '', variants: '' });
       clearImageSelection();
 
       setTimeout(() => setSystemFeedback({ status: 'IDLE', message: '' }), 5000);
@@ -295,7 +298,28 @@ export default function ProductEntryForm({ role, storeId }) {
                 className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
               />
             </div>
-            
+
+            <div>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Storefront Destination <span className="text-[#ff4444]">*</span></label>
+              <div className="relative">
+                <select 
+                  required 
+                  value={formData.storefrontDestination} 
+                  onChange={e => setFormData({...formData, storefrontDestination: e.target.value})} 
+                  className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem] appearance-none"
+                >
+                  <option value="" disabled>Select Destination</option>
+                  <option value="Daily Needs">Daily Needs</option>
+                  <option value="Veggies & Fruits">Veggies & Fruits</option>
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#666666]">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Category <span className="text-[#ff4444]">*</span></label>
               <div className="relative">
@@ -319,6 +343,18 @@ export default function ProductEntryForm({ role, storeId }) {
                 </div>
               </div>
             </div>
+
+            <div>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Weight or Quantity <span className="text-[#ff4444]">*</span></label>
+              <input 
+                type="text" 
+                required 
+                placeholder="e.g. 500g, 1L, 1 Dozen"
+                value={formData.weight} 
+                onChange={e => setFormData({...formData, weight: e.target.value})} 
+                className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -340,13 +376,12 @@ export default function ProductEntryForm({ role, storeId }) {
             </div>
 
             <div>
-              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Weight or Quantity <span className="text-[#ff4444]">*</span></label>
+              <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Size Options (Optional)</label>
               <input 
                 type="text" 
-                required 
-                placeholder="e.g. 500g, 1L, 1 Dozen"
-                value={formData.weight} 
-                onChange={e => setFormData({...formData, weight: e.target.value})} 
+                placeholder="Comma separated (e.g. 250g, 500g, 1Kg)"
+                value={formData.variants} 
+                onChange={e => setFormData({...formData, variants: e.target.value})} 
                 className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
               />
             </div>
@@ -377,17 +412,6 @@ export default function ProductEntryForm({ role, storeId }) {
               value={formData.description} 
               onChange={e => setFormData({...formData, description: e.target.value})} 
               className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem] resize-none" 
-            />
-          </div>
-
-          <div>
-            <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Size Options (Optional)</label>
-            <input 
-              type="text" 
-              placeholder="Comma separated (e.g. 250g, 500g, 1Kg)"
-              value={formData.variants} 
-              onChange={e => setFormData({...formData, variants: e.target.value})} 
-              className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
             />
           </div>
 
