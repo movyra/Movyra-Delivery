@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { db } from '../../firebaseConfig';
 import { Link } from 'react-router-dom';
 import VendorDashboard from './components/VendorDashboard';
@@ -9,10 +9,10 @@ import VendorDashboard from './components/VendorDashboard';
  * ============================================================================
  * COMPONENT: VENDOR PORTAL ROUTER (mv-main)
  * Purpose: Acts as the public module exporter. Conditionally renders the 
- * secure VendorDashboard for authenticated users, or the B2B Onboarding Form 
- * for guest users.
+ * secure VendorDashboard for authenticated users. For guests, it renders the 
+ * B2B Onboarding Form accompanied by an interactive Auth login modal overlay.
  * Structural Constraint: Strict zero emoji vector configuration. Existing
- * codebase strictly preserved.
+ * codebase strictly preserved. Uses standard business terminology.
  * ============================================================================
  */
 
@@ -223,13 +223,21 @@ function VendorOnboarding() {
 }
 
 // ----------------------------------------------------------------------------
-// NEW CODE: MASTER VIEW CONTROLLER ROUTER
+// NEW CODE: MASTER VIEW CONTROLLER ROUTER WITH LIVE AUTHENTICATION TERMINAL
 // ----------------------------------------------------------------------------
 export default function VendorIndex() {
   const [authState, setAuthState] = useState('loading'); // 'loading', 'guest', 'authenticated'
+  
+  // Terminal Modal State
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  const auth = getAuth();
 
   useEffect(() => {
-    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthState('authenticated');
@@ -239,24 +247,147 @@ export default function VendorIndex() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [auth]);
 
+  // Handle Standard Email & Password
+  const handleStandardSignIn = async (e) => {
+    e.preventDefault();
+    setIsAuthenticating(true);
+    setLoginError('');
+
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      // Success will automatically trigger the onAuthStateChanged listener
+    } catch (error) {
+      console.error("Firebase Login Error:", error);
+      setLoginError("Invalid email or password. Please try again.");
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // Handle External Google Identity Provider
+  const handleGoogleSignIn = async () => {
+    setIsAuthenticating(true);
+    setLoginError('');
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Google Sign-In Error:", error);
+      setLoginError("Sign in with Google failed. Please try again.");
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
+  // 1. System Initializing Matrix
   if (authState === 'loading') {
     return (
       <div className="min-h-screen bg-[#000000] flex items-center justify-center font-sans">
         <div className="flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-2 border-[#00ff88] border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-[#666666] text-[0.8rem] uppercase tracking-widest font-bold">Initializing Node</span>
+          <span className="text-[#666666] text-[0.8rem] uppercase tracking-widest font-bold">Loading System</span>
         </div>
       </div>
     );
   }
 
-  // If authenticated, mount the new RBAC protected vendor dashboard
+  // 2. Verified Authorization Access
   if (authState === 'authenticated') {
     return <VendorDashboard />;
   }
 
-  // If unauthenticated guest, mount the existing untouched B2B onboarding form
-  return <VendorOnboarding />;
+  // 3. Guest Interface (Onboarding + Login Terminal Overlay)
+  return (
+    <div className="relative">
+      
+      {/* Floating Entry Button to Trigger Authorization Modal */}
+      <div className="fixed top-6 left-6 md:top-10 md:left-10 z-[60]">
+        <button 
+          onClick={() => setShowLoginModal(true)}
+          className="bg-transparent border border-[#333333] text-white px-5 py-2.5 rounded-full text-[0.75rem] font-bold uppercase tracking-widest hover:bg-[#111111] hover:border-white transition-all flex items-center gap-2 shadow-2xl"
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          Vendor Login
+        </button>
+      </div>
+
+      <VendorOnboarding />
+
+      {/* Interactive Authorization Modal Overlay */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-[100] bg-[#000000]/90 backdrop-blur-md flex items-center justify-center p-6 animate-fade">
+          <div className="w-full max-w-[400px] bg-[#050505] border border-[#222222] rounded-[24px] p-8 shadow-[0_0_50px_rgba(255,255,255,0.05)] relative">
+            
+            <button 
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-5 right-5 text-[#666666] hover:text-white transition-colors"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <h2 className="text-[1.6rem] font-black tracking-tight text-white mb-2">Welcome Back</h2>
+            <p className="text-[#888888] text-[0.85rem] mb-6">Enter your account details to access your dashboard.</p>
+
+            {loginError && (
+              <div className="w-full bg-[#ff4444]/10 border border-[#ff4444]/30 text-[#ff4444] text-[0.8rem] font-bold p-3 rounded-xl mb-4">
+                {loginError}
+              </div>
+            )}
+
+            <form onSubmit={handleStandardSignIn} className="flex flex-col gap-4 mb-6">
+              <div>
+                <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
+                />
+              </div>
+              
+              <div>
+                <label className="block text-[0.7rem] font-bold uppercase tracking-widest text-[#666666] mb-2">Password</label>
+                <input 
+                  type="password" 
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full bg-[#111111] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-[#00ff88] transition-colors text-[0.95rem]" 
+                />
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={isAuthenticating}
+                className="w-full bg-white text-black font-black tracking-tight py-3.5 rounded-xl hover:bg-[#e0e0e0] transition-colors mt-2 disabled:opacity-50 text-[1rem]"
+              >
+                {isAuthenticating ? 'Signing In...' : 'Sign In'}
+              </button>
+            </form>
+
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-[1px] bg-[#222222]"></div>
+              <span className="text-[#666666] text-[0.75rem] font-bold uppercase tracking-widest">Or Continue With</span>
+              <div className="flex-1 h-[1px] bg-[#222222]"></div>
+            </div>
+
+            <button 
+              onClick={handleGoogleSignIn}
+              disabled={isAuthenticating}
+              className="w-full bg-[#111111] border border-[#333333] text-white font-bold py-3.5 rounded-xl hover:bg-[#222222] transition-colors flex items-center justify-center gap-3 disabled:opacity-50 text-[0.95rem]"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12c0-.83-.08-1.63-.2-2.4H12v4.6h5.7a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.6-5.2 3.6-8.8z"></path><path d="M12 22c2.8 0 5.2-1 6.9-2.6l-3.9-3c-.9.6-2.1 1-3 1-2.4 0-4.5-1.6-5.2-3.8H2.8v3.1C4.6 20.3 8 22 12 22z"></path><path d="M6.8 13.6c-.2-.6-.3-1.3-.3-1.9s.1-1.3.3-1.9V6.7H2.8C2.1 8.3 1.7 10.1 1.7 12s.4 3.7 1.1 5.3l3.9-3.7z"></path><path d="M12 5.4c1.5 0 2.9.5 3.9 1.5l3-3C17.2 2.2 14.8 1 12 1 8 1 4.6 2.7 2.8 5.7l3.9 3.1c.8-2.2 2.8-3.4 5.3-3.4z"></path></svg>
+              Sign in with Google
+            </button>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
 }
