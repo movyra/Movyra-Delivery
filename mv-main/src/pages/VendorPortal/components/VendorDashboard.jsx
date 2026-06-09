@@ -6,7 +6,7 @@ import { db } from '../../../firebaseConfig';
 
 import ProductCatalogManager from './ProductCatalogManager';
 import ProductEntryForm from './ProductEntryForm';
-import GradioImageIntegration from './GradioImageIntegration';
+import VendorOrderBoard from './VendorOrderBoard';
 
 /**
  * ============================================================================
@@ -29,7 +29,7 @@ export default function VendorDashboard() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState('loading'); // 'loading', 'admin', 'vendor', 'unauthorized'
   const [storeData, setStoreData] = useState(null);
-  const [activeView, setActiveView] = useState('catalog'); // 'catalog', 'entry', 'ai_image'
+  const [activeView, setActiveView] = useState('orders'); // Default to orders view for operational efficiency
 
   const auth = getAuth();
 
@@ -77,14 +77,14 @@ export default function VendorDashboard() {
 
   const renderActiveView = () => {
     switch (activeView) {
+      case 'orders':
+        return <VendorOrderBoard role={role} storeId={user?.uid} />;
       case 'catalog':
         return <ProductCatalogManager role={role} storeId={user?.uid} />;
       case 'entry':
         return <ProductEntryForm role={role} storeId={user?.uid} />;
-      case 'ai_image':
-        return <GradioImageIntegration />;
       default:
-        return <ProductCatalogManager role={role} storeId={user?.uid} />;
+        return <VendorOrderBoard role={role} storeId={user?.uid} />;
     }
   };
 
@@ -145,6 +145,16 @@ export default function VendorDashboard() {
         <nav className="flex-1 overflow-y-auto py-6 px-4 flex flex-col gap-2">
           
           <button 
+            onClick={() => setActiveView('orders')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[0.9rem] transition-colors ${
+              activeView === 'orders' ? 'bg-white text-black' : 'text-[#888888] hover:bg-[#111111] hover:text-white'
+            }`}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            Order Management
+          </button>
+
+          <button 
             onClick={() => setActiveView('catalog')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[0.9rem] transition-colors ${
               activeView === 'catalog' ? 'bg-white text-black' : 'text-[#888888] hover:bg-[#111111] hover:text-white'
@@ -162,16 +172,6 @@ export default function VendorDashboard() {
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
             Add New Product
-          </button>
-
-          <button 
-            onClick={() => setActiveView('ai_image')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[0.9rem] transition-colors ${
-              activeView === 'ai_image' ? 'bg-white text-black' : 'text-[#888888] hover:bg-[#111111] hover:text-white'
-            }`}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            Upload Product Image
           </button>
 
         </nav>
