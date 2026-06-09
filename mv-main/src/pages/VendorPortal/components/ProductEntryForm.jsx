@@ -146,10 +146,12 @@ export default function ProductEntryForm({ role, storeId }) {
       // Phase 1: Upload Physical Asset to PocketBase
       if (selectedFile) {
         setSystemFeedback({ status: 'IDLE', message: 'Uploading image asset...' });
+        
+        // Restored Payload fields required by PocketBase Schema
         const uploadPayload = new FormData();
         uploadPayload.append('image_file', selectedFile);
-        uploadPayload.append('product_name', formData.name);
-        uploadPayload.append('vendor_id', storeId);
+        uploadPayload.append('product_name', formData.name || 'Unnamed Product');
+        uploadPayload.append('vendor_id', storeId || 'unknown_vendor');
 
         const pbResponse = await fetch('https://movyra-mv-main-db-gradio.hf.space/api/collections/product_images/records', {
           method: 'POST',
@@ -157,7 +159,9 @@ export default function ProductEntryForm({ role, storeId }) {
         });
 
         if (!pbResponse.ok) {
-          throw new Error('Image upload rejected by the storage server.');
+          const errorData = await pbResponse.json().catch(() => ({}));
+          console.error("Storage Server Rejection:", errorData);
+          throw new Error(errorData.message || 'Image upload rejected. Ensure the database column is exactly named "image_file".');
         }
 
         const pbData = await pbResponse.json();
@@ -196,7 +200,7 @@ export default function ProductEntryForm({ role, storeId }) {
       setTimeout(() => setSystemFeedback({ status: 'IDLE', message: '' }), 5000);
     } catch (error) {
       console.error("Pipeline Execution Failure:", error);
-      setSystemFeedback({ status: 'ERROR', message: 'Failed to add product. Please verify your connection and permissions.' });
+      setSystemFeedback({ status: 'ERROR', message: error.message || 'Failed to add product. Please verify your connection.' });
     } finally {
       setIsSubmitting(false);
     }
