@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; 
 import { uploadVendorKYCDocuments } from '../../services/pocketbaseService';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function ComingSoon() {
   // 1. STATE MANAGEMENT
@@ -14,6 +15,7 @@ export default function ComingSoon() {
   const [status, setStatus] = useState('IDLE'); // IDLE, KYC_FACE, KYC_DOCS, SUBMITTING, SUCCESS, ERROR
   const [faceVerified, setFaceVerified] = useState(false);
   const [localCity, setLocalCity] = useState('Mumbai');
+  const [showRoutingPrompt, setShowRoutingPrompt] = useState(false); // Controls the Daily Needs routing dialog
   const videoRef = useRef(null);
 
   // 2. REAL-TIME LOGIC (STRICTLY INDIA ONLY, NO TELEMETRY)
@@ -159,7 +161,7 @@ export default function ComingSoon() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden flex flex-col">
+    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden flex flex-col relative">
       
       {/* CSS-IN-JS FOR MINIMALIST ANIMATIONS */}
       <style>
@@ -199,8 +201,65 @@ export default function ComingSoon() {
         </div>
       </header>
 
+      {/* ROUTING PROMPT MODAL */}
+      <AnimatePresence>
+        {showRoutingPrompt && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[400px] bg-[#050505] border border-[#222222] rounded-3xl p-8 flex flex-col shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowRoutingPrompt(false)} 
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#666666] hover:text-white transition-colors"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              
+              <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Destination</h2>
+              <p className="text-[#888888] text-[0.9rem] text-center mb-8">Which marketplace would you like to access?</p>
+              
+              <div className="flex flex-col gap-4">
+                <Link 
+                  to="/grocery" 
+                  className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-[#00ff88] transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#00ff88]/10 text-[#00ff88] flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    </div>
+                    <span className="font-bold text-[1rem]">Daily Needs</span>
+                  </div>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </Link>
+
+                <Link 
+                  to="/veggies" 
+                  className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-[#00ccff] transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-[#00ccff]/10 text-[#00ccff] flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    </div>
+                    <span className="font-bold text-[1rem]">Veggies & Fruits</span>
+                  </div>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* MAIN CONTAINER: Flex layout to strictly put Form in 2nd position */}
-      <div className="w-full max-w-[1400px] mx-auto px-8 md:px-16 py-12 flex flex-col lg:flex-row gap-20 items-start justify-between">
+      <div className="w-full max-w-[1400px] mx-auto px-8 md:px-16 py-12 flex flex-col lg:flex-row gap-20 items-start justify-between relative z-10">
         
         {/* SECTION 1: MARKETING HERO & VALUE PROPOSITIONS */}
         <div className="flex-1 opacity-0 animate-fade stagger-1">
@@ -219,9 +278,15 @@ export default function ComingSoon() {
             <Link to="/vendor" className="border border-[#333333] text-white px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#111111] transition-colors">
               {currentT.btn_partner}
             </Link>
-            <Link to="/grocery" className="bg-[#050505] border border-[#00ff88]/40 text-[#00ff88] px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#00ff88]/10 transition-colors shadow-[0_0_15px_rgba(0,255,136,0.1)]">
+
+            {/* ROUTING PROMPT TRIGGER BUTTON */}
+            <button 
+              onClick={() => setShowRoutingPrompt(true)}
+              className="bg-[#050505] border border-[#00ff88]/40 text-[#00ff88] px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#00ff88]/10 transition-colors shadow-[0_0_15px_rgba(0,255,136,0.1)] flex items-center gap-2"
+            >
               {currentT.btn_grocery}
-            </Link>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -376,7 +441,7 @@ export default function ComingSoon() {
       </div>
 
       {/* FOOTER ALIGNMENT */}
-      <footer className="w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t border-[#111111] opacity-0 animate-fade stagger-3">
+      <footer className="w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t border-[#111111] opacity-0 animate-fade stagger-3 relative z-10">
         
         {/* Custom SVG Social Icons */}
         <div className="flex items-center gap-8 text-[#555555]">
