@@ -16,6 +16,15 @@ service cloud.firestore {
       ];
     }
 
+    // Standard User Verification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
     // ========================================================================
     // GLOBAL DENY
     // Strictly block all access by default to prevent data leaks.
@@ -28,7 +37,7 @@ service cloud.firestore {
     // IN-DEVELOPMENT WAITLIST REGISTRATIONS
     // ========================================================================
     match /pre_registrations/{document} {
-      allow create: if true;
+      allow create: if isAuthenticated();
       allow read, update, delete: if isAdmin();
     }
 
@@ -36,8 +45,8 @@ service cloud.firestore {
     // CORPORATE RECRUITMENT PORTAL
     // ========================================================================
     match /career_applications/{document} {
-      // Allow any public user to submit an application
-      allow create: if true;
+      // Require authentication to submit an application
+      allow create: if isAuthenticated();
       // Strictly restrict reading/processing to internal administrators only
       allow read, update, delete: if isAdmin();
     }
@@ -48,21 +57,21 @@ service cloud.firestore {
 
     // 1. Live Vendor Onboarding & Early Tester Signups
     match /vendor_applications/{document} {
-      allow create: if request.resource.data.keys().hasAll(['businessName', 'contactPhone', 'timestamp', 'status']);
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['businessName', 'contactPhone', 'timestamp', 'status']);
       allow read: if true; 
       allow update, delete: if isAdmin(); 
     }
 
     // 2. Live Investor QnA Board
     match /investor_questions/{document} {
-      allow create: if request.resource.data.keys().hasAll(['question', 'timestamp', 'votes']);
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['question', 'timestamp', 'votes']);
       allow read, update: if true; 
       allow delete: if isAdmin();
     }
 
     // 3. Real-Time Feedback Module
     match /platform_feedback/{document} {
-      allow create: if request.resource.data.keys().hasAll(['rating', 'comment', 'timestamp']);
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['rating', 'comment', 'timestamp']);
       allow read: if true; 
       allow update, delete: if isAdmin();
     }
@@ -84,9 +93,28 @@ service cloud.firestore {
     // ONBOARDING / EARLY ACCESS (Existing)
     // ========================================================================
     match /early_access/{document} {
-      allow create: if request.resource.data.name != null && request.resource.data.phone != null;
+      allow create: if isAuthenticated() && request.resource.data.name != null && request.resource.data.phone != null;
       allow read: if true;
       allow update, delete: if isAdmin(); 
+    }
+
+    // ========================================================================
+    // ENTERPRISE LOGISTICS & ASSET TRACKING MODULE (NEW)
+    // ========================================================================
+    match /delivery_orders/{orderId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /digital_wallets/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin(); // Only system processes can alter financial balances
+    }
+
+    match /saved_locations/{document} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isOwner(resource.data.userId) || isAdmin();
     }
 
     // ========================================================================
@@ -94,19 +122,19 @@ service cloud.firestore {
     // ========================================================================
     match /artifacts/{appId} {
       match /users/{userId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+        allow read, write: if isOwner(userId) || isAdmin();
         match /{document=**} {
-          allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+          allow read, write: if isOwner(userId) || isAdmin();
         }
       }
 
       match /public/data {
         match /drivers/{driverId} {
-          allow read: if request.auth != null;
+          allow read: if isAuthenticated();
           allow write: if isAdmin();
         }
         match /system_logs/{logId} {
-          allow create: if true; 
+          allow create: if isAuthenticated(); 
           allow read, update, delete: if isAdmin();
         }
       }
@@ -116,49 +144,49 @@ service cloud.firestore {
     // DEDICATED SHOPPER ACCOUNTS (VEGGIES & DAILY NEEDS STOREFRONTS)
     // ========================================================================
     match /shopper_accounts/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
     // ========================================================================
     // GROCERY MODULE ONBOARDING PROFILES 
     // ========================================================================
     match /grocery_profiles/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
     // ========================================================================
     // E-COMMERCE PUBLIC CATALOGS & USER STATE (UPDATED FOR VENDORS)
     // ========================================================================
     match /promotions/{promoId} {
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
     
     match /stores/{storeId} {
-      allow read: if request.auth != null;
-      allow write: if (request.auth != null && request.auth.uid == storeId) || isAdmin();
+      allow read: if isAuthenticated();
+      allow write: if isOwner(storeId) || isAdmin();
     }
     
     match /products/{productId} {
-      allow read: if request.auth != null;
-      allow create, update: if (request.auth != null && request.resource.data.storeId == request.auth.uid) || isAdmin();
-      allow delete: if (request.auth != null && resource.data.storeId == request.auth.uid) || isAdmin();
+      allow read: if isAuthenticated();
+      allow create, update: if (isAuthenticated() && request.resource.data.storeId == request.auth.uid) || isAdmin();
+      allow delete: if (isAuthenticated() && resource.data.storeId == request.auth.uid) || isAdmin();
     }
 
     match /user_carts/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
     // ========================================================================
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
     match /orders/{orderId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null && (
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() && (
         resource.data.userId == request.auth.uid || 
         resource.data.storeId == request.auth.uid || 
         !('userId' in resource.data) ||
@@ -167,23 +195,23 @@ service cloud.firestore {
     }
 
     match /saved_addresses/{addressId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null || isAdmin();
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
     }
 
     match /bids/{bidId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null || isAdmin();
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
     }
 
     match /shipments/{shipmentId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null || isAdmin();
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
     }
 
     match /disputes/{disputeId} {
-      allow create: if request.auth != null;
-      allow read, update, delete: if request.auth != null || isAdmin();
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
     }
 
   }
