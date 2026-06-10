@@ -110,8 +110,8 @@ export default function Careers() {
       {/* HEADER */}
       <header className="w-full max-w-[1000px] flex items-center justify-between px-6 py-8 border-b border-[#1c1c1c]">
         <div className="flex items-center gap-2">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-          <span className="font-black text-[1.2rem] tracking-tighter">Movyra Careers</span>
+        <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+        <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra Careers</span>
         </div>
         
         {/* LANGUAGE SELECTOR */}
