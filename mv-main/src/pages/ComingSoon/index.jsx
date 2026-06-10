@@ -11,7 +11,7 @@ export default function ComingSoon() {
   const [showLangPrompt, setShowLangPrompt] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', role: 'Consumer / Buyer', city: '', vehicle: '' });
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', role: 'Customer / Buyer', city: '', vehicle: '' });
   const [businessData, setBusinessData] = useState({ businessName: '' });
   const [files, setFiles] = useState({ gst: null, pan: null, aadhaar: null });
   
@@ -114,7 +114,7 @@ export default function ComingSoon() {
   ];
 
   // DYNAMIC ROLE CHECKS BASED ON EXPANDED TAXONOMY
-  const isConsumer = formData.role === 'Consumer / Buyer';
+  const isConsumer = formData.role === 'Customer / Buyer';
   const isDriver = ['Independent Courier', 'Enterprise Fleet Owner', '3PL Logistics Partner'].includes(formData.role);
 
   // 4. GOOGLE FACE VERIFICATION (LIVENESS ENGINE)
@@ -232,7 +232,8 @@ export default function ComingSoon() {
               </button>
               
               <div className="w-12 h-12 mx-auto rounded-full border border-[#333333] flex items-center justify-center mb-4">
-                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                {/* Translator / Globe Icon */}
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               </div>
 
               <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Language</h2>
@@ -280,10 +281,11 @@ export default function ComingSoon() {
                 <Link to="/grocery" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                      {/* Customer Profile Icon */}
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-[1rem] text-white leading-tight">Consumer Login</span>
+                      <span className="font-bold text-[1rem] text-white leading-tight">Customer Login</span>
                       <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Daily Needs & Veggies</span>
                     </div>
                   </div>
@@ -293,7 +295,8 @@ export default function ComingSoon() {
                 <Link to="/vendor" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6H3v8h12V6z"></path><path d="M15 9h4l2 3v2h-6V9z"></path></svg>
+                      {/* Vendor Storefront Icon */}
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-bold text-[1rem] text-white leading-tight">Vendor Portal</span>
@@ -306,6 +309,7 @@ export default function ComingSoon() {
                 <Link to="/admin" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                      {/* System Admin Shield Icon */}
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     </div>
                     <div className="flex flex-col">
@@ -451,7 +455,7 @@ export default function ComingSoon() {
                   <div className="w-full sm:w-1/2">
                     <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#666666] mb-2">{currentT.form_role}</label>
                     <select value={formData.role} onChange={(e)=>setFormData({...formData, role: e.target.value, vehicle: ''})} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3.5 rounded-xl outline-none transition-colors cursor-pointer text-[0.9rem] appearance-none">
-                      <option value="Consumer / Buyer">Consumer / Buyer</option>
+                      <option value="Customer / Buyer">Customer / Buyer</option>
                       <option value="Independent Courier">Independent Courier</option>
                       <option value="Enterprise Fleet Owner">Enterprise Fleet Owner</option>
                       <option value="Restaurant / Cloud Kitchen">Restaurant / Cloud Kitchen</option>
@@ -499,14 +503,14 @@ export default function ComingSoon() {
         
         {/* Custom SVG Social Icons */}
         <div className="flex items-center gap-8 text-[#555555]">
-          <a href="#linkedin" className="hover:text-white transition-colors"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="https://www.linkedin.com/company/getmovyra/" className="hover:text-white transition-colors"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
           <a href="#youtube" className="hover:text-white transition-colors"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
           <a href="#instagram" className="hover:text-white transition-colors"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
           <a href="#x" className="hover:text-white transition-colors"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg></a>
         </div>
         
         <div className="flex items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
-          <Link to="/careers" className="hover:text-white transition-colors">{currentT.careers}</Link>
+          <Link to="/careers" className="hover:text-[#00ff88] transition-colors">{currentT.careers}</Link>
           <span className="w-1 h-1 bg-[#333333] rounded-full"></span>
           <div className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
