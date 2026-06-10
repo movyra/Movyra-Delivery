@@ -187,8 +187,8 @@ export default function ComingSoon() {
       {/* TOP HEADER */}
       <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade relative z-50">
         <div className="flex items-center gap-2">
-        <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
-        <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra</span>
+        <span className="font-black text-[1.5rem] tracking<img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+        -tighter ml-[-5px]">ovyra</span>
         </div>
         
         <div className="flex items-center gap-6 text-[0.9rem] font-bold">
