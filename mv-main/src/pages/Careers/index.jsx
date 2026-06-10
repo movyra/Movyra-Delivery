@@ -1,441 +1,403 @@
-import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowRight, Globe, Shield, Zap, Download, ChevronDown, 
-  Briefcase, MapPin, Search, Code, TrendingUp, Users, Heart, Laptop, CheckCircle
-} from 'lucide-react';
-import Header from '../../components/Header';
-import Footer from '../../components/Footer';
+import React, { useState, useEffect, useRef } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../firebaseConfig'; 
+import { motion, AnimatePresence } from 'framer-motion';
 
 /**
  * ============================================================================
- * MODULE: PREMIUM CAREERS PAGE (mv-main)
- * Architecture: 11 Sections
- * Features: Real Browser Geolocation API for job matching, Functional 
- * Search Filter, Hardware Concurrency Detection, High-End Animations,
- * SVG Topography, App Badges, and strictly zero mock data.
+ * COMPONENT: CORPORATE RECRUITMENT PORTAL (mv-main)
+ * Purpose: Secure intake gateway for prospective team members.
+ * Behavior: Multi-stage evaluation process featuring dynamic, role-specific 
+ * technical and operational questionnaires. Submits encrypted payloads to
+ * the isolated career_applications database node.
+ * Structural Constraint: Strict zero emoji vector configuration. Black and 
+ * white minimalist design architecture.
  * ============================================================================
  */
 
-// ============================================================================
-// HIGH-END SVG ILLUSTRATIONS & ASSETS
-// ============================================================================
+export default function Careers() {
+  const [lang, setLang] = useState('en');
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
+  const langDropdownRef = useRef(null);
 
-const TopoBackground = () => (
-  <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-    <svg className="w-full h-full min-w-[1200px] object-cover opacity-5" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" fill="none">
-      <path d="M -100 300 Q 300 100 800 400 T 1400 200" stroke="currentColor" strokeWidth="1" />
-      <path d="M -100 400 Q 300 200 800 500 T 1400 300" stroke="currentColor" strokeWidth="1" />
-      <path d="M -100 500 Q 300 300 800 600 T 1400 400" stroke="currentColor" strokeWidth="1" />
-      <circle cx="900" cy="300" r="140" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-      <circle cx="200" cy="700" r="180" stroke="currentColor" strokeWidth="1" strokeDasharray="4 4" />
-    </svg>
-  </div>
-);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStatus, setSubmissionStatus] = useState('IDLE'); // IDLE, SUCCESS, ERROR
 
-const AppStoreSVG = () => (
-  <svg viewBox="0 0 180 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer border border-gray-800 rounded-xl">
-    <rect width="180" height="54" rx="12" fill="black" />
-    <path d="M41.05 18.25c-.2-3.1 2.55-4.6 2.65-4.7-1.45-2.1-3.7-2.4-4.5-2.45-1.9-.2-3.7 1.15-4.65 1.15-.95 0-2.45-1.1-4.05-1.1-2.05 0-3.95 1.2-4.95 3-2.05 3.55-.5 8.75 1.45 11.65.95 1.4 2.1 2.95 3.6 2.9 1.45-.05 2.05-.95 3.8-.95 1.7 0 2.25.95 3.8.9 1.6-.05 2.55-1.45 3.5-2.85 1.1-1.6 1.55-3.15 1.6-3.25-.05-.05-3-1.15-3.25-4.3zM37.35 13.5c.8-1 1.35-2.35 1.2-3.75-1.15.05-2.6.8-3.45 1.8-.75.85-1.4 2.25-1.2 3.6 1.3.1 2.65-.65 3.45-1.65z" fill="white" />
-    <text x="58" y="24" fill="white" fontSize="10" fontFamily="sans-serif">Download on the</text>
-    <text x="56" y="42" fill="white" fontSize="20" fontFamily="sans-serif" fontWeight="bold">App Store</text>
-  </svg>
-);
+  const [formData, setFormData] = useState({
+    fullName: '', phone: '', email: '', city: '', state: '',
+    linkedin: '', github: '', portfolio: '',
+    roleCategory: '', specificRole: '', employmentType: 'Full-Time', expectedSalary: '',
+    // Startup Mindset Qs
+    startupReason: '', budgetStrategy: '',
+    // Role Specific Qs
+    techArch: '', nearestPartner: '', aiPrompt: '', aiHallucination: '', 
+    marketingAcquisition: '', opsPeakHours: '', opsFraud: ''
+  });
 
-const GooglePlaySVG = () => (
-  <svg viewBox="0 0 190 54" fill="none" className="h-14 hover:opacity-80 transition-opacity cursor-pointer border border-gray-800 rounded-xl">
-    <rect width="190" height="54" rx="12" fill="black" />
-    <path d="M23.5 14.5l14.5 8.5-14.5 8.5v-17z" fill="white" />
-    <path d="M23.5 14.5l14.5 8.5-5 5-9.5-13.5z" fill="white" opacity="0.8" />
-    <path d="M23.5 31.5l14.5-8.5-5-5-9.5 13.5z" fill="white" opacity="0.6" />
-    <text x="54" y="22" fill="white" fontSize="10" fontFamily="sans-serif">GET IT ON</text>
-    <text x="52" y="42" fill="white" fontSize="20" fontFamily="sans-serif" fontWeight="bold">Google Play</text>
-  </svg>
-);
-
-const AbstractNetworkSVG = () => (
-  <svg viewBox="0 0 400 400" fill="none" className="w-full h-full object-contain opacity-90">
-    <motion.circle animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 4 }} cx="200" cy="200" r="80" stroke="#111111" strokeWidth="4" />
-    <motion.circle animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 20, ease: "linear" }} cx="200" cy="200" r="140" stroke="#333333" strokeWidth="2" strokeDasharray="10 10" />
-    <circle cx="200" cy="200" r="20" fill="#000000" />
-    <circle cx="200" cy="60" r="15" fill="#000000" />
-    <circle cx="340" cy="200" r="15" fill="#000000" />
-    <circle cx="60" cy="200" r="15" fill="#000000" />
-    <circle cx="200" cy="340" r="15" fill="#000000" />
-    <path d="M200 80 L200 180 M320 200 L220 200 M80 200 L180 200 M200 320 L200 220" stroke="#111111" strokeWidth="2" />
-  </svg>
-);
-
-// Database of actual roles for functional search filtering
-const OPEN_ROLES = [
-  { id: 1, title: 'Senior Software Engineer, Routing', dept: 'Engineering', location: 'Remote, Global', type: 'Full-time' },
-  { id: 2, title: 'Product Manager, Safety Matrix', dept: 'Product', location: 'San Francisco, CA', type: 'Full-time' },
-  { id: 3, title: 'City Operations Lead', dept: 'Operations', location: 'Mumbai, IN', type: 'Full-time' },
-  { id: 4, title: 'Data Scientist, Telemetry', dept: 'Data & AI', location: 'Remote, US/EU', type: 'Full-time' },
-  { id: 5, title: 'Corporate Counsel, APAC', dept: 'Legal', location: 'Bangalore, IN', type: 'Full-time' },
-  { id: 6, title: 'Frontend Systems Engineer', dept: 'Engineering', location: 'London, UK', type: 'Full-time' },
-  { id: 7, title: 'Fleet Acquisition Manager', dept: 'Operations', location: 'Delhi, IN', type: 'Full-time' },
-  { id: 8, title: 'UI/UX Design Director', dept: 'Design', location: 'Remote, Global', type: 'Full-time' },
-];
-
-// ============================================================================
-// MAIN PAGE COMPONENT
-// ============================================================================
-
-export default function CareersPage() {
-  const { scrollYProgress } = useScroll();
-  const yParallax = useTransform(scrollYProgress, [0, 1], [0, -100]);
-  
-  // Functional States
-  const [activeFaq, setActiveFaq] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredRoles, setFilteredRoles] = useState(OPEN_ROLES);
-  
-  // Real-time Contextual States
-  const [userRegion, setUserRegion] = useState('Detecting network region...');
-  const [hardwareContext, setHardwareContext] = useState('');
-
-  // Functional Search Logic
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredRoles(OPEN_ROLES);
-    } else {
-      const lowerQuery = searchQuery.toLowerCase();
-      setFilteredRoles(
-        OPEN_ROLES.filter(role => 
-          role.title.toLowerCase().includes(lowerQuery) || 
-          role.dept.toLowerCase().includes(lowerQuery) ||
-          role.location.toLowerCase().includes(lowerQuery)
-        )
-      );
-    }
-  }, [searchQuery]);
+    const sysLang = navigator.language.slice(0, 2);
+    const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
+    if (supported.includes(sysLang)) setLang(sysLang);
 
-  // Real-Time Browser Telemetry for Contextual Hiring
-  useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setUserRegion(tz.split('/')[1]?.replace('_', ' ') || 'Global');
-
-    const cores = navigator.hardwareConcurrency;
-    if (cores && cores >= 8) {
-      setHardwareContext(`High-performance machine detected (${cores} cores). Check out our Engineering roles.`);
-    } else {
-      setHardwareContext(`Network optimal. Explore global opportunities below.`);
-    }
+    const handleClickOutside = (event) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
+        setIsLangMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const fadeUp = { hidden: { opacity: 0, y: 30 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } } };
+  const languageOptions = [
+    { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
+    { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
+    { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+    { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' }
+  ];
+
+  const t = {
+    en: { title: "Build the Future of Logistics", sub: "Join the core grid architecture team.", next: "Continue", submit: "Submit Application", back: "Previous Step" },
+    hi: { title: "लॉजिस्टिक्स का भविष्य बनाएं", sub: "कोर ग्रिड आर्किटेक्चर टीम में शामिल हों।", next: "आगे बढ़ें", submit: "आवेदन जमा करें", back: "पिछला कदम" },
+    hinglish: { title: "Logistics ka Future Build Karein", sub: "Core grid architecture team join karein.", next: "Continue", submit: "Submit Application", back: "Back" },
+    mr: { title: "लॉजिस्टिक्सचे भविष्य घडवा", sub: "कोर टीममध्ये सामील व्हा.", next: "पुढे जा", submit: "अर्ज सबमिट करा", back: "मागे" },
+    gu: { title: "લોજિસ્ટિક્સનું ભવિષ્ય બનાવો", sub: "કોર ટીમમાં જોડાઓ.", next: "આગળ", submit: "સબમિટ કરો", back: "પાછળ" },
+    te: { title: "లాజిస్టిక్స్ భవిష్యత్తును నిర్మించండి", sub: "కోర్ టీమ్‌లో చేరండి.", next: "కొనసాగించు", submit: "సమర్పించండి", back: "వెనుకకు" },
+    ta: { title: "லாஜிஸ்டிக்ஸின் எதிர்காலத்தை உருவாக்குங்கள்", sub: "முக்கிய குழுவில் சேரவும்.", next: "தொடரவும்", submit: "சமர்ப்பிக்கவும்", back: "முந்தைய" },
+    pa: { title: "ਲੌਜਿਸਟਿਕਸ ਦਾ ਭਵਿੱਖ ਬਣਾਓ", sub: "ਕੋਰ ਟੀਮ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ।", next: "ਜਾਰੀ ਰੱਖੋ", submit: "ਜਮ੍ਹਾਂ ਕਰੋ", back: "ਪਿੱਛੇ" },
+    bho: { title: "लॉजिस्टिक्स के भविष्य बनाईं", sub: "कोर टीम में शामिल होईं।", next: "आगे बढ़ीं", submit: "जमा करीं", back: "पाछे" },
+    ar: { title: "بناء مستقبل الخدمات اللوجستية", sub: "انضم إلى الفريق الأساسي.", next: "متابعة", submit: "إرسال", back: "السابق" },
+    es: { title: "Construye el futuro de la logística", sub: "Únete al equipo principal.", next: "Continuar", submit: "Enviar aplicación", back: "Anterior" },
+    fr: { title: "Construire l'avenir de la logistique", sub: "Rejoignez l'équipe principale.", next: "Continuer", submit: "Soumettre", back: "Précédent" },
+    de: { title: "Gestalten Sie die Zukunft der Logistik", sub: "Werden Sie Teil des Kernteams.", next: "Weiter", submit: "Einreichen", back: "Zurück" }
+  };
+
+  const currentT = t[lang] || t['en'];
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    setCurrentStep(prev => prev + 1);
+    window.scrollTo(0, 0);
+  };
+
+  const handleBack = () => {
+    setCurrentStep(prev => prev - 1);
+    window.scrollTo(0, 0);
+  };
+
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'career_applications'), {
+        ...formData,
+        status: 'Pending Review',
+        timestamp: serverTimestamp()
+      });
+      setSubmissionStatus('SUCCESS');
+    } catch (error) {
+      console.error("Submission Failure:", error);
+      setSubmissionStatus('ERROR');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="bg-white text-[#111111] font-sans selection:bg-black selection:text-white overflow-x-hidden pt-20">
-      <Header />
-
-      {/* ========================================================= */}
-      {/* SECTION 1: IMMERSIVE HERO */}
-      {/* ========================================================= */}
-      <section className="relative w-full min-h-[85vh] flex items-center overflow-hidden bg-black text-white">
-        <TopoBackground />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
-        <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16 relative z-20">
-          <motion.div initial="hidden" animate="show" variants={fadeUp} className="w-full lg:w-3/5">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 border border-white/20 rounded-full mb-8">
-              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-xs font-bold text-gray-200 tracking-widest uppercase">Global Talent Portal</span>
-            </div>
-            <h1 className="text-[56px] md:text-[84px] font-black leading-[1.05] tracking-tighter mb-6">
-              Come build <br/> with us.
-            </h1>
-            <p className="text-[20px] md:text-[24px] font-medium text-gray-400 mb-10 max-w-2xl leading-relaxed">
-              We are assembling a team to engineer the physical world. Your detected local hub is <span className="text-white font-bold">{userRegion}</span>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button onClick={() => window.scrollTo({ top: 800, behavior: 'smooth' })} className="bg-white text-black px-8 py-4 rounded-xl font-black text-[16px] hover:bg-gray-200 transition-colors flex items-center justify-center gap-3">
-                View Open Roles <ArrowRight size={20} />
-              </button>
-            </div>
-          </motion.div>
-          <motion.div style={{ y: yParallax }} className="w-full lg:w-2/5 flex justify-center">
-            <div className="relative w-[300px] h-[300px] border border-white/20 rounded-full flex items-center justify-center overflow-hidden bg-white/5 backdrop-blur-md">
-               <AbstractNetworkSVG />
-            </div>
-          </motion.div>
+    <div className="w-full min-h-screen bg-[#000000] text-white font-sans selection:bg-white selection:text-black flex flex-col items-center">
+      
+      {/* HEADER */}
+      <header className="w-full max-w-[1000px] flex items-center justify-between px-6 py-8 border-b border-[#1c1c1c]">
+        <div className="flex items-center gap-2">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <span className="font-black text-[1.2rem] tracking-tighter">Movyra Careers</span>
         </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* SECTION 2: TELEMETRY & SYSTEM CONTEXT */}
-      {/* ========================================================= */}
-      <section className="py-12 bg-[#111111] text-white border-y border-white/10">
-        <div className="container mx-auto px-6 md:px-12 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-4">
-             <Laptop size={24} className="text-blue-500" />
-             <div>
-               <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">System Context</h4>
-               <p className="text-[16px] font-mono text-gray-300">{hardwareContext}</p>
-             </div>
-          </div>
-          <div className="h-12 w-px bg-white/10 hidden md:block" />
-          <div className="flex items-center gap-4">
-             <Globe size={24} className="text-green-500" />
-             <div>
-               <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-1">Scale</h4>
-               <p className="text-[16px] font-bold text-white">Operating in 10,000+ Cities</p>
-             </div>
-          </div>
+        
+        {/* LANGUAGE SELECTOR */}
+        <div className="relative" ref={langDropdownRef}>
+          <button 
+            onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
+            className="flex items-center gap-2 text-[#888888] hover:text-white transition-colors outline-none text-[0.85rem] font-bold"
+          >
+            {languageOptions.find(opt => opt.code === lang)?.label || 'Language'}
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-300 ${isLangMenuOpen ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <AnimatePresence>
+            {isLangMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}
+                className="absolute right-0 mt-4 w-48 bg-[#0a0a0a] border border-[#222222] rounded-2xl shadow-2xl overflow-hidden flex flex-col z-50 max-h-[60vh] overflow-y-auto"
+              >
+                {languageOptions.map((option) => (
+                  <button 
+                    key={option.code}
+                    onClick={() => { setLang(option.code); setIsLangMenuOpen(false); }}
+                    className={`px-4 py-3 text-left hover:bg-[#111111] transition-colors ${lang === option.code ? 'text-white font-black' : 'text-[#888888] font-bold'}`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      </section>
+      </header>
 
-      {/* ========================================================= */}
-      {/* SECTION 3: FUNCTIONAL JOB BOARD (SEARCH & FILTER) */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-[#F8FAFC]" id="open-roles">
-        <div className="container mx-auto px-6 md:px-12 max-w-[1200px]">
-          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="mb-16">
-            <h2 className="text-[48px] font-black tracking-tight mb-8 text-black">Open Roles.</h2>
-            <div className="relative w-full max-w-2xl">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400" size={24} />
-              <input 
-                type="text" 
-                placeholder="Search by title, department, or location..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white border border-gray-200 rounded-full py-6 pl-16 pr-8 text-[18px] font-bold text-black shadow-sm outline-none focus:border-black transition-colors"
-              />
+      {/* MAIN CONTENT */}
+      <main className="w-full max-w-[800px] px-6 py-12 flex-1">
+        
+        {submissionStatus === 'SUCCESS' ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center text-center py-20">
+            <div className="w-20 h-20 border-2 border-white rounded-full flex items-center justify-center mb-6">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
+            <h1 className="text-[2.5rem] font-black tracking-tight mb-4">Application Received</h1>
+            <p className="text-[#888888] text-[1.1rem] max-w-[400px]">Your professional profile has been securely logged. Our assessment systems will process your data shortly.</p>
           </motion.div>
+        ) : (
+          <>
+            <div className="mb-12">
+              <h1 className="text-[2.5rem] md:text-[3.5rem] font-black tracking-tighter leading-[1.1] mb-4">{currentT.title}</h1>
+              <p className="text-[#888888] text-[1.1rem] max-w-[600px]">{currentT.sub}</p>
+            </div>
 
-          <div className="grid grid-cols-1 gap-4">
-            <AnimatePresence>
-              {filteredRoles.map((role) => (
-                <motion.div 
-                  key={role.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-shadow flex flex-col md:flex-row md:items-center justify-between gap-6 group cursor-pointer"
-                >
-                  <div>
-                    <h3 className="text-[24px] font-black text-black group-hover:text-blue-600 transition-colors mb-2">{role.title}</h3>
-                    <div className="flex flex-wrap items-center gap-4 text-sm font-bold text-gray-500">
-                      <span className="flex items-center gap-1"><Briefcase size={16}/> {role.dept}</span>
-                      <span className="flex items-center gap-1"><MapPin size={16}/> {role.location}</span>
-                      <span className="bg-gray-100 text-black px-3 py-1 rounded-full uppercase tracking-widest text-xs">{role.type}</span>
+            {/* PROGRESS INDICATOR */}
+            <div className="flex items-center justify-between mb-12">
+              {[1, 2, 3, 4].map((stepNumber) => (
+                <div key={stepNumber} className="flex-1 flex items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-[0.85rem] transition-colors ${currentStep >= stepNumber ? 'bg-white text-black' : 'bg-[#111111] text-[#666666] border border-[#333333]'}`}>
+                    {stepNumber}
+                  </div>
+                  {stepNumber < 4 && (
+                    <div className={`h-[2px] flex-1 mx-2 rounded-full transition-colors ${currentStep > stepNumber ? 'bg-white' : 'bg-[#222222]'}`}></div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <form onSubmit={currentStep === 4 ? handleFinalSubmit : handleNext} className="bg-[#050505] border border-[#1c1c1c] p-8 md:p-12 rounded-[2rem] shadow-2xl">
+              
+              {/* STEP 1: BASIC INFORMATION */}
+              {currentStep === 1 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2 className="text-[1.5rem] font-black mb-8 border-b border-[#1c1c1c] pb-4">Professional Profile</h2>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Legal Full Name</label>
+                      <input required type="text" value={formData.fullName} onChange={(e)=>setFormData({...formData, fullName: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Contact Number</label>
+                      <input required type="tel" value={formData.phone} onChange={(e)=>setFormData({...formData, phone: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" />
                     </div>
                   </div>
-                  <button className="hidden md:flex items-center justify-center w-12 h-12 rounded-full border border-gray-200 group-hover:bg-black group-hover:text-white transition-all">
-                    <ArrowRight size={20} />
-                  </button>
+
+                  <div className="mb-6">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Email Address</label>
+                    <input required type="email" value={formData.email} onChange={(e)=>setFormData({...formData, email: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">LinkedIn URL</label>
+                      <input required type="url" value={formData.linkedin} onChange={(e)=>setFormData({...formData, linkedin: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" placeholder="https://linkedin.com/in/..." />
+                    </div>
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">GitHub / Portfolio URL</label>
+                      <input type="url" value={formData.github} onChange={(e)=>setFormData({...formData, github: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" placeholder="Optional" />
+                    </div>
+                  </div>
                 </motion.div>
-              ))}
-            </AnimatePresence>
-            
-            {filteredRoles.length === 0 && (
-              <div className="text-center py-20 bg-white rounded-[24px] border border-gray-100">
-                <p className="text-gray-500 font-bold text-[18px]">No matching roles found. Try adjusting your search parameters.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+              )}
 
-      {/* ========================================================= */}
-      {/* SECTION 4: CORE VALUES GRID */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-6 md:px-12">
-          <motion.h2 initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-[40px] md:text-[56px] font-black tracking-tight mb-16 text-black">
-            Our DNA.
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {[
-              { icon: Globe, title: 'Build for everyone', desc: 'We engineer solutions that scale across diverse geographies, languages, and economic demographics.' },
-              { icon: Zap, title: 'Move with velocity', desc: 'Speed is a feature. We iterate rapidly, deploy continuously, and solve complex problems in real-time.' },
-              { icon: Shield, title: 'Act like owners', desc: 'Total accountability. If you see a fractured system, you are empowered to rewrite the protocol.' }
-            ].map((feature, idx) => (
-              <motion.div key={idx} initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} transition={{ delay: idx * 0.1 }} className="flex flex-col p-8 bg-[#F8FAFC] border border-gray-100 rounded-[32px]">
-                <div className="w-16 h-16 bg-black text-white rounded-2xl flex items-center justify-center mb-8">
-                  <feature.icon size={32} strokeWidth={1.5} />
-                </div>
-                <h3 className="text-[24px] font-black mb-4 text-black">{feature.title}</h3>
-                <p className="text-[16px] font-medium text-gray-600 leading-relaxed">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+              {/* STEP 2: ROLE SELECTION */}
+              {currentStep === 2 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2 className="text-[1.5rem] font-black mb-8 border-b border-[#1c1c1c] pb-4">Position Allocation</h2>
+                  
+                  <div className="mb-6">
+                    <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Target Department</label>
+                    <div className="relative">
+                      <select required value={formData.roleCategory} onChange={(e)=>setFormData({...formData, roleCategory: e.target.value, specificRole: ''})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors appearance-none cursor-pointer">
+                        <option value="" disabled>Select Department</option>
+                        <option value="Engineering & Tech">Engineering & Architecture</option>
+                        <option value="AI & Data">Artificial Intelligence & Prompt Engineering</option>
+                        <option value="Operations & Logistics">Operations & Fleet Logistics</option>
+                        <option value="Marketing & Sales">Growth, Marketing & Business Development</option>
+                      </select>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+                  </div>
 
-      {/* ========================================================= */}
-      {/* SECTION 5: ENGINEERING & PRODUCT (ANIMATED LOGO BG) */}
-      {/* ========================================================= */}
-      <section className="py-32 relative overflow-hidden flex flex-col justify-center min-h-[80vh]" style={{ backgroundColor: '#111111' }}>
-         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="w-full h-full opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-         </div>
+                  {formData.roleCategory && (
+                    <div className="mb-6">
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Specific Role</label>
+                      <div className="relative">
+                        <select required value={formData.specificRole} onChange={(e)=>setFormData({...formData, specificRole: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors appearance-none cursor-pointer">
+                          <option value="" disabled>Select Role</option>
+                          {formData.roleCategory === 'Engineering & Tech' && (
+                            <>
+                              <option value="Flutter Developer">Flutter Mobile Architect</option>
+                              <option value="Backend Developer">Backend Systems Engineer</option>
+                              <option value="Full Stack Developer">Full Stack Engineer</option>
+                            </>
+                          )}
+                          {formData.roleCategory === 'AI & Data' && (
+                            <>
+                              <option value="AI Engineer">Artificial Intelligence Engineer</option>
+                              <option value="Prompt Engineer">LLM Prompt Architect</option>
+                            </>
+                          )}
+                          {formData.roleCategory === 'Operations & Logistics' && (
+                            <>
+                              <option value="Logistics Manager">Logistics Flow Controller</option>
+                              <option value="Vendor Onboarding">Vendor Partnership Executive</option>
+                              <option value="Customer Success">Customer Success Analyst</option>
+                            </>
+                          )}
+                          {formData.roleCategory === 'Marketing & Sales' && (
+                            <>
+                              <option value="Growth Marketer">Performance Growth Strategist</option>
+                              <option value="B2B Sales">B2B Sales & Acquisition</option>
+                              <option value="Content Strategist">Digital Content Architect</option>
+                            </>
+                          )}
+                        </select>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </div>
+                    </div>
+                  )}
 
-         <div className="container mx-auto px-6 md:px-12 relative z-20 flex flex-col lg:flex-row items-center gap-16">
-            <div className="w-full lg:w-1/2 text-white">
-              <Code size={48} className="text-blue-500 mb-8" />
-              <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-6 leading-tight">Engineering <br/> & Product.</h2>
-              <p className="text-gray-400 font-medium text-[20px] leading-relaxed mb-8">
-                Solve unprecedented computer science challenges. Our teams manage high-throughput transactional databases, ML-driven dispatch matching, and real-time mapping layers.
-              </p>
-              <ul className="space-y-4 font-bold text-gray-300">
-                <li className="flex items-center gap-4"><CheckCircle size={20} className="text-blue-500"/> Microservices Architecture</li>
-                <li className="flex items-center gap-4"><CheckCircle size={20} className="text-blue-500"/> Sub-millisecond Latency Tolerance</li>
-                <li className="flex items-center gap-4"><CheckCircle size={20} className="text-blue-500"/> Cross-Platform Native Deployments</li>
-              </ul>
-            </div>
-            
-            <div className="w-full lg:w-1/2 flex justify-center lg:justify-end relative">
-              <motion.div 
-                animate={{ y: [0, -20, 0], rotate: [0, 1, -1, 0] }}
-                transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
-                className="relative bg-black p-12 rounded-[48px] shadow-[0_20px_100px_rgba(0,0,0,0.8)] border border-white/10 flex items-center justify-center w-[250px] h-[250px] z-30"
-              >
-                 <div className="absolute inset-0 bg-blue-500/10 blur-2xl rounded-[48px] -z-10" />
-                 <img src="/logo.png" alt="Movyra Core Engine" className="w-full h-auto object-contain" onError={(e) => e.target.style.display = 'none'} />
-              </motion.div>
-              {/* Decorative nodes */}
-              <div className="absolute top-10 right-20 w-16 h-16 bg-white/5 border border-white/10 rounded-2xl animate-pulse" />
-              <div className="absolute bottom-10 left-10 w-20 h-20 bg-white/5 border border-white/10 rounded-full animate-bounce" />
-            </div>
-         </div>
-      </section>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Engagement Type</label>
+                      <div className="relative">
+                        <select required value={formData.employmentType} onChange={(e)=>setFormData({...formData, employmentType: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors appearance-none cursor-pointer">
+                          <option value="Full-Time">Full-Time Commitment</option>
+                          <option value="Internship (Performance Based)">Internship (Performance Evaluated)</option>
+                          <option value="Contract / Freelance">Contract / Project Basis</option>
+                        </select>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[0.75rem] font-bold uppercase tracking-widest text-[#888888] mb-2">Expected Compensation (INR)</label>
+                      <input required type="text" value={formData.expectedSalary} onChange={(e)=>setFormData({...formData, expectedSalary: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors" placeholder="e.g. 50,000/month or Negotiable" />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-      {/* ========================================================= */}
-      {/* SECTION 6: OPERATIONS & LOGISTICS */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-white">
-        <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
-          <div className="w-full lg:w-1/2 bg-[#F8FAFC] rounded-[48px] aspect-square flex flex-col justify-center border border-gray-100 p-12 relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-green-100 rounded-full blur-3xl -z-10" />
-             <TrendingUp size={64} className="text-black mb-8" />
-             <div className="text-[64px] font-black text-black leading-none mb-4">25M+</div>
-             <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">Dispatches Managed Daily</p>
-          </div>
-          <div className="w-full lg:w-1/2">
-            <h2 className="text-[48px] font-black tracking-tighter mb-8 text-black leading-tight">Operations <br/> & Strategy.</h2>
-            <p className="text-[20px] text-gray-600 font-medium mb-8 leading-relaxed">
-              We need analytical operators to scale regions, manage fleet economics, and optimize the marketplace. You will balance supply and demand algorithms in real-time across major urban centers.
-            </p>
-            <button className="bg-black text-white px-8 py-4 rounded-xl font-bold hover:bg-gray-800 transition-colors">
-              View Ops Roles
-            </button>
-          </div>
-        </div>
-      </section>
+              {/* STEP 3: STARTUP MINDSET EVALUATION */}
+              {currentStep === 3 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2 className="text-[1.5rem] font-black mb-8 border-b border-[#1c1c1c] pb-4">Startup Philosophy & Execution</h2>
+                  
+                  <div className="bg-[#111111] p-6 rounded-2xl border border-[#222222] mb-8">
+                    <p className="text-[#aaaaaa] text-[0.85rem] uppercase tracking-widest font-bold mb-2">Evaluation Note</p>
+                    <p className="text-white text-[0.95rem] leading-relaxed">Movyra operates in an intense, zero-to-one startup environment. We prioritize extreme ownership, rapid execution, and problem-solving velocity over standard credentials.</p>
+                  </div>
 
-      {/* ========================================================= */}
-      {/* SECTION 7: PERKS & BENEFITS */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-[#F8FAFC] border-y border-gray-200">
-        <div className="container mx-auto px-6 md:px-12">
-          <h2 className="text-[48px] font-black tracking-tight mb-16 text-black text-center">Comprehensive Support.</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { t: 'Comprehensive Healthcare', d: 'Top-tier medical, dental, and vision coverage for you and your dependents.' },
-              { t: 'Equity & Ownership', d: 'Competitive RSU packages. We want you to own a piece of what you build.' },
-              { t: 'Flexible PTO', d: 'Take the time you need to recharge. Mandatory company-wide reset days.' },
-              { t: 'Movyra Credits', d: 'Monthly platform credits for rides and food delivery worldwide.' }
-            ].map((f, i) => (
-              <div key={i} className="bg-white p-8 rounded-[24px] border border-gray-100 shadow-sm">
-                <Heart className="text-black mb-6" size={32} strokeWidth={1.5} />
-                <h4 className="text-[20px] font-black mb-3 text-black">{f.t}</h4>
-                <p className="text-gray-500 font-medium leading-relaxed">{f.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                  <div className="mb-8">
+                    <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">If you were acting as the founder and had only ₹10,000 for marketing, what exactly would you do in the next 30 days to acquire 100 active users in a new city?</label>
+                    <textarea required rows="5" value={formData.budgetStrategy} onChange={(e)=>setFormData({...formData, budgetStrategy: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed" placeholder="Detail your exact execution strategy, channels, and operational methodology..."></textarea>
+                  </div>
 
-      {/* ========================================================= */}
-      {/* SECTION 8: DIVERSITY & INCLUSION */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-black text-white text-center">
-        <div className="container mx-auto px-6 md:px-12 max-w-4xl">
-          <Users size={64} className="text-white mx-auto mb-8" />
-          <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter mb-8">A culture of inclusion.</h2>
-          <p className="text-[20px] text-gray-400 font-medium leading-relaxed mb-12">
-            To build technology for the entire world, we need a team that reflects it. We actively champion diverse perspectives, knowing that varied backgrounds yield the most robust algorithms and products.
-          </p>
-          <a href="/diversity" className="font-bold text-[16px] text-white border-b-2 border-white pb-1 hover:text-gray-400 hover:border-gray-400 transition-colors">
-            Read our Diversity Report
-          </a>
-        </div>
-      </section>
+                  <div className="mb-6">
+                    <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">Why are you actively seeking an early-stage startup environment where infrastructure is minimal and responsibilities are constantly shifting?</label>
+                    <textarea required rows="4" value={formData.startupReason} onChange={(e)=>setFormData({...formData, startupReason: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed" placeholder="Explain your professional motivations..."></textarea>
+                  </div>
+                </motion.div>
+              )}
 
-      {/* ========================================================= */}
-      {/* SECTION 9: INTERVIEW PIPELINE (HORIZONTAL) */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-white overflow-hidden">
-        <div className="container mx-auto px-6 md:px-12">
-          <h2 className="text-[40px] font-black tracking-tight mb-16 text-black">The Interview Pipeline.</h2>
-          <div className="flex gap-6 overflow-x-auto no-scrollbar pb-12 snap-x">
-            {[
-              { step: 1, title: 'Application Review', desc: 'Our recruiting systems analyze your profile against required matrix skills.' },
-              { step: 2, title: 'Initial Telemetry', desc: 'A quick technical or cultural phone screen with a recruiting partner.' },
-              { step: 3, title: 'Technical Assessment', desc: 'Role-specific challenges (coding, case studies, or operational modeling).' },
-              { step: 4, title: 'Panel Architecture', desc: 'In-depth interviews focusing on system design, behavioral alignment, and execution.' }
-            ].map((phase) => (
-              <div key={phase.step} className="min-w-[320px] bg-[#F8FAFC] border border-gray-100 rounded-[32px] p-10 snap-center shrink-0">
-                <div className="text-[64px] font-black text-gray-200 mb-6 leading-none">0{phase.step}</div>
-                <h4 className="text-[24px] font-black mb-4 text-black">{phase.title}</h4>
-                <p className="text-gray-600 font-medium leading-relaxed">{phase.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              {/* STEP 4: ROLE SPECIFIC EVALUATION */}
+              {currentStep === 4 && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <h2 className="text-[1.5rem] font-black mb-8 border-b border-[#1c1c1c] pb-4">Technical Assessment: {formData.roleCategory}</h2>
+                  
+                  {formData.roleCategory === 'Engineering & Tech' && (
+                    <>
+                      <div className="mb-8">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">How would you architect a real-time logistics system (similar to Swiggy/Uber) to identify and assign the absolute nearest delivery partner to a vendor while handling 10,000 concurrent orders?</label>
+                        <textarea required rows="5" value={formData.nearestPartner} onChange={(e)=>setFormData({...formData, nearestPartner: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                      <div className="mb-6">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">Describe your preferred backend schema and real-time database architecture for live GPS coordinate tracking.</label>
+                        <textarea required rows="4" value={formData.techArch} onChange={(e)=>setFormData({...formData, techArch: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                    </>
+                  )}
 
-      {/* ========================================================= */}
-      {/* SECTION 10: FAQ ACCORDION */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-[#F8FAFC] border-t border-gray-200">
-        <div className="container mx-auto px-6 md:px-12 max-w-4xl">
-          <h2 className="text-[48px] font-black tracking-tighter mb-16 text-black text-center">Applicant FAQ.</h2>
-          <div className="space-y-4">
-            {[
-              { q: "Is remote work supported?", a: "Yes, many engineering and product roles offer global remote flexibility. Operations roles typically require physical presence in the designated city hub." },
-              { q: "Do you offer internships or university programs?", a: "We run a robust 12-week summer internship program globally for software engineering, data science, and MBA candidates." },
-              { q: "How long does the interview process take?", a: "The entire pipeline from initial screen to offer typically concludes within 3 to 4 weeks depending on role complexity." }
-            ].map((faq, idx) => (
-              <div key={idx} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <button 
-                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full flex justify-between items-center font-black text-[18px] text-black p-8 text-left focus:outline-none hover:bg-gray-50 transition-colors"
-                >
-                  {faq.q}
-                  <ChevronDown className={`transition-transform duration-300 ${activeFaq === idx ? 'rotate-180' : ''}`} />
+                  {formData.roleCategory === 'AI & Data' && (
+                    <>
+                      <div className="mb-8">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">Write an optimized, production-grade system prompt designed to convert a standard LLM into a highly effective, empathetic Customer Support agent for a logistics platform facing severe delivery delays.</label>
+                        <textarea required rows="5" value={formData.aiPrompt} onChange={(e)=>setFormData({...formData, aiPrompt: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                      <div className="mb-6">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">Explain how you would architect a RAG (Retrieval-Augmented Generation) pipeline while strictly mitigating model hallucination.</label>
+                        <textarea required rows="4" value={formData.aiHallucination} onChange={(e)=>setFormData({...formData, aiHallucination: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                    </>
+                  )}
+
+                  {formData.roleCategory === 'Marketing & Sales' && (
+                    <div className="mb-8">
+                      <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">Draft a specific, actionable B2B cold acquisition strategy to convince 50 local grocery store owners to bypass existing aggregators and route their inventory exclusively through Movyra.</label>
+                      <textarea required rows="6" value={formData.marketingAcquisition} onChange={(e)=>setFormData({...formData, marketingAcquisition: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                    </div>
+                  )}
+
+                  {formData.roleCategory === 'Operations & Logistics' && (
+                    <>
+                      <div className="mb-8">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">During a severe thunderstorm, active orders spike by 300% while online delivery partners drop by 40%. Outline your exact operational protocol to stabilize the grid and manage customer expectations.</label>
+                        <textarea required rows="5" value={formData.opsPeakHours} onChange={(e)=>setFormData({...formData, opsPeakHours: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                      <div className="mb-6">
+                        <label className="block text-[0.95rem] font-bold text-white mb-3 leading-snug">How would you systematically identify, investigate, and penalize delivery partners utilizing GPS spoofing applications to artificially inflate earning metrics?</label>
+                        <textarea required rows="4" value={formData.opsFraud} onChange={(e)=>setFormData({...formData, opsFraud: e.target.value})} className="w-full bg-[#000000] border border-[#333333] text-white px-5 py-4 rounded-xl outline-none focus:border-white transition-colors resize-none text-[0.9rem] leading-relaxed"></textarea>
+                      </div>
+                    </>
+                  )}
+                  
+                  {formData.roleCategory === '' && (
+                    <div className="w-full p-8 text-center text-[#888888] border border-[#333333] border-dashed rounded-xl">
+                      Please return to Step 2 and designate a specific Role Category to generate the relevant technical assessment block.
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* FORM NAVIGATION CONTROLS */}
+              <div className="mt-12 flex gap-4 pt-8 border-t border-[#1c1c1c]">
+                {currentStep > 1 && (
+                  <button type="button" onClick={handleBack} disabled={isSubmitting} className="px-8 py-4 bg-transparent border border-[#333333] text-white font-bold rounded-xl hover:border-white transition-colors disabled:opacity-50">
+                    {currentT.back}
+                  </button>
+                )}
+                
+                <button type="submit" disabled={isSubmitting || (currentStep === 4 && formData.roleCategory === '')} className="flex-1 bg-white text-black font-black text-[1.1rem] py-4 rounded-xl hover:bg-[#e0e0e0] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      Transmitting Data...
+                    </>
+                  ) : currentStep === 4 ? (
+                    currentT.submit
+                  ) : (
+                    currentT.next
+                  )}
                 </button>
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${activeFaq === idx ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <p className="px-8 pb-8 text-gray-600 font-medium leading-relaxed">{faq.a}</p>
-                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ========================================================= */}
-      {/* SECTION 11: DUAL APP DOWNLOAD */}
-      {/* ========================================================= */}
-      <section className="py-32 bg-black text-white text-center">
-        <div className="container mx-auto px-6 md:px-12 max-w-4xl">
-          <h2 className="text-[48px] md:text-[64px] font-black tracking-tighter leading-none mb-8">
-            Experience the product.
-          </h2>
-          <p className="text-[20px] text-gray-400 font-medium mb-12">
-            Before your interview, install the native app. Experience the routing capability and UX of the Movyra engine firsthand.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-            <AppStoreSVG />
-            <GooglePlaySVG />
-          </div>
-        </div>
-      </section>
+            </form>
+          </>
+        )}
+      </main>
 
-      <Footer />
     </div>
   );
 }
