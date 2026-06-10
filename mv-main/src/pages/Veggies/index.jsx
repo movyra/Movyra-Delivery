@@ -166,8 +166,11 @@ export default function VeggiesStorefront() {
     return (
       <div className="w-full min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans">
         <div className="w-full max-w-[400px]">
-          <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
-          <h1 className="text-[2.5rem] font-black tracking-tight mb-2 text-black">ovyra Fresh</h1>
+          
+          <div className="flex items-center gap-1.5 mb-2">
+            <img src="/logo.png" alt="Movyra" className="h-8 w-auto invert" onError={(e) => e.target.style.display = 'none'} />
+            <h1 className="text-[2.5rem] font-black tracking-tight text-black leading-none">ovyra Fresh</h1>
+          </div>
           <p className="text-[#666666] text-[0.95rem] mb-8">Access the premium produce marketplace.</p>
 
           {authError && (
