@@ -42,6 +42,7 @@ import RentalsPage from './pages/Rentals';
 import PackagePage from './pages/Package';
 import PharmacyPage from './pages/Pharmacy';
 import GroceryPage from './pages/Grocery';
+import VeggiesPage from './pages/Veggies';
 import AlcoholPage from './pages/Alcohol';
 import PetsPage from './pages/Pets';
 import ElevatePage from './pages/Elevate';
@@ -224,14 +225,16 @@ export default function App() {
             {isDevelopmentMode ? (
               // ==============================================================
               // IN-DEVELOPMENT ROUTES
-              // Intercepts all traffic to the Coming Soon page except Admin & Portals
+              // Intercepts traffic to the Coming Soon page except for open gateways
               // ==============================================================
               <>
-              <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
-              <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
-              <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
-              <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
-              <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
+                <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
+                <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
+                <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
+                <Route path='/veggies' element={<AnimatedRoute><VeggiesPage /></AnimatedRoute>} />
+                <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
+                <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
               // ==============================================================
@@ -266,6 +269,7 @@ export default function App() {
                 <Route path='/package' element={<AnimatedRoute><PackagePage /></AnimatedRoute>} />
                 <Route path='/pharmacy' element={<AnimatedRoute><PharmacyPage /></AnimatedRoute>} />
                 <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
+                <Route path='/veggies' element={<AnimatedRoute><VeggiesPage /></AnimatedRoute>} />
                 <Route path='/alcohol' element={<AnimatedRoute><AlcoholPage /></AnimatedRoute>} />
                 <Route path='/pets' element={<AnimatedRoute><PetsPage /></AnimatedRoute>} />
                 <Route path='/elevate' element={<AnimatedRoute><ElevatePage /></AnimatedRoute>} />
