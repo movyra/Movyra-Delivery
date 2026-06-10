@@ -44,6 +44,7 @@ import PharmacyPage from './pages/Pharmacy';
 import GroceryPage from './pages/Grocery';
 import VeggiesPage from './pages/Veggies';
 import DeliveryPage from './pages/Delivery';
+import ServantPage from './pages/Servant';
 import AlcoholPage from './pages/Alcohol';
 import PetsPage from './pages/Pets';
 import ElevatePage from './pages/Elevate';
@@ -235,6 +236,7 @@ export default function App() {
                 <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
                 <Route path='/veggies' element={<AnimatedRoute><VeggiesPage /></AnimatedRoute>} />
                 <Route path='/delivery' element={<AnimatedRoute><DeliveryPage /></AnimatedRoute>} />
+                <Route path='/servant' element={<AnimatedRoute><ServantPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
@@ -273,6 +275,7 @@ export default function App() {
                 <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
                 <Route path='/veggies' element={<AnimatedRoute><VeggiesPage /></AnimatedRoute>} />
                 <Route path='/delivery' element={<AnimatedRoute><DeliveryPage /></AnimatedRoute>} />
+                <Route path='/servant' element={<AnimatedRoute><ServantPage /></AnimatedRoute>} />
                 <Route path='/alcohol' element={<AnimatedRoute><AlcoholPage /></AnimatedRoute>} />
                 <Route path='/pets' element={<AnimatedRoute><PetsPage /></AnimatedRoute>} />
                 <Route path='/elevate' element={<AnimatedRoute><ElevatePage /></AnimatedRoute>} />
