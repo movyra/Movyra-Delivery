@@ -33,6 +33,16 @@ service cloud.firestore {
     }
 
     // ========================================================================
+    // CORPORATE RECRUITMENT PORTAL
+    // ========================================================================
+    match /career_applications/{document} {
+      // Allow any public user to submit an application
+      allow create: if true;
+      // Strictly restrict reading/processing to internal administrators only
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
     // MOVYRA PITCH DECK LIVE SECTIONS (Existing)
     // ========================================================================
 
