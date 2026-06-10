@@ -12,6 +12,7 @@ export default function ComingSoon() {
   const [showLangPrompt, setShowLangPrompt] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showDeliverModal, setShowDeliverModal] = useState(false);
+  const [showRidesComingSoon, setShowRidesComingSoon] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   
@@ -43,10 +44,6 @@ export default function ComingSoon() {
     // Authentication Observer
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      // Auto-close login prompt on successful authentication
-      if (user) {
-        setShowLoginPrompt(false);
-      }
     });
 
     // Language Detection
@@ -133,6 +130,7 @@ export default function ComingSoon() {
   const handleSignOut = async () => {
     await signOut(auth);
     setShowLoginPrompt(false);
+    setShowRidesComingSoon(false);
   };
 
   // 5. 13-LANGUAGE MARKETING DICTIONARY
@@ -363,7 +361,7 @@ export default function ComingSoon() {
               className="w-full max-w-[400px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[90vh] overflow-y-auto"
             >
               <button 
-                onClick={() => setShowLoginPrompt(false)} 
+                onClick={() => { setShowLoginPrompt(false); setShowRidesComingSoon(false); }} 
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors"
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -417,10 +415,46 @@ export default function ComingSoon() {
                     <span className="text-white font-bold text-[0.95rem] truncate block">{currentUser.email}</span>
                   </div>
 
+                  {showRidesComingSoon && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111111] border border-[#00A9F7] text-white p-4 rounded-2xl mb-2 flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[0.9rem]">Movyra Rides</span>
+                        <span className="text-[#00A9F7] text-[0.75rem] font-bold uppercase tracking-widest mt-1">Launching Soon</span>
+                      </div>
+                      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#00A9F7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                    </motion.div>
+                  )}
+
+                  <button onClick={() => setShowRidesComingSoon(true)} className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"></path><circle cx="7" cy="17" r="2"></circle><path d="M9 17h6"></path><circle cx="17" cy="17" r="2"></circle></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[1rem] text-white leading-tight">Movyra Rides</span>
+                        <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">City Transit Network</span>
+                      </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </button>
+
+                  <Link to="/delivery" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[1rem] text-white leading-tight">Movyra Delivery</span>
+                        <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Point-to-Point Logistics</span>
+                      </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </Link>
+
                   <Link to="/grocery" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                       </div>
                       <div className="flex flex-col">
                         <span className="font-bold text-[1rem] text-white leading-tight">Daily Needs</span>
@@ -451,6 +485,19 @@ export default function ComingSoon() {
                       <div className="flex flex-col">
                         <span className="font-bold text-[1rem] text-white leading-tight">Vendor Portal</span>
                         <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Store Management</span>
+                      </div>
+                    </div>
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                  </Link>
+
+                  <Link to="/vendor" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[1rem] text-white leading-tight">Partner Portal</span>
+                        <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Fleet & Logistics</span>
                       </div>
                     </div>
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -583,7 +630,7 @@ export default function ComingSoon() {
             >
               {currentT.btn_deliver}
             </button>
-            <Link to={currentUser ? "/vendor" : "#"} onClick={(e) => { if(!currentUser) { e.preventDefault(); setShowLoginPrompt(true); } }} className="border border-[#333333] text-white px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#111111] transition-colors">
+            <Link to="/vendor" className="border border-[#333333] text-white px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#111111] transition-colors">
               {currentT.btn_partner}
             </Link>
           </div>
