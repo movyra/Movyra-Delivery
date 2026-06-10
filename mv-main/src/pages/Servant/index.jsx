@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
+import { useNavigate, Link } from 'react-router-dom';
 
 /**
  * ============================================================================
@@ -23,6 +24,7 @@ export default function ServantApp() {
   const [selectedService, setSelectedService] = useState(null);
 
   const auth = getAuth();
+  const navigate = useNavigate();
 
   // 1. Establish Secure Authentication & Live Data Streams
   useEffect(() => {
@@ -52,7 +54,7 @@ export default function ServantApp() {
   // 2. Functional Transaction Dispatcher
   const handleServiceDispatch = async () => {
     if (!selectedService || !user) return;
-    setIsBooking(true);
+    setIsProcessing(true);
     try {
       
       // Calculate future service date (Tomorrow 9:00 AM)
@@ -69,12 +71,12 @@ export default function ServantApp() {
         createdAt: serverTimestamp(),
         personnelType: selectedService.personnel
       });
-      setIsBooking(false);
+      setIsProcessing(false);
       setSelectedService(null);
       setActiveTab('Contracts');
     } catch (error) {
       console.error("Service scheduling failed:", error);
-      setIsBooking(false);
+      setIsProcessing(false);
     }
   };
 
@@ -92,6 +94,12 @@ export default function ServantApp() {
       
       {/* Brand Header */}
       <div className="bg-[#111111] px-6 pt-10 pb-8 rounded-b-[40px] shadow-sm relative z-40 border-b border-[#333333]">
+        <div className="flex items-center justify-between w-full mb-6">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 bg-[#000000] border border-[#333333] rounded-full flex items-center justify-center text-[#FFFFFF] hover:bg-[#222222] transition-colors">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          </button>
+          <img src="/logo.png" alt="Movyra" className="h-6 w-auto invert" onError={(e) => e.target.style.display = 'none'} />
+        </div>
         <h1 className="text-[#FFFFFF] font-black text-[2rem] leading-tight mb-2">Local Services</h1>
         <p className="text-[#888888] font-bold text-[0.95rem]">Verified personnel for your domestic needs.</p>
       </div>
@@ -101,7 +109,7 @@ export default function ServantApp() {
         {/* Verification Trust Banner */}
         <div className="w-full bg-[#111111] border border-[#333333] rounded-[24px] p-5 flex items-center justify-between shadow-sm mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-[#00A9F7]/10 rounded-full flex items-center justify-center text-[#00A9F7]">
+            <div className="w-10 h-10 bg-[#000000] border border-[#333333] rounded-full flex items-center justify-center text-[#FFFFFF]">
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             </div>
             <div className="flex flex-col">
@@ -119,7 +127,7 @@ export default function ServantApp() {
             <div key={service.id} className="bg-[#111111] border border-[#333333] rounded-[24px] p-5 flex flex-col shadow-sm">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-[#000000] border border-[#333333] rounded-full flex items-center justify-center text-[#00A9F7]">
+                  <div className="w-14 h-14 bg-[#000000] border border-[#333333] rounded-full flex items-center justify-center text-[#FFFFFF]">
                     {service.icon}
                   </div>
                   <div className="flex flex-col">
@@ -162,7 +170,7 @@ export default function ServantApp() {
                  </div>
                  <div className="flex justify-between items-center">
                    <span className="text-[#888888] font-bold text-[0.9rem]">Schedule Date</span>
-                   <span className="text-[#00A9F7] font-black text-[0.95rem]">Tomorrow, 09:00 AM</span>
+                   <span className="text-[#FFFFFF] font-black text-[0.95rem]">Tomorrow, 09:00 AM</span>
                  </div>
               </div>
 
@@ -178,7 +186,10 @@ export default function ServantApp() {
 
   const renderContracts = () => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full min-h-screen bg-[#000000] pb-24">
-      <div className="bg-[#111111] px-6 pt-10 pb-4 sticky top-0 z-40 shadow-sm border-b border-[#333333]">
+      <div className="bg-[#111111] px-6 pt-10 pb-4 sticky top-0 z-40 shadow-sm border-b border-[#333333] flex items-center gap-4">
+        <button onClick={() => navigate(-1)} className="w-10 h-10 bg-[#000000] border border-[#333333] rounded-full flex items-center justify-center text-[#FFFFFF] hover:bg-[#222222] transition-colors shrink-0">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </button>
         <h1 className="text-[#FFFFFF] font-black text-[1.8rem]">Active Contracts</h1>
       </div>
       
@@ -206,16 +217,16 @@ export default function ServantApp() {
                   <span className="text-[#FFFFFF] font-black text-[1.2rem]">₹{booking.price}</span>
                 </div>
                 
-                <div className="px-5 py-4 bg-[#000000]/50 flex items-center justify-between">
+                <div className="px-5 py-4 bg-[#000000] flex items-center justify-between">
                    <div className="flex flex-col">
                       <span className="text-[#888888] font-bold text-[0.7rem] uppercase tracking-wider mb-1">Scheduled For</span>
                       <span className="text-[#FFFFFF] font-black text-[0.95rem]">
                         {booking.serviceDate ? new Date(booking.serviceDate.toDate()).toLocaleString() : 'Processing...'}
                       </span>
                    </div>
-                   <div className="bg-[#00A9F7]/10 border border-[#00A9F7]/30 px-3 py-1.5 rounded-lg flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#00A9F7] animate-pulse"></div>
-                      <span className="text-[#00A9F7] font-black text-[0.8rem] uppercase tracking-wider">{booking.status}</span>
+                   <div className="bg-[#111111] border border-[#333333] px-3 py-1.5 rounded-lg flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-[#FFFFFF] animate-pulse"></div>
+                      <span className="text-[#FFFFFF] font-black text-[0.8rem] uppercase tracking-wider">{booking.status}</span>
                    </div>
                 </div>
               </div>
