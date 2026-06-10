@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function ComingSoon() {
   // 1. STATE MANAGEMENT
   const [lang, setLang] = useState('en');
+  const [showLangPrompt, setShowLangPrompt] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  
   const [formData, setFormData] = useState({ name: '', phone: '', email: '', role: 'Consumer / Buyer', city: '', vehicle: '' });
   const [businessData, setBusinessData] = useState({ businessName: '' });
   const [files, setFiles] = useState({ gst: null, pan: null, aadhaar: null });
@@ -15,7 +18,6 @@ export default function ComingSoon() {
   const [status, setStatus] = useState('IDLE'); // IDLE, KYC_FACE, KYC_DOCS, SUBMITTING, SUCCESS, ERROR
   const [faceVerified, setFaceVerified] = useState(false);
   const [localCity, setLocalCity] = useState('Mumbai');
-  const [showRoutingPrompt, setShowRoutingPrompt] = useState(false); // Controls the Daily Needs routing dialog
   const videoRef = useRef(null);
 
   // 2. REAL-TIME LOGIC (STRICTLY INDIA ONLY, NO TELEMETRY)
@@ -43,10 +45,10 @@ export default function ComingSoon() {
   // 3. 13-LANGUAGE MARKETING DICTIONARY
   const t = {
     en: {
-      help: "Help Center", lang: "English",
+      help: "Help Center", lang: "English", login: "Log In", careers: "Careers",
       main_title: "India's Smartest Delivery Grid is Loading.",
       main_sub: "Experience zero delays. A revolutionary logistics network built for speed, transparency, and you.",
-      btn_order: "Order Now", btn_partner: "Partner With Us", btn_grocery: "Daily Needs",
+      btn_order: "Order Now", btn_partner: "Partner With Us",
       val1_title: "Lightning Fast", val1_sub: "Real-time routing algorithms to beat the traffic.",
       val2_title: "Zero Hidden Fees", val2_sub: "Transparent pricing. Pay exactly what you see.",
       val3_title: "Live Tracking", val3_sub: "Watch your package move street by street.",
@@ -59,10 +61,10 @@ export default function ComingSoon() {
       error: "Verification failed. Please try again."
     },
     hi: {
-      help: "सहायता केंद्र", lang: "हिन्दी",
+      help: "सहायता केंद्र", lang: "हिन्दी", login: "लॉग इन", careers: "करियर",
       main_title: "भारत का सबसे स्मार्ट डिलीवरी ग्रिड आ रहा है।",
       main_sub: "ज़ीरो देरी का अनुभव करें। गति और पारदर्शिता के लिए बनाया गया एक क्रांतिकारी नेटवर्क।",
-      btn_order: "अभी ऑर्डर करें", btn_partner: "हमारे साथ जुड़ें", btn_grocery: "रोजमर्रा की जरूरतें",
+      btn_order: "अभी ऑर्डर करें", btn_partner: "हमारे साथ जुड़ें",
       val1_title: "बिजली सी तेज़", val1_sub: "ट्रैफिक को मात देने के लिए रीयल-टाइम रूटिंग।",
       val2_title: "कोई छिपा शुल्क नहीं", val2_sub: "पारदर्शी मूल्य निर्धारण। जो देखें, वही चुकाएं।",
       val3_title: "लाइव ट्रैकिंग", val3_sub: "अपने पैकेज को हर सड़क पर चलते हुए देखें।",
@@ -75,10 +77,10 @@ export default function ComingSoon() {
       error: "सत्यापन विफल। कृपया पुनः प्रयास करें।"
     },
     hinglish: {
-      help: "Help Center", lang: "Hinglish",
+      help: "Help Center", lang: "Hinglish", login: "Log In", careers: "Careers",
       main_title: "India ka Smartest Delivery Grid Load ho raha hai.",
       main_sub: "Zero delays ka experience. Speed aur transparency ke liye bana naya network.",
-      btn_order: "Order Now", btn_partner: "Partner With Us", btn_grocery: "Daily Needs",
+      btn_order: "Order Now", btn_partner: "Partner With Us",
       val1_title: "Bijli se Tez", val1_sub: "Traffic beat karne ke liye real-time routing.",
       val2_title: "No Hidden Charges", val2_sub: "Transparent pricing. Jo dekhe, wahi pay karein.",
       val3_title: "Live Tracking", val3_sub: "Apne package ko har street par track karein.",
@@ -90,19 +92,26 @@ export default function ComingSoon() {
       success: "Spot secured. Launch par notify karenge.",
       error: "Verification failed. Phir se try karein."
     },
-    mr: { help: "मदत केंद्र", lang: "मराठी", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.", main_sub: "शून्य विलंबाचा अनुभव घ्या.", btn_order: "आत्ता ऑर्डर करा", btn_partner: "भागीदारी करा", btn_grocery: "दैनंदिन गरजा", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी.", val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज पहा.", val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "जागा सुरक्षित करा", form_kyc_btn: "KYC सुरू करा", kyc_face_title: "चेहरा पडताळणी", kyc_face_desc: "कॅमेराकडे पहा.", kyc_docs_title: "कागदपत्रे", kyc_docs_desc: "कागदपत्रे अपलोड करा.", success: "तुमची जागा सुरक्षित आहे.", error: "पुन्हा प्रयत्न करा." },
-    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", btn_order: "ઓર્ડર કરો", btn_partner: "અમારી સાથે જોડાઓ", btn_grocery: "રોજિંદી જરૂરિયાતો", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "નોંધણી કરો", form_kyc_btn: "KYC શરૂ કરો", kyc_face_title: "ચહેરો ચકાસણી", kyc_face_desc: "કેમેરા સામે જુઓ.", kyc_docs_title: "દસ્તાવેજો", kyc_docs_desc: "દસ્તાવેજો અપલોડ કરો.", success: "સ્વાગત છે.", error: "ફરીથી પ્રયાસ કરો." },
-    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", btn_order: "ఆర్డర్ చేయండి", btn_partner: "భాగస్వామి అవ్వండి", btn_grocery: "రోజువారీ అవసరాలు", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నమోదు చేయండి", form_kyc_btn: "KYC ప్రారంభించండి", kyc_face_title: "ముఖ నిర్ధారణ", kyc_face_desc: "కెమెరాను చూడండి.", kyc_docs_title: "పత్రాలు", kyc_docs_desc: "పత్రాలను అప్‌లోడ్ చేయండి.", success: "స్వాగతం.", error: "మళ్ళీ ప్రయత్నించండి." },
-    ta: { help: "உதவி மையம்", lang: "தமிழ்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", btn_order: "ஆர்டர் செய்", btn_partner: "கூட்டாளராகுங்கள்", btn_grocery: "தினசரி தேவைகள்", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "பதிவு செய்க", form_kyc_btn: "KYC தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள்.", kyc_docs_title: "ஆவணங்கள்", kyc_docs_desc: "ஆவணங்களை பதிவேற்றவும்.", success: "வரவேற்பு.", error: "மீண்டும் முயற்சிக்கவும்." },
-    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", btn_order: "ਆਰਡਰ ਕਰੋ", btn_partner: "ਸਾਡੇ ਨਾਲ ਜੁੜੋ", btn_grocery: "ਰੋਜ਼ਾਨਾ ਲੋੜਾਂ", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕਾ", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", form_kyc_btn: "KYC ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰੇ ਦੀ ਤਸਦੀਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼", kyc_docs_desc: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਜੀ ਆਇਆਂ ਨੂੰ।", error: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" },
-    bho: { help: "मदद केंद्र", lang: "भोजपुरी", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", btn_order: "ऑर्डर करीं", btn_partner: "हमनी से जुड़ीं", btn_grocery: "रोज के जरूरत", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "रजिस्टर करीं", form_kyc_btn: "KYC शुरू करीं", kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "कैमरा में देखीं।", kyc_docs_title: "दस्तावेज", kyc_docs_desc: "दस्तावेज अपलोड करीं।", success: "रउआ स्वागत बा।", error: "फेरू कोशिश करीं।" },
-    ar: { help: "مركز المساعدة", lang: "العربية", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", btn_order: "اطلب الان", btn_partner: "كن شريكاً", btn_grocery: "الاحتياجات اليومية", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "تأمين مكاني", form_kyc_btn: "بدء KYC", kyc_face_title: "التحقق من الوجه", kyc_face_desc: "انظر للكاميرا.", kyc_docs_title: "مستندات", kyc_docs_desc: "ارفع المستندات.", success: "مرحباً.", error: "حاول مرة أخرى." },
-    es: { help: "Centro de ayuda", lang: "Español", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", btn_order: "Ordenar", btn_partner: "Asociarse", btn_grocery: "Necesidades Diarias", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Asegurar mi lugar", form_kyc_btn: "Iniciar KYC", kyc_face_title: "Verificación facial", kyc_face_desc: "Mire a la cámara.", kyc_docs_title: "Documentos", kyc_docs_desc: "Subir documentos.", success: "Bienvenido.", error: "Inténtalo de nuevo." },
-    fr: { help: "Centre d'aide", lang: "Français", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", btn_order: "Commander", btn_partner: "Devenez Partenaire", btn_grocery: "Besoins Quotidiens", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Sécuriser ma place", form_kyc_btn: "Démarrer KYC", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra.", kyc_docs_title: "Documents", kyc_docs_desc: "Télécharger les documents.", success: "Bienvenue.", error: "Réessayez." },
-    de: { help: "Hilfezentrum", lang: "Deutsch", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", btn_order: "Bestellen", btn_partner: "Partner Werden", btn_grocery: "Täglicher Bedarf", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Platz sichern", form_kyc_btn: "KYC starten", kyc_face_title: "Gesichtsverifizierung", kyc_face_desc: "In die Kamera schauen.", kyc_docs_title: "Dokumente", kyc_docs_desc: "Dokumente hochladen.", success: "Willkommen.", error: "Versuchen Sie es erneut." }
+    mr: { help: "मदत केंद्र", lang: "मराठी", login: "लॉग इन", careers: "करिअर", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.", main_sub: "शून्य विलंबाचा अनुभव घ्या.", btn_order: "आत्ता ऑर्डर करा", btn_partner: "भागीदारी करा", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी.", val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज पहा.", val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "जागा सुरक्षित करा", form_kyc_btn: "KYC सुरू करा", kyc_face_title: "चेहरा पडताळणी", kyc_face_desc: "कॅमेराकडे पहा.", kyc_docs_title: "कागदपत्रे", kyc_docs_desc: "कागदपत्रे अपलोड करा.", success: "तुमची जागा सुरक्षित आहे.", error: "पुन्हा प्रयत्न करा." },
+    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", login: "લોગ ઇન", careers: "કારકિર્દી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", btn_order: "ઓર્ડર કરો", btn_partner: "અમારી સાથે જોડાઓ", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "નોંધણી કરો", form_kyc_btn: "KYC શરૂ કરો", kyc_face_title: "ચહેરો ચકાસણી", kyc_face_desc: "કેમેરા સામે જુઓ.", kyc_docs_title: "દસ્તાવેજો", kyc_docs_desc: "દસ્તાવેજો અપલોડ કરો.", success: "સ્વાગત છે.", error: "ફરીથી પ્રયાસ કરો." },
+    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", login: "లాగిన్", careers: "కెరీర్స్", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", btn_order: "ఆర్డర్ చేయండి", btn_partner: "భాగస్వామి అవ్వండి", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నమోదు చేయండి", form_kyc_btn: "KYC ప్రారంభించండి", kyc_face_title: "ముఖ నిర్ధారణ", kyc_face_desc: "కెమెరాను చూడండి.", kyc_docs_title: "పత్రాలు", kyc_docs_desc: "పత్రాలను అప్‌లోడ్ చేయండి.", success: "స్వాగతం.", error: "మళ్ళీ ప్రయత్నించండి." },
+    ta: { help: "உதவி மையம்", lang: "தமிழ்", login: "உள்நுழைய", careers: "தொழில்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", btn_order: "ஆர்டர் செய்", btn_partner: "கூட்டாளராகுங்கள்", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "பதிவு செய்க", form_kyc_btn: "KYC தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள்.", kyc_docs_title: "ஆவணங்கள்", kyc_docs_desc: "ஆவணங்களை பதிவேற்றவும்.", success: "வரவேற்பு.", error: "மீண்டும் முயற்சிக்கவும்." },
+    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", login: "ਲਾਗਿਨ", careers: "ਕਰੀਅਰ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", btn_order: "ਆਰਡਰ ਕਰੋ", btn_partner: "ਸਾਡੇ ਨਾਲ ਜੁੜੋ", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕા", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", form_kyc_btn: "KYC ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰੇ ਦੀ ਤਸਦੀਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼", kyc_docs_desc: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਜੀ ਆਇਆਂ ਨੂੰ।", error: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" },
+    bho: { help: "मदद केंद्र", lang: "भोजपुरी", login: "लॉग इन", careers: "करियर", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", btn_order: "ऑर्डर करीं", btn_partner: "हमनी से जुड़ीं", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "रजिस्टर करीं", form_kyc_btn: "KYC शुरू करीं", kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "कैमरा में देखीं।", kyc_docs_title: "दस्तावेज", kyc_docs_desc: "दस्तावेज अपलोड करीं।", success: "रउआ स्वागत बा।", error: "फेरू कोशिश करीं।" },
+    ar: { help: "مركز المساعدة", lang: "العربية", login: "تسجيل الدخول", careers: "وظائف", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", btn_order: "اطلب الان", btn_partner: "كن شريكاً", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "تأمين مكاني", form_kyc_btn: "بدء KYC", kyc_face_title: "التحقق من الوجه", kyc_face_desc: "انظر للكاميرا.", kyc_docs_title: "مستندات", kyc_docs_desc: "ارفع المستندات.", success: "مرحباً.", error: "حاول مرة أخرى." },
+    es: { help: "Centro de ayuda", lang: "Español", login: "Iniciar Sesión", careers: "Carreras", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", btn_order: "Ordenar", btn_partner: "Asociarse", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Asegurar mi lugar", form_kyc_btn: "Iniciar KYC", kyc_face_title: "Verificación facial", kyc_face_desc: "Mire a la cámara.", kyc_docs_title: "Documentos", kyc_docs_desc: "Subir documentos.", success: "Bienvenido.", error: "Inténtalo de nuevo." },
+    fr: { help: "Centre d'aide", lang: "Français", login: "Connexion", careers: "Carrières", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", btn_order: "Commander", btn_partner: "Devenez Partenaire", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Sécuriser ma place", form_kyc_btn: "Démarrer KYC", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra.", kyc_docs_title: "Documents", kyc_docs_desc: "Télécharger les documents.", success: "Bienvenue.", error: "Réessayez." },
+    de: { help: "Hilfezentrum", lang: "Deutsch", login: "Anmelden", careers: "Karriere", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", btn_order: "Bestellen", btn_partner: "Partner Werden", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Platz sichern", form_kyc_btn: "KYC starten", kyc_face_title: "Gesichtsverifizierung", kyc_face_desc: "In die Kamera schauen.", kyc_docs_title: "Dokumente", kyc_docs_desc: "Dokumente hochladen.", success: "Willkommen.", error: "Versuchen Sie es erneut." }
   };
 
   const currentT = t[lang] || t['en'];
+  const languageOptions = [
+    { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
+    { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
+    { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+    { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' }
+  ];
 
   // DYNAMIC ROLE CHECKS BASED ON EXPANDED TAXONOMY
   const isConsumer = formData.role === 'Consumer / Buyer';
@@ -176,79 +185,133 @@ export default function ComingSoon() {
       </style>
 
       {/* TOP HEADER */}
-      <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade">
+      <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade relative z-50">
         <div className="flex items-center gap-2">
         <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
         <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra</span>
         </div>
+        
         <div className="flex items-center gap-6 text-[0.9rem] font-bold">
           <span className="cursor-pointer hover:text-[#aaaaaa] transition-colors hidden sm:block">{currentT.help}</span>
-          <select value={lang} onChange={(e) => setLang(e.target.value)} className="bg-transparent outline-none cursor-pointer hover:text-[#aaaaaa] transition-colors appearance-none text-right">
-            <option value="en" className="text-black">English</option>
-            <option value="hi" className="text-black">हिन्दी</option>
-            <option value="hinglish" className="text-black">Hinglish</option>
-            <option value="mr" className="text-black">मराठी</option>
-            <option value="gu" className="text-black">ગુજરાતી</option>
-            <option value="te" className="text-black">తెలుగు</option>
-            <option value="ta" className="text-black">தமிழ்</option>
-            <option value="pa" className="text-black">ਪੰਜਾਬੀ</option>
-            <option value="bho" className="text-black">भोजपुरी</option>
-            <option value="ar" className="text-black">العربية</option>
-            <option value="es" className="text-black">Español / Mexican</option>
-            <option value="fr" className="text-black">Français</option>
-            <option value="de" className="text-black">Deutsch</option>
-          </select>
+          
+          {/* CUSTOM LANGUAGE PROMPT TRIGGER */}
+          <button 
+            onClick={() => setShowLangPrompt(true)}
+            className="flex items-center gap-2 hover:text-[#aaaaaa] transition-colors outline-none"
+          >
+            {currentT.lang}
+          </button>
+
+          {/* CUSTOM GLOBAL LOGIN PROMPT TRIGGER */}
+          <button 
+            onClick={() => setShowLoginPrompt(true)}
+            className="bg-white text-black px-5 py-2 rounded-full flex items-center gap-2 hover:bg-[#e0e0e0] transition-colors outline-none"
+          >
+            {currentT.login}
+          </button>
+
         </div>
       </header>
 
-      {/* ROUTING PROMPT MODAL */}
+      {/* LANGUAGE SELECTOR MODAL */}
       <AnimatePresence>
-        {showRoutingPrompt && (
+        {showLangPrompt && (
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
           >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-[400px] bg-[#050505] border border-[#222222] rounded-3xl p-8 flex flex-col shadow-2xl relative"
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[400px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto"
             >
               <button 
-                onClick={() => setShowRoutingPrompt(false)} 
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#666666] hover:text-white transition-colors"
+                onClick={() => setShowLangPrompt(false)} 
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors"
               >
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
               
-              <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Destination</h2>
-              <p className="text-[#888888] text-[0.9rem] text-center mb-8">Which marketplace would you like to access?</p>
+              <div className="w-12 h-12 mx-auto rounded-full border border-[#333333] flex items-center justify-center mb-4">
+                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+              </div>
+
+              <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Language</h2>
+              <p className="text-[#888888] text-[0.9rem] text-center mb-8">Choose your preferred viewing language.</p>
+              
+              <div className="flex flex-col gap-2">
+                {languageOptions.map((option) => (
+                  <button 
+                    key={option.code}
+                    onClick={() => { setLang(option.code); setShowLangPrompt(false); }}
+                    className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors ${lang === option.code ? 'bg-[#222222] border border-white' : 'bg-[#0a0a0a] border border-[#333333] hover:border-white'}`}
+                  >
+                    <span className={`font-bold text-[1rem] ${lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white'}`}>{option.label}</span>
+                    {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* GLOBAL LOGIN ROUTING MODAL */}
+      <AnimatePresence>
+        {showLoginPrompt && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[400px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative"
+            >
+              <button 
+                onClick={() => setShowLoginPrompt(false)} 
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors"
+              >
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              
+              <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center mt-2">Secure Access</h2>
+              <p className="text-[#888888] text-[0.9rem] text-center mb-8">Select your designated portal to continue.</p>
               
               <div className="flex flex-col gap-4">
-                <Link 
-                  to="/grocery" 
-                  className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-[#00ff88] transition-colors"
-                >
+                <Link to="/grocery" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#00ff88]/10 text-[#00ff88] flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                     </div>
-                    <span className="font-bold text-[1rem]">Daily Needs</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[1rem] text-white leading-tight">Consumer Login</span>
+                      <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Daily Needs & Veggies</span>
+                    </div>
                   </div>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </Link>
 
-                <Link 
-                  to="/veggies" 
-                  className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-[#00ccff] transition-colors"
-                >
+                <Link to="/vendor" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
                   <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#00ccff]/10 text-[#00ccff] flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle><path d="M15 6H3v8h12V6z"></path><path d="M15 9h4l2 3v2h-6V9z"></path></svg>
                     </div>
-                    <span className="font-bold text-[1rem]">Veggies & Fruits</span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[1rem] text-white leading-tight">Vendor Portal</span>
+                      <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Store Management</span>
+                    </div>
+                  </div>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </Link>
+
+                <Link to="/admin" className="w-full bg-[#111111] border border-[#333333] p-4 rounded-2xl flex items-center justify-between group hover:border-white transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full border border-[#555555] flex items-center justify-center text-white group-hover:border-white transition-colors">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-[1rem] text-white leading-tight">System Admin</span>
+                      <span className="text-[#888888] text-[0.75rem] font-medium mt-0.5">Master Control Hub</span>
+                    </div>
                   </div>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-white transition-colors"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </Link>
@@ -278,15 +341,6 @@ export default function ComingSoon() {
             <Link to="/vendor" className="border border-[#333333] text-white px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#111111] transition-colors">
               {currentT.btn_partner}
             </Link>
-
-            {/* ROUTING PROMPT TRIGGER BUTTON */}
-            <button 
-              onClick={() => setShowRoutingPrompt(true)}
-              className="bg-[#050505] border border-[#00ff88]/40 text-[#00ff88] px-6 py-3 rounded-full font-bold text-[0.95rem] hover:bg-[#00ff88]/10 transition-colors shadow-[0_0_15px_rgba(0,255,136,0.1)] flex items-center gap-2"
-            >
-              {currentT.btn_grocery}
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -452,10 +506,7 @@ export default function ComingSoon() {
         </div>
         
         <div className="flex items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
-          <div className="flex items-center gap-2 hover:text-white transition-colors cursor-pointer">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            {currentT.lang}
-          </div>
+          <Link to="/careers" className="hover:text-white transition-colors">{currentT.careers}</Link>
           <span className="w-1 h-1 bg-[#333333] rounded-full"></span>
           <div className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
