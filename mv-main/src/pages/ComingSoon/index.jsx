@@ -144,7 +144,7 @@ export default function ComingSoon() {
       val4_title: "24/7 Support", val4_sub: "Always here. Always listening. Always solving.",
       form_title: "Join the Exclusive Waitlist", form_desc: "Be the first to experience the future. Early access members receive exclusive launch benefits.",
       form_name: "Full Name", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Your City", form_role: "I want to be a", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Secure My Spot", form_kyc_btn: "Proceed to KYC",
-      kyc_face_title: "Live Verification", kyc_face_desc: "Please look directly at the camera. The system will auto-capture when a face is detected.",
+      kyc_face_title: "Live Verification", kyc_face_desc: "Please look directly at the camera. The system will auto-capture when a face is detected, or press the button to capture manually.",
       kyc_docs_title: "Compliance Documents", kyc_docs_desc: "Upload clear PDF or JPG copies of your official documents.",
       success: "Access secured. We will notify you upon grid launch.",
       error: "Verification failed. Please try again."
@@ -159,7 +159,7 @@ export default function ComingSoon() {
       val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा यहाँ। हमेशा सुनते हुए। हमेशा समाधान करते हुए।",
       form_title: "एक्सक्लूसिव वेटलिस्ट से जुड़ें", form_desc: "भविष्य का अनुभव करने वाले पहले व्यक्ति बनें। अर्ली एक्सेस सदस्यों को विशेष लाभ।",
       form_name: "पूरा नाम", form_phone: "व्हाट्सएप नंबर", form_email: "ईमेल पता", form_city: "आपका शहर", form_role: "मैं बनना चाहता हूँ", form_vehicle: "वाहन प्रकार", form_business: "व्यवसाय का नाम", form_submit: "मेरा स्थान सुरक्षित करें", form_kyc_btn: "KYC के लिए आगे बढ़ें",
-      kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "अपनी पहचान सत्यापित करने के लिए कृपया सीधे कैमरे की ओर देखें।",
+      kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "अपनी पहचान सत्यापित करने के लिए कृपया सीधे कैमरे की ओर देखें। यदि स्वचालित रूप से कैप्चर नहीं होता है, तो बटन दबाएं।",
       kyc_docs_title: "व्यापार दस्तावेज़", kyc_docs_desc: "अपने आधिकारिक दस्तावेजों की स्पष्ट प्रतियां अपलोड करें।",
       success: "स्थान सुरक्षित। लॉन्च होने पर हम आपको सूचित करेंगे।",
       error: "सत्यापन विफल। कृपया पुनः प्रयास करें।"
@@ -174,21 +174,21 @@ export default function ComingSoon() {
       val4_title: "24/7 Support", val4_sub: "Hamesha aapke saath. Har problem ka solution.",
       form_title: "Exclusive Waitlist Join Karein", form_desc: "Future experience karne waale pehle banein. Early access benefits.",
       form_name: "Pura Naam", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Aapka City", form_role: "Main banna chahta hu", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Spot Secure Karein", form_kyc_btn: "KYC Shuru Karein",
-      kyc_face_title: "Face Verification", kyc_face_desc: "Identity verify karne ke liye camera me dekhein.",
+      kyc_face_title: "Face Verification", kyc_face_desc: "Identity verify karne ke liye camera me dekhein. Agar auto-capture nahi hota, toh button dabayein.",
       kyc_docs_title: "Business Documents", kyc_docs_desc: "Official documents upload karein.",
       success: "Spot secured. Launch par notify karenge.",
       error: "Verification failed. Phir se try karein."
     },
-    mr: { help: "मदत केंद्र", lang: "मराठी", login: "लॉग इन", careers: "करिअर", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.", main_sub: "शून्य विलंबाचा अनुभव घ्या.", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी.", val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज पहा.", val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "जागा सुरक्षित करा", form_kyc_btn: "KYC सुरू करा", kyc_face_title: "चेहरा पडताळणी", kyc_face_desc: "कॅमेराकडे पहा.", kyc_docs_title: "कागदपत्रे", kyc_docs_desc: "कागदपत्रे अपलोड करा.", success: "तुमची जागा सुरक्षित आहे.", error: "पुन्हा प्रयत्न करा." },
-    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", login: "લોગ ઇન", careers: "કારકિર્દી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "નોંધણી કરો", form_kyc_btn: "KYC શરૂ કરો", kyc_face_title: "ચહેરો ચકાસણી", kyc_face_desc: "કેમેરા સામે જુઓ.", kyc_docs_title: "દસ્તાવેજો", kyc_docs_desc: "દસ્તાવેજો અપલોડ કરો.", success: "સ્વાગત છે.", error: "ફરીથી પ્રયાસ કરો." },
-    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", login: "లాగిన్", careers: "కెరీర్స్", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నమోదు చేయండి", form_kyc_btn: "KYC ప్రారంభించండి", kyc_face_title: "ముఖ నిర్ధారణ", kyc_face_desc: "కెమెరాను చూడండి.", kyc_docs_title: "పత్రాలు", kyc_docs_desc: "పత్రాలను అప్‌లోడ్ చేయండి.", success: "స్వాగతం.", error: "మళ్ళీ ప్రయత్నించండి." },
-    ta: { help: "உதவி மையம்", lang: "தமிழ்", login: "உள்நுழைய", careers: "தொழில்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "பதிவு செய்க", form_kyc_btn: "KYC தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள்.", kyc_docs_title: "ஆவணங்கள்", kyc_docs_desc: "ஆவணங்களை பதிவேற்றவும்.", success: "வரவேற்பு.", error: "மீண்டும் முயற்சிக்கவும்." },
-    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", login: "ਲਾਗਿਨ", careers: "ਕਰੀਅਰ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕા", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", form_kyc_btn: "KYC ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰੇ ਦੀ ਤਸਦੀਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼", kyc_docs_desc: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਜੀ ਆਇਆਂ ਨੂੰ।", error: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" },
-    bho: { help: "मदद केंद्र", lang: "भोजपुरी", login: "लॉग इन", careers: "करियर", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "रजिस्टर करीं", form_kyc_btn: "KYC शुरू करीं", kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "कैमरा में देखीं।", kyc_docs_title: "दस्तावेज", kyc_docs_desc: "दस्तावेज अपलोड करीं।", success: "रउआ स्वागत बा।", error: "फेरू कोशिश करीं।" },
-    ar: { help: "مركز المساعدة", lang: "العربية", login: "تسجيل الدخول", careers: "وظائف", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "تأمين مكاني", form_kyc_btn: "بدء KYC", kyc_face_title: "التحقق من الوجه", kyc_face_desc: "انظر للكاميرا.", kyc_docs_title: "مستندات", kyc_docs_desc: "ارفع المستندات.", success: "مرحباً.", error: "حاول مرة أخرى." },
-    es: { help: "Centro de ayuda", lang: "Español", login: "Iniciar Sesión", careers: "Carreras", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Asegurar mi lugar", form_kyc_btn: "Iniciar KYC", kyc_face_title: "Verificación facial", kyc_face_desc: "Mire a la cámara.", kyc_docs_title: "Documentos", kyc_docs_desc: "Subir documentos.", success: "Bienvenido.", error: "Inténtalo de nuevo." },
-    fr: { help: "Centre d'aide", lang: "Français", login: "Connexion", careers: "Carrières", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Sécuriser ma place", form_kyc_btn: "Démarrer KYC", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra.", kyc_docs_title: "Documents", kyc_docs_desc: "Télécharger les documents.", success: "Bienvenue.", error: "Réessayez." },
-    de: { help: "Hilfezentrum", lang: "Deutsch", login: "Anmelden", careers: "Karriere", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Platz sichern", form_kyc_btn: "KYC starten", kyc_face_title: "Gesichtsverifizierung", kyc_face_desc: "In die Kamera schauen.", kyc_docs_title: "Dokumente", kyc_docs_desc: "Dokumente hochladen.", success: "Willkommen.", error: "Versuchen Sie es erneut." }
+    mr: { help: "मदत केंद्र", lang: "मराठी", login: "लॉग इन", careers: "करिअर", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी ग्रिड लोड होत आहे.", main_sub: "शून्य विलंबाचा अनुभव घ्या.", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी.", val2_title: "कोणतेही छुपे शुल्क नाही", val2_sub: "पारदर्शक किंमत.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमचे पॅकेज पहा.", val4_title: "24/7 सपोर्ट", val4_sub: "नेहमी तुमच्यासाठी.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "भविष्याचा अनुभव घेणारे पहिले व्हा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "जागा सुरक्षित करा", form_kyc_btn: "KYC सुरू करा", kyc_face_title: "चेहरा पडताळणी", kyc_face_desc: "कॅमेराकडे पहा. स्वयंचलित न झाल्यास बटण दाबा.", kyc_docs_title: "कागदपत्रे", kyc_docs_desc: "कागदपत्रे अपलोड करा.", success: "तुमची जागा सुरक्षित आहे.", error: "पुन्हा प्रयत्न करा." },
+    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", login: "લોગ ઇન", careers: "કારકિર્દી", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "શૂન્ય વિલંબ.", val1_title: "અતિ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે", val2_title: "કોઈ છુપાયેલ ચાર્જ નથી", val2_sub: "પારદર્શક કિંમત.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારું પેકેજ જુઓ.", val4_title: "24/7 સપોર્ટ", val4_sub: "હંમેશા તમારી સાથે.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "પ્રથમ બનો.", form_name: "નામ", form_phone: "ફોન", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "નોંધણી કરો", form_kyc_btn: "KYC શરૂ કરો", kyc_face_title: "ચહેરો ચકાસણી", kyc_face_desc: "કેમેરા સામે જુઓ. જો ઑટો-કૅપ્ચર ન થાય તો બટન દબાવો.", kyc_docs_title: "દસ્તાવેજો", kyc_docs_desc: "દસ્તાવેજો અપલોડ કરો.", success: "સ્વાગત છે.", error: "ફરીથી પ્રયાસ કરો." },
+    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", login: "లాగిన్", careers: "కెరీర్స్", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ వస్తోంది.", main_sub: "ఆలస్యం లేదు.", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ లేదు", val2_title: "దాచిన ఛార్జీలు లేవు", val2_sub: "పారదర్శక ధర.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "ప్యాకేజీని చూడండి.", val4_title: "24/7 సపోర్ట్", val4_sub: "ఎల్లప్పుడూ ఇక్కడే.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "మొదటి వ్యక్తి అవ్వండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నమోదు చేయండి", form_kyc_btn: "KYC ప్రారంభించండి", kyc_face_title: "ముఖ నిర్ధారణ", kyc_face_desc: "కెమెరాను చూడండి. ఆటో-క్యాప్చర్ విఫలమైతే బటన్‌ను నొక్కండి.", kyc_docs_title: "పత్రాలు", kyc_docs_desc: "పత్రాలను అప్‌లోడ్ చేయండి.", success: "స్వాగతం.", error: "మళ్ళీ ప్రయత్నించండి." },
+    ta: { help: "உதவி மையம்", lang: "தமிழ்", login: "உள்நுழைய", careers: "தொழில்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி வருகிறது.", main_sub: "தாமதம் இல்லை.", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்து இல்லை", val2_title: "மறைக்கப்பட்ட கட்டணங்கள் இல்லை", val2_sub: "வெளிப்படையான விலை.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "தொகுப்பைப் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "எப்போதும் இங்கே.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முதல் நபராக இருங்கள்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "பதிவு செய்க", form_kyc_btn: "KYC தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள். தானாகப் படம் எடுக்கத் தவறினால் பட்டனை அழுத்தவும்.", kyc_docs_title: "ஆவணங்கள்", kyc_docs_desc: "ஆவணங்களை பதிவேற்றவும்.", success: "வரவேற்பு.", error: "மீண்டும் முயற்சிக்கவும்." },
+    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", login: "ਲਾਗਿਨ", careers: "ਕਰੀਅਰ", main_title: "ਭਾਰਤ ਦੀ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਆ ਰਹੀ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ।", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਕੋਈ ਟ੍ਰੈਫਿਕ ਨਹੀਂ", val2_title: "ਕੋਈ ਲੁਕਵੇਂ ਖਰਚੇ ਨਹੀਂ", val2_sub: "ਪਾਰਦਰਸ਼ੀ ਕੀਮਤ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣਾ ਪੈਕੇਜ ਦੇਖੋ।", val4_title: "24/7 ਸਪੋਰਟ", val4_sub: "ਹਮੇਸ਼ਾ ਇੱਥੇ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਪਹਿਲੇ ਬਣੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕા", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਰਜਿਸਟਰ ਕਰੋ", form_kyc_btn: "KYC ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰੇ ਦੀ ਤਸਦੀਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ। ਜੇਕਰ ਆਟੋ-ਕੈਪਚਰ ਫੇਲ ਹੁੰਦਾ ਹੈ ਤਾਂ ਬਟਨ ਦਬਾਓ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼", kyc_docs_desc: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਜੀ ਆਇਆਂ ਨੂੰ।", error: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।" },
+    bho: { help: "मदद केंद्र", lang: "भोजपुरी", login: "लॉग इन", careers: "करियर", main_title: "भारत के स्मार्ट डिलीवरी आवत बा।", main_sub: "कौनो देरी ना।", val1_title: "बहुत तेज", val1_sub: "कौनो ट्रैफिक ना", val2_title: "कौनो छिपल चार्ज ना", val2_sub: "पारदर्शी कीमत।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन पैकेज देखीं।", val4_title: "24/7 सपोर्ट", val4_sub: "हमेशा इहाँ।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "पहिल बनीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "रजिस्टर करीं", form_kyc_btn: "KYC शुरू करीं", kyc_face_title: "चेहरा सत्यापन", kyc_face_desc: "कैमरा में देखीं। अगर ऑटो-कैप्चर ना होखे त बटन दबाईं।", kyc_docs_title: "दस्तावेज", kyc_docs_desc: "दस्तावेज अपलोड करीं।", success: "रउआ स्वागत बा।", error: "फेरू कोशिश करीं।" },
+    ar: { help: "مركز المساعدة", lang: "العربية", login: "تسجيل الدخول", careers: "وظائف", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير.", val1_title: "سريع جداً", val1_sub: "توجيه في الوقت الفعلي", val2_title: "لا رسوم خفية", val2_sub: "تسعير شفاف.", val3_title: "تتبع مباشر", val3_sub: "شاهد حزمتك.", val4_title: "دعم 24/7", val4_sub: "دائماً هنا.", form_title: "انضم إلى قائمة الانتظار", form_desc: "كن الأول.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "تأمين مكاني", form_kyc_btn: "بدء KYC", kyc_face_title: "التحقق من الوجه", kyc_face_desc: "انظر للكاميرا. اضغط على الزر إذا فشل الالتقاط التلقائي.", kyc_docs_title: "مستندات", kyc_docs_desc: "ارفع المستندات.", success: "مرحباً.", error: "حاول مرة أخرى." },
+    es: { help: "Centro de ayuda", lang: "Español", login: "Iniciar Sesión", careers: "Carreras", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos.", val1_title: "Súper rápido", val1_sub: "Rutas en tiempo real.", val2_title: "Sin cargos ocultos", val2_sub: "Precios transparentes.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu paquete.", val4_title: "Soporte 24/7", val4_sub: "Siempre aquí.", form_title: "Únete a la lista", form_desc: "Sé el primero.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Asegurar mi lugar", form_kyc_btn: "Iniciar KYC", kyc_face_title: "Verificación facial", kyc_face_desc: "Mire a la cámara. Pulse el botón si la captura automática falla.", kyc_docs_title: "Documentos", kyc_docs_desc: "Subir documentos.", success: "Bienvenido.", error: "Inténtalo de nuevo." },
+    fr: { help: "Centre d'aide", lang: "Français", login: "Connexion", careers: "Carrières", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard.", val1_title: "Super rapide", val1_sub: "Routage en temps réel.", val2_title: "Pas de frais cachés", val2_sub: "Prix transparents.", val3_title: "Suivi en direct", val3_sub: "Regardez votre colis.", val4_title: "Support 24/7", val4_sub: "Toujours là.", form_title: "Rejoindre la liste", form_desc: "Soyez le premier.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Sécuriser ma place", form_kyc_btn: "Démarrer KYC", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra. Appuyez sur le bouton si la capture automatique échoue.", kyc_docs_title: "Documents", kyc_docs_desc: "Télécharger les documents.", success: "Bienvenue.", error: "Réessayez." },
+    de: { help: "Hilfezentrum", lang: "Deutsch", login: "Anmelden", careers: "Karriere", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen.", val1_title: "Super schnell", val1_sub: "Echtzeit-Routing.", val2_title: "Keine versteckten Gebühren", val2_sub: "Transparente Preise.", val3_title: "Live-Tracking", val3_sub: "Beobachten Sie Ihr Paket.", val4_title: "24/7 Support", val4_sub: "Immer hier.", form_title: "Warteliste beitreten", form_desc: "Sei der Erste.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Platz sichern", form_kyc_btn: "KYC starten", kyc_face_title: "Gesichtsverifizierung", kyc_face_desc: "In die Kamera schauen. Drücken Sie die Taste, wenn die automatische Aufnahme fehlschlägt.", kyc_docs_title: "Dokumente", kyc_docs_desc: "Dokumente hochladen.", success: "Willkommen.", error: "Versuchen Sie es erneut." }
   };
 
   const currentT = t[lang] || t['en'];
@@ -222,6 +222,31 @@ export default function ComingSoon() {
     }
   };
 
+  const processCapture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob((blob) => {
+      const file = new File([blob], "live_face.jpg", { type: "image/jpeg" });
+      setFaceImageFile(file);
+      setStatus('KYC_DOCS');
+      
+      // Stop media stream
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach(track => track.stop());
+      }
+    }, 'image/jpeg', 0.8);
+    setIsDetecting(false);
+  };
+
   const detectFaceLoop = () => {
     if (!videoRef.current || !faceDetector || status !== 'KYC_FACE') return;
     
@@ -235,26 +260,7 @@ export default function ComingSoon() {
         const detections = faceDetector.detectForVideo(video, performance.now());
         
         if (detections.detections.length > 0) {
-          // Face detected. Capture the frame.
-          const canvas = canvasRef.current;
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          
-          canvas.toBlob((blob) => {
-            const file = new File([blob], "live_face.jpg", { type: "image/jpeg" });
-            setFaceImageFile(file);
-            setStatus('KYC_DOCS');
-            
-            // Stop media stream
-            const stream = video.srcObject;
-            if (stream) {
-              const tracks = stream.getTracks();
-              tracks.forEach(track => track.stop());
-            }
-          }, 'image/jpeg', 0.8);
-          setIsDetecting(false);
+          processCapture();
           return; // Stop loop
         }
       }
@@ -559,15 +565,13 @@ export default function ComingSoon() {
               <div className="w-full aspect-square bg-[#000000] border border-[#333333] rounded-[24px] overflow-hidden relative shadow-inner mb-6">
                 <video ref={videoRef} playsInline muted className="w-full h-full object-cover scale-x-[-1]"></video>
                 <canvas ref={canvasRef} className="hidden"></canvas>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  {/* Face Guide Overlay */}
-                  <svg viewBox="0 0 100 100" className="w-[60%] h-[60%] opacity-30"><ellipse cx="50" cy="50" rx="35" ry="45" fill="none" stroke="white" strokeWidth="2" strokeDasharray="4 4" /></svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <svg viewBox="0 0 100 100" className="w-[60%] h-[60%] opacity-30 mb-8"><ellipse cx="50" cy="50" rx="35" ry="45" fill="none" stroke="white" strokeWidth="2" strokeDasharray="4 4" /></svg>
                 </div>
-                {isDetecting && (
-                   <div className="absolute bottom-4 left-0 w-full text-center">
-                     <span className="bg-black/50 text-white text-[0.7rem] px-3 py-1 rounded-full backdrop-blur-sm">Align face within oval...</span>
-                   </div>
-                )}
+                {/* MANUAL CAPTURE OVERRIDE BUTTON */}
+                <div className="absolute bottom-8 left-0 w-full flex justify-center z-10">
+                   <button onClick={processCapture} className="w-16 h-16 bg-white rounded-full border-4 border-[#333] shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform outline-none"></button>
+                </div>
               </div>
               <div className="text-center font-mono text-[0.7rem] text-[#666] tracking-widest uppercase animate-pulse">Running Liveness Engine...</div>
             </div>
