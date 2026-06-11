@@ -55,14 +55,28 @@ export const uploadVendorKYCDocuments = async (
     formData.append('email', userEmail);
     formData.append('kyc_status', 'pending');
     
-    // Append real-time binary File objects dynamically if provided
-    if (liveFaceFile) formData.append('live_face', liveFaceFile);
-    if (aadhaarFrontFile) formData.append('aadhaar_front', aadhaarFrontFile);
-    if (aadhaarBackFile) formData.append('aadhaar_back', aadhaarBackFile);
-    if (panFrontFile) formData.append('pan_front', panFrontFile);
-    if (panBackFile) formData.append('pan_back', panBackFile);
-    if (gstFile) formData.append('gst_certificate', gstFile);
-    if (businessDocsFile) formData.append('business_docs', businessDocsFile);
+    // Explicitly append binary File objects with filename declarations to satisfy PocketBase schema requirements
+    if (liveFaceFile instanceof File || liveFaceFile instanceof Blob) {
+        formData.append('live_face', liveFaceFile, liveFaceFile.name || 'live_face.jpg');
+    }
+    if (aadhaarFrontFile instanceof File || aadhaarFrontFile instanceof Blob) {
+        formData.append('aadhaar_front', aadhaarFrontFile, aadhaarFrontFile.name || 'aadhaar_front.jpg');
+    }
+    if (aadhaarBackFile instanceof File || aadhaarBackFile instanceof Blob) {
+        formData.append('aadhaar_back', aadhaarBackFile, aadhaarBackFile.name || 'aadhaar_back.jpg');
+    }
+    if (panFrontFile instanceof File || panFrontFile instanceof Blob) {
+        formData.append('pan_front', panFrontFile, panFrontFile.name || 'pan_front.jpg');
+    }
+    if (panBackFile instanceof File || panBackFile instanceof Blob) {
+        formData.append('pan_back', panBackFile, panBackFile.name || 'pan_back.jpg');
+    }
+    if (gstFile instanceof File || gstFile instanceof Blob) {
+        formData.append('gst_certificate', gstFile, gstFile.name || 'gst_certificate.jpg');
+    }
+    if (businessDocsFile instanceof File || businessDocsFile instanceof Blob) {
+        formData.append('business_docs', businessDocsFile, businessDocsFile.name || 'business_docs.jpg');
+    }
 
     // 3. Execute Secure Network Request to 'vendor_kyc' collection
     const record = await pb.collection('vendor_kyc').create(formData);
