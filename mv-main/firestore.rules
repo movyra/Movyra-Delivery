@@ -37,7 +37,7 @@ service cloud.firestore {
     // IN-DEVELOPMENT WAITLIST REGISTRATIONS
     // ========================================================================
     match /pre_registrations/{document} {
-      allow create: if true; // Unauthenticated creation permitted for waitlist
+      allow create: if true; // Unauthenticated creation permitted for waitlist and vendor intake
       allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
     }
 
