@@ -25,6 +25,9 @@ import SecureAdminGate from './components/Admin/SecureAdminGate';
 import ConsumerPortal from './pages/ConsumerPortal';
 import VendorPortal from './pages/VendorPortal';
 
+// --- SYSTEM MAINTENANCE COMPONENT ---
+import ScheduledMaintenance from './components/m';
+
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
 import AboutPage from './pages/About';
@@ -76,9 +79,10 @@ import FreightPage from './pages/Products/Freight';
 import BusinessPage from './pages/Products/Business';
 
 // ============================================================================
-// MASTER DEVELOPMENT TOGGLE
+// MASTER ARCHITECTURE CONTROLS
 // ============================================================================
 const isDevelopmentMode = true; // Set to false to unlock standard routing
+const isUnderMaintenance = true; // Master toggle to intercept specified commercial routes
 
 // ============================================================================
 // GLOBAL FEATURE COMPONENTS & HOOKS
@@ -228,14 +232,18 @@ export default function App() {
               // ==============================================================
               // IN-DEVELOPMENT ROUTES
               // Intercepts traffic to the Coming Soon page except for open gateways
+              // and evaluates the global maintenance protocol for specified modules.
               // ==============================================================
               <>
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
                 <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
                 <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
-                <Route path='/grocery' element={<AnimatedRoute><GroceryPage /></AnimatedRoute>} />
-                <Route path='/veggies' element={<AnimatedRoute><VeggiesPage /></AnimatedRoute>} />
-                <Route path='/delivery' element={<AnimatedRoute><DeliveryPage /></AnimatedRoute>} />
+                
+                {/* Dynamically intercepted commercial pathways based on master toggle */}
+                <Route path='/grocery' element={<AnimatedRoute>{isUnderMaintenance ? <ScheduledMaintenance /> : <GroceryPage />}</AnimatedRoute>} />
+                <Route path='/veggies' element={<AnimatedRoute>{isUnderMaintenance ? <ScheduledMaintenance /> : <VeggiesPage />}</AnimatedRoute>} />
+                <Route path='/delivery' element={<AnimatedRoute>{isUnderMaintenance ? <ScheduledMaintenance /> : <DeliveryPage />}</AnimatedRoute>} />
+                
                 <Route path='/servant' element={<AnimatedRoute><ServantPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
