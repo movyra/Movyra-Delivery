@@ -65,7 +65,7 @@ export default function MaintenanceOverlay() {
 
   const t = {
     en: {
-      help: "Help Center", lang: "English", back: "Return to Gateway", careers: "Careers",
+      help: "Help Center", lang: "English", back: "Back to Home", careers: "Careers",
       main_title: "System Infrastructure Upgrade.",
       main_sub: "This sector of the enterprise network is currently undergoing scheduled maintenance to enhance routing algorithms and data security. Operations will resume shortly.",
       val1_title: "Security Protocols", val1_sub: "Reinforcing data encryption pathways.",
