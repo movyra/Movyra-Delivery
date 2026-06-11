@@ -12,7 +12,15 @@ export default function WaitlistDashboard() {
   
   // Document Viewer Modal State
   const [docModalActive, setDocModalActive] = useState(false);
-  const [activeDocUrls, setActiveDocUrls] = useState({ gst: null, pan: null, aadhaar: null });
+  const [activeDocUrls, setActiveDocUrls] = useState({ 
+    liveFace: null, 
+    aadhaarFront: null, 
+    aadhaarBack: null, 
+    panFront: null, 
+    panBack: null, 
+    gst: null, 
+    businessDocs: null 
+  });
   const [docLoading, setDocLoading] = useState(false);
   const [docError, setDocError] = useState(null);
 
@@ -82,9 +90,9 @@ export default function WaitlistDashboard() {
     }
   };
 
-  // 6. POCKETBASE LIVE DOCUMENT VIEWER
+  // 6. POCKETBASE EXPANDED COMPLIANCE VIEWER
   const viewDocs = async (pbId) => {
-    if (!pbId || pbId === 'none') return alert("System Log: No PocketBase artifact ID associated with this entity.");
+    if (!pbId || pbId === 'none') return alert("System Log: No compliance artifacts associated with this entity.");
     
     setDocModalActive(true);
     setDocLoading(true);
@@ -92,10 +100,18 @@ export default function WaitlistDashboard() {
 
     try {
       const urls = await getKYCDocumentUrls(pbId);
-      setActiveDocUrls({ gst: urls.gstUrl, pan: urls.panUrl, aadhaar: urls.aadhaarUrl });
+      setActiveDocUrls({ 
+        liveFace: urls.liveFaceUrl, 
+        aadhaarFront: urls.aadhaarFrontUrl, 
+        aadhaarBack: urls.aadhaarBackUrl, 
+        panFront: urls.panFrontUrl, 
+        panBack: urls.panBackUrl, 
+        gst: urls.gstUrl, 
+        businessDocs: urls.businessDocsUrl 
+      });
     } catch (error) {
       console.error("Document fetch failed:", error);
-      setDocError("Access Denied: Please verify that the 'view' API rule is unlocked in your Hugging Face PocketBase dashboard.");
+      setDocError("Access Denied: Please verify connection to the external media repository.");
     } finally {
       setDocLoading(false);
     }
@@ -103,7 +119,7 @@ export default function WaitlistDashboard() {
 
   const closeDocModal = () => {
     setDocModalActive(false);
-    setActiveDocUrls({ gst: null, pan: null, aadhaar: null });
+    setActiveDocUrls({ liveFace: null, aadhaarFront: null, aadhaarBack: null, panFront: null, panBack: null, gst: null, businessDocs: null });
     setDocError(null);
   };
 
@@ -119,7 +135,7 @@ export default function WaitlistDashboard() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Movyra_Onboarding_Ledger_${Date.now()}.csv`;
+    link.download = `Movyra_Compliance_Ledger_${Date.now()}.csv`;
     link.click();
   };
 
@@ -277,9 +293,9 @@ export default function WaitlistDashboard() {
       {/* MODAL: DOCUMENT VIEWER */}
       {docModalActive && (
         <div className="fixed inset-0 z-[99999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-8 animate-fade">
-          <div className="w-full max-w-[1000px] h-[85vh] bg-[#050505] border border-[#222] rounded-[24px] flex flex-col overflow-hidden shadow-[0_0_100px_rgba(255,255,255,0.05)]">
+          <div className="w-full max-w-[1200px] h-[90vh] bg-[#050505] border border-[#222] rounded-[24px] flex flex-col overflow-hidden shadow-[0_0_100px_rgba(255,255,255,0.05)]">
             
-            <div className="p-6 border-b border-[#222] flex items-center justify-between bg-black">
+            <div className="p-6 border-b border-[#222] flex items-center justify-between bg-black shrink-0">
               <h3 className="font-black text-[1.2rem]">Compliance Artifact Viewer</h3>
               <button onClick={closeDocModal} className="text-[#888] hover:text-white font-bold text-[0.8rem] uppercase tracking-widest transition-colors px-4 py-2 border border-[#333] rounded-lg hover:border-white">
                 {cur.close}
@@ -298,34 +314,72 @@ export default function WaitlistDashboard() {
                   <p className="text-[0.9rem] leading-relaxed">{docError}</p>
                 </div>
               ) : (
-                <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  
+                  {/* Live Facial Capture */}
+                  <div className="flex flex-col gap-4 lg:col-span-2">
+                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666] border-b border-[#333] pb-2">1. Live Facial Verification</h4>
+                    {activeDocUrls.liveFace ? (
+                      <div className="w-[300px] h-[300px] border border-[#222] rounded-xl overflow-hidden bg-black mx-auto">
+                        <iframe src={activeDocUrls.liveFace} className="w-full h-full object-cover" title="Live Face Capture" />
+                      </div>
+                    ) : <p className="text-[#444] font-mono text-[0.8rem]">Artifact Missing</p>}
+                  </div>
+
+                  {/* Primary Identity Document */}
                   <div className="flex flex-col gap-4">
-                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666]">1. GST Certificate</h4>
+                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666] border-b border-[#333] pb-2">2. Primary Identity (Aadhaar)</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {activeDocUrls.aadhaarFront ? (
+                        <div className="w-full h-[300px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                          <iframe src={activeDocUrls.aadhaarFront} className="w-full h-full" title="Aadhaar Front" />
+                        </div>
+                      ) : <p className="text-[#444] font-mono text-[0.8rem]">Front Artifact Missing</p>}
+                      {activeDocUrls.aadhaarBack ? (
+                        <div className="w-full h-[300px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                          <iframe src={activeDocUrls.aadhaarBack} className="w-full h-full" title="Aadhaar Back" />
+                        </div>
+                      ) : <p className="text-[#444] font-mono text-[0.8rem]">Back Artifact Missing</p>}
+                    </div>
+                  </div>
+
+                  {/* Tax Identification Document */}
+                  <div className="flex flex-col gap-4">
+                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666] border-b border-[#333] pb-2">3. Tax Identity (PAN)</h4>
+                    <div className="grid grid-cols-1 gap-4">
+                      {activeDocUrls.panFront ? (
+                        <div className="w-full h-[300px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                          <iframe src={activeDocUrls.panFront} className="w-full h-full" title="PAN Front" />
+                        </div>
+                      ) : <p className="text-[#444] font-mono text-[0.8rem]">Front Artifact Missing</p>}
+                      {activeDocUrls.panBack ? (
+                        <div className="w-full h-[300px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                          <iframe src={activeDocUrls.panBack} className="w-full h-full" title="PAN Back" />
+                        </div>
+                      ) : <p className="text-[#444] font-mono text-[0.8rem]">Back Artifact Missing</p>}
+                    </div>
+                  </div>
+
+                  {/* Business & Commercial Registration */}
+                  <div className="flex flex-col gap-4">
+                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666] border-b border-[#333] pb-2">4. Commercial Registration (GST)</h4>
                     {activeDocUrls.gst ? (
-                      <div className="w-full h-[500px] border border-[#222] rounded-xl overflow-hidden bg-black">
-                        <iframe src={activeDocUrls.gst} className="w-full h-full" title="GST Document" />
+                      <div className="w-full h-[400px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                        <iframe src={activeDocUrls.gst} className="w-full h-full" title="GST Certificate" />
                       </div>
                     ) : <p className="text-[#444] font-mono text-[0.8rem]">Artifact Missing</p>}
                   </div>
 
                   <div className="flex flex-col gap-4">
-                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666]">2. Permanent Account Number (PAN)</h4>
-                    {activeDocUrls.pan ? (
-                      <div className="w-full h-[500px] border border-[#222] rounded-xl overflow-hidden bg-black">
-                        <iframe src={activeDocUrls.pan} className="w-full h-full" title="PAN Document" />
+                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666] border-b border-[#333] pb-2">5. Incorporation Documents</h4>
+                    {activeDocUrls.businessDocs ? (
+                      <div className="w-full h-[400px] border border-[#222] rounded-xl overflow-hidden bg-black">
+                        <iframe src={activeDocUrls.businessDocs} className="w-full h-full" title="Business Documents" />
                       </div>
                     ) : <p className="text-[#444] font-mono text-[0.8rem]">Artifact Missing</p>}
                   </div>
 
-                  <div className="flex flex-col gap-4">
-                    <h4 className="text-[0.8rem] font-black uppercase tracking-widest text-[#666]">3. Aadhaar Verification</h4>
-                    {activeDocUrls.aadhaar ? (
-                      <div className="w-full h-[500px] border border-[#222] rounded-xl overflow-hidden bg-black">
-                        <iframe src={activeDocUrls.aadhaar} className="w-full h-full" title="Aadhaar Document" />
-                      </div>
-                    ) : <p className="text-[#444] font-mono text-[0.8rem]">Artifact Missing</p>}
-                  </div>
-                </>
+                </div>
               )}
             </div>
 
