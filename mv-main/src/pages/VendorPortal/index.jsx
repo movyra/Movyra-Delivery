@@ -173,6 +173,7 @@ function VendorOnboarding() {
     setStatus('LOADING');
     try {
       // 1. Upload compliance suite to external database
+      // The internal PocketBase service dynamically constructs the required FormData payload.
       const record = await uploadVendorKYCDocuments(
         formData.email, 
         faceImageFile,
