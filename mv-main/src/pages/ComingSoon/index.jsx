@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from 'firebase/auth';
+
+// CORRECTED PATH MAPPING VECTORS
 import { db } from '../../firebaseConfig'; 
 import { uploadVendorKYCDocuments } from '../../services/pocketbaseService';
+
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Google MediaPipe Dependencies
