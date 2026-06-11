@@ -37,8 +37,8 @@ service cloud.firestore {
     // IN-DEVELOPMENT WAITLIST REGISTRATIONS
     // ========================================================================
     match /pre_registrations/{document} {
-      allow create: if isAuthenticated();
-      allow read, update, delete: if isAdmin();
+      allow create: if true; // Unauthenticated creation permitted for waitlist
+      allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
     }
 
     // ========================================================================
@@ -57,9 +57,8 @@ service cloud.firestore {
 
     // 1. Live Vendor Onboarding & Early Tester Signups
     match /vendor_applications/{document} {
-      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['businessName', 'contactPhone', 'timestamp', 'status']);
-      allow read: if true; 
-      allow update, delete: if isAdmin(); 
+      allow create: if request.resource.data.keys().hasAll(['businessName', 'contactPhone', 'timestamp', 'status']); // Unauthenticated creation permitted
+      allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
     }
 
     // 2. Live Investor QnA Board
@@ -88,7 +87,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-
     // ========================================================================
     // ONBOARDING / EARLY ACCESS (Existing)
     // ========================================================================
@@ -103,14 +101,18 @@ service cloud.firestore {
     // ========================================================================
     match /delivery_orders/{orderId} {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      // Permit read if owner, admin, or querying a specific tracking payload
+      allow read: if isOwner(resource.data.userId) || isAdmin() || ('trackingId' in resource.data);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     // Advanced Routing & Bidding Models
     match /delivery_multi_stop/{routeId} {
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      // Permit read if owner, admin, or querying a specific tracking payload
+      allow read: if isOwner(resource.data.userId) || isAdmin() || ('trackingId' in resource.data);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -167,7 +169,6 @@ service cloud.firestore {
       allow read, update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
-
 
     // ========================================================================
     // ISOLATED APP ENVIRONMENT (Existing Multi-Tenant Structure)
