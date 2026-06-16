@@ -15,6 +15,7 @@ import { WifiOff, AlertCircle } from 'lucide-react';
  * 6. Framer Motion Page Transitions
  * 7. Live Viewport Meta Management
  * 8. IN-DEVELOPMENT MASTER TOGGLE & SECURE ROUTE INTERCEPTOR
+ * 9. GLOBAL QUOTA BLOCKER INTERCEPTION
  * ============================================================================
  */
 
@@ -27,6 +28,9 @@ import VendorPortal from './pages/VendorPortal';
 
 // --- SYSTEM MAINTENANCE COMPONENT ---
 import ScheduledMaintenance from './components/m';
+
+// --- GLOBAL QUOTA BLOCKER COMPONENT ---
+import FirebaseQuotaBlocker from './components/f';
 
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
@@ -83,6 +87,7 @@ import BusinessPage from './pages/Products/Business';
 // ============================================================================
 const isDevelopmentMode = true; // Set to false to unlock standard routing
 const isUnderMaintenance = true; // Master toggle to intercept specified commercial routes
+const isQuotaExceeded = true; // MASTER TOGGLE: Set to true to enforce global infrastructure lockdown
 
 // ============================================================================
 // GLOBAL FEATURE COMPONENTS & HOOKS
@@ -219,6 +224,15 @@ const AnimatedRoute = ({ children }) => {
 // ============================================================================
 
 export default function App() {
+  
+  // --------------------------------------------------------------------------
+  // GLOBAL ACCESS INTERCEPTION PROTOCOL
+  // If the quota flag is active, strictly bypass all routing and render blocker.
+  // --------------------------------------------------------------------------
+  if (isQuotaExceeded) {
+      return <FirebaseQuotaBlocker />;
+  }
+
   return (
     <GlobalErrorBoundary>
       <BrowserRouter>
