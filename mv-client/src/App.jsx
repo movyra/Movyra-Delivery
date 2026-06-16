@@ -14,6 +14,9 @@ import NetworkStatus from './components/UI/NetworkStatus';
 import { useOnboardingStore } from './store/useOnboardingStore';
 import usePreferencesStore from './store/usePreferencesStore';
 
+// GLOBAL QUOTA BLOCKER COMPONENT
+import FirebaseQuotaBlocker from './components/f';
+
 // NETWORK RESILIENCE ENGINE
 import lazyRetry from './utils/lazyRetry';
 
@@ -199,6 +202,16 @@ export default function App() {
   const theme = usePreferencesStore(state => state.theme);
   const [authStatus, setAuthStatus] = useState('loading');
   const currentVersionRef = useRef(null);
+
+  // ==========================================================================
+  // GLOBAL ACCESS INTERCEPTION PROTOCOL
+  // MASTER TOGGLE: Set to true to enforce global infrastructure lockdown
+  // ==========================================================================
+  const isQuotaExceeded = true; 
+
+  if (isQuotaExceeded) {
+      return <FirebaseQuotaBlocker />;
+  }
 
   // THEME ENGINE
   useEffect(() => {
