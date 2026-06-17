@@ -1,13 +1,13 @@
 # Getting Support for Movyra
 
-Welcome to the Movyra support infrastructure. Whether you are an open-source contributor, a community developer, or an enterprise client utilizing Movyra by Bongo (an initiative of AnyAstro Techno Pvt Ltd), we provide comprehensive channels to assist you.
+Welcome to the Movyra support infrastructure. Whether you are an open-source contributor, a community developer, or an enterprise client utilizing Movyra by AnyAstro Techno Solutions, we provide comprehensive channels to assist you.
 
 ## Community Support Channels
 For general architectural questions, implementation advice, integration help, or sharing custom Movyra builds, please utilize our community-driven platforms:
 
 * **GitHub Discussions:** The primary venue for Q&A, architectural debates, feature requests, and showcasing integrations.
 * **Discord Server:** Join the `AnyAstro Developers` Discord server for real-time chat, debugging assistance, and networking with other contributors.
-* **Stack Overflow:** Ask specific technical questions using the tags `#movyra` and `#bongo-os` to reach the broader developer community.
+* **Stack Overflow:** Ask specific technical questions using the tags `#movyra` to reach the broader developer community.
 
 ## Filing Bug Reports
 If you have identified a reproducible bug in the Movyra codebase, please follow these steps to ensure a swift resolution:

@@ -1,6 +1,6 @@
 # Security Policy for Movyra
 
-Security is a foundational pillar for Bongo and the Movyra, an initiative of AnyAstro Techno Pvt Ltd. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
+Security is a foundational pillar for Movyra, an initiative of AnyAstro Techno Solutions. We maintain rigorous standards to protect user identity, location telemetry, and transaction data against unauthorized access and exploitation.
 
 ## Supported Versions
 We actively maintain, patch, and provide security updates for the following release branches of Movyra:
@@ -25,4 +25,4 @@ Our security engineering team follows a strict SLA for addressing reported vulne
 * **Resolution:** Critical vulnerabilities (e.g., Authentication bypass, Firestore injection, unauthorized telemetry access) will be patched, and a hotfix will be deployed to production within 48 hours of verification.
 
 ## Bug Bounty Program
-AnyAstro Techno Pvt Ltd operates a private bug bounty program for Movyra. Meaningful security reports that lead to validated code changes may be eligible for a financial reward. Rewards are evaluated on a case-by-case basis, factoring in the severity, impact, and quality of the report.
+AnyAstro Techno Solutions operates a private bug bounty program for Movyra. Meaningful security reports that lead to validated code changes may be eligible for a financial reward. Rewards are evaluated on a case-by-case basis, factoring in the severity, impact, and quality of the report.

@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 AnyAstro Techno Pvt Ltd.
+Copyright (c) 2026 AnyAstro Techno Solutions.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,8 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 ---
-Special Provision regarding "Bongo" and "Movyra" Trademarks:
-While the source code is licensed under MIT, the names "Movyra", "Bongo", and 
-"AnyAstro Techno Pvt Ltd", as well as their associated logos and brand assets, 
+Special Provision regarding "Movyra" Trademarks:
+While the source code is licensed under MIT, the name "Movyra" and 
+"AnyAstro Techno Solutions", as well as their associated logos and brand assets, 
 are registered trademarks and may not be used to endorse or promote derived 
-products without explicit prior written permission from AnyAstro Techno Pvt Ltd.
+products without explicit prior written permission from AnyAstro Techno Solutions.

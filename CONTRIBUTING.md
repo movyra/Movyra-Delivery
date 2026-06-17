@@ -1,6 +1,6 @@
 # Contributing to Movyra
 
-First and foremost, thank you for considering contributing to Movyra, an enterprise logistics operating system developed by Bongo, an initiative of AnyAstro Techno Pvt Ltd. We value the time and effort of our developer community. To ensure a highly efficient, secure, and structured integration process, please strictly adhere to the guidelines documented below.
+First and foremost, thank you for considering contributing to Movyra, an enterprise logistics operating system developed by AnyAstro Techno Solutions. We value the time and effort of our developer community. To ensure a highly efficient, secure, and structured integration process, please strictly adhere to the guidelines documented below.
 
 ## 1. Development Prerequisites
 Before you begin, ensure your local development environment meets the strict baseline requirements for the Movyra tech stack:
