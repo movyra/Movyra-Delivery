@@ -13,7 +13,7 @@ import Footer from '../../components/Footer';
  * Architecture: 11 Sections
  * Features: Real Browser Geolocation API, Functional Search Filter,
  * Animated Core Logo Section (#333333 BG), SVG Cityscapes,
- * Jaipur Pre-Launch integration, and strictly zero mock data.
+ * Banglore Pre-Launch integration, and strictly zero mock data.
  * ============================================================================
  */
 
@@ -74,7 +74,6 @@ const CORE_CITIES = [
   { name: 'Chennai', region: 'Tamil Nadu, IN', status: 'Live', type: 'Metro' },
   { name: 'Kolkata', region: 'West Bengal, IN', status: 'Live', type: 'Metro' },
   { name: 'Ahmedabad', region: 'Gujarat, IN', status: 'Live', type: 'Metro' },
-  { name: 'Jaipur', region: 'Rajasthan, IN', status: 'Pre-launch Soon', type: 'Expansion' },
   { name: 'Surat', region: 'Gujarat, IN', status: 'Live', type: 'Metro' },
   { name: 'Lucknow', region: 'Uttar Pradesh, IN', status: 'Beta', type: 'Expansion' },
   { name: 'Chandigarh', region: 'Punjab, IN', status: 'Beta', type: 'Expansion' },
@@ -262,7 +261,7 @@ export default function CitiesPage() {
               </div>
               <div className="flex items-center gap-4 bg-orange-50 p-4 rounded-xl border border-orange-100 shadow-sm">
                 <div className="w-3 h-3 rounded-full bg-orange-500 animate-pulse" />
-                <span className="font-bold text-orange-900">Next Target: Jaipur (Pre-launch Soon)</span>
+                <span className="font-bold text-orange-900">Next Target: Banglore (Pre-launch Soon)</span>
               </div>
             </div>
           </div>
@@ -429,7 +428,7 @@ export default function CitiesPage() {
             {[
               { q: "What happens if I request a ride outside an operational zone?", a: "The Movyra terminal will alert you that the destination or origin is out of bounds, preventing the request from processing to ensure partner safety." },
               { q: "Is Intercity travel available between all live cities?", a: "Intercity routing is enabled dynamically based on regional toll systems and fleet availability. Check the terminal for real-time route clearance." },
-              { q: "When will Jaipur officially launch?", a: "Jaipur is currently in 'Pre-launch Soon' status. We are finalizing onboarding for fleet partners and completing security mapping. Check the app for push notifications." }
+              { q: "When will Banglore officially launch?", a: "Banglore is currently in 'Pre-launch Soon' status. We are finalizing onboarding for fleet partners and completing security mapping. Check the app for push notifications." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-[#F8FAFC] border border-gray-100 rounded-2xl overflow-hidden">
                 <button 

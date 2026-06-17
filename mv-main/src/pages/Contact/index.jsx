@@ -303,20 +303,20 @@ export default function ContactPage() {
              <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-[40px] p-10 md:p-14">
                 <div className="space-y-8">
                    <div>
-                     <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-2">Registered Corporate Address</h4>
+                     <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-2">Registered Office</h4>
                      <p className="text-[20px] font-bold text-white leading-relaxed">
-                       28, Shiv Vihar A, Mangyawas, <br/> Mansarovar, Jaipur, <br/> Rajasthan, India – 302020
+                       Bengaluru <br/> Karnataka, India – 560034
                      </p>
                    </div>
                    <div className="h-px w-full bg-white/10" />
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                      <div>
                        <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-2">Corporate Identity (CIN)</h4>
-                       <p className="text-[16px] font-mono text-gray-200">U62099RJ2025PTC106888</p>
+                       <p className="text-[16px] font-mono text-gray-200">#</p>
                      </div>
                      <div>
                        <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-2">Tax Registration (GST)</h4>
-                       <p className="text-[16px] font-mono text-gray-200">08ABDCA8593P1ZS</p>
+                       <p className="text-[16px] font-mono text-gray-200">#</p>
                      </div>
                    </div>
                    <div className="h-px w-full bg-white/10" />
@@ -324,8 +324,8 @@ export default function ContactPage() {
                      <h4 className="text-[12px] font-bold text-gray-500 uppercase tracking-widest mb-3">Jurisdiction & Registration</h4>
                      <ul className="space-y-2 font-medium text-sm text-gray-400">
                        <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Registered under the Indian Ministry of Corporate Affairs (MCA)</li>
-                       <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Registered in Rajasthan jurisdiction</li>
-                       <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Registered with ROC Jaipur</li>
+                       <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Registered in Karnataka jurisdiction</li>
+                       <li className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500"/> Registered with ROC Bangalore</li>
                      </ul>
                    </div>
                 </div>
@@ -461,7 +461,7 @@ export default function ContactPage() {
             {[
               { q: "Where can I report a safety incident?", a: "If you are in immediate danger, contact local emergency services. For non-urgent incidents, utilize the SOS or Support hub directly inside the Movyra app for instantaneous processing." },
               { q: "How do I become an enterprise logistics partner?", a: "Submit the B2B protocol form above. A regional director will evaluate your fleet capacity and infrastructure to begin API integration." },
-              { q: "Can I visit the corporate office?", a: "Access to the AnyAstro headquarters in Jaipur is strictly restricted to scheduled appointments and authorized personnel due to operational security protocols." }
+              { q: "Can I visit the corporate office?", a: "Access to the AnyAstro headquarters in Banglore is strictly restricted to scheduled appointments and authorized personnel due to operational security protocols." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-[#F8FAFC] border border-gray-100 rounded-2xl overflow-hidden">
                 <button 
