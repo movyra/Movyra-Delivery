@@ -91,7 +91,7 @@ export default function ComingSoonPorter() {
 
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'bongo_logistics_waitlist'), {
+      await addDoc(collection(db, 'AAT_logistics_waitlist'), {
         email: email,
         languagePreference: language,
         clientType: clientMode,

@@ -35,7 +35,7 @@ const translations = {
     universeSub: "Six dedicated categories connecting you to daily essentials, local food, premium retail, and reliable mobility.",
     uspTitle: "The dressing room, delivered.",
     uspSub: "Movyra Fashion revolutionizes retail. Request premium clothes and luxury watches. Try them on at home. Keep what fits perfectly, we return the rest.",
-    foodTitle: "Bongo Eats. Authentic Home Cooking.",
+    foodTitle: "AAT Eats. Authentic Home Cooking.",
     foodSub: "Craving authentic food? Movyra connects you directly to FSSAI-verified local home chefs. Hygienic meals prepared with love.",
     onboardTitle: "Join the Network.",
     onboardSub: "Register as a partner, driver, or merchant today."
@@ -51,7 +51,7 @@ const translations = {
     universeSub: "Chheh (6) aasan categories jo aapko khana, kapde aur travel se jodti hain.",
     uspTitle: "Pehno phir paise do.",
     uspSub: "Ghar baithe premium kapde aur ghadiyan try karein. Jo pasand aaye rakhein, baaki wapis karein. Bilkul aasan.",
-    foodTitle: "Bongo Eats. Ghar ka khana.",
+    foodTitle: "AAT Eats. Ghar ka khana.",
     foodSub: "Asli ghar ka khana chahiye? Movyra aapko seedha FSSAI-verified home chefs se jodata hai. Saaf aur swadisht.",
     onboardTitle: "Hamare Saath Judein.",
     onboardSub: "Aaj hi partner, driver ya merchant banne ke liye register karein."
@@ -67,7 +67,7 @@ const translations = {
     universeSub: "सहा श्रेणी ज्या तुम्हाला अन्न, कपडे आणि प्रवासाशी जोडतात.",
     uspTitle: "घरी ट्राय करा, मगच पैसे द्या.",
     uspSub: "घरबसल्या प्रीमियम कपडे आणि घड्याळे ट्राय करा. जे आवडेल ते ठेवा, बाकीचे परत करा.",
-    foodTitle: "Bongo Eats. घरचं जेवण.",
+    foodTitle: "AAT Eats. घरचं जेवण.",
     foodSub: "अस्सल घरचं जेवण हवंय? Movyra तुम्हाला थेट FSSAI-प्रमाणित होम शेफशी जोडते.",
     onboardTitle: "आमच्यात सामील व्हा.",
     onboardSub: "पार्टनर, ड्रायव्हर किंवा मर्चंट म्हणून आजच रजिस्टर करा."
@@ -83,7 +83,7 @@ const translations = {
     universeSub: "छव (6) गो कैटेगरी जवन रउवा के खाना, कपड़ा अउर सफर से जोड़ेला.",
     uspTitle: "पहिन के देखीं, तब पइसा दीं.",
     uspSub: "घरे बइठल प्रीमियम कपड़ा अउर घड़ी ट्राई करीं. जवन पसंद आवे राखीं, बाकी वापस करीं.",
-    foodTitle: "Bongo Eats. घर के खाना.",
+    foodTitle: "AAT Eats. घर के खाना.",
     foodSub: "असली घर के खाना चाहीं? Movyra रउवा के सीधा FSSAI-verified होम शेफ से जोड़ेला.",
     onboardTitle: "हमनी संगे जुड़ीं.",
     onboardSub: "पार्टनर, ड्राइवर भा दुकानदार बने खातिर आजे रजिस्टर करीं."
@@ -99,7 +99,7 @@ const translations = {
     universeSub: "ఆహారం, బట్టలు మరియు ప్రయాణంతో మిమ్మల్ని కలిపే ఆరు విభాగాలు.",
     uspTitle: "ఇంట్లోనే వేసుకుని చూడండి.",
     uspSub: "ప్రీమియం బట్టలు మరియు వాచీలను ఇంట్లోనే ట్రై చేయండి. నచ్చినవి ఉంచుకుని మిగతావి వాపస్ చేయండి.",
-    foodTitle: "Bongo Eats. ఇంటి భోజనం.",
+    foodTitle: "AAT Eats. ఇంటి భోజనం.",
     foodSub: "అసలైన ఇంటి భోజనం కావాలా? Movyra మిమ్మల్ని నేరుగా FSSAI-వెరిఫైడ్ హోమ్ చెఫ్‌లతో కలుపుతుంది.",
     onboardTitle: "మాతో చేరండి.",
     onboardSub: "భాగస్వామి, డ్రైవర్ లేదా వ్యాపారిగా ఈరోజే నమోదు చేసుకోండి."
@@ -115,7 +115,7 @@ const translations = {
     universeSub: "உணவு, உடைகள் மற்றும் பயணத்துடன் உங்களை இணைக்கும் ஆறு பிரிவுகள்.",
     uspTitle: "வீட்டிலேயே அணிந்து பாருங்கள்.",
     uspSub: "பிரீமியம் உடைகள் மற்றும் கடிகாரங்களை வீட்டிலேயே அணிந்து பாருங்கள். பிடித்ததை வைத்துக்கொண்டு, மற்றதை திருப்பி அனுப்புங்கள்.",
-    foodTitle: "Bongo Eats. வீட்டு உணவு.",
+    foodTitle: "AAT Eats. வீட்டு உணவு.",
     foodSub: "உண்மையான வீட்டு உணவு வேண்டுமா? Movyra உங்களை நேரடியாக FSSAI சான்றளிக்கப்பட்ட வீட்டு சமையல்காரர்களுடன் இணைக்கிறது.",
     onboardTitle: "எங்களுடன் இணையுங்கள்.",
     onboardSub: "கூட்டாளர், ஓட்டுநர் அல்லது வியாபாரியாக இன்றே பதிவு செய்யுங்கள்."
@@ -131,7 +131,7 @@ const translations = {
     universeSub: "ਛੇ (6) ਕੈਟਾਗਰੀਆਂ ਜੋ ਤੁਹਾਨੂੰ ਖਾਣੇ, ਕੱਪੜਿਆਂ ਅਤੇ ਸਫ਼ਰ ਨਾਲ ਜੋੜਦੀਆਂ ਹਨ।",
     uspTitle: "ਪਾ ਕੇ ਦੇਖੋ, ਫਿਰ ਪੈਸੇ ਦਿਓ।",
     uspSub: "ਘਰ ਬੈਠੇ ਪ੍ਰੀਮੀਅਮ ਕੱਪੜੇ ਅਤੇ ਘੜੀਆਂ ਟਰਾਈ ਕਰੋ। ਜੋ ਪਸੰਦ ਆਵੇ ਰੱਖੋ, ਬਾਕੀ ਵਾਪਸ ਕਰੋ।",
-    foodTitle: "Bongo Eats. ਘਰ ਦਾ ਖਾਣਾ।",
+    foodTitle: "AAT Eats. ਘਰ ਦਾ ਖਾਣਾ।",
     foodSub: "ਅਸਲੀ ਘਰ ਦਾ ਖਾਣਾ ਚਾਹੀਦਾ ਹੈ? Movyra ਤੁਹਾਨੂੰ ਸਿੱਧਾ FSSAI-verified ਹੋਮ ਸ਼ੈੱਫ ਨਾਲ ਜੋੜਦਾ ਹੈ।",
     onboardTitle: "ਸਾਡੇ ਨਾਲ ਜੁੜੋ।",
     onboardSub: "ਅੱਜ ਹੀ ਪਾਰਟਨਰ, ਡਰਾਈਵਰ ਜਾਂ ਵਪਾਰੀ ਬਣਨ ਲਈ ਰਜਿਸਟਰ ਕਰੋ।"
@@ -147,7 +147,7 @@ const translations = {
     universeSub: "છ (6) કેટેગરીઝ જે તમને જમવા, કપડાં અને મુસાફરી સાથે જોડે છે.",
     uspTitle: "પહેરીને જુઓ, પછી પૈસા આપો.",
     uspSub: "ઘરે બેઠા પ્રીમિયમ કપડાં અને ઘડિયાળો ટ્રાય કરો. જે ગમે તે રાખો, બાકીનું પાછું આપો.",
-    foodTitle: "Bongo Eats. ઘરનું જમવાનું.",
+    foodTitle: "AAT Eats. ઘરનું જમવાનું.",
     foodSub: "અસલી ઘરનું જમવાનું જોઈએ છે? Movyra તમને સીધા FSSAI-verified હોમ શેફ સાથે જોડે છે.",
     onboardTitle: "અમારી સાથે જોડાઓ.",
     onboardSub: "આજે જ પાર્ટનર, ડ્રાઈવર અથવા વેપારી બનવા માટે રજિસ્ટર કરો."
@@ -322,7 +322,7 @@ export default function Landing() {
           {[
             { t: "Daily Needs", d: "Fresh groceries, fruits, and vegetables delivered to your kitchen in minutes.", icon: ShoppingBag, path: '/grocery' },
             { t: "Shop Delivery", d: "Direct delivery from your favorite local merchants and neighborhood stores.", icon: Package, path: '/merchants' },
-            { t: "Bongo Eats", d: "Authentic, hygienic meals prepared by verified local home chefs.", icon: Utensils, path: '/eat' },
+            { t: "AAT Eats", d: "Authentic, hygienic meals prepared by verified local home chefs.", icon: Utensils, path: '/eat' },
             { t: "Fashion Boutique", d: "High-end clothes, shoes, and watches. Try them on at home before buying.", icon: Shirt, path: '/fashion' },
             { t: "Home Services", d: "Book trusted, background-checked maids, servants, and deep cleaners.", icon: Home, path: '/services' },
             { t: "Mobility", d: "Rental vehicles for the day, and city rides (Coming Soon) for quick commutes.", icon: Car, path: '/drive' }
@@ -397,7 +397,7 @@ export default function Landing() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 5: BONGO EATS (HOME KITCHENS)                     */}
+      {/* SECTION 5: AAT EATS (HOME KITCHENS)                     */}
       {/* ========================================================= */}
       <section className="py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center gap-16">
@@ -548,7 +548,7 @@ export default function Landing() {
                       <select value={leadForm.type} onChange={(e) => setLeadForm({...leadForm, type: e.target.value})} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-4 focus:border-black outline-none font-bold appearance-none">
                         <option>Delivery Partner</option>
                         <option>Local Merchant / Shop</option>
-                        <option>Home Chef (Bongo Eats)</option>
+                        <option>Home Chef (AAT Eats)</option>
                         <option>Enterprise B2B Access</option>
                       </select>
                       <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />

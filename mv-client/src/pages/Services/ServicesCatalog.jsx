@@ -91,7 +91,7 @@ export default function ServicesCatalog() {
   ];
 
   const LIFESTYLE_FOOD = [
-    { id: 'eats', label: 'Bongo Eats', desc: 'Restaurants & Home Chefs', icon: 'eats', route: '/modules/eats', active: true },
+    { id: 'eats', label: 'AAT Eats', desc: 'Restaurants & Home Chefs', icon: 'eats', route: '/modules/eats', active: true },
     { id: 'porter', label: 'Logistics', desc: 'Trucks & heavy goods moving', icon: 'porter', route: '/modules/porter', active: true },
     { id: 'subs', label: 'Subscriptions', desc: 'Daily milk, paper & essentials', icon: 'subs', route: '/modules/subs', active: true },
   ];

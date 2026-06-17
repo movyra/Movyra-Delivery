@@ -68,8 +68,8 @@ const Header = () => {
                     {/* Steering Wheel Icon Equivalent */}
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 group-hover:text-black transition-colors"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="9"/><line x1="19.07" y1="4.93" x2="14.12" y2="9.88"/><line x1="22" y1="12" x2="15" y2="12"/><line x1="19.07" y1="19.07" x2="14.12" y2="14.12"/><line x1="12" y1="22" x2="12" y2="15"/><line x1="4.93" y1="19.07" x2="9.88" y2="14.12"/><line x1="2" y1="12" x2="9" y2="12"/><line x1="4.93" y1="4.93" x2="9.88" y2="9.88"/></svg>
                   </a>
-                  <a href="/bongo-eats" className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors group">
-                    <span className="font-bold text-lg">Bongo Eats</span>
+                  <a href="/AAT-eats" className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors group">
+                    <span className="font-bold text-lg">AAT Eats</span>
                     <Utensils size={24} className="text-gray-400 group-hover:text-black transition-colors"/>
                   </a>
                   <a href="/vendor" className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors group">

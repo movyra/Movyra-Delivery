@@ -378,13 +378,13 @@ export default function CitiesPage() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 8: LOCAL COMMERCE (BONGO EATS INTEGRATION) */}
+      {/* SECTION 8: LOCAL COMMERCE (AAT EATS INTEGRATION) */}
       {/* ========================================================= */}
       <section className="py-24 bg-[#0A0A0A] text-white">
         <div className="container mx-auto px-6 md:px-12">
           <div className="flex flex-col md:flex-row items-center justify-between gap-12">
              <div className="w-full md:w-1/2">
-                <h2 className="text-[48px] font-black tracking-tighter mb-6">Bongo Eats globally.</h2>
+                <h2 className="text-[48px] font-black tracking-tighter mb-6">AAT Eats globally.</h2>
                 <p className="text-[20px] text-gray-400 font-medium leading-relaxed">
                   Our food logistics module operates natively within the core Movyra app in supported regions. Delivering from enterprise restaurants to verified neighborhood home kitchens.
                 </p>

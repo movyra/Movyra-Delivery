@@ -139,7 +139,7 @@ const HomePage = () => {
             <div className="grid md:grid-cols-3 gap-8">
               {[
                 { title: 'Daily Needs', icon: ShoppingBag, pts: ['Groceries in minutes', 'Fresh Vegetables', 'Kirana Integration'] },
-                { title: 'Bongo Eats', icon: Utensils, pts: ['Verified Home Kitchens', 'Tiffin Subscriptions', 'Neighborhood Chefs'] },
+                { title: 'AAT Eats', icon: Utensils, pts: ['Verified Home Kitchens', 'Tiffin Subscriptions', 'Neighborhood Chefs'] },
                 { title: 'Local Fashion', icon: Shirt, pts: ['Boutique Delivery', 'Try-at-Home', 'Local Trends'] }
               ].map((svc, i) => (
                 <div key={i} className="bg-white p-10 rounded-[2.5rem] shadow-sm border border-gray-100 hover:shadow-xl transition-all">

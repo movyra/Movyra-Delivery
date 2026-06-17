@@ -1,7 +1,7 @@
 import emailjs from '@emailjs/browser';
 
 /**
- * MOVYRA BY BONGO - FREE AUTHENTICATION SERVICE
+ * MOVYRA BY AAT - FREE AUTHENTICATION SERVICE
  * Logic sections: Configuration, Generation, Transmission, and Verification.
  */
 
@@ -29,7 +29,7 @@ export const sendOTPEmail = async (userEmail, otp) => {
   const templateParams = {
     to_email: userEmail,
     otp_code: otp,
-    app_name: "Movyra by Bongo",
+    app_name: "Movyra by AAT",
     expiry_time: "5 minutes"
   };
 

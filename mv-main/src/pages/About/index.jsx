@@ -258,14 +258,14 @@ export default function AboutPage() {
       </section>
 
       {/* ========================================================= */}
-      {/* SECTION 6: BONGO EATS (HOME KITCHENS) */}
+      {/* SECTION 6: AAT EATS (HOME KITCHENS) */}
       {/* ========================================================= */}
       <section className="py-32 bg-[#0A0A0A] text-white">
         <div className="container mx-auto px-6 md:px-12 flex flex-col-reverse lg:flex-row items-center gap-16">
           <div className="w-full lg:w-1/2 grid grid-cols-2 gap-4">
              <div className="bg-white/5 p-8 rounded-[32px] border border-white/10 text-center flex flex-col items-center justify-center aspect-square">
                 <Utensils size={48} className="text-white mb-4" strokeWidth={1} />
-                <h4 className="font-black text-xl mb-2">Bongo Eats</h4>
+                <h4 className="font-black text-xl mb-2">AAT Eats</h4>
                 <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">Testing Phase</p>
              </div>
              <div className="bg-white/5 p-8 rounded-[32px] border border-white/10 text-center flex flex-col items-center justify-center aspect-square">
@@ -276,7 +276,7 @@ export default function AboutPage() {
           <div className="w-full lg:w-1/2">
             <h2 className="text-[48px] font-black tracking-tighter mb-8 leading-tight">Authentic food. <br/> From real homes.</h2>
             <p className="text-[20px] text-gray-400 font-medium leading-relaxed mb-8">
-              Bongo Eats bypasses commercial cloud kitchens. We algorithmically connect you directly to verified local home chefs, ensuring authentic, hygienic, and localized culinary experiences.
+              AAT Eats bypasses commercial cloud kitchens. We algorithmically connect you directly to verified local home chefs, ensuring authentic, hygienic, and localized culinary experiences.
             </p>
             <ul className="space-y-4 font-bold text-gray-300">
               <li className="flex items-center gap-4"><CheckCircle size={20} className="text-green-500"/> FSSAI Certified Home Nodes</li>
@@ -370,7 +370,7 @@ export default function AboutPage() {
           <div className="space-y-4">
             {[
               { q: "How does the Fashion try-at-home feature work?", a: "Request apparel through the app. The driver node brings it to your door and waits while you try it on. You only pay for what you keep, and the driver returns the rest." },
-              { q: "Are Bongo Eats home kitchens certified?", a: "Yes. Every home chef in our network is required to upload valid FSSAI certifications and undergo kitchen hygiene reviews before dispatching orders." },
+              { q: "Are AAT Eats home kitchens certified?", a: "Yes. Every home chef in our network is required to upload valid FSSAI certifications and undergo kitchen hygiene reviews before dispatching orders." },
               { q: "When will Movyra Rides launch?", a: "Movyra Rides is finalizing regional fleet onboarding and regulatory compliance. We will announce the public launch via app notification shortly." }
             ].map((faq, idx) => (
               <div key={idx} className="bg-[#F8FAFC] border border-gray-100 rounded-2xl overflow-hidden">

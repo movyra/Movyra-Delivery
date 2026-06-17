@@ -139,7 +139,7 @@ export default function MobileHome() {
   ];
 
   const comingSoonDeliveryModules = [
-    { id: 'eats', label: 'Bongo Eats', icon: 'eats', route: '/modules/eats' },
+    { id: 'eats', label: 'AAT Eats', icon: 'eats', route: '/modules/eats' },
     { id: 'porter', label: 'Heavy Logistics', icon: 'porter', route: '/modules/porter' },
     { id: 'subs', label: 'Subscriptions', icon: 'subs', route: '/modules/subs' },
   ];
