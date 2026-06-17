@@ -55,7 +55,7 @@ export default defineConfig({
       },
 
       manifest: {
-        name: 'Movyra by Bongo',
+        name: 'Movyra by AAT',
         short_name: 'Movyra',
         description: 'Premium Logistics and Delivery Platform',
         theme_color: '#F2F4F7',

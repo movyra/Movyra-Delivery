@@ -38,7 +38,7 @@ const ClothTryOn = lazyRetry(() => import('./pages/Modules/ClothDelivery/ClothTr
 // ============================================================================
 // ⏳ SUPER-APP ARCHITECTURE: "COMING SOON" PLACEHOLDERS (NEW)
 // ============================================================================
-const ComingSoonEats = lazyRetry(() => import('./pages/Modules/BongoEats/ComingSoonEats'));
+const ComingSoonEats = lazyRetry(() => import('./pages/Modules/AATEats/ComingSoonEats'));
 const ComingSoonPorter = lazyRetry(() => import('./pages/Modules/Logistics/ComingSoonPorter'));
 const ComingSoonSubs = lazyRetry(() => import('./pages/Modules/Subscriptions/ComingSoonSubs'));
 

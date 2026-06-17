@@ -14,7 +14,7 @@ import { t } from '../../../utils/translations';
 
 /**
  * ============================================================================
- * MODULE: BONGO EATS (COMING SOON HYPE ENGINE)
+ * MODULE: AAT EATS (COMING SOON HYPE ENGINE)
  * 11 Real Features: Firebase Waitlist Capture, Live Launch Countdown, OS Native
  * Share API, Interactive Macro Calculator, Interactive View Toggle, Early Access
  * Tier Logic, FAQ Accordion, Real Time Validation, and Safety Context Integration.
@@ -86,7 +86,7 @@ export default function ComingSoonEats() {
     setIsSubmitting(true);
     try {
       // Real database write to Firestore
-      await addDoc(collection(db, 'bongo_eats_waitlist'), {
+      await addDoc(collection(db, 'AAT_eats_waitlist'), {
         email: email,
         languagePreference: language,
         joinedAt: serverTimestamp(),
@@ -109,7 +109,7 @@ export default function ComingSoonEats() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Movyra Bongo Eats',
+          title: 'Movyra AAT Eats',
           text: 'Join the waitlist for the most advanced food delivery ecosystem coming to India. Home chefs, smart diet planners, and 400+ features.',
           url: window.location.origin + '/modules/eats',
         });
@@ -139,7 +139,7 @@ export default function ComingSoonEats() {
   const faqs = [
     { q: 'What is Smart Cart Split?', a: 'Order from up to 3 different restaurants in a single order, and our multi-rider algorithm will coordinate a simultaneous arrival at your door.' },
     { q: 'How do Home Chefs work?', a: 'We are onboarding thousands of certified local home kitchens. You get authentic, hygienic, home-cooked regional meals delivered directly to you.' },
-    { q: 'What are the waitlist perks?', a: 'Early access users receive ₹500 in Bongo Credits, 1 month of zero delivery fees, and priority matching with top-rated delivery partners.' }
+    { q: 'What are the waitlist perks?', a: 'Early access users receive ₹500 in AAT Credits, 1 month of zero delivery fees, and priority matching with top-rated delivery partners.' }
   ];
 
   return (
@@ -152,7 +152,7 @@ export default function ComingSoonEats() {
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-[18px] font-black tracking-tight flex items-center gap-2">
-            <UtensilsCrossed className="text-orange-500" size={20} /> Bongo Eats
+            <UtensilsCrossed className="text-orange-500" size={20} /> AAT Eats
           </h1>
         </div>
         <button onClick={handleShareApp} className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-600 flex items-center justify-center active:scale-95 transition-transform">

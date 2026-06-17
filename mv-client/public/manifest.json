@@ -1,8 +1,8 @@
 {
-  "name": "Movyra by Bongo",
+  "name": "Movyra by AAT",
   "short_name": "Movyra",
-  "description": "Premium Customer Delivery, Rides, and Real-time Tracking App by Bongo Logistics.",
-  "id": "com.bongo.movyra",
+  "description": "Premium Customer Delivery, Rides, and Real-time Tracking App by AAT Logistics.",
+  "id": "com.AAT.movyra",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
@@ -84,8 +84,8 @@
   "related_applications": [
     {
       "platform": "play",
-      "url": "https://www.google.com/search?q=https://play.google.com/store/apps/details%3Fid%3Dcom.bongo.movyra",
-      "id": "com.bongo.movyra"
+      "url": "https://www.google.com/search?q=https://play.google.com/store/apps/details%3Fid%3Dcom.AAT.movyra",
+      "id": "com.AAT.movyra"
     }
   ],
   "prefer_related_applications": false

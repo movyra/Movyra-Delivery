@@ -24,7 +24,7 @@ def twaManifest = [
     applicationId: 'app.web.movyra_customer_prod.twa',
     hostName: 'movyra-customer-prod.web.app', // The domain being opened in the TWA.
     launchUrl: '/', // The start path for the TWA. Must be relative to the domain.
-    name: 'Movyra by Bongo', // The application name.
+    name: 'Movyra by AAT', // The application name.
     launcherName: 'Movyra', // The name shown on the Android Launcher.
     themeColor: '#F2F4F7', // The color used for the status bar.
     themeColorDark: '#000000', // The color used for the dark status bar.

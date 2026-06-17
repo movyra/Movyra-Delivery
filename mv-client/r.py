@@ -4,7 +4,7 @@ import os
 FILES = {
 
 r"mv-client/public/manifest.json": r"""{
-  "name": "Movyra by Bongo",
+  "name": "Movyra by AAT",
   "short_name": "Movyra",
   "description": "Premium Customer Delivery App",
   "start_url": "/",
@@ -854,7 +854,7 @@ export default {
 }""",
 
 r"mv-client/vite.config.js": r"""import { defineConfig } from 'vite'; import react from '@vitejs/plugin-react'; import { VitePWA } from 'vite-plugin-pwa';
-export default defineConfig({ plugins: [ react(), VitePWA({ registerType: 'autoUpdate', manifest: { name: 'Movyra by Bongo', theme_color: '#000000', background_color: '#000000', display: 'standalone' } }) ] });""",
+export default defineConfig({ plugins: [ react(), VitePWA({ registerType: 'autoUpdate', manifest: { name: 'Movyra by AAT', theme_color: '#000000', background_color: '#000000', display: 'standalone' } }) ] });""",
 
 r"mv-client/bubblewrap.json": r"""{ "domain": "movyra.app", "manifestUrl": "https://movyra.app/manifest.json", "name": "Movyra", "shortName": "Movyra", "themeColor": "#000000", "backgroundColor": "#000000", "appVersionName": "1.0.0", "appVersionCode": 1 }"""
 
