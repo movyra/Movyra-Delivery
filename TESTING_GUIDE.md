@@ -1,6 +1,6 @@
 # Movyra Quality Assurance and Testing Guide
 
-Reliability is paramount for the Movyra Logistics OS. A broken component in production translates to delayed dispatches and financial loss. This document outlines the rigorous testing standards enforced by AnyAstro Techno Pvt Ltd.
+Reliability is paramount for the Movyra Logistics OS. A broken component in production translates to delayed dispatches and financial loss. This document outlines the rigorous testing standards enforced by AnyAstro Techno Solutions.
 
 ## 1. Unit Testing Strategy (Vitest)
 Vitest is utilized for high-speed, localized testing of discrete logic.

@@ -1,6 +1,6 @@
 # Movyra System Architecture
 
-This document details the high-level architecture and technical decisions underlying the Movyra Logistics OS, built by Bongo (AnyAstro Techno Pvt Ltd). Movyra is designed as a highly scalable, real-time dispatch and tracking system capable of handling thousands of concurrent delivery telemetry streams.
+This document details the high-level architecture and technical decisions underlying the Movyra Logistics OS, built by AnyAstro Techno Solutions. Movyra is designed as a highly scalable, real-time dispatch and tracking system capable of handling thousands of concurrent delivery telemetry streams.
 
 ## High-Level Topology
 

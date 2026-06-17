@@ -4,7 +4,7 @@
   <img src="https://movyra-customer-prod.web.app/logo.png" alt="Movyra Logo" width="160" height="160" />
 </p>
 
-<h1 align="center">Movyra by Bongo</h1>
+<h1 align="center">Movyra</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" />
@@ -17,7 +17,7 @@
 
 ## Overview
 
-Movyra is an enterprise-grade, real-time logistics and delivery platform engineered by Bongo, an initiative of AnyAstro Techno Pvt Ltd. The platform is designed to solve high-frequency logistics challenges across India with a focus on real-time coordination, operational reliability, and scalable system design.
+Movyra is an enterprise-grade, real-time logistics and delivery platform engineered by AnyAstro Techno Solutions. The platform is designed to solve high-frequency logistics challenges across India with a focus on real-time coordination, operational reliability, and scalable system design.
 
 Movyra operates as a Progressive Web App (PWA), ensuring seamless performance across devices, including low-bandwidth environments. It is built to support customers, delivery partners, and vendors within a unified ecosystem.
 
@@ -98,7 +98,7 @@ The following actions are not permitted:
 ## License
 
 ```text
-Copyright (c) Movyra by Bongo
+Copyright (c) Movyra
 
 All Rights Reserved.
 

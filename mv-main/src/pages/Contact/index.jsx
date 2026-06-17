@@ -295,7 +295,7 @@ export default function ContactPage() {
              </div>
              <h2 className="text-[48px] font-black tracking-tighter mb-8 leading-tight">Global <br/> Headquarters.</h2>
              <p className="text-[20px] text-gray-400 font-medium mb-12 max-w-md leading-relaxed">
-               Movyra by Bongo Logistics Network is operating under the legal entity AnyAstro Techno Pvt Ltd, governing global dispatch routing from our core facility.
+               Movyra by Bongo Logistics Network is operating under the legal entity AnyAstro Techno Solutions, governing global dispatch routing from our core facility.
              </p>
           </div>
           

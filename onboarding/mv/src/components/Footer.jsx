@@ -109,7 +109,7 @@ const Footer = () => {
 
         {/* Bottom Legal Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-8 border-t border-gray-800 text-xs text-gray-400">
-          <p>© 2026 Movyra Technologies. <br className="md:hidden"/>by Bongo Logistics Network operating under the premises of AnyAstro Techno Pvt Ltd.</p>
+          <p>© 2026 Movyra Technologies. <br className="md:hidden"/>by Bongo Logistics Network operating under the premises of AnyAstro Techno Solutions.</p>
           <div className="flex items-center gap-6 font-medium">
             <a href="#privacy" className="hover:text-white transition-colors">Privacy</a>
             <a href="#accessibility" className="hover:text-white transition-colors">Accessibility</a>
