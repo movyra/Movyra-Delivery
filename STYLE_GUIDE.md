@@ -1,6 +1,6 @@
 # Movyra Coding Style and Conventions
 
-To ensure a highly maintainable and readable codebase across the engineering team at AnyAstro Techno Pvt Ltd, all contributions to Movyra must adhere to the following strict stylistic conventions.
+To ensure a highly maintainable and readable codebase across the engineering team at AnyAstro Techno Solutions, all contributions to Movyra must adhere to the following strict stylistic conventions.
 
 ## 1. React Component Architecture
 * **Functional Components:** Only use functional components with React Hooks. Class components are strictly prohibited unless implementing an Error Boundary.
