@@ -87,7 +87,7 @@ import BusinessPage from './pages/Products/Business';
 // ============================================================================
 const isDevelopmentMode = true; // Set to false to unlock standard routing
 const isUnderMaintenance = true; // Master toggle to intercept specified commercial routes
-const isQuotaExceeded = true; // MASTER TOGGLE: Set to true to enforce global infrastructure lockdown
+const isQuotaExceeded = false; // MASTER TOGGLE: Set to true to enforce global infrastructure lockdown
 
 // ============================================================================
 // GLOBAL FEATURE COMPONENTS & HOOKS
