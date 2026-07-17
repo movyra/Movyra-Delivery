@@ -82,6 +82,14 @@ import RidePage from './pages/Products/Ride';
 import FreightPage from './pages/Products/Freight';
 import BusinessPage from './pages/Products/Business';
 
+// --- MOVYRA CIVIC MODULE IMPORTS ---
+import CivicLanding from './pages/Civic/CivicLanding';
+import ReportIssue from './pages/Civic/ReportIssue';
+import IssueTracker from './pages/Civic/IssueTracker';
+import CivicHeatmap from './pages/Civic/CivicHeatmap';
+import TransparencyDashboard from './pages/Civic/TransparencyDashboard';
+import WardAdmin from './pages/Civic/WardAdmin';
+
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
 // ============================================================================
@@ -260,6 +268,15 @@ export default function App() {
                 
                 <Route path='/servant' element={<AnimatedRoute><ServantPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
+
+                {/* MOVYRA CIVIC MODULE */}
+                <Route path='/civic' element={<AnimatedRoute><CivicLanding /></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><IssueTracker /></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureAdminGate><WardAdmin /></SecureAdminGate></AnimatedRoute>} />
+
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
@@ -318,6 +335,14 @@ export default function App() {
                 <Route path='/partners' element={<AnimatedRoute><PartnersPage /></AnimatedRoute>} />
                 <Route path='/alumni' element={<AnimatedRoute><AlumniPage /></AnimatedRoute>} />
                 <Route path='/download' element={<AnimatedRoute><DownloadPage /></AnimatedRoute>} />
+
+                {/* MOVYRA CIVIC MODULE */}
+                <Route path='/civic' element={<AnimatedRoute><CivicLanding /></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><IssueTracker /></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureAdminGate><WardAdmin /></SecureAdminGate></AnimatedRoute>} />
               </>
             )}
           </Routes>
