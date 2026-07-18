@@ -8,12 +8,23 @@ import { persist, createJSONStorage } from 'zustand/middleware';
  * 1. Geographic Location Tracking & Memory
  * 2. Administrative Dashboard Filter State
  * 3. Offline Complaint Drafting & Persistence
+ * 4. Persistent Interface Theme Configuration (Light/Dark Mode)
  * ============================================================================
  */
 
 export const useCivicStore = create(
   persist(
     (set) => ({
+      // ======================================================================
+      // INTERFACE THEME CONFIGURATION
+      // ======================================================================
+      theme: 'dark', // Defaults to corporate master identity
+      
+      toggleTheme: () => 
+        set((state) => ({
+          theme: state.theme === 'dark' ? 'light' : 'dark'
+        })),
+
       // ======================================================================
       // GEOGRAPHIC LOCATION STATE
       // ======================================================================
