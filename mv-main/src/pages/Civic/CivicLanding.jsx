@@ -271,7 +271,7 @@ export default function CivicLanding() {
                     </button>
 
                     <button onClick={() => navigate('/')} className="bg-[#111111] border border-[#333333] text-white px-5 py-2 rounded-full flex items-center gap-2 hover:border-white transition-colors outline-none">
-                        Main Portal
+                        Home
                     </button>
                 </div>
             </header>
