@@ -12,7 +12,9 @@ import {
     ArrowLeft,
     FileText,
     Wand2,
-    EyeOff
+    EyeOff,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -90,6 +92,8 @@ export default function ReportIssue() {
     const saveDraft = useCivicStore((state) => state.saveDraft);
     
     // 1. STATE MANAGEMENT
+    const theme = useCivicStore((state) => state.theme);
+    const toggleTheme = useCivicStore((state) => state.toggleTheme);
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
 
@@ -341,7 +345,7 @@ export default function ReportIssue() {
         { code: 'de', label: 'Deutsch' }
     ];
 
-    // Schema mapped dynamically to translation dictionary to prevent English validation errors in foreign languages
+    // Schema mapped dynamically to translation dictionary
     const dynamicSchema = z.object({
         title: z.string().min(5, currentT.err_title).max(100),
         category: z.string().min(1, currentT.err_cat),
@@ -364,7 +368,6 @@ export default function ReportIssue() {
     const currentCategory = watch('category');
     const currentDescription = watch('description');
 
-    // Automated duplicate detection protocol
     useEffect(() => {
         const checkDuplicates = async () => {
             if (selectedLocation && currentCategory) {
@@ -384,17 +387,9 @@ export default function ReportIssue() {
         checkDuplicates();
     }, [selectedLocation, currentCategory]);
 
-    // Automated text formatting protocol to ensure administrative clarity
     const enhanceDescription = () => {
         if (!currentDescription || currentDescription.length < 10) return;
-        
-        const structuredText = `OFFICIAL INCIDENT REPORT
-Category: ${currentCategory || 'Unspecified'}
-Priority Assessment: Pending Review
-Details: ${currentDescription.charAt(0).toUpperCase() + currentDescription.slice(1)}
-
-Please deploy necessary assessment personnel to evaluate the reported condition.`;
-        
+        const structuredText = `OFFICIAL INCIDENT REPORT\nCategory: ${currentCategory || 'Unspecified'}\nPriority Assessment: Pending Review\nDetails: ${currentDescription.charAt(0).toUpperCase() + currentDescription.slice(1)}\n\nPlease deploy necessary assessment personnel to evaluate the reported condition.`;
         setValue('description', structuredText);
     };
 
@@ -409,15 +404,12 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
             alert(currentT.alert_map);
             return;
         }
-
         setIsProcessing(true);
-
         try {
             let evidenceUrl = null;
             if (evidenceFile) {
                 evidenceUrl = await uploadCivicEvidence(evidenceFile);
             }
-
             const activeUser = auth.currentUser;
             const finalPayload = {
                 title: data.title,
@@ -425,23 +417,15 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                 priority: data.priority,
                 description: data.description,
                 isAnonymous: data.isAnonymous,
-                location: {
-                    latitude: selectedLocation[0],
-                    longitude: selectedLocation[1]
-                },
+                location: { latitude: selectedLocation[0], longitude: selectedLocation[1] },
                 geohash: generateGeohash(selectedLocation[0], selectedLocation[1]),
                 evidenceUrl: evidenceUrl,
                 userId: data.isAnonymous ? 'ANONYMOUS_CITIZEN' : (activeUser ? activeUser.uid : 'UNREGISTERED_CITIZEN'),
-                ward: 'Zone A', // Administrative sector assignment placeholder
+                ward: 'Zone A',
             };
-
             await submitCivicComplaint(finalPayload);
             setSubmissionSuccess(true);
-            
-            setTimeout(() => {
-                navigate('/civic');
-            }, 3000);
-
+            setTimeout(() => { navigate('/civic'); }, 3000);
         } catch (error) {
             console.error("Submission processing failed:", error);
             saveDraft(data);
@@ -464,10 +448,10 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
 
     if (submissionSuccess) {
         return (
-            <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center p-6">
-                <CheckCircle size={64} className="text-[#ffffff] mb-6" />
+            <div className={`min-h-screen flex flex-col items-center justify-center p-6 ${theme === 'light' ? 'bg-[#f5f5f5] text-black' : 'bg-[#050505] text-white'}`}>
+                <CheckCircle size={64} className={theme === 'light' ? 'text-black mb-6' : 'text-[#ffffff] mb-6'} />
                 <h1 className="text-[2.5rem] font-black tracking-tight mb-4 text-center">{currentT.succ_title}</h1>
-                <p className="text-[#888888] text-center max-w-[400px]">
+                <p className={`text-center max-w-[400px] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
                     {currentT.succ_sub}
                 </p>
             </div>
@@ -475,7 +459,9 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden flex flex-col relative">
+        <div className={`min-h-screen font-sans overflow-x-hidden flex flex-col relative transition-colors duration-300 ${
+            theme === 'light' ? 'bg-[#f5f5f5] text-[#111111] selection:bg-black selection:text-white' : 'bg-[#050505] text-white selection:bg-white selection:text-black'
+        }`}>
             
             <style>
                 {`
@@ -487,23 +473,43 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
                 <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                    <img 
+                        src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
+                        alt="Movyra" 
+                        className="h-8 w-auto" 
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
                     <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
-                        ovyra <span className="text-[#888888] font-medium text-[1.2rem] ml-1">Civic</span>
+                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Civic</span>
                     </span>
                 </div>
                 
                 <div className="flex items-center gap-6 text-[0.9rem] font-bold">
-                    <span className="cursor-pointer hover:text-[#aaaaaa] transition-colors hidden sm:block">{currentT.help}</span>
+                    <span className={`cursor-pointer transition-colors hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
+                        {currentT.help}
+                    </span>
                     
                     <button 
                         onClick={() => setShowLangPrompt(true)}
-                        className="flex items-center gap-2 hover:text-[#aaaaaa] transition-colors outline-none"
+                        className={`flex items-center gap-2 transition-colors outline-none ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
                     >
                         {currentT.lang}
                     </button>
 
-                    <button onClick={() => navigate('/')} className="bg-[#111111] border border-[#333333] text-white px-5 py-2 rounded-full flex items-center gap-2 hover:border-white transition-colors outline-none">
+                    <button 
+                        onClick={toggleTheme}
+                        className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                        aria-label="Toggle Theme"
+                    >
+                        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                    </button>
+
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className={`px-5 py-2 rounded-full flex items-center gap-2 transition-colors outline-none border ${
+                            theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
+                        }`}
+                    >
                         Home
                     </button>
                 </div>
@@ -514,35 +520,49 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                 {showLangPrompt && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+                        className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto"
+                            className={`w-full max-w-[400px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                            }`}
                         >
                             <button 
                                 onClick={() => setShowLangPrompt(false)} 
-                                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors"
+                                className={`absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors ${
+                                    theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
+                                }`}
                             >
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                             
-                            <div className="w-12 h-12 mx-auto rounded-full border border-[#333333] flex items-center justify-center mb-4">
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center mb-4 ${
+                                theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'
+                            }`}>
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             </div>
 
-                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Language</h2>
-                            <p className="text-[#888888] text-[0.9rem] text-center mb-8">Choose your preferred viewing language.</p>
+                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
+                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Choose your preferred viewing language.</p>
                             
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((option) => (
                                     <button 
                                         key={option.code}
                                         onClick={() => { setLang(option.code); setShowLangPrompt(false); }}
-                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors ${lang === option.code ? 'bg-[#222222] border border-white' : 'bg-[#0a0a0a] border border-[#333333] hover:border-white'}`}
+                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors border ${
+                                            theme === 'light' 
+                                                ? (lang === option.code ? 'bg-[#f0f0f0] border-black' : 'bg-white border-[#e0e0e0] hover:border-black')
+                                                : (lang === option.code ? 'bg-[#222222] border-white' : 'bg-[#0a0a0a] border-[#333333] hover:border-white')
+                                        }`}
                                     >
-                                        <span className={`font-bold text-[1rem] ${lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white'}`}>{option.label}</span>
-                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                        <span className={`font-bold text-[1rem] ${
+                                            theme === 'light'
+                                                ? (lang === option.code ? 'text-black' : 'text-[#666666] group-hover:text-black')
+                                                : (lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white')
+                                        }`}>{option.label}</span>
+                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                     </button>
                                 ))}
                             </div>
@@ -551,11 +571,13 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                 )}
             </AnimatePresence>
 
-            <div className="flex-1 max-w-[1000px] w-full mx-auto px-6 md:px-12 pb-12 mt-8">
+            <div className="flex-1 max-w-[1000px] w-full mx-auto px-6 md:px-12 pb-12 mt-8 animate-fade">
                 
                 <button 
                     onClick={() => navigate('/civic')}
-                    className="flex items-center gap-2 text-[#888888] hover:text-white transition-colors mb-10 outline-none font-bold text-[0.9rem]"
+                    className={`flex items-center gap-2 mb-10 outline-none font-bold text-[0.9rem] transition-colors ${
+                        theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'
+                    }`}
                 >
                     <ArrowLeft size={16} /> {currentT.back}
                 </button>
@@ -564,7 +586,7 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                     <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4">
                         {currentT.title}
                     </h1>
-                    <p className="text-[#aaaaaa] text-[1.1rem]">
+                    <p className={`text-[1.1rem] ${theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'}`}>
                         {currentT.sub}
                     </p>
                 </div>
@@ -574,19 +596,21 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                         <form onSubmit={handleSubmit(processSubmission)} className="flex flex-col gap-6">
                             
                             {/* Basic Details */}
-                            <div className="bg-[#111111] border border-[#333333] rounded-2xl p-6 md:p-8">
+                            <div className={`rounded-2xl p-6 md:p-8 border ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                                 <h3 className="text-[1.2rem] font-black mb-6 flex items-center gap-2">
                                     <FileText size={20} /> {currentT.form_cat}
                                 </h3>
                                 
                                 <div className="flex flex-col gap-5">
                                     <div>
-                                        <label className="block text-[0.85rem] font-bold text-[#888888] mb-2 uppercase tracking-wider">{currentT.form_title_label}</label>
+                                        <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.form_title_label}</label>
                                         <Controller
                                             name="title"
                                             control={control}
                                             render={({ field }) => (
-                                                <input {...field} placeholder={currentT.form_title_ph} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-white transition-colors text-[0.95rem]" />
+                                                <input {...field} placeholder={currentT.form_title_ph} className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
+                                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                }`} />
                                             )}
                                         />
                                         {errors.title && <span className="text-red-500 text-[0.8rem] mt-1 block">{errors.title.message}</span>}
@@ -594,12 +618,14 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div>
-                                            <label className="block text-[0.85rem] font-bold text-[#888888] mb-2 uppercase tracking-wider">{currentT.form_div_label}</label>
+                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.form_div_label}</label>
                                             <Controller
                                                 name="category"
                                                 control={control}
                                                 render={({ field }) => (
-                                                    <select {...field} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-white transition-colors text-[0.95rem] appearance-none">
+                                                    <select {...field} className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] appearance-none border ${
+                                                        theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                    }`}>
                                                         <option value="">{currentT.form_div_ph}</option>
                                                         <option value="Road Maintenance">{currentT.cat_road}</option>
                                                         <option value="Sanitation Services">{currentT.cat_san}</option>
@@ -613,12 +639,14 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                                         </div>
 
                                         <div>
-                                            <label className="block text-[0.85rem] font-bold text-[#888888] mb-2 uppercase tracking-wider">{currentT.form_pri_label}</label>
+                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.form_pri_label}</label>
                                             <Controller
                                                 name="priority"
                                                 control={control}
                                                 render={({ field }) => (
-                                                    <select {...field} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-white transition-colors text-[0.95rem] appearance-none">
+                                                    <select {...field} className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] appearance-none border ${
+                                                        theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                    }`}>
                                                         <option value="Standard">{currentT.pri_std}</option>
                                                         <option value="High">{currentT.pri_high}</option>
                                                         <option value="Critical">{currentT.pri_crit}</option>
@@ -630,8 +658,10 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
 
                                     <div>
                                         <div className="flex items-center justify-between mb-2">
-                                            <label className="block text-[0.85rem] font-bold text-[#888888] uppercase tracking-wider">{currentT.form_desc_label}</label>
-                                            <button type="button" onClick={enhanceDescription} className="text-[0.8rem] font-bold text-[#aaaaaa] hover:text-white transition-colors flex items-center gap-1 outline-none">
+                                            <label className={`block text-[0.85rem] font-bold uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.form_desc_label}</label>
+                                            <button type="button" onClick={enhanceDescription} className={`text-[0.8rem] font-bold transition-colors flex items-center gap-1 outline-none ${
+                                                theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#aaaaaa] hover:text-white'
+                                            }`}>
                                                 <Wand2 size={14} /> {currentT.form_desc_btn}
                                             </button>
                                         </div>
@@ -639,7 +669,9 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                                             name="description"
                                             control={control}
                                             render={({ field }) => (
-                                                <textarea {...field} rows="5" placeholder={currentT.form_desc_ph} className="w-full bg-[#000000] border border-[#333333] text-white px-4 py-3 rounded-xl outline-none focus:border-white transition-colors text-[0.95rem] resize-none"></textarea>
+                                                <textarea {...field} rows="5" placeholder={currentT.form_desc_ph} className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] resize-none border ${
+                                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                }`}></textarea>
                                             )}
                                         />
                                         {errors.description && <span className="text-red-500 text-[0.8rem] mt-1 block">{errors.description.message}</span>}
@@ -648,12 +680,12 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                             </div>
 
                             {/* Privacy Controls */}
-                            <div className="bg-[#111111] border border-[#333333] rounded-2xl p-6 md:p-8 flex items-center justify-between">
+                            <div className={`rounded-2xl p-6 md:p-8 flex items-center justify-between border ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                                 <div>
                                     <h3 className="text-[1.1rem] font-black flex items-center gap-2 mb-1">
                                         <EyeOff size={18} /> {currentT.priv_title}
                                     </h3>
-                                    <p className="text-[0.85rem] text-[#888888]">{currentT.priv_sub}</p>
+                                    <p className={`text-[0.85rem] ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.priv_sub}</p>
                                 </div>
                                 <Controller
                                     name="isAnonymous"
@@ -661,7 +693,11 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                                     render={({ field }) => (
                                         <label className="relative inline-flex items-center cursor-pointer">
                                             <input type="checkbox" className="sr-only peer" checked={field.value} onChange={field.onChange} />
-                                            <div className="w-11 h-6 bg-[#333333] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#ffffff]"></div>
+                                            <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                                                theme === 'light' 
+                                                    ? 'bg-[#e0e0e0] peer-checked:after:border-black after:bg-white after:border-gray-300 peer-checked:bg-black' 
+                                                    : 'bg-[#333333] peer-checked:after:border-white after:bg-white after:border-gray-300 peer-checked:bg-[#ffffff]'
+                                            }`}></div>
                                         </label>
                                     )}
                                 />
@@ -670,7 +706,9 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                             <button 
                                 type="submit" 
                                 disabled={isProcessing || duplicateFound !== null}
-                                className="w-full bg-white text-black py-4 rounded-xl font-black text-[1rem] hover:bg-[#e0e0e0] transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none mt-4"
+                                className={`w-full py-4 rounded-xl font-black text-[1rem] transition-colors disabled:opacity-50 disabled:cursor-not-allowed outline-none mt-4 ${
+                                    theme === 'light' ? 'bg-black text-white hover:bg-[#333333]' : 'bg-white text-black hover:bg-[#e0e0e0]'
+                                }`}
                             >
                                 {isProcessing ? currentT.submit_proc : currentT.submit_btn}
                             </button>
@@ -686,19 +724,23 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="bg-[#111111] border border-white rounded-2xl p-6 overflow-hidden"
+                                    className={`border rounded-2xl p-6 overflow-hidden ${
+                                        theme === 'light' ? 'bg-[#fff5f5] border-[#ffcccc]' : 'bg-[#111111] border-white'
+                                    }`}
                                 >
                                     <div className="flex items-center gap-3 mb-3">
-                                        <AlertTriangle size={24} className="text-white" />
-                                        <h4 className="font-black text-[1.1rem]">{currentT.dup_title}</h4>
+                                        <AlertTriangle size={24} className={theme === 'light' ? 'text-[#ff4444]' : 'text-white'} />
+                                        <h4 className={`font-black text-[1.1rem] ${theme === 'light' ? 'text-[#ff4444]' : 'text-white'}`}>{currentT.dup_title}</h4>
                                     </div>
-                                    <p className="text-[0.9rem] text-[#aaaaaa] mb-4">
+                                    <p className={`text-[0.9rem] mb-4 ${theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'}`}>
                                         {currentT.dup_sub} ({duplicateFound.title}). 
                                     </p>
                                     <button 
                                         onClick={handleSupportExisting}
                                         disabled={isProcessing}
-                                        className="w-full bg-white text-black py-3 rounded-xl font-bold text-[0.9rem] hover:bg-[#e0e0e0] transition-colors disabled:opacity-50"
+                                        className={`w-full py-3 rounded-xl font-bold text-[0.9rem] transition-colors disabled:opacity-50 ${
+                                            theme === 'light' ? 'bg-[#ff4444] text-white hover:bg-[#cc0000]' : 'bg-white text-black hover:bg-[#e0e0e0]'
+                                        }`}
                                     >
                                         {currentT.dup_btn}
                                     </button>
@@ -707,36 +749,38 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                         </AnimatePresence>
 
                         {/* Location Picker */}
-                        <div className="bg-[#111111] border border-[#333333] rounded-2xl p-6 flex flex-col h-[400px]">
+                        <div className={`border rounded-2xl p-6 flex flex-col h-[400px] ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                             <h3 className="text-[1.1rem] font-black mb-4 flex items-center gap-2 shrink-0">
                                 <MapPin size={18} /> {currentT.map_title}
                             </h3>
-                            <div className="w-full flex-1 rounded-xl overflow-hidden border border-[#333333] relative z-0">
+                            <div className={`w-full flex-1 rounded-xl overflow-hidden border relative z-0 ${theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'}`}>
                                 <MapContainer 
                                     center={[19.0760, 72.8777]} // Default coordinates
                                     zoom={13} 
-                                    style={{ height: '100%', width: '100%' }}
+                                    style={{ height: '100%', width: '100%', background: theme === 'light' ? '#f5f5f5' : '#0a0a0a' }}
                                     zoomControl={false}
                                 >
                                     <TileLayer
-                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        url={theme === 'light' ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"}
                                     />
                                     <LocationSelector position={selectedLocation} setPosition={setSelectedLocation} />
                                 </MapContainer>
                             </div>
-                            <p className="text-[0.8rem] text-[#888888] mt-3 shrink-0 text-center font-bold">
+                            <p className={`text-[0.8rem] mt-3 shrink-0 text-center font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>
                                 {currentT.map_sub}
                             </p>
                         </div>
 
                         {/* Evidence Upload */}
-                        <div className="bg-[#111111] border border-[#333333] rounded-2xl p-6">
+                        <div className={`border rounded-2xl p-6 ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                             <h3 className="text-[1.1rem] font-black mb-4 flex items-center gap-2">
                                 <UploadCloud size={18} /> {currentT.ev_title}
                             </h3>
                             <div 
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full border-2 border-dashed border-[#333333] hover:border-white transition-colors rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer text-center"
+                                className={`w-full border-2 border-dashed transition-colors rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer text-center ${
+                                    theme === 'light' ? 'border-[#cccccc] hover:border-black bg-[#f9f9f9]' : 'border-[#333333] hover:border-white bg-[#0a0a0a]'
+                                }`}
                             >
                                 <input 
                                     type="file" 
@@ -747,15 +791,15 @@ Please deploy necessary assessment personnel to evaluate the reported condition.
                                 />
                                 {evidenceFile ? (
                                     <>
-                                        <CheckCircle size={28} className="text-white mb-2" />
-                                        <span className="text-[0.9rem] font-bold text-white break-all">{evidenceFile.name}</span>
-                                        <span className="text-[0.8rem] text-[#888888] mt-1">{currentT.ev_ready}</span>
+                                        <CheckCircle size={28} className={`mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                                        <span className={`text-[0.9rem] font-bold break-all ${theme === 'light' ? 'text-black' : 'text-white'}`}>{evidenceFile.name}</span>
+                                        <span className={`text-[0.8rem] mt-1 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.ev_ready}</span>
                                     </>
                                 ) : (
                                     <>
-                                        <UploadCloud size={28} className="text-[#555555] mb-2" />
-                                        <span className="text-[0.9rem] font-bold text-white">{currentT.ev_sub}</span>
-                                        <span className="text-[0.8rem] text-[#888888] mt-1">{currentT.ev_sub2}</span>
+                                        <UploadCloud size={28} className={`mb-2 ${theme === 'light' ? 'text-[#888888]' : 'text-[#555555]'}`} />
+                                        <span className={`text-[0.9rem] font-bold ${theme === 'light' ? 'text-black' : 'text-white'}`}>{currentT.ev_sub}</span>
+                                        <span className={`text-[0.8rem] mt-1 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.ev_sub2}</span>
                                     </>
                                 )}
                             </div>
