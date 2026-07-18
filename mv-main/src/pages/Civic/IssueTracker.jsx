@@ -313,7 +313,7 @@ export default function IssueTracker() {
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
                 <div className="flex items-center gap-2">
                     <img 
-                        src={theme === 'light' ? '/logo-light.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
@@ -349,7 +349,7 @@ export default function IssueTracker() {
                             theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
                         }`}
                     >
-                        Main Portal
+                        Home
                     </button>
                 </div>
             </header>
