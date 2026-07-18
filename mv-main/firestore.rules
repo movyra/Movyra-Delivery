@@ -294,5 +294,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ========================================================================
+    // MOVYRA CIVIC MODULE - NEW ADMINISTRATIVE CAPABILITIES
+    // ========================================================================
+    match /civic_personnel/{personnelId} {
+      // Strictly restricted to authorized administrators for municipal roster management
+      allow read, write: if isAdmin();
+    }
+
+    match /civic_audit_logs/{logId} {
+      // Strictly restricted to authorized administrators for compliance and accountability tracking
+      allow read, write: if isAdmin();
+    }
+
   }
 }
