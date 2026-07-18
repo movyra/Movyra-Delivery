@@ -10,7 +10,9 @@ import {
     ShieldCheck, 
     Clock, 
     TrendingUp,
-    MapPin
+    MapPin,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
@@ -19,9 +21,12 @@ import { useCivicStore } from '../../store/useCivicStore';
 
 export default function CivicLanding() {
     const navigate = useNavigate();
-    const currentLocation = useCivicStore((state) => state.currentLocation);
     
     // 1. STATE MANAGEMENT
+    const currentLocation = useCivicStore((state) => state.currentLocation);
+    const theme = useCivicStore((state) => state.theme);
+    const toggleTheme = useCivicStore((state) => state.toggleTheme);
+    
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
@@ -230,10 +235,7 @@ export default function CivicLanding() {
 
     const containerVariants = {
         hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: { staggerChildren: 0.1 }
-        }
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
     };
 
     const itemVariants = {
@@ -242,7 +244,9 @@ export default function CivicLanding() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white selection:text-black overflow-x-hidden flex flex-col relative">
+        <div className={`min-h-screen font-sans overflow-x-hidden flex flex-col relative transition-colors duration-300 ${
+            theme === 'light' ? 'bg-[#f5f5f5] text-[#111111] selection:bg-black selection:text-white' : 'bg-[#050505] text-white selection:bg-white selection:text-black'
+        }`}>
             
             <style>
                 {`
@@ -254,23 +258,43 @@ export default function CivicLanding() {
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
                 <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                    <img 
+                        src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
+                        alt="Movyra" 
+                        className="h-8 w-auto" 
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
                     <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
-                        ovyra <span className="text-[#888888] font-medium text-[1.2rem] ml-1">Civic</span>
+                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Civic</span>
                     </span>
                 </div>
                 
                 <div className="flex items-center gap-6 text-[0.9rem] font-bold">
-                    <span className="cursor-pointer hover:text-[#aaaaaa] transition-colors hidden sm:block">{currentT.help}</span>
+                    <span className={`cursor-pointer transition-colors hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
+                        {currentT.help}
+                    </span>
                     
                     <button 
                         onClick={() => setShowLangPrompt(true)}
-                        className="flex items-center gap-2 hover:text-[#aaaaaa] transition-colors outline-none"
+                        className={`flex items-center gap-2 transition-colors outline-none ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
                     >
                         {currentT.lang}
                     </button>
 
-                    <button onClick={() => navigate('/')} className="bg-[#111111] border border-[#333333] text-white px-5 py-2 rounded-full flex items-center gap-2 hover:border-white transition-colors outline-none">
+                    <button 
+                        onClick={toggleTheme}
+                        className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                        aria-label="Toggle Theme"
+                    >
+                        {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                    </button>
+
+                    <button 
+                        onClick={() => navigate('/')} 
+                        className={`px-5 py-2 rounded-full flex items-center gap-2 transition-colors outline-none border ${
+                            theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
+                        }`}
+                    >
                         Home
                     </button>
                 </div>
@@ -281,35 +305,49 @@ export default function CivicLanding() {
                 {showLangPrompt && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
+                        className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto"
+                            className={`w-full max-w-[400px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                            }`}
                         >
                             <button 
                                 onClick={() => setShowLangPrompt(false)} 
-                                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors"
+                                className={`absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors ${
+                                    theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
+                                }`}
                             >
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             </button>
                             
-                            <div className="w-12 h-12 mx-auto rounded-full border border-[#333333] flex items-center justify-center mb-4">
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center mb-4 ${
+                                theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'
+                            }`}>
+                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             </div>
 
-                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center">Select Language</h2>
-                            <p className="text-[#888888] text-[0.9rem] text-center mb-8">Choose your preferred viewing language.</p>
+                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
+                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Choose your preferred viewing language.</p>
                             
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((option) => (
                                     <button 
                                         key={option.code}
                                         onClick={() => { setLang(option.code); setShowLangPrompt(false); }}
-                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors ${lang === option.code ? 'bg-[#222222] border border-white' : 'bg-[#0a0a0a] border border-[#333333] hover:border-white'}`}
+                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors border ${
+                                            theme === 'light' 
+                                                ? (lang === option.code ? 'bg-[#f0f0f0] border-black' : 'bg-white border-[#e0e0e0] hover:border-black')
+                                                : (lang === option.code ? 'bg-[#222222] border-white' : 'bg-[#0a0a0a] border-[#333333] hover:border-white')
+                                        }`}
                                     >
-                                        <span className={`font-bold text-[1rem] ${lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white'}`}>{option.label}</span>
-                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                        <span className={`font-bold text-[1rem] ${
+                                            theme === 'light'
+                                                ? (lang === option.code ? 'text-black' : 'text-[#666666] group-hover:text-black')
+                                                : (lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white')
+                                        }`}>{option.label}</span>
+                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                     </button>
                                 ))}
                             </div>
@@ -327,14 +365,14 @@ export default function CivicLanding() {
                     variants={containerVariants}
                     className="mb-16 mt-8"
                 >
-                    <motion.div variants={itemVariants} className="flex items-center gap-3 mb-4 text-[#888888]">
-                        <ShieldCheck size={20} className="text-white" />
+                    <motion.div variants={itemVariants} className={`flex items-center gap-3 mb-4 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>
+                        <ShieldCheck size={20} className={theme === 'light' ? 'text-black' : 'text-white'} />
                         <span className="text-[0.9rem] font-bold tracking-widest uppercase">Movyra Civic Operations</span>
                     </motion.div>
                     <motion.h1 variants={itemVariants} className="text-[3rem] md:text-[4.5rem] font-black leading-[1.1] tracking-tighter mb-6">
                         {currentT.main_title}
                     </motion.h1>
-                    <motion.p variants={itemVariants} className="text-[1.1rem] md:text-[1.25rem] text-[#aaaaaa] max-w-[700px] leading-relaxed">
+                    <motion.p variants={itemVariants} className={`text-[1.1rem] md:text-[1.25rem] max-w-[700px] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'}`}>
                         {currentT.main_sub}
                     </motion.p>
                 </motion.div>
@@ -348,13 +386,17 @@ export default function CivicLanding() {
                 >
                     <button 
                         onClick={() => navigate('/civic/report')}
-                        className="bg-white text-black p-8 rounded-2xl flex flex-col items-start text-left hover:bg-[#e0e0e0] transition-colors outline-none group"
+                        className={`p-8 rounded-2xl flex flex-col items-start text-left transition-colors outline-none group border ${
+                            theme === 'light' ? 'bg-black text-white border-black hover:bg-[#222222]' : 'bg-white text-black border-white hover:bg-[#e0e0e0]'
+                        }`}
                     >
-                        <div className="w-12 h-12 bg-black text-white rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform ${
+                            theme === 'light' ? 'bg-white text-black' : 'bg-black text-white'
+                        }`}>
                             <AlertTriangle size={24} />
                         </div>
                         <h3 className="text-[1.25rem] font-black mb-2">{currentT.report_title}</h3>
-                        <p className="text-[0.9rem] font-medium text-[#333333] mb-8">{currentT.report_sub}</p>
+                        <p className={`text-[0.9rem] font-medium mb-8 ${theme === 'light' ? 'text-[#cccccc]' : 'text-[#333333]'}`}>{currentT.report_sub}</p>
                         <div className="mt-auto flex items-center gap-2 font-bold text-[0.9rem]">
                             {currentT.report_btn} <ArrowRight size={16} />
                         </div>
@@ -362,42 +404,60 @@ export default function CivicLanding() {
 
                     <button 
                         onClick={() => navigate('/civic/tracker')}
-                        className="bg-[#111111] border border-[#333333] p-8 rounded-2xl flex flex-col items-start text-left hover:border-white transition-colors outline-none group"
+                        className={`p-8 rounded-2xl flex flex-col items-start text-left transition-colors outline-none group border ${
+                            theme === 'light' ? 'bg-white border-[#e0e0e0] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'
+                        }`}
                     >
-                        <div className="w-12 h-12 bg-[#222222] text-white rounded-full flex items-center justify-center mb-6 group-hover:bg-white group-hover:text-black transition-colors">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-6 transition-colors ${
+                            theme === 'light' ? 'bg-[#f0f0f0] text-black group-hover:bg-black group-hover:text-white' : 'bg-[#222222] text-white group-hover:bg-white group-hover:text-black'
+                        }`}>
                             <Activity size={24} />
                         </div>
                         <h3 className="text-[1.25rem] font-black mb-2">{currentT.track_title}</h3>
-                        <p className="text-[0.9rem] font-medium text-[#aaaaaa] mb-8">{currentT.track_sub}</p>
-                        <div className="mt-auto flex items-center gap-2 font-bold text-[0.9rem] text-[#888888] group-hover:text-white transition-colors">
+                        <p className={`text-[0.9rem] font-medium mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#aaaaaa]'}`}>{currentT.track_sub}</p>
+                        <div className={`mt-auto flex items-center gap-2 font-bold text-[0.9rem] transition-colors ${
+                            theme === 'light' ? 'text-[#888888] group-hover:text-black' : 'text-[#888888] group-hover:text-white'
+                        }`}>
                             {currentT.track_btn} <ArrowRight size={16} />
                         </div>
                     </button>
 
                     <button 
                         onClick={() => navigate('/civic/heatmap')}
-                        className="bg-[#111111] border border-[#333333] p-8 rounded-2xl flex flex-col items-start text-left hover:border-white transition-colors outline-none group"
+                        className={`p-8 rounded-2xl flex flex-col items-start text-left transition-colors outline-none group border ${
+                            theme === 'light' ? 'bg-white border-[#e0e0e0] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'
+                        }`}
                     >
-                        <div className="w-12 h-12 bg-[#222222] text-white rounded-full flex items-center justify-center mb-6 group-hover:bg-white group-hover:text-black transition-colors">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-6 transition-colors ${
+                            theme === 'light' ? 'bg-[#f0f0f0] text-black group-hover:bg-black group-hover:text-white' : 'bg-[#222222] text-white group-hover:bg-white group-hover:text-black'
+                        }`}>
                             <Map size={24} />
                         </div>
                         <h3 className="text-[1.25rem] font-black mb-2">{currentT.map_title}</h3>
-                        <p className="text-[0.9rem] font-medium text-[#aaaaaa] mb-8">{currentT.map_sub}</p>
-                        <div className="mt-auto flex items-center gap-2 font-bold text-[0.9rem] text-[#888888] group-hover:text-white transition-colors">
+                        <p className={`text-[0.9rem] font-medium mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#aaaaaa]'}`}>{currentT.map_sub}</p>
+                        <div className={`mt-auto flex items-center gap-2 font-bold text-[0.9rem] transition-colors ${
+                            theme === 'light' ? 'text-[#888888] group-hover:text-black' : 'text-[#888888] group-hover:text-white'
+                        }`}>
                             {currentT.map_btn} <ArrowRight size={16} />
                         </div>
                     </button>
 
                     <button 
                         onClick={() => navigate('/civic/transparency')}
-                        className="bg-[#111111] border border-[#333333] p-8 rounded-2xl flex flex-col items-start text-left hover:border-white transition-colors outline-none group"
+                        className={`p-8 rounded-2xl flex flex-col items-start text-left transition-colors outline-none group border ${
+                            theme === 'light' ? 'bg-white border-[#e0e0e0] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'
+                        }`}
                     >
-                        <div className="w-12 h-12 bg-[#222222] text-white rounded-full flex items-center justify-center mb-6 group-hover:bg-white group-hover:text-black transition-colors">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-6 transition-colors ${
+                            theme === 'light' ? 'bg-[#f0f0f0] text-black group-hover:bg-black group-hover:text-white' : 'bg-[#222222] text-white group-hover:bg-white group-hover:text-black'
+                        }`}>
                             <TrendingUp size={24} />
                         </div>
                         <h3 className="text-[1.25rem] font-black mb-2">{currentT.data_title}</h3>
-                        <p className="text-[0.9rem] font-medium text-[#aaaaaa] mb-8">{currentT.data_sub}</p>
-                        <div className="mt-auto flex items-center gap-2 font-bold text-[0.9rem] text-[#888888] group-hover:text-white transition-colors">
+                        <p className={`text-[0.9rem] font-medium mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#aaaaaa]'}`}>{currentT.data_sub}</p>
+                        <div className={`mt-auto flex items-center gap-2 font-bold text-[0.9rem] transition-colors ${
+                            theme === 'light' ? 'text-[#888888] group-hover:text-black' : 'text-[#888888] group-hover:text-white'
+                        }`}>
                             {currentT.data_btn} <ArrowRight size={16} />
                         </div>
                     </button>
@@ -411,12 +471,16 @@ export default function CivicLanding() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
-                        className="lg:col-span-1 bg-[#111111] border border-[#333333] rounded-3xl p-8"
+                        className={`lg:col-span-1 rounded-3xl p-8 border ${
+                            theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'
+                        }`}
                     >
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-[1.5rem] font-black tracking-tight">{currentT.score}</h2>
                             {currentLocation.address && (
-                                <div className="flex items-center gap-1 text-[#888888] text-[0.8rem] font-bold px-3 py-1 bg-[#222222] rounded-full">
+                                <div className={`flex items-center gap-1 text-[0.8rem] font-bold px-3 py-1 rounded-full ${
+                                    theme === 'light' ? 'bg-[#f0f0f0] text-[#555555]' : 'bg-[#222222] text-[#888888]'
+                                }`}>
                                     <MapPin size={12} /> {currentT.localized}
                                 </div>
                             )}
@@ -424,19 +488,19 @@ export default function CivicLanding() {
 
                         {isLoading ? (
                             <div className="h-[200px] flex items-center justify-center">
-                                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin ${theme === 'light' ? 'border-black' : 'border-white'}`}></div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-6">
                                 <div className="relative w-40 h-40 flex items-center justify-center mb-6">
                                     <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                                        <circle cx="50" cy="50" r="45" fill="none" stroke="#222222" strokeWidth="8" />
+                                        <circle cx="50" cy="50" r="45" fill="none" stroke={theme === 'light' ? '#e0e0e0' : '#222222'} strokeWidth="8" />
                                         <circle 
                                             cx="50" 
                                             cy="50" 
                                             r="45" 
                                             fill="none" 
-                                            stroke={healthMetrics.healthScore > 75 ? "#ffffff" : healthMetrics.healthScore > 40 ? "#aaaaaa" : "#555555"} 
+                                            stroke={healthMetrics.healthScore > 75 ? (theme === 'light' ? '#000000' : '#ffffff') : healthMetrics.healthScore > 40 ? '#888888' : '#ff4444'} 
                                             strokeWidth="8" 
                                             strokeDasharray={`${(healthMetrics.healthScore / 100) * 283} 283`} 
                                             className="transition-all duration-1000 ease-out"
@@ -444,17 +508,19 @@ export default function CivicLanding() {
                                     </svg>
                                     <div className="text-center">
                                         <span className="text-[3rem] font-black leading-none">{healthMetrics.healthScore}</span>
-                                        <span className="block text-[0.8rem] text-[#888888] font-bold mt-1">/ 100</span>
+                                        <span className={`block text-[0.8rem] font-bold mt-1 ${theme === 'light' ? 'text-[#888888]' : 'text-[#888888]'}`}>/ 100</span>
                                     </div>
                                 </div>
-                                <div className="w-full grid grid-cols-2 gap-4 text-center border-t border-[#333333] pt-6">
+                                <div className={`w-full grid grid-cols-2 gap-4 text-center border-t pt-6 ${
+                                    theme === 'light' ? 'border-[#e0e0e0]' : 'border-[#333333]'
+                                }`}>
                                     <div>
                                         <div className="text-[1.5rem] font-black">{healthMetrics.totalActive}</div>
-                                        <div className="text-[0.8rem] text-[#888888] font-bold">{currentT.active}</div>
+                                        <div className={`text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.active}</div>
                                     </div>
                                     <div>
                                         <div className="text-[1.5rem] font-black">{healthMetrics.averageResolutionTime}</div>
-                                        <div className="text-[0.8rem] text-[#888888] font-bold">{currentT.avg_res}</div>
+                                        <div className={`text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.avg_res}</div>
                                     </div>
                                 </div>
                             </div>
@@ -466,14 +532,18 @@ export default function CivicLanding() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.5 }}
-                        className="lg:col-span-2 bg-[#111111] border border-[#333333] rounded-3xl p-8 flex flex-col"
+                        className={`lg:col-span-2 rounded-3xl p-8 flex flex-col border ${
+                            theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'
+                        }`}
                     >
                         <div className="flex items-center justify-between mb-8">
                             <h2 className="text-[1.5rem] font-black tracking-tight flex items-center gap-3">
-                                <FileText size={24} className="text-[#888888]" />
+                                <FileText size={24} className={theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} />
                                 {currentT.notices}
                             </h2>
-                            <button className="text-[0.9rem] font-bold text-[#888888] hover:text-white transition-colors outline-none">
+                            <button className={`text-[0.9rem] font-bold transition-colors outline-none ${
+                                theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
+                            }`}>
                                 {currentT.archive}
                             </button>
                         </div>
@@ -481,27 +551,33 @@ export default function CivicLanding() {
                         <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-2">
                             {isLoading ? (
                                 <div className="h-full flex items-center justify-center">
-                                    <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin ${theme === 'light' ? 'border-black' : 'border-white'}`}></div>
                                 </div>
                             ) : notices.length === 0 ? (
-                                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed border-[#333333] rounded-2xl">
-                                    <Clock size={32} className="text-[#555555] mb-4" />
-                                    <h4 className="text-[1.1rem] font-bold text-white mb-1">{currentT.no_notices}</h4>
-                                    <p className="text-[0.9rem] text-[#888888]">{currentT.no_notices_sub}</p>
+                                <div className={`flex-1 flex flex-col items-center justify-center text-center p-8 rounded-2xl border border-dashed ${
+                                    theme === 'light' ? 'border-[#cccccc] bg-[#f9f9f9]' : 'border-[#333333] bg-[#0a0a0a]'
+                                }`}>
+                                    <Clock size={32} className={`mb-4 ${theme === 'light' ? 'text-[#888888]' : 'text-[#555555]'}`} />
+                                    <h4 className="text-[1.1rem] font-bold mb-1">{currentT.no_notices}</h4>
+                                    <p className={`text-[0.9rem] ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.no_notices_sub}</p>
                                 </div>
                             ) : (
                                 notices.map((notice) => (
-                                    <div key={notice.id} className="p-5 border border-[#333333] rounded-xl hover:border-[#555555] transition-colors bg-[#0a0a0a]">
+                                    <div key={notice.id} className={`p-5 rounded-xl transition-colors border ${
+                                        theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0] hover:border-black' : 'bg-[#0a0a0a] border-[#333333] hover:border-[#555555]'
+                                    }`}>
                                         <div className="flex items-start justify-between gap-4 mb-2">
-                                            <h4 className="text-[1.1rem] font-black text-white">{notice.title}</h4>
-                                            <span className="shrink-0 px-3 py-1 bg-[#222222] text-[#aaaaaa] text-[0.75rem] font-bold rounded-full">
+                                            <h4 className="text-[1.1rem] font-black">{notice.title}</h4>
+                                            <span className={`shrink-0 px-3 py-1 text-[0.75rem] font-bold rounded-full ${
+                                                theme === 'light' ? 'bg-[#e0e0e0] text-[#555555]' : 'bg-[#222222] text-[#aaaaaa]'
+                                            }`}>
                                                 {notice.department || 'General Administration'}
                                             </span>
                                         </div>
-                                        <p className="text-[0.95rem] text-[#aaaaaa] leading-relaxed mb-4">
+                                        <p className={`text-[0.95rem] leading-relaxed mb-4 ${theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'}`}>
                                             {notice.description}
                                         </p>
-                                        <div className="flex items-center text-[0.8rem] font-bold text-[#555555]">
+                                        <div className={`flex items-center text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#888888]' : 'text-[#555555]'}`}>
                                             Issued: {notice.createdAt?.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) || 'Recent'}
                                         </div>
                                     </div>
