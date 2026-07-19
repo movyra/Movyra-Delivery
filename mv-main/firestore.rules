@@ -273,23 +273,23 @@ service cloud.firestore {
     match /civic_complaints/{complaintId} {
       // Authenticated citizens can submit reports
       allow create: if isAuthenticated();
-      // Public read access is strictly required for transparency dashboards, heatmaps, and duplicate detection
-      allow read: if true; 
+      // Authenticated session required to view infrastructure records
+      allow read: if isAuthenticated(); 
       // Only the citizen who submitted the report or an authorized administrator can modify it
       allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /civic_notices/{noticeId} {
-      // Public read access for community announcements
-      allow read: if true;
+      // Authenticated session required to view official notices
+      allow read: if isAuthenticated();
       // Strictly restricted to authorized administrators
       allow write: if isAdmin();
     }
 
     match /civic_analytics/{analyticsId} {
-      // Public read access for ward performance metrics and transparency
-      allow read: if true;
+      // Authenticated session required to view performance metrics
+      allow read: if isAuthenticated();
       // Strictly restricted to system generation and administrators
       allow write: if isAdmin();
     }
