@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WifiOff, AlertCircle } from 'lucide-react';
 
@@ -16,8 +16,14 @@ import { WifiOff, AlertCircle } from 'lucide-react';
  * 7. Live Viewport Meta Management
  * 8. IN-DEVELOPMENT MASTER TOGGLE & SECURE ROUTE INTERCEPTOR
  * 9. GLOBAL QUOTA BLOCKER INTERCEPTION
+ * 10. CIVIC MODULE SECURE ACCESS GATEWAY
  * ============================================================================
  */
+
+// --- FIREBASE & STORE IMPORTS ---
+import { auth } from './firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useCivicStore } from './store/useCivicStore';
 
 // --- IN-DEVELOPMENT & ADMIN IMPORTS ---
 import ComingSoon from './pages/ComingSoon';
@@ -89,6 +95,8 @@ import IssueTracker from './pages/Civic/IssueTracker';
 import CivicHeatmap from './pages/Civic/CivicHeatmap';
 import TransparencyDashboard from './pages/Civic/TransparencyDashboard';
 import WardAdmin from './pages/Civic/WardAdmin';
+import CivicOnboarding from './pages/Civic/CivicOnboarding';
+import CivicAuth from './pages/Civic/CivicAuth';
 
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
@@ -227,6 +235,40 @@ const AnimatedRoute = ({ children }) => {
   );
 };
 
+// Feature 10: Civic Operations Security Gateway
+const SecureCivicGateway = ({ children }) => {
+  const onboardingCompleted = useCivicStore(state => state.onboardingCompleted);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      setIsAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-[#888888] font-bold text-[0.9rem]">Verifying identity credentials...</p>
+      </div>
+    );
+  }
+
+  if (!onboardingCompleted) {
+    return <Navigate to="/civic/onboarding" replace />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/civic/auth" replace />;
+  }
+
+  return children;
+};
+
 // ============================================================================
 // APP ENTRY POINT
 // ============================================================================
@@ -270,12 +312,15 @@ export default function App() {
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
 
                 {/* MOVYRA CIVIC MODULE */}
-                <Route path='/civic' element={<AnimatedRoute><CivicLanding /></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
-                <Route path='/civic/tracker' element={<AnimatedRoute><IssueTracker /></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
-                <Route path='/civic/admin' element={<AnimatedRoute><SecureAdminGate><WardAdmin /></SecureAdminGate></AnimatedRoute>} />
+                <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
+                <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
+                
+                <Route path='/civic' element={<AnimatedRoute><SecureCivicGateway><CivicLanding /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><ReportIssue /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><IssueTracker /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><CivicHeatmap /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><TransparencyDashboard /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SecureAdminGate><WardAdmin /></SecureAdminGate></SecureCivicGateway></AnimatedRoute>} />
 
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
@@ -337,12 +382,15 @@ export default function App() {
                 <Route path='/download' element={<AnimatedRoute><DownloadPage /></AnimatedRoute>} />
 
                 {/* MOVYRA CIVIC MODULE */}
-                <Route path='/civic' element={<AnimatedRoute><CivicLanding /></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
-                <Route path='/civic/tracker' element={<AnimatedRoute><IssueTracker /></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
-                <Route path='/civic/admin' element={<AnimatedRoute><SecureAdminGate><WardAdmin /></SecureAdminGate></AnimatedRoute>} />
+                <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
+                <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
+                
+                <Route path='/civic' element={<AnimatedRoute><SecureCivicGateway><CivicLanding /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><ReportIssue /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><IssueTracker /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><CivicHeatmap /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><TransparencyDashboard /></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SecureAdminGate><WardAdmin /></SecureAdminGate></SecureCivicGateway></AnimatedRoute>} />
               </>
             )}
           </Routes>
