@@ -9,6 +9,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
  * 2. Administrative Dashboard Filter State
  * 3. Offline Complaint Drafting & Persistence
  * 4. Persistent Interface Theme Configuration (Light/Dark Mode)
+ * 5. Persistent Onboarding Documentation History Tracker
  * ============================================================================
  */
 
@@ -24,6 +25,16 @@ export const useCivicStore = create(
         set((state) => ({
           theme: state.theme === 'dark' ? 'light' : 'dark'
         })),
+
+      // ======================================================================
+      // USER ONBOARDING OPERATIONS STATE
+      // ======================================================================
+      onboardingCompleted: false,
+
+      completeOnboarding: () =>
+        set({
+          onboardingCompleted: true
+        }),
 
       // ======================================================================
       // GEOGRAPHIC LOCATION STATE
