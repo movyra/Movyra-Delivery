@@ -189,7 +189,7 @@ export default function CivicOnboarding() {
             theme === 'light' ? 'bg-[#ffffff] text-[#111111]' : 'bg-[#000000] text-white'
         }`}>
             
-            {/* FLOATING UTILITY CONTROLS */}
+            {/* FLOATING UTILITY CONTROLS (Moved Logo Here) */}
             <div className="absolute top-6 left-6 right-6 flex items-center justify-between z-50">
                 <div className="flex items-center gap-2">
                     <button onClick={() => setShowLangPrompt(true)} className={`font-black text-[0.8rem] px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black' : 'border-[#333333] hover:border-white'}`}>
@@ -199,17 +199,18 @@ export default function CivicOnboarding() {
                         {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
                     </button>
                 </div>
+                
+                {/* CENTERED LOGO (Moved up & larger) */}
+                <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 z-40">
+                    <img src={theme === 'light' ? '/logo-3.png' : '/logo.png'} alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                    <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
+                        ovyra <span className={`${theme === 'light' ? 'text-[#888888]' : 'text-[#666666]'} font-medium text-[1.1rem] ml-0.5`}>Civic</span>
+                    </span>
+                </div>
+
                 <button onClick={executeExit} className={`font-black text-[0.85rem] transition-colors ${theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#666666] hover:text-white'}`}>
                     {currentT.skip}
                 </button>
-            </div>
-
-            {/* CENTERED LOGO */}
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 flex items-center gap-2 z-40">
-                <img src={theme === 'light' ? '/logo-3.png' : '/logo.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
-                <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px]">
-                    ovyra <span className={`${theme === 'light' ? 'text-[#888888]' : 'text-[#666666]'} font-medium text-[0.9rem] ml-0.5`}>Civic</span>
-                </span>
             </div>
 
             {/* TRANSLATION MODAL */}
