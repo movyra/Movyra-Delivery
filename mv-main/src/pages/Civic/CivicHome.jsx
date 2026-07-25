@@ -1,16 +1,16 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
     ShieldCheck, 
     BarChart3, 
     Map, 
-    Clock, 
     TerminalSquare, 
-    Database, 
     ArrowRight,
     Sun,
-    Moon
+    Moon,
+    CheckCircle2,
+    Activity
 } from 'lucide-react';
 import { useCivicStore } from '../../store/useCivicStore';
 
@@ -19,6 +19,10 @@ export default function CivicHome() {
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
 
+    // Variables for the standardized footer
+    const localCity = "Mumbai";
+    const currentT = { careers: "Careers" };
+
     const fadeUp = {
         hidden: { opacity: 0, y: 30 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
@@ -26,16 +30,24 @@ export default function CivicHome() {
 
     const staggerContainer = {
         hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { staggerChildren: 0.2 } }
+        visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
     };
 
     return (
-        <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 ${
+        <div className={`min-h-screen font-sans overflow-x-hidden flex flex-col transition-colors duration-300 ${
             theme === 'light' ? 'bg-[#f5f5f5] text-[#111111] selection:bg-black selection:text-white' : 'bg-[#050505] text-white selection:bg-white selection:text-black'
         }`}>
+            <style>
+                {`
+                @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                .animate-fade { animation: fade 0.6s ease-out forwards; }
+                .stagger-3 { animation-delay: 0.3s; }
+                `}
+            </style>
+
             {/* MASTER HEADER */}
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 transition-colors backdrop-blur-md ${
-                theme === 'light' ? 'bg-[#f5f5f5]/80 border-b border-[#e0e0e0]' : 'bg-[#050505]/80 border-b border-[#111111]'
+                theme === 'light' ? 'bg-[#f5f5f5]/90 border-b border-[#e0e0e0]' : 'bg-[#050505]/90 border-b border-[#111111]'
             }`}>
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
                     <img 
@@ -66,7 +78,7 @@ export default function CivicHome() {
                     </button>
                     <button 
                         onClick={() => navigate('/civic/auth')} 
-                        className={`px-5 py-2.5 rounded-full transition-colors outline-none border ${
+                        className={`px-6 py-2.5 rounded-full transition-colors outline-none border ${
                             theme === 'light' ? 'bg-black text-white border-black hover:bg-[#222222]' : 'bg-white text-black border-white hover:bg-[#e0e0e0]'
                         }`}
                     >
@@ -75,21 +87,21 @@ export default function CivicHome() {
                 </div>
             </header>
 
-            {/* HERO SECTION */}
-            <section className="relative pt-40 pb-20 px-6 md:px-12 max-w-[1400px] mx-auto min-h-[85vh] flex flex-col justify-center">
+            {/* SECTION 1: HERO */}
+            <section className="relative pt-48 pb-20 px-6 md:px-12 max-w-[1400px] mx-auto flex flex-col justify-center w-full">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                     <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="z-10">
-                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-6">
-                            <ShieldCheck size={20} className={theme === 'light' ? 'text-black' : 'text-white'} />
-                            <span className="text-[0.9rem] font-bold tracking-widest uppercase text-[#888888]">Enterprise Infrastructure Control</span>
+                        <motion.div variants={fadeUp} className={`inline-flex items-center gap-3 px-4 py-2 rounded-full mb-8 border ${theme === 'light' ? 'bg-white border-[#cccccc]' : 'bg-[#111111] border-[#333333]'}`}>
+                            <div className="w-2 h-2 rounded-full bg-[#00aa55] animate-pulse"></div>
+                            <span className="text-[0.85rem] font-bold tracking-widest uppercase">Smart City Operations</span>
                         </motion.div>
-                        <motion.h1 variants={fadeUp} className="text-[3.5rem] md:text-[4.5rem] lg:text-[5rem] font-black leading-[1.05] tracking-tighter mb-6">
-                            Next-Generation Municipal Operations.
+                        <motion.h1 variants={fadeUp} className="text-[3.5rem] md:text-[4.5rem] font-black leading-[1.1] tracking-tighter mb-6">
+                            Manage City Services Fast & Securely.
                         </motion.h1>
-                        <motion.p variants={fadeUp} className={`text-[1.1rem] md:text-[1.25rem] max-w-[600px] leading-relaxed mb-10 ${
+                        <motion.p variants={fadeUp} className={`text-[1.1rem] md:text-[1.2rem] max-w-[500px] leading-relaxed mb-10 ${
                             theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'
                         }`}>
-                            A secure, unified architecture for documenting civic deficiencies, tracking field personnel resolution metrics, and executing data-driven resource allocation.
+                            A simple, secure platform to report issues, track work progress, and manage daily municipal tasks in real time.
                         </motion.p>
                         <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center gap-4">
                             <button 
@@ -98,150 +110,181 @@ export default function CivicHome() {
                                     theme === 'light' ? 'bg-black text-white hover:bg-[#222222]' : 'bg-white text-black hover:bg-[#e0e0e0]'
                                 }`}
                             >
-                                Access Control Center <ArrowRight size={18} />
-                            </button>
-                            <button 
-                                onClick={() => navigate('/civic/onboarding')} 
-                                className={`w-full sm:w-auto px-8 py-4 rounded-xl font-black text-[1rem] transition-colors outline-none border ${
-                                    theme === 'light' ? 'bg-transparent border-[#cccccc] text-black hover:border-black' : 'bg-transparent border-[#333333] text-white hover:border-white'
-                                }`}
-                            >
-                                Platform Overview
+                                Get Started <ArrowRight size={18} />
                             </button>
                         </motion.div>
                     </motion.div>
 
-                    {/* CUSTOM VECTOR GRAPHIC: Isometric Data Cityscape */}
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }} className="hidden lg:flex justify-end relative">
-                        <div className={`w-full aspect-square max-w-[600px] rounded-full absolute -top-20 -right-20 blur-3xl opacity-20 ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></div>
-                        <svg viewBox="0 0 400 400" className="w-full h-auto max-w-[500px] z-10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            {/* Grid Base */}
-                            <path d="M50 250 L200 330 L350 250 L200 170 Z" fill={theme === 'light' ? '#e0e0e0' : '#111111'} stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="2"/>
-                            <path d="M50 250 L200 330 L200 350 L50 270 Z" fill={theme === 'light' ? '#cccccc' : '#0a0a0a'} />
-                            <path d="M350 250 L200 330 L200 350 L350 270 Z" fill={theme === 'light' ? '#d5d5d5' : '#1a1a1a'} />
-                            
-                            {/* Block 1 */}
-                            <path d="M100 220 L150 245 L200 220 L150 195 Z" fill={theme === 'light' ? '#ffffff' : '#222222'} stroke={theme === 'light' ? '#cccccc' : '#444444'} strokeWidth="1"/>
-                            <path d="M100 220 L150 245 L150 150 L100 125 Z" fill={theme === 'light' ? '#f0f0f0' : '#1a1a1a'} />
-                            <path d="M200 220 L150 245 L150 150 L200 125 Z" fill={theme === 'light' ? '#e5e5e5' : '#2a2a2a'} />
-                            
-                            {/* Block 2 (Taller) */}
-                            <path d="M220 230 L270 255 L320 230 L270 205 Z" fill={theme === 'light' ? '#ffffff' : '#222222'} stroke={theme === 'light' ? '#cccccc' : '#444444'} strokeWidth="1"/>
-                            <path d="M220 230 L270 255 L270 100 L220 75 Z" fill={theme === 'light' ? '#f0f0f0' : '#1a1a1a'} />
-                            <path d="M320 230 L270 255 L270 100 L320 75 Z" fill={theme === 'light' ? '#e5e5e5' : '#2a2a2a'} />
-
-                            {/* Data Nodes */}
-                            <circle cx="150" cy="150" r="4" fill={theme === 'light' ? '#000000' : '#ffffff'} />
-                            <circle cx="270" cy="100" r="4" fill={theme === 'light' ? '#000000' : '#ffffff'} />
-                            <circle cx="200" cy="170" r="4" fill={theme === 'light' ? '#000000' : '#ffffff'} />
-                            <path d="M150 150 L200 170 L270 100" stroke={theme === 'light' ? '#000000' : '#ffffff'} strokeWidth="2" strokeDasharray="4 4" />
+                    {/* HERO GRAPHIC: Animated Network SVG */}
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }} className="hidden lg:flex justify-end relative">
+                        <svg viewBox="0 0 400 400" className="w-full h-auto max-w-[500px]" fill="none">
+                            <circle cx="200" cy="200" r="180" stroke={theme === 'light' ? '#e0e0e0' : '#1a1a1a'} strokeWidth="2" strokeDasharray="8 8"/>
+                            <circle cx="200" cy="200" r="120" stroke={theme === 'light' ? '#cccccc' : '#222222'} strokeWidth="1" />
+                            <motion.circle cx="200" cy="200" r="60" fill={theme === 'light' ? '#000000' : '#ffffff'} initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, duration: 2, repeatType: "reverse" }} />
+                            {/* Connectors */}
+                            <path d="M200 140 L200 50 M260 200 L350 200 M200 260 L200 350 M140 200 L50 200" stroke={theme === 'light' ? '#000000' : '#ffffff'} strokeWidth="3"/>
+                            {/* Nodes */}
+                            <circle cx="200" cy="50" r="8" fill={theme === 'light' ? '#000000' : '#ffffff'} />
+                            <circle cx="350" cy="200" r="8" fill={theme === 'light' ? '#000000' : '#ffffff'} />
+                            <circle cx="200" cy="350" r="8" fill={theme === 'light' ? '#000000' : '#ffffff'} />
+                            <circle cx="50" cy="200" r="8" fill={theme === 'light' ? '#000000' : '#ffffff'} />
                         </svg>
                     </motion.div>
                 </div>
             </section>
 
-            {/* OPERATIONAL FEATURES MATRIX */}
+            {/* SECTION 2: CORE VALUES */}
             <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
                 <div className="max-w-[1400px] mx-auto">
-                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-100px" }} variants={fadeUp} className="mb-16">
-                        <h2 className="text-[2.5rem] md:text-[3rem] font-black tracking-tighter mb-4">Core Capabilities</h2>
-                        <p className={`text-[1.1rem] max-w-[600px] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>Engineered for municipal accountability, field operation velocity, and absolute administrative visibility.</p>
-                    </motion.div>
+                    <div className="mb-16">
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Why Choose Movyra Civic?</h2>
+                        <p className={`text-[1.1rem] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>Built for speed, transparency, and simple tracking.</p>
+                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {[
-                            { icon: Map, title: "Geographic Data Routing", desc: "Automated aggregation of infrastructure deficiencies mapped directly to specific municipal wards and operational zones." },
-                            { icon: Clock, title: "Service Level Agreements", desc: "Strict tracking protocols that flag overdue tasks, monitor personnel resolution times, and enforce accountability." },
-                            { icon: BarChart3, title: "Transparency Analytics", desc: "Live dashboards rendering resolution efficiency, public reporting volumes, and historical operational metrics." },
-                            { icon: Database, title: "Immutable Audit Trails", desc: "Every administrative action, status modification, and personnel assignment is recorded into a secure historical ledger." },
-                            { icon: ShieldCheck, title: "Secure Authentication", desc: "Isolated administrative access controls ensuring only verified field units and ward officers manage sensitive operational data." },
-                            { icon: TerminalSquare, title: "Redundant Offline Support", desc: "Field personnel and citizens can draft reports offline, synchronizing automatically upon network restoration." }
+                            { icon: Map, title: "Location Tracking", desc: "Pinpoint exact locations for faster field response." },
+                            { icon: Activity, title: "Live Updates", desc: "Watch the status of work change from pending to complete." },
+                            { icon: ShieldCheck, title: "Secure Records", desc: "All data is stored safely with controlled access." }
                         ].map((feature, idx) => (
-                            <motion.div 
-                                key={idx} 
-                                initial="hidden" 
-                                whileInView="visible" 
-                                viewport={{ once: true, margin: "-50px" }} 
-                                variants={fadeUp} 
-                                className={`p-8 rounded-3xl border transition-colors ${
-                                    theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0] hover:border-[#cccccc]' : 'bg-[#111111] border-[#333333] hover:border-[#555555]'
-                                }`}
-                            >
-                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 border ${
-                                    theme === 'light' ? 'bg-white border-[#cccccc]' : 'bg-[#222222] border-[#444444]'
-                                }`}>
+                            <div key={idx} className={`p-8 rounded-3xl border transition-colors ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'}`}>
+                                <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 border ${theme === 'light' ? 'bg-white border-[#cccccc]' : 'bg-[#222222] border-[#444444]'}`}>
                                     <feature.icon size={20} className={theme === 'light' ? 'text-black' : 'text-white'} />
                                 </div>
-                                <h3 className="text-[1.25rem] font-black mb-3">{feature.title}</h3>
-                                <p className={`text-[0.95rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>{feature.desc}</p>
-                            </motion.div>
+                                <h3 className="text-[1.25rem] font-black mb-2">{feature.title}</h3>
+                                <p className={`text-[0.95rem] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>{feature.desc}</p>
+                            </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* DEVELOPER & INTEGRATION SECTION */}
-            <section className="py-24 px-6 md:px-12 max-w-[1400px] mx-auto">
+            {/* SECTION 3: LIVE ANALYTICS PREVIEW */}
+            <section className="py-24 px-6 md:px-12 max-w-[1400px] mx-auto w-full">
                 <div className={`rounded-3xl p-10 md:p-16 border flex flex-col lg:flex-row items-center justify-between gap-12 overflow-hidden relative ${
-                    theme === 'light' ? 'bg-[#f0f0f0] border-[#cccccc]' : 'bg-[#111111] border-[#333333]'
+                    theme === 'light' ? 'bg-white border-[#cccccc]' : 'bg-[#111111] border-[#333333]'
                 }`}>
-                    <div className="relative z-10 lg:max-w-[50%]">
+                    <div className="relative z-10 lg:max-w-[40%]">
+                        <BarChart3 size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Clear Analytics.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed mb-8 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            View performance dashboards instantly. Track total reports, resolution speed, and active areas without complex menus.
+                        </p>
+                    </div>
+
+                    {/* Animated Bar Chart Graphic */}
+                    <div className="w-full lg:w-[50%] h-[300px] flex items-end gap-4 relative">
+                        <div className={`absolute bottom-0 left-0 w-full h-[1px] ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></div>
+                        {[40, 70, 45, 90, 60, 100].map((height, idx) => (
+                            <motion.div 
+                                key={idx}
+                                initial={{ height: 0 }}
+                                whileInView={{ height: `${height}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: idx * 0.1 }}
+                                className={`flex-1 rounded-t-lg ${theme === 'light' ? 'bg-black' : 'bg-white'}`}
+                            ></motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 4: CITIZEN WORKFLOW */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
+                <div className="max-w-[1400px] mx-auto text-center">
+                    <h2 className="text-[2.5rem] font-black tracking-tighter mb-16">How It Works</h2>
+                    
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-8 relative">
+                        {/* Connecting Line (Hidden on Mobile) */}
+                        <div className={`hidden md:block absolute top-1/2 left-0 w-full h-[2px] -translate-y-1/2 z-0 ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></div>
+
+                        {[
+                            { num: "1", title: "Report", desc: "Submit details." },
+                            { num: "2", title: "Assign", desc: "Routed to team." },
+                            { num: "3", title: "Resolve", desc: "Work completed." }
+                        ].map((step, idx) => (
+                            <div key={idx} className={`relative z-10 w-full md:w-1/3 p-8 rounded-3xl border flex flex-col items-center text-center ${
+                                theme === 'light' ? 'bg-white border-[#cccccc]' : 'bg-[#111111] border-[#333333]'
+                            }`}>
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-[1.2rem] mb-4 ${
+                                    theme === 'light' ? 'bg-black text-white' : 'bg-white text-black'
+                                }`}>
+                                    {step.num}
+                                </div>
+                                <h3 className="text-[1.25rem] font-black mb-2">{step.title}</h3>
+                                <p className={`text-[0.95rem] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 5: DEVELOPER INTEGRATION */}
+            <section className="py-24 px-6 md:px-12 max-w-[1400px] mx-auto w-full">
+                <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+                    <div className="lg:max-w-[40%]">
                         <div className="flex items-center gap-2 mb-4">
                             <TerminalSquare size={18} className={theme === 'light' ? 'text-black' : 'text-[#888888]'} />
-                            <span className="text-[0.85rem] font-bold tracking-widest uppercase">Developer Platform</span>
+                            <span className="text-[0.85rem] font-bold tracking-widest uppercase">Developers</span>
                         </div>
-                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">System Integration API</h2>
-                        <p className={`text-[1.05rem] leading-relaxed mb-8 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
-                            Connect municipal legacy systems with the Movyra Civic architecture. Access standardized JSON endpoints for operational telemetry, issue extraction, and automated cross-platform state synchronization.
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Connect Systems.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed mb-8 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            Use our simple API to pull active task data into your existing tools. Standard JSON responses make integration fast.
                         </p>
-                        <button 
-                            className={`px-6 py-3 rounded-xl font-bold text-[0.95rem] border transition-colors outline-none ${
-                                theme === 'light' ? 'bg-white text-black border-[#cccccc] hover:border-black' : 'bg-[#000000] text-white border-[#555555] hover:border-white'
-                            }`}
-                        >
-                            View API Documentation
+                        <button className={`px-6 py-3 rounded-xl font-bold text-[0.95rem] border transition-colors outline-none ${
+                            theme === 'light' ? 'bg-white text-black border-[#cccccc] hover:border-black' : 'bg-[#000000] text-white border-[#555555] hover:border-white'
+                        }`}>
+                            Read API Docs
                         </button>
                     </div>
 
-                    {/* API CODE SNIPPET VECTOR */}
-                    <div className={`w-full lg:w-auto flex-1 rounded-2xl p-6 font-mono text-[0.8rem] md:text-[0.9rem] leading-loose border relative z-10 shadow-2xl ${
-                        theme === 'light' ? 'bg-white border-[#cccccc] text-[#333333]' : 'bg-[#000000] border-[#333333] text-[#aaaaaa]'
+                    <div className={`w-full lg:w-[50%] rounded-2xl p-6 font-mono text-[0.85rem] leading-loose border shadow-xl ${
+                        theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-[#333333]' : 'bg-[#0a0a0a] border-[#222222] text-[#aaaaaa]'
                     }`}>
-                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-dashed border-current opacity-30">
+                        <div className="flex items-center gap-2 mb-4 pb-4 border-b border-[#333333]/20">
                             <div className="w-3 h-3 rounded-full bg-[#ff4444]"></div>
                             <div className="w-3 h-3 rounded-full bg-[#ffaa00]"></div>
                             <div className="w-3 h-3 rounded-full bg-[#00ff88]"></div>
                         </div>
-                        <span className={theme === 'light' ? 'text-[#0055aa]' : 'text-[#44aaff]'}>GET</span> /v1/civic/infrastructure/status<br/>
-                        <span className={theme === 'light' ? 'text-[#aa0055]' : 'text-[#ff44aa]'}>Authorization:</span> Bearer [API_KEY]<br/>
-                        <br/>
+                        <span className={theme === 'light' ? 'text-[#0055aa]' : 'text-[#44aaff]'}>GET</span> /api/status<br/><br/>
                         {`{`} <br/>
-                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"status"</span>: 200,<br/>
-                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"ward_id"</span>: "WD-14A",<br/>
-                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"active_incidents"</span>: 42,<br/>
-                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"sla_compliance"</span>: "94.2%",<br/>
-                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"last_sync"</span>: "2026-07-25T12:35:17Z"<br/>
+                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"active_tasks"</span>: 42,<br/>
+                        &nbsp;&nbsp;<span className={theme === 'light' ? 'text-[#000000]' : 'text-[#ffffff]'}>"success_rate"</span>: "94%"<br/>
                         {`}`}
                     </div>
                 </div>
             </section>
 
-            {/* FOOTER CTA */}
-            <footer className={`py-12 px-6 border-t text-center ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#050505] border-[#111111]'}`}>
-                <h2 className="text-[2rem] font-black tracking-tighter mb-4">Ready to modernize operations?</h2>
-                <div className="flex items-center justify-center gap-4 mt-8">
-                    <button 
-                        onClick={() => navigate('/civic/auth')} 
-                        className={`px-8 py-4 rounded-xl font-black text-[1rem] transition-colors outline-none ${
-                            theme === 'light' ? 'bg-black text-white hover:bg-[#222222]' : 'bg-white text-black hover:bg-[#e0e0e0]'
-                        }`}
-                    >
-                        Sign Up Now
-                    </button>
+            {/* FOOTER ALIGNMENT */}
+            <footer className={`w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t opacity-0 animate-fade stagger-3 relative z-10 ${
+                theme === 'light' ? 'border-[#e0e0e0]' : 'border-[#111111]'
+            }`}>
+                
+                {/* Custom SVG Social Icons */}
+                <div className={`flex items-center gap-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <a href="https://www.linkedin.com/company/getmovyra/" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </a>
+                    <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                    </a>
+                    <a href="https://www.instagram.com/getmovyra" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    </a>
+                    <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                    </a>
                 </div>
-                <p className={`mt-12 text-[0.8rem] font-bold tracking-wider uppercase ${theme === 'light' ? 'text-[#888888]' : 'text-[#555555]'}`}>
-                    © {new Date().getFullYear()} Movyra Civic. Secure Enterprise Infrastructure.
-                </p>
+                
+                <div className={`flex items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                    <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        {localCity}, IN
+                    </div>
+                </div>
+
             </footer>
         </div>
     );
