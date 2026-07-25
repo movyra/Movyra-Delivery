@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     signInWithEmailAndPassword, 
@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
-import { Sun, Moon, ShieldCheck, X } from 'lucide-react';
+import { Sun, Moon, ShieldCheck, X, Zap, Activity, Lock } from 'lucide-react';
 import { useCivicStore } from '../../store/useCivicStore';
 
 export default function CivicAuth() {
@@ -29,6 +29,9 @@ export default function CivicAuth() {
     const [errorMessage, setErrorMessage] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
+    // Variables for the standardized footer
+    const localCity = "Mumbai";
+
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
@@ -38,108 +41,108 @@ export default function CivicAuth() {
     // 13-Language Dictionary (Simplified Terminology)
     const t = {
         en: { 
-            lang: "English", title: "Identity Verification", sub: "Access the civic portal to report, track, and analyze municipal operations.", 
-            name: "Full Name", email: "Email Address", pass: "Password", purpose: "Operational Purpose", questions: "Additional Questions or Context",
-            login_btn: "Sign In", reg_btn: "Sign Up", reset_btn: "Send Recovery Link", admin_btn: "Submit Access Request",
-            switch_reg: "Need an account? Sign Up", switch_log: "Already registered? Sign In", forgot: "Forgot Password?", switch_admin: "Request Admin Access",
-            reset_msg: "Recovery link sent. Check your inbox.", admin_msg: "Request submitted securely. Awaiting administrative review.",
-            google_btn: "Continue with Google"
+            lang: "English", title: "Welcome Back", sub: "Sign in to manage reports and track progress.", 
+            name: "Full Name", email: "Email Address", pass: "Password", purpose: "Role / Purpose", questions: "Why do you need access?",
+            login_btn: "Sign In", reg_btn: "Sign Up", reset_btn: "Send Link", admin_btn: "Submit Request",
+            switch_reg: "Need an account? Sign Up", switch_log: "Already have an account? Sign In", forgot: "Forgot Password?", switch_admin: "Request Admin Access",
+            reset_msg: "Link sent. Check your email.", admin_msg: "Request sent. Waiting for approval.",
+            google_btn: "Sign in with Google", careers: "Careers"
         },
         hi: { 
-            lang: "हिन्दी", title: "पहचान सत्यापन", sub: "नगर निगम ऑपरेशंस को रिपोर्ट करने, ट्रैक करने और विश्लेषण करने के लिए पोर्टल तक पहुंचें।", 
-            name: "पूरा नाम", email: "ईमेल पता", pass: "पासवर्ड", purpose: "परिचालन उद्देश्य", questions: "अतिरिक्त प्रश्न या संदर्भ",
-            login_btn: "साइन इन", reg_btn: "साइन अप", reset_btn: "रिकवरी लिंक भेजें", admin_btn: "एक्सेस अनुरोध सबमिट करें",
-            switch_reg: "खाता चाहिए? साइन अप करें", switch_log: "पहले से पंजीकृत हैं? साइन इन करें", forgot: "पासवर्ड भूल गए?", switch_admin: "एडमिन एक्सेस का अनुरोध करें",
-            reset_msg: "रिकवरी लिंक भेज दिया गया है। अपना इनबॉक्स जांचें।", admin_msg: "अनुरोध सुरक्षित रूप से सबमिट किया गया। प्रशासनिक समीक्षा की प्रतीक्षा है।",
-            google_btn: "Google के साथ जारी रखें"
+            lang: "हिन्दी", title: "वापसी पर स्वागत है", sub: "रिपोर्ट प्रबंधित करने और प्रगति को ट्रैक करने के लिए साइन इन करें।", 
+            name: "पूरा नाम", email: "ईमेल पता", pass: "पासवर्ड", purpose: "भूमिका / उद्देश्य", questions: "आपको पहुँच की आवश्यकता क्यों है?",
+            login_btn: "साइन इन", reg_btn: "साइन अप", reset_btn: "लिंक भेजें", admin_btn: "अनुरोध सबमिट करें",
+            switch_reg: "खाता चाहिए? साइन अप करें", switch_log: "पहले से खाता है? साइन इन करें", forgot: "पासवर्ड भूल गए?", switch_admin: "एडमिन एक्सेस का अनुरोध करें",
+            reset_msg: "लिंक भेजा गया। अपना ईमेल जांचें।", admin_msg: "अनुरोध भेजा गया। मंजूरी का इंतजार है।",
+            google_btn: "Google से साइन इन करें", careers: "करियर"
         },
         hinglish: { 
-            lang: "Hinglish", title: "Identity Verification", sub: "Municipal operations report, track aur analyze karne ke liye portal access karein.", 
-            name: "Full Name", email: "Email Address", pass: "Password", purpose: "Operational Purpose", questions: "Additional Questions or Context",
-            login_btn: "Sign In", reg_btn: "Sign Up", reset_btn: "Recovery Link Bhejein", admin_btn: "Access Request Submit Karein",
-            switch_reg: "Account chahiye? Sign Up karein", switch_log: "Pehle se registered hain? Sign In karein", forgot: "Password bhool gaye?", switch_admin: "Admin Access Request Karein",
-            reset_msg: "Recovery link send ho gaya hai. Inbox check karein.", admin_msg: "Request securely submit ho gayi hai. Admin review ka wait karein.",
-            google_btn: "Google ke sath continue karein"
+            lang: "Hinglish", title: "Welcome Back", sub: "Reports manage karne aur progress track karne ke liye sign in karein.", 
+            name: "Full Name", email: "Email Address", pass: "Password", purpose: "Role / Purpose", questions: "Aapko access kyun chahiye?",
+            login_btn: "Sign In", reg_btn: "Sign Up", reset_btn: "Link Bhejein", admin_btn: "Request Submit Karein",
+            switch_reg: "Account chahiye? Sign Up karein", switch_log: "Pehle se account hai? Sign In karein", forgot: "Password bhool gaye?", switch_admin: "Admin Access Request Karein",
+            reset_msg: "Link send ho gaya. Email check karein.", admin_msg: "Request send ho gayi. Approval ka wait karein.",
+            google_btn: "Google se sign in karein", careers: "Careers"
         },
         mr: { 
-            lang: "मराठी", title: "ओळख पडताळणी", sub: "महानगरपालिका ऑपरेशन्सचा अहवाल देण्यासाठी, ट्रॅक करण्यासाठी आणि विश्लेषण करण्यासाठी पोर्टलमध्ये प्रवेश करा.", 
-            name: "पूर्ण नाव", email: "ईमेल पत्ता", pass: "पासवर्ड", purpose: "ऑपरेशनल हेतू", questions: "अतिरिक्त प्रश्न किंवा संदर्भ",
-            login_btn: "साइन इन करा", reg_btn: "साइन अप करा", reset_btn: "रिकव्हरी लिंक पाठवा", admin_btn: "अॅक्सेस विनंती सबमिट करा",
-            switch_reg: "खाते हवे आहे? साइन अप करा", switch_log: "आधीच नोंदणीकृत आहात? साइन इन करा", forgot: "पासवर्ड विसरलात?", switch_admin: "अॅडमिन अॅक्सेसची विनंती करा",
-            reset_msg: "रिकव्हरी लिंक पाठवली आहे. तुमचा इनबॉक्स तपासा.", admin_msg: "विनंती सुरक्षितपणे सबमिट केली. प्रशासकीय पुनरावलोकनाची प्रतीक्षा करत आहे.",
-            google_btn: "Google सह सुरू ठेवा"
+            lang: "मराठी", title: "स्वागत आहे", sub: "अहवाल व्यवस्थापित करण्यासाठी आणि प्रगती ट्रॅक करण्यासाठी साइन इन करा.", 
+            name: "पूर्ण नाव", email: "ईमेल पत्ता", pass: "पासवर्ड", purpose: "भूमिका / हेतू", questions: "तुम्हाला प्रवेश का हवा आहे?",
+            login_btn: "साइन इन करा", reg_btn: "साइन अप करा", reset_btn: "लिंक पाठवा", admin_btn: "विनंती सबमिट करा",
+            switch_reg: "खाते हवे आहे? साइन अप करा", switch_log: "आधीच खाते आहे? साइन इन करा", forgot: "पासवर्ड विसरलात?", switch_admin: "अॅडमिन अॅक्सेसची विनंती करा",
+            reset_msg: "लिंक पाठवली. तुमचा ईमेल तपासा.", admin_msg: "विनंती पाठवली. मंजुरीची प्रतीक्षा आहे.",
+            google_btn: "Google सह साइन इन करा", careers: "करिअर"
         },
         gu: { 
-            lang: "ગુજરાતી", title: "ઓળખ ચકાસણી", sub: "મ્યુનિસિપલ ઓપરેશન્સને રિપોર્ટ કરવા, ટ્રૅક કરવા અને વિશ્લેષણ કરવા માટે પોર્ટલ ઍક્સેસ કરો.", 
-            name: "પૂરું નામ", email: "ઈમેલ એડ્રેસ", pass: "પાસવર્ડ", purpose: "ઓપરેશનલ હેતુ", questions: "વધારાના પ્રશ્નો અથવા સંદર્ભ",
-            login_btn: "સાઇન ઇન", reg_btn: "સાઇન અપ", reset_btn: "રિકવરી લિંક મોકલો", admin_btn: "ઍક્સેસ વિનંતી સબમિટ કરો",
-            switch_reg: "એકાઉન્ટ જોઈએ છે? સાઇન અપ કરો", switch_log: "પહેલેથી નોંધાયેલ છો? સાઇન ઇન કરો", forgot: "પાસવર્ડ ભૂલી ગયા છો?", switch_admin: "એડમિન એક્સેસની વિનંતી કરો",
-            reset_msg: "રિકવરી લિંક મોકલવામાં આવી. તમારું ઇનબૉક્સ તપાસો.", admin_msg: "વિનંતી સુરક્ષિત રીતે સબમિટ કરવામાં આવી. વહીવટી સમીક્ષાની રાહ જોવાય છે.",
-            google_btn: "Google સાથે ચાલુ રાખો"
+            lang: "ગુજરાતી", title: "સ્વાગત છે", sub: "રિપોર્ટ્સ મેનેજ કરવા અને પ્રગતિ ટ્રૅક કરવા માટે સાઇન ઇન કરો.", 
+            name: "પૂરું નામ", email: "ઈમેલ એડ્રેસ", pass: "પાસવર્ડ", purpose: "ભૂમિકા / હેતુ", questions: "તમારે ઍક્સેસ શા માટે જોઈએ છે?",
+            login_btn: "સાઇન ઇન", reg_btn: "સાઇન અપ", reset_btn: "લિંક મોકલો", admin_btn: "વિનંતી સબમિટ કરો",
+            switch_reg: "એકાઉન્ટ જોઈએ છે? સાઇન અપ કરો", switch_log: "પહેલેથી એકાઉન્ટ છે? સાઇન ઇન કરો", forgot: "પાસવર્ડ ભૂલી ગયા છો?", switch_admin: "એડમિન એક્સેસની વિનંતી કરો",
+            reset_msg: "લિંક મોકલી. તમારો ઇમેઇલ તપાસો.", admin_msg: "વિનંતી મોકલી. મંજૂરીની રાહ જોવાય છે.",
+            google_btn: "Google થી સાઇન ઇન કરો", careers: "કારકિર્દી"
         },
         te: { 
-            lang: "తెలుగు", title: "గుర్తింపు ధృవీకరణ", sub: "మున్సిపల్ కార్యకలాపాలను నివేదించడానికి, ట్రాక్ చేయడానికి మరియు విశ్లేషించడానికి పోర్టల్‌ను యాక్సెస్ చేయండి.", 
-            name: "పూర్తి పేరు", email: "ఈమెయిల్ చిరునామా", pass: "పాస్‌వర్డ్", purpose: "కార్యాచరణ ప్రయోజనం", questions: "అదనపు ప్రశ్నలు లేదా సందర్భం",
-            login_btn: "సైన్ ఇన్ చేయండి", reg_btn: "సైన్ అప్ చేయండి", reset_btn: "రికవరీ లింక్ పంపండి", admin_btn: "యాక్సెస్ అభ్యర్థనను సమర్పించండి",
-            switch_reg: "ఖాతా కావాలా? సైన్ అప్ చేయండి", switch_log: "ఇప్పటికే నమోదు చేసుకున్నారా? సైన్ ఇన్ చేయండి", forgot: "పాస్‌వర్డ్ మర్చిపోయారా?", switch_admin: "అడ్మిన్ యాక్సెస్‌ను అభ్యర్థించండి",
-            reset_msg: "రికవరీ లింక్ పంపబడింది. మీ ఇన్‌బాక్స్‌ని తనిఖీ చేయండి.", admin_msg: "అభ్యర్థన సురక్షితంగా సమర్పించబడింది. అడ్మినిస్ట్రేటివ్ సమీక్ష కోసం వేచి ఉంది.",
-            google_btn: "Google తో కొనసాగించండి"
+            lang: "తెలుగు", title: "స్వాగతం", sub: "నివేదికలను నిర్వహించడానికి మరియు పురోగతిని ట్రాక్ చేయడానికి సైన్ ఇన్ చేయండి.", 
+            name: "పూర్తి పేరు", email: "ఈమెయిల్ చిరునామా", pass: "పాస్‌వర్డ్", purpose: "పాత్ర / ప్రయోజనం", questions: "మీకు యాక్సెస్ ఎందుకు కావాలి?",
+            login_btn: "సైన్ ఇన్ చేయండి", reg_btn: "సైన్ అప్ చేయండి", reset_btn: "లింక్ పంపండి", admin_btn: "అభ్యర్థనను సమర్పించండి",
+            switch_reg: "ఖాతా కావాలా? సైన్ అప్ చేయండి", switch_log: "ఇప్పటికే ఖాతా ఉందా? సైన్ ఇన్ చేయండి", forgot: "పాస్‌వర్డ్ మర్చిపోయారా?", switch_admin: "అడ్మిన్ యాక్సెస్‌ను అభ్యర్థించండి",
+            reset_msg: "లింక్ పంపబడింది. మీ ఇమెయిల్‌ను తనిఖీ చేయండి.", admin_msg: "అభ్యర్థన పంపబడింది. ఆమోదం కోసం వేచి ఉంది.",
+            google_btn: "Google తో సైన్ ఇన్ చేయండి", careers: "కెరీర్స్"
         },
         ta: { 
-            lang: "தமிழ்", title: "அடையாள சரிபார்ப்பு", sub: "நகராட்சி செயல்பாடுகளைப் புகாரளிக்க, கண்காணிக்க மற்றும் பகுப்பாய்வு செய்ய போர்ட்டலை அணுகவும்.", 
-            name: "முழு பெயர்", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", purpose: "செயல்பாட்டு நோக்கம்", questions: "கூடுதல் கேள்விகள் அல்லது சூழல்",
-            login_btn: "உள்நுழைய", reg_btn: "பதிவு செய்", reset_btn: "மீட்பு இணைப்பை அனுப்பு", admin_btn: "அணுகல் கோரிக்கையை சமர்ப்பிக்கவும்",
-            switch_reg: "கணக்கு வேண்டுமா? பதிவு செய்", switch_log: "ஏற்கனவே பதிவு செய்யப்பட்டதா? உள்நுழைய", forgot: "கடவுச்சொல்லை மறந்துவிட்டீர்களா?", switch_admin: "நிர்வாகி அணுகலைக் கோரவும்",
-            reset_msg: "மீட்பு இணைப்பு அனுப்பப்பட்டது. உங்கள் இன்பாக்ஸைச் சரிபார்க்கவும்.", admin_msg: "கோரிக்கை பாதுகாப்பாக சமர்ப்பிக்கப்பட்டது. நிர்வாக மதிப்பாய்விற்காக காத்திருக்கிறது.",
-            google_btn: "Google உடன் தொடரவும்"
+            lang: "தமிழ்", title: "நல்வரவு", sub: "அறிக்கைகளை நிர்வகிக்க மற்றும் முன்னேற்றத்தை கண்காணிக்க உள்நுழையவும்.", 
+            name: "முழு பெயர்", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", purpose: "பங்கு / நோக்கம்", questions: "உங்களுக்கு அணுகல் ஏன் தேவை?",
+            login_btn: "உள்நுழைய", reg_btn: "பதிவு செய்", reset_btn: "இணைப்பை அனுப்பு", admin_btn: "கோரிக்கையை சமர்ப்பி",
+            switch_reg: "கணக்கு வேண்டுமா? பதிவு செய்", switch_log: "ஏற்கனவே கணக்கு உள்ளதா? உள்நுழைய", forgot: "கடவுச்சொல்லை மறந்துவிட்டீர்களா?", switch_admin: "நிர்வாகி அணுகலைக் கோரவும்",
+            reset_msg: "இணைப்பு அனுப்பப்பட்டது. மின்னஞ்சலைச் சரிபார்க்கவும்.", admin_msg: "கோரிக்கை அனுப்பப்பட்டது. ஒப்புதலுக்காக காத்திருக்கிறது.",
+            google_btn: "Google மூலம் உள்நுழைக", careers: "வேலைவாய்ப்புகள்"
         },
         pa: { 
-            lang: "ਪੰਜਾਬੀ", title: "ਪਛਾਣ ਤਸਦੀਕ", sub: "ਮਿਉਂਸਪਲ ਓਪਰੇਸ਼ਨਾਂ ਦੀ ਰਿਪੋਰਟ ਕਰਨ, ਟਰੈਕ ਕਰਨ ਅਤੇ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਲਈ ਪੋਰਟਲ ਤੱਕ ਪਹੁੰਚ ਕਰੋ।", 
-            name: "ਪੂਰਾ ਨਾਮ", email: "ਈਮੇਲ ਪਤਾ", pass: "ਪਾਸਵਰਡ", purpose: "ਸੰਚਾਲਨ ਉਦੇਸ਼", questions: "ਵਾਧੂ ਸਵਾਲ ਜਾਂ ਸੰਦਰਭ",
-            login_btn: "ਸਾਈਨ ਇਨ ਕਰੋ", reg_btn: "ਸਾਈਨ ਅੱਪ ਕਰੋ", reset_btn: "ਰਿਕਵਰੀ ਲਿੰਕ ਭੇਜੋ", admin_btn: "ਪਹੁੰਚ ਬੇਨਤੀ ਸਬਮਿਟ ਕਰੋ",
-            switch_reg: "ਖਾਤਾ ਚਾਹੀਦਾ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ", switch_log: "ਕੀ ਪਹਿਲਾਂ ਹੀ ਰਜਿਸਟਰਡ ਹੈ? ਸਾਈਨ ਇਨ ਕਰੋ", forgot: "ਕੀ ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ ਹੋ?", switch_admin: "ਐਡਮਿਨ ਐਕਸੈਸ ਦੀ ਬੇਨਤੀ ਕਰੋ",
-            reset_msg: "ਰਿਕਵਰੀ ਲਿੰਕ ਭੇਜਿਆ ਗਿਆ। ਆਪਣਾ ਇਨਬਾਕਸ ਚੈੱਕ ਕਰੋ।", admin_msg: "ਬੇਨਤੀ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਬਮਿਟ ਕੀਤੀ ਗਈ। ਪ੍ਰਬੰਧਕੀ ਸਮੀਖਿਆ ਦੀ ਉਡੀਕ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ।",
-            google_btn: "Google ਨਾਲ ਜਾਰੀ ਰੱਖੋ"
+            lang: "ਪੰਜਾਬੀ", title: "ਜੀ ਆਇਆਂ ਨੂੰ", sub: "ਰਿਪੋਰਟਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰਨ ਅਤੇ ਤਰੱਕੀ ਨੂੰ ਟਰੈਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।", 
+            name: "ਪੂਰਾ ਨਾਮ", email: "ਈਮੇਲ ਪਤਾ", pass: "ਪਾਸਵਰਡ", purpose: "ਭੂਮਿਕਾ / ਉਦੇਸ਼", questions: "ਤੁਹਾਨੂੰ ਪਹੁੰਚ ਦੀ ਲੋੜ ਕਿਉਂ ਹੈ?",
+            login_btn: "ਸਾਈਨ ਇਨ ਕਰੋ", reg_btn: "ਸਾਈਨ ਅੱਪ ਕਰੋ", reset_btn: "ਲਿੰਕ ਭੇਜੋ", admin_btn: "ਬੇਨਤੀ ਸਬਮਿਟ ਕਰੋ",
+            switch_reg: "ਖਾਤਾ ਚਾਹੀਦਾ ਹੈ? ਸਾਈਨ ਅੱਪ ਕਰੋ", switch_log: "ਕੀ ਪਹਿਲਾਂ ਹੀ ਖਾਤਾ ਹੈ? ਸਾਈਨ ਇਨ ਕਰੋ", forgot: "ਕੀ ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ ਹੋ?", switch_admin: "ਐਡਮਿਨ ਐਕਸੈਸ ਦੀ ਬੇਨਤੀ ਕਰੋ",
+            reset_msg: "ਲਿੰਕ ਭੇਜਿਆ ਗਿਆ। ਆਪਣੀ ਈਮੇਲ ਚੈੱਕ ਕਰੋ।", admin_msg: "ਬੇਨਤੀ ਭੇਜੀ ਗਈ। ਮਨਜ਼ੂਰੀ ਦੀ ਉਡੀਕ ਹੈ।",
+            google_btn: "Google ਨਾਲ ਸਾਈਨ ਇਨ ਕਰੋ", careers: "ਕਰੀਅਰ"
         },
         bho: { 
-            lang: "भोजपुरी", title: "पहचान सत्यापन", sub: "नगर निगम ऑपरेशंस के रिपोर्ट करे, ट्रैक करे आ विश्लेषण करे खातिर पोर्टल तक पहुंचें।", 
-            name: "पूरा नाम", email: "ईमेल पता", pass: "पासवर्ड", purpose: "परिचालन उद्देश्य", questions: "अतिरिक्त प्रश्न या संदर्भ",
-            login_btn: "साइन इन", reg_btn: "साइन अप", reset_btn: "रिकवरी लिंक भेजीं", admin_btn: "एक्सेस अनुरोध सबमिट करीं",
-            switch_reg: "खाता चाहीं? साइन अप करीं", switch_log: "पहिले से पंजीकृत बानी? साइन इन करीं", forgot: "पासवर्ड भुला गइलें?", switch_admin: "एडमिन एक्सेस के अनुरोध करीं",
-            reset_msg: "रिकवरी लिंक भेज दिहल गइल बा। आपन इनबॉक्स जाँचीं।", admin_msg: "अनुरोध सुरक्षित रूप से सबमिट कइल गइल। प्रशासनिक समीक्षा के प्रतीक्षा बा।",
-            google_btn: "Google के साथ जारी रखीं"
+            lang: "भोजपुरी", title: "स्वागत बा", sub: "रिपोर्ट प्रबंधित करे आ प्रगति ट्रैक करे खातिर साइन इन करीं।", 
+            name: "पूरा नाम", email: "ईमेल पता", pass: "पासवर्ड", purpose: "भूमिका / उद्देश्य", questions: "रउआँ के एक्सेस काहें चाहीं?",
+            login_btn: "साइन इन", reg_btn: "साइन अप", reset_btn: "लिंक भेजीं", admin_btn: "अनुरोध सबमिट करीं",
+            switch_reg: "खाता चाहीं? साइन अप करीं", switch_log: "पहिले से खाता बा? साइन इन करीं", forgot: "पासवर्ड भुला गइलें?", switch_admin: "एडमिन एक्सेस के अनुरोध करीं",
+            reset_msg: "लिंक भेजल गइल। आपन ईमेल जाँचीं।", admin_msg: "अनुरोध भेजल गइल। मंजूरी के इंतजार बा।",
+            google_btn: "Google से साइन इन करीं", careers: "करियर"
         },
         ar: { 
-            lang: "العربية", title: "التحقق من الهوية", sub: "الوصول إلى بوابة البلدية للإبلاغ عن العمليات وتتبعها وتحليلها.", 
-            name: "الاسم الكامل", email: "عنوان البريد الإلكتروني", pass: "كلمة المرور", purpose: "الهدف التشغيلي", questions: "أسئلة إضافية أو سياق",
-            login_btn: "تسجيل الدخول", reg_btn: "إنشاء حساب", reset_btn: "إرسال رابط الاسترداد", admin_btn: "إرسال طلب الوصول",
-            switch_reg: "هل تحتاج إلى حساب؟ إنشاء حساب", switch_log: "هل أنت مسجل بالفعل؟ تسجيل الدخول", forgot: "هل نسيت كلمة المرور؟", switch_admin: "طلب وصول المسؤول",
-            reset_msg: "تم إرسال رابط الاسترداد. تحقق من صندوق الوارد الخاص بك.", admin_msg: "تم إرسال الطلب بشكل آمن. في انتظار المراجعة الإدارية.",
-            google_btn: "المتابعة باستخدام Google"
+            lang: "العربية", title: "مرحباً بعودتك", sub: "قم بتسجيل الدخول لإدارة التقارير وتتبع التقدم.", 
+            name: "الاسم الكامل", email: "عنوان البريد الإلكتروني", pass: "كلمة المرور", purpose: "الدور / الغرض", questions: "لماذا تحتاج إلى الوصول؟",
+            login_btn: "تسجيل الدخول", reg_btn: "إنشاء حساب", reset_btn: "إرسال الرابط", admin_btn: "إرسال الطلب",
+            switch_reg: "تحتاج إلى حساب؟ إنشاء حساب", switch_log: "هل لديك حساب؟ تسجيل الدخول", forgot: "هل نسيت كلمة المرور؟", switch_admin: "طلب وصول المسؤول",
+            reset_msg: "تم إرسال الرابط. تحقق من بريدك الإلكتروني.", admin_msg: "تم إرسال الطلب. في انتظار الموافقة.",
+            google_btn: "تسجيل الدخول باستخدام Google", careers: "الوظائف"
         },
         es: { 
-            lang: "Español", title: "Verificación de Identidad", sub: "Acceda al portal municipal para reportar, rastrear y analizar operaciones.", 
-            name: "Nombre Completo", email: "Dirección de Correo", pass: "Contraseña", purpose: "Propósito Operativo", questions: "Preguntas Adicionales o Contexto",
-            login_btn: "Iniciar Sesión", reg_btn: "Registrarse", reset_btn: "Enviar Enlace de Recuperación", admin_btn: "Enviar Solicitud de Acceso",
-            switch_reg: "¿Necesita una cuenta? Registrarse", switch_log: "¿Ya está registrado? Iniciar Sesión", forgot: "¿Olvidó su contraseña?", switch_admin: "Solicitar Acceso de Administrador",
-            reset_msg: "Enlace de recuperación enviado. Revise su bandeja de entrada.", admin_msg: "Solicitud enviada de forma segura. En espera de revisión administrativa.",
-            google_btn: "Continuar con Google"
+            lang: "Español", title: "Bienvenido", sub: "Inicie sesión para gestionar informes y seguir el progreso.", 
+            name: "Nombre Completo", email: "Correo Electrónico", pass: "Contraseña", purpose: "Rol / Propósito", questions: "¿Por qué necesita acceso?",
+            login_btn: "Iniciar Sesión", reg_btn: "Registrarse", reset_btn: "Enviar Enlace", admin_btn: "Enviar Solicitud",
+            switch_reg: "¿Necesita una cuenta? Registrarse", switch_log: "¿Ya tiene cuenta? Iniciar Sesión", forgot: "¿Olvidó la contraseña?", switch_admin: "Solicitar Acceso de Administrador",
+            reset_msg: "Enlace enviado. Revise su correo.", admin_msg: "Solicitud enviada. Esperando aprobación.",
+            google_btn: "Iniciar sesión con Google", careers: "Carreras"
         },
         fr: { 
-            lang: "Français", title: "Vérification d'Identité", sub: "Accédez au portail municipal pour signaler, suivre et analyser les opérations.", 
-            name: "Nom Complet", email: "Adresse E-mail", pass: "Mot de passe", purpose: "Objectif Opérationnel", questions: "Questions Supplémentaires ou Contexte",
-            login_btn: "Se Connecter", reg_btn: "S'inscrire", reset_btn: "Envoyer le Lien de Récupération", admin_btn: "Soumettre la Demande d'Accès",
-            switch_reg: "Besoin d'un compte ? S'inscrire", switch_log: "Déjà inscrit ? Se Connecter", forgot: "Mot de passe oublié ?", switch_admin: "Demander un Accès Administrateur",
-            reset_msg: "Lien de récupération envoyé. Vérifiez votre boîte de réception.", admin_msg: "Demande soumise en toute sécurité. En attente d'examen administratif.",
-            google_btn: "Continuer avec Google"
+            lang: "Français", title: "Bon retour", sub: "Connectez-vous pour gérer les rapports et suivre les progrès.", 
+            name: "Nom Complet", email: "Adresse E-mail", pass: "Mot de passe", purpose: "Rôle / Objectif", questions: "Pourquoi avez-vous besoin d'accès ?",
+            login_btn: "Se Connecter", reg_btn: "S'inscrire", reset_btn: "Envoyer le Lien", admin_btn: "Soumettre la Demande",
+            switch_reg: "Besoin d'un compte ? S'inscrire", switch_log: "Déjà un compte ? Se Connecter", forgot: "Mot de passe oublié ?", switch_admin: "Demander un Accès Administrateur",
+            reset_msg: "Lien envoyé. Vérifiez votre e-mail.", admin_msg: "Demande envoyée. En attente d'approbation.",
+            google_btn: "Se connecter avec Google", careers: "Carrières"
         },
         de: { 
-            lang: "Deutsch", title: "Identitätsprüfung", sub: "Greifen Sie auf das kommunale Portal zu, um Operationen zu melden, zu verfolgen und zu analysieren.", 
-            name: "Vollständiger Name", email: "E-Mail-Adresse", pass: "Passwort", purpose: "Operativer Zweck", questions: "Zusätzliche Fragen oder Kontext",
-            login_btn: "Anmelden", reg_btn: "Registrieren", reset_btn: "Wiederherstellungslink Senden", admin_btn: "Zugangsanfrage Einreichen",
-            switch_reg: "Brauchen Sie ein Konto? Registrieren", switch_log: "Bereits registriert? Anmelden", forgot: "Passwort vergessen?", switch_admin: "Admin-Zugang Anfordern",
-            reset_msg: "Wiederherstellungslink gesendet. Überprüfen Sie Ihren Posteingang.", admin_msg: "Anfrage sicher eingereicht. Warten auf administrative Prüfung.",
-            google_btn: "Weiter mit Google"
+            lang: "Deutsch", title: "Willkommen zurück", sub: "Melden Sie sich an, um Berichte zu verwalten und den Fortschritt zu verfolgen.", 
+            name: "Vollständiger Name", email: "E-Mail-Adresse", pass: "Passwort", purpose: "Rolle / Zweck", questions: "Warum benötigen Sie Zugriff?",
+            login_btn: "Anmelden", reg_btn: "Registrieren", reset_btn: "Link Senden", admin_btn: "Anfrage Senden",
+            switch_reg: "Brauchen Sie ein Konto? Registrieren", switch_log: "Haben Sie bereits ein Konto? Anmelden", forgot: "Passwort vergessen?", switch_admin: "Admin-Zugang Anfordern",
+            reset_msg: "Link gesendet. Überprüfen Sie Ihre E-Mail.", admin_msg: "Anfrage gesendet. Warten auf Genehmigung.",
+            google_btn: "Mit Google anmelden", careers: "Karriere"
         }
     };
 
@@ -161,11 +164,11 @@ export default function CivicAuth() {
         try {
             if (authMode === 'login') {
                 await signInWithEmailAndPassword(auth, formData.email, formData.password);
-                navigate('/civic');
+                navigate('/civic/dashboard');
             } else if (authMode === 'register') {
                 const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
                 await updateProfile(userCredential.user, { displayName: formData.name });
-                navigate('/civic');
+                navigate('/civic/dashboard');
             } else if (authMode === 'reset') {
                 await sendPasswordResetEmail(auth, formData.email);
                 setSuccessMessage(currentT.reset_msg);
@@ -196,7 +199,7 @@ export default function CivicAuth() {
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
-            navigate('/civic');
+            navigate('/civic/dashboard');
         } catch (error) {
             setErrorMessage(error.message);
         } finally {
@@ -211,16 +214,24 @@ export default function CivicAuth() {
         setFormData({ name: '', email: '', password: '', purpose: '', questions: '' });
     };
 
+    const fadeUpAnim = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+    };
+
     return (
-        <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 flex flex-col items-center justify-center p-6 ${
+        <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 flex flex-col ${
             theme === 'light' ? 'bg-[#f5f5f5] text-[#111111] selection:bg-black selection:text-white' : 'bg-[#050505] text-white selection:bg-white selection:text-black'
         }`}>
             <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade { animation: fadeIn 0.5s ease-out forwards; }`}</style>
             
-            <header className="fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 animate-fade">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+            {/* MASTER HEADER */}
+            <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 transition-colors backdrop-blur-md ${
+                theme === 'light' ? 'bg-[#f5f5f5]/90 border-b border-[#e0e0e0]' : 'bg-[#050505]/90 border-b border-[#111111]'
+            }`}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
-                        src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-light.png' : '/logo.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
@@ -242,7 +253,7 @@ export default function CivicAuth() {
                     <button 
                         onClick={toggleTheme} 
                         className={`p-2 rounded-full transition-colors outline-none ${
-                            theme === 'light' ? 'bg-[#e0e0e0] text-black' : 'bg-[#222222] text-white'
+                            theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'
                         }`}
                     >
                         {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
@@ -250,7 +261,7 @@ export default function CivicAuth() {
                 </div>
             </header>
 
-            {/* TRANSLATION MODAL DIALOG */}
+            {/* TRANSLATION MODAL */}
             <AnimatePresence>
                 {showLangPrompt && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}>
@@ -275,139 +286,247 @@ export default function CivicAuth() {
                 )}
             </AnimatePresence>
 
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                className={`w-full max-w-[450px] p-8 md:p-10 rounded-3xl border animate-fade mt-16 ${
-                    theme === 'light' ? 'bg-white border-[#e0e0e0] shadow-xl shadow-black/5' : 'bg-[#111111] border-[#333333] shadow-2xl'
-                }`}
-            >
-                <div className="flex items-center gap-4 mb-8">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
-                        theme === 'light' ? 'bg-[#f5f5f5] border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
-                    }`}>
-                        <ShieldCheck size={24} className={theme === 'light' ? 'text-black' : 'text-white'} />
+            {/* AUTHENTICATION GATEWAY SECTION */}
+            <section className="relative pt-40 pb-20 px-6 md:px-12 flex flex-col items-center justify-center min-h-[90vh]">
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    className={`w-full max-w-[450px] p-8 md:p-10 rounded-3xl border animate-fade z-10 ${
+                        theme === 'light' ? 'bg-white border-[#e0e0e0] shadow-xl shadow-black/5' : 'bg-[#111111] border-[#333333] shadow-2xl'
+                    }`}
+                >
+                    <div className="flex items-center gap-4 mb-8">
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
+                            theme === 'light' ? 'bg-[#f5f5f5] border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                        }`}>
+                            <ShieldCheck size={24} className={theme === 'light' ? 'text-black' : 'text-white'} />
+                        </div>
+                        <div>
+                            <h1 className="text-[1.5rem] font-black tracking-tight leading-tight">
+                                {authMode === 'admin_req' ? "Admin Request" : currentT.title}
+                            </h1>
+                            <p className={`text-[0.8rem] font-bold mt-1 ${theme === 'light' ? 'text-[#666666]' : 'text-[#aaaaaa]'}`}>
+                                {authMode === 'admin_req' ? "Submit credentials for review." : currentT.sub}
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-[1.5rem] font-black tracking-tight leading-tight">
-                            {authMode === 'admin_req' ? "Admin Request" : currentT.title}
-                        </h1>
-                        <p className={`text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#aaaaaa]'}`}>
-                            {authMode === 'admin_req' ? "Submit credentials for review" : "Secure access portal"}
-                        </p>
-                    </div>
-                </div>
-                
-                <form onSubmit={processAuthentication} className="flex flex-col gap-4">
-                    {(authMode === 'register' || authMode === 'admin_req') && (
-                        <input 
-                            type="text" 
-                            placeholder={currentT.name} 
-                            required 
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                            className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border ${
-                                theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
-                            }`} 
-                        />
-                    )}
                     
-                    <input 
-                        type="email" 
-                        placeholder={currentT.email} 
-                        required 
-                        value={formData.email}
-                        onChange={(e) => setFormData({...formData, email: e.target.value})} 
-                        className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border ${
-                            theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
-                        }`} 
-                    />
-                    
-                    {authMode === 'admin_req' && (
-                        <>
-                            <select
-                                required
-                                value={formData.purpose}
-                                onChange={(e) => setFormData({...formData, purpose: e.target.value})}
-                                className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border appearance-none ${
-                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
-                                }`}
-                            >
-                                <option value="" disabled hidden>{currentT.purpose}</option>
-                                <option value="Ward Officer">Ward Officer / Municipal Representative</option>
-                                <option value="Field Support Unit">Field Support Unit</option>
-                                <option value="System Administrator">System Administrator</option>
-                            </select>
-                            
-                            <textarea 
-                                placeholder={currentT.questions} 
+                    <form onSubmit={processAuthentication} className="flex flex-col gap-4">
+                        {(authMode === 'register' || authMode === 'admin_req') && (
+                            <input 
+                                type="text" 
+                                placeholder={currentT.name} 
                                 required 
-                                rows="3"
-                                value={formData.questions}
-                                onChange={(e) => setFormData({...formData, questions: e.target.value})} 
-                                className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border resize-none ${
+                                value={formData.name}
+                                onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                                className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border ${
                                     theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
                                 }`} 
-                            ></textarea>
-                        </>
-                    )}
-
-                    {(authMode === 'login' || authMode === 'register') && (
+                            />
+                        )}
+                        
                         <input 
-                            type="password" 
-                            placeholder={currentT.pass} 
+                            type="email" 
+                            placeholder={currentT.email} 
                             required 
-                            value={formData.password}
-                            onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})} 
                             className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border ${
                                 theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
                             }`} 
                         />
-                    )}
+                        
+                        {authMode === 'admin_req' && (
+                            <>
+                                <select
+                                    required
+                                    value={formData.purpose}
+                                    onChange={(e) => setFormData({...formData, purpose: e.target.value})}
+                                    className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border appearance-none ${
+                                        theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                    }`}
+                                >
+                                    <option value="" disabled hidden>{currentT.purpose}</option>
+                                    <option value="Ward Officer">Ward Officer / Municipal Rep.</option>
+                                    <option value="Field Support Unit">Field Support Unit</option>
+                                    <option value="System Administrator">System Administrator</option>
+                                </select>
+                                
+                                <textarea 
+                                    placeholder={currentT.questions} 
+                                    required 
+                                    rows="3"
+                                    value={formData.questions}
+                                    onChange={(e) => setFormData({...formData, questions: e.target.value})} 
+                                    className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border resize-none ${
+                                        theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                    }`} 
+                                ></textarea>
+                            </>
+                        )}
 
-                    {errorMessage && <p className="text-[#ff4444] text-[0.85rem] font-bold px-2">{errorMessage}</p>}
-                    {successMessage && <p className="text-[#00aa55] text-[0.85rem] font-bold px-2">{successMessage}</p>}
-                    
-                    <button 
-                        type="submit"
-                        disabled={isLoading} 
-                        className={`w-full py-4 mt-2 rounded-xl font-black text-[0.95rem] transition-colors disabled:opacity-50 outline-none ${
-                            theme === 'light' ? 'bg-black text-white hover:bg-[#333333]' : 'bg-white text-black hover:bg-[#e0e0e0]'
-                        }`}
-                    >
-                        {isLoading ? "..." : (authMode === 'login' ? currentT.login_btn : authMode === 'register' ? currentT.reg_btn : authMode === 'reset' ? currentT.reset_btn : currentT.admin_btn)}
-                    </button>
-                </form>
+                        {(authMode === 'login' || authMode === 'register') && (
+                            <input 
+                                type="password" 
+                                placeholder={currentT.pass} 
+                                required 
+                                value={formData.password}
+                                onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                                className={`w-full p-4 rounded-xl outline-none transition-colors font-bold text-[0.9rem] border ${
+                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                }`} 
+                            />
+                        )}
 
-                {(authMode === 'login' || authMode === 'register') && (
-                    <div className="mt-4">
+                        {errorMessage && <p className="text-[#ff4444] text-[0.85rem] font-bold px-2">{errorMessage}</p>}
+                        {successMessage && <p className="text-[#00aa55] text-[0.85rem] font-bold px-2">{successMessage}</p>}
+                        
                         <button 
-                            type="button"
-                            onClick={handleGoogleAuth}
-                            disabled={isLoading}
-                            className={`w-full py-4 rounded-xl font-black text-[0.95rem] flex items-center justify-center gap-3 transition-colors disabled:opacity-50 outline-none border ${
-                                theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
+                            type="submit"
+                            disabled={isLoading} 
+                            className={`w-full py-4 mt-2 rounded-xl font-black text-[0.95rem] transition-colors disabled:opacity-50 outline-none ${
+                                theme === 'light' ? 'bg-black text-white hover:bg-[#333333]' : 'bg-white text-black hover:bg-[#e0e0e0]'
                             }`}
                         >
-                            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>
-                            {currentT.google_btn}
+                            {isLoading ? "..." : (authMode === 'login' ? currentT.login_btn : authMode === 'register' ? currentT.reg_btn : authMode === 'reset' ? currentT.reset_btn : currentT.admin_btn)}
                         </button>
-                    </div>
-                )}
+                    </form>
 
-                <div className="flex flex-col gap-3 mt-8 pt-6 border-t border-dashed border-[#333333]">
-                    {authMode === 'login' && (
-                        <>
-                            <button onClick={() => switchAuthMode('reset')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.forgot}</button>
-                            <button onClick={() => switchAuthMode('register')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.switch_reg}</button>
-                            <button onClick={() => switchAuthMode('admin_req')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#00aa55] hover:text-black' : 'text-[#00ff88] hover:text-white'}`}>{currentT.switch_admin}</button>
-                        </>
+                    {(authMode === 'login' || authMode === 'register') && (
+                        <div className="mt-4">
+                            <button 
+                                type="button"
+                                onClick={handleGoogleAuth}
+                                disabled={isLoading}
+                                className={`w-full py-4 rounded-xl font-black text-[0.95rem] flex items-center justify-center gap-3 transition-colors disabled:opacity-50 outline-none border ${
+                                    theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
+                                }`}
+                            >
+                                <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/><path d="M1 1h22v22H1z" fill="none"/></svg>
+                                {currentT.google_btn}
+                            </button>
+                        </div>
                     )}
-                    {(authMode === 'register' || authMode === 'reset' || authMode === 'admin_req') && (
-                        <button onClick={() => switchAuthMode('login')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.switch_log}</button>
-                    )}
+
+                    <div className="flex flex-col gap-3 mt-8 pt-6 border-t border-dashed border-[#333333]">
+                        {authMode === 'login' && (
+                            <>
+                                <button onClick={() => switchAuthMode('reset')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.forgot}</button>
+                                <button onClick={() => switchAuthMode('register')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.switch_reg}</button>
+                                <button onClick={() => switchAuthMode('admin_req')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#00aa55] hover:text-black' : 'text-[#00ff88] hover:text-white'}`}>{currentT.switch_admin}</button>
+                            </>
+                        )}
+                        {(authMode === 'register' || authMode === 'reset' || authMode === 'admin_req') && (
+                            <button onClick={() => switchAuthMode('login')} className={`text-[0.85rem] font-bold transition-colors outline-none text-left ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}>{currentT.switch_log}</button>
+                        )}
+                    </div>
+                </motion.div>
+                
+                {/* Background Decor */}
+                <div className={`absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full blur-[100px] opacity-10 z-0 pointer-events-none ${
+                    theme === 'light' ? 'bg-[#aaaaaa]' : 'bg-[#222222]'
+                }`}></div>
+            </section>
+
+            {/* SECTION 2: FAST REPORTING */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
+                <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpAnim}>
+                        <Zap size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Fast Reporting.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            Spot an issue? Open the app, snap a photo, and the system automatically tags the location. It is sent instantly to the exact team needed.
+                        </p>
+                    </motion.div>
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex justify-center lg:justify-end">
+                        <svg viewBox="0 0 200 200" className="w-full max-w-[250px] h-auto" fill="none">
+                            <rect x="20" y="40" width="160" height="120" rx="12" fill={theme === 'light' ? '#f0f0f0' : '#1a1a1a'} stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="2" />
+                            <motion.path d="M100 80 L100 120 M80 100 L120 100" stroke={theme === 'light' ? '#111111' : '#ffffff'} strokeWidth="8" strokeLinecap="round" initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}/>
+                        </svg>
+                    </motion.div>
                 </div>
-            </motion.div>
+            </section>
+
+            {/* SECTION 3: LIVE TRACKING */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#050505] border-[#111111]'}`}>
+                <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-2 lg:order-1 flex justify-center lg:justify-start">
+                        <svg viewBox="0 0 300 150" className="w-full max-w-[300px] h-auto" fill="none">
+                            <path d="M20 100 Q 80 100, 150 50 T 280 80" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="4" strokeDasharray="8 8" fill="none"/>
+                            <motion.circle cx="20" cy="100" r="6" fill={theme === 'light' ? '#111111' : '#ffffff'} />
+                            <motion.circle cx="150" cy="50" r="6" fill={theme === 'light' ? '#111111' : '#ffffff'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ repeat: Infinity, duration: 2 }} />
+                            <motion.circle cx="280" cy="80" r="8" fill="#00aa55" initial={{ scale: 1 }} animate={{ scale: 1.5 }} transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }} />
+                        </svg>
+                    </motion.div>
+                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpAnim} className="order-1 lg:order-2">
+                        <Activity size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Live Tracking.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            No more guessing. Watch your task move from "Pending" to "Assigned" and finally to "Resolved" with real-time status updates.
+                        </p>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* SECTION 4: DATA SECURITY */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
+                <div className="max-w-[1200px] mx-auto text-center flex flex-col items-center">
+                    <Lock size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                    <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Strict Data Security.</h2>
+                    <p className={`text-[1.1rem] max-w-[600px] leading-relaxed mb-12 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                        Your account is protected by enterprise-grade encryption. Administrative access requires strict verification, ensuring only approved staff can modify civic records.
+                    </p>
+                    
+                    <div className="relative w-full max-w-[200px]">
+                        <svg viewBox="0 0 100 120" className="w-full h-auto" fill="none">
+                            <motion.path d="M20 50 V30 C20 10 80 10 80 30 V50" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="8" strokeLinecap="round" initial={{ y: 10 }} animate={{ y: 0 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}/>
+                            <rect x="10" y="45" width="80" height="60" rx="10" fill={theme === 'light' ? '#111111' : '#ffffff'} />
+                            <circle cx="50" cy="75" r="6" fill={theme === 'light' ? '#ffffff' : '#111111'} />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            {/* FOOTER ALIGNMENT */}
+            <footer className={`w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t relative z-10 ${
+                theme === 'light' ? 'border-[#e0e0e0] bg-[#ffffff]' : 'border-[#111111] bg-[#050505]'
+            }`}>
+                
+                {/* Custom SVG Social Icons */}
+                <div className={`flex items-center gap-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </a>
+                    <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                    </a>
+                    <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                    </a>
+                    <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                    </a>
+                </div>
+                
+                <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <div className="flex items-center gap-6">
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {localCity}, IN
+                        </div>
+                    </div>
+                    
+                    <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    
+                    {/* Attribution Link */}
+                    <div className={`text-[0.75rem] uppercase tracking-wider ${theme === 'light' ? 'text-[#888888]' : 'text-[#666666]'}`}>
+                        Built by <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className={`transition-colors underline decoration-[#444444] underline-offset-4 ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>AnyAstro</a>
+                    </div>
+                </div>
+
+            </footer>
         </div>
     );
 }
