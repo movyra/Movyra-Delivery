@@ -307,5 +307,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    match /civic_admin_requests/{requestId} {
+      // Permit unauthenticated submission of administrative access requests
+      allow create: if true;
+      // Strictly restrict review and management to authorized administrators
+      allow read, update, delete: if isAdmin();
+    }
+
   }
 }
