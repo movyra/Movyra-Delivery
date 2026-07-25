@@ -17,7 +17,7 @@ import { useCivicStore } from '../../store/useCivicStore';
 export default function CivicOnboarding() {
     const navigate = useNavigate();
     
-    // 1. STATE & STORE CONFIGURATION
+    // State and Store Configuration
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
     const completeOnboarding = useCivicStore((state) => state.completeOnboarding);
@@ -32,7 +32,7 @@ export default function CivicOnboarding() {
         if (supported.includes(sysLang)) setLang(sysLang);
     }, []);
 
-    // 2. 13-LANGUAGE ONBOARDING DICTIONARY
+    // 13-Language Onboarding Dictionary
     const t = {
         en: {
             lang: "English", skip: "Skip", finish: "Get Started", next: "Continue",
@@ -179,36 +179,38 @@ export default function CivicOnboarding() {
             <style>{`@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } } .animate-fade { animation: fadeIn 0.6s ease-out forwards; }`}</style>
             
             {/* UTILITY CONTROL ROW */}
-            <div className="w-full flex items-center justify-between px-6 md:px-12 py-6 relative z-50 animate-fade">
-                <div className="flex items-center gap-2">
-                    <span className="font-black text-[1.3rem] tracking-tighter">
-                        Movyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.1rem] ml-1`}>Civic</span>
-                    </span>
-                </div>
-                
-                <div className="flex items-center gap-4 text-[0.85rem] font-bold">
-                    <button 
-                        onClick={() => setShowLangPrompt(true)} 
-                        className={`transition-colors outline-none border px-3 py-1.5 rounded-full ${theme === 'light' ? 'border-[#cccccc] hover:border-black' : 'border-[#333333] hover:border-white'}`}
-                    >
-                        {currentT.lang}
-                    </button>
-
-                    <button 
-                        onClick={toggleTheme} 
-                        className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black' : 'bg-[#222222] text-white'}`}
-                    >
-                        {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-                    </button>
-
-                    <button 
-                        onClick={executeExit}
-                        className={`transition-colors font-bold ${theme === 'light' ? 'text-[#666666] hover:text-black' : 'text-[#888888] hover:text-white'}`}
-                    >
-                        {currentT.skip}
-                    </button>
-                </div>
-            </div>
+                        <header className="fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 animate-fade">
+                            <div className="flex items-center gap-2">
+                                <img 
+                                    src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
+                                    alt="Movyra" 
+                                    className="h-8 w-auto" 
+                                    onError={(e) => e.target.style.display = 'none'} 
+                                />
+                                <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
+                                    ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Civic</span>
+                                </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 text-[0.85rem] font-bold">
+                                <button 
+                                    onClick={() => setShowLangPrompt(true)} 
+                                    className={`transition-colors outline-none border px-3 py-1.5 rounded-full ${
+                                        theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'
+                                    }`}
+                                >
+                                    {currentT.lang}
+                                </button>
+                                <button 
+                                    onClick={toggleTheme} 
+                                    className={`p-2 rounded-full transition-colors outline-none ${
+                                        theme === 'light' ? 'bg-[#e0e0e0] text-black' : 'bg-[#222222] text-white'
+                                    }`}
+                                >
+                                    {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+                                </button>
+                            </div>
+                        </header>
 
             {/* TRANSLATION MODAL DIALOG */}
             <AnimatePresence>
