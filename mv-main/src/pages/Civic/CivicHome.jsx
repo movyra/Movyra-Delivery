@@ -139,7 +139,7 @@ export default function CivicHome() {
             <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
                 <div className="max-w-[1400px] mx-auto">
                     <div className="mb-16">
-                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Why Choose Movyra Civic?</h2>
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Why Choose Us?</h2>
                         <p className={`text-[1.1rem] ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>Built for speed, transparency, and simple tracking.</p>
                     </div>
 
