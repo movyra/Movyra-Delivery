@@ -9,8 +9,10 @@ import {
     ArrowRight,
     Sun,
     Moon,
-    CheckCircle2,
-    Activity
+    Activity,
+    Lock,
+    Smartphone,
+    Users
 } from 'lucide-react';
 import { useCivicStore } from '../../store/useCivicStore';
 
@@ -173,7 +175,7 @@ export default function CivicHome() {
                     </div>
 
                     {/* Animated Bar Chart Graphic */}
-                    <div className="w-full lg:w-[50%] h-[300px] flex items-end gap-4 relative">
+                    <div className="w-full lg:w-[50%] h-[300px] flex items-end gap-4 relative z-10">
                         <div className={`absolute bottom-0 left-0 w-full h-[1px] ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></div>
                         {[40, 70, 45, 90, 60, 100].map((height, idx) => (
                             <motion.div 
@@ -255,20 +257,92 @@ export default function CivicHome() {
                 </div>
             </section>
 
+            {/* SECTION 6: ENTERPRISE SECURITY */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#050505] border-[#111111]'}`}>
+                <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="order-2 lg:order-1 flex justify-center lg:justify-start">
+                        {/* Custom Isometric Security Lock Vector */}
+                        <svg viewBox="0 0 200 200" className="w-full max-w-[300px] h-auto" fill="none">
+                            <motion.path 
+                                d="M60 100 V70 C60 40 140 40 140 70 V100" 
+                                stroke={theme === 'light' ? '#111111' : '#ffffff'} 
+                                strokeWidth="16" strokeLinecap="round"
+                                initial={{ y: 20 }} animate={{ y: 0 }} transition={{ repeat: Infinity, duration: 2, repeatType: "reverse", ease: "easeInOut" }}
+                            />
+                            <rect x="40" y="90" width="120" height="90" rx="16" fill={theme === 'light' ? '#111111' : '#ffffff'} />
+                            <circle cx="100" cy="135" r="12" fill={theme === 'light' ? '#ffffff' : '#111111'} />
+                            <path d="M96 145 L92 160 H108 L104 145 Z" fill={theme === 'light' ? '#ffffff' : '#111111'} />
+                        </svg>
+                    </motion.div>
+                    <div className="order-1 lg:order-2">
+                        <Lock size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Data Privacy First.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            Your reports and personal details are protected by enterprise-grade security. We ensure that sensitive operational data is only accessible to authorized municipal personnel.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 7: MOBILE ACCESSIBILITY */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
+                <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <Smartphone size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Access Anywhere.</h2>
+                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                            Report issues on the go. Our platform is fully optimized for smartphones and tablets, ensuring you can manage and track tasks from any field location.
+                        </p>
+                    </div>
+                    <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="flex justify-center lg:justify-end">
+                        {/* Custom Animated Smartphone Vector */}
+                        <svg viewBox="0 0 200 200" className="w-full max-w-[300px] h-auto" fill="none">
+                            <rect x="50" y="20" width="100" height="160" rx="20" fill={theme === 'light' ? '#e0e0e0' : '#222222'} stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="4" />
+                            <rect x="56" y="26" width="88" height="148" rx="14" fill={theme === 'light' ? '#ffffff' : '#050505'} />
+                            <motion.rect x="66" y="50" width="56" height="12" rx="4" fill={theme === 'light' ? '#cccccc' : '#333333'} initial={{ opacity: 0.3 }} animate={{ opacity: 1 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }} />
+                            <rect x="66" y="70" width="68" height="8" rx="4" fill={theme === 'light' ? '#e0e0e0' : '#222222'} />
+                            <rect x="66" y="86" width="48" height="8" rx="4" fill={theme === 'light' ? '#e0e0e0' : '#222222'} />
+                            <circle cx="100" cy="155" r="8" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="2" />
+                        </svg>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* SECTION 8: COMMUNITY IMPACT */}
+            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#050505] border-[#111111]'}`}>
+                <div className="max-w-[1400px] mx-auto text-center flex flex-col items-center">
+                    <Users size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
+                    <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Better Cities Together.</h2>
+                    <p className={`text-[1.1rem] max-w-[600px] leading-relaxed mb-12 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
+                        Join thousands of citizens and municipal officials working in harmony. A unified network ensures faster resolutions and improves local infrastructure for everyone.
+                    </p>
+                    
+                    {/* Custom Animated Network Nodes Vector */}
+                    <div className="relative w-full max-w-[400px] aspect-video">
+                        <svg viewBox="0 0 400 200" className="w-full h-full" fill="none">
+                            <path d="M50 100 C150 150 250 50 350 100" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="2" strokeDasharray="6 6" />
+                            <motion.circle cx="50" cy="100" r="10" fill={theme === 'light' ? '#111111' : '#ffffff'} initial={{ scale: 1 }} animate={{ scale: 1.5, opacity: 0.5 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }} />
+                            <motion.circle cx="200" cy="100" r="14" fill={theme === 'light' ? '#111111' : '#ffffff'} initial={{ scale: 1 }} animate={{ scale: 1.3, opacity: 0.8 }} transition={{ repeat: Infinity, duration: 2, repeatType: "reverse", delay: 0.5 }} />
+                            <motion.circle cx="350" cy="100" r="10" fill={theme === 'light' ? '#111111' : '#ffffff'} initial={{ scale: 1 }} animate={{ scale: 1.5, opacity: 0.5 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse", delay: 1 }} />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
             {/* FOOTER ALIGNMENT */}
-            <footer className={`w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t opacity-0 animate-fade stagger-3 relative z-10 ${
-                theme === 'light' ? 'border-[#e0e0e0]' : 'border-[#111111]'
+            <footer className={`w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t opacity-0 animate-fade stagger-3 relative z-10 ${
+                theme === 'light' ? 'border-[#e0e0e0] bg-[#ffffff]' : 'border-[#111111] bg-[#050505]'
             }`}>
                 
                 {/* Custom SVG Social Icons */}
                 <div className={`flex items-center gap-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
-                    <a href="https://www.linkedin.com/company/getmovyra/" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                    <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                     </a>
                     <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
                     </a>
-                    <a href="https://www.instagram.com/getmovyra" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                    <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                     </a>
                     <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
@@ -276,12 +350,21 @@ export default function CivicHome() {
                     </a>
                 </div>
                 
-                <div className={`flex items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
-                    <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
-                    <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
-                    <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                        {localCity}, IN
+                <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <div className="flex items-center gap-6">
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {localCity}, IN
+                        </div>
+                    </div>
+                    
+                    <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    
+                    {/* Attribution Link */}
+                    <div className={`text-[0.75rem] uppercase tracking-wider ${theme === 'light' ? 'text-[#888888]' : 'text-[#666666]'}`}>
+                        Built by <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className={`transition-colors underline decoration-[#444444] underline-offset-4 ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>AnyAstro</a>
                     </div>
                 </div>
 
