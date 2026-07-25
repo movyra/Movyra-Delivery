@@ -89,6 +89,7 @@ import FreightPage from './pages/Products/Freight';
 import BusinessPage from './pages/Products/Business';
 
 // --- MOVYRA CIVIC MODULE IMPORTS ---
+import CivicHome from './pages/Civic/CivicHome';
 import CivicLanding from './pages/Civic/CivicLanding';
 import ReportIssue from './pages/Civic/ReportIssue';
 import IssueTracker from './pages/Civic/IssueTracker';
@@ -97,6 +98,7 @@ import TransparencyDashboard from './pages/Civic/TransparencyDashboard';
 import WardAdmin from './pages/Civic/WardAdmin';
 import CivicOnboarding from './pages/Civic/CivicOnboarding';
 import CivicAuth from './pages/Civic/CivicAuth';
+import SessionMonitor from './components/Civic/SessionMonitor';
 
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
@@ -312,15 +314,16 @@ export default function App() {
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
 
                 {/* MOVYRA CIVIC MODULE */}
+                <Route path='/civic' element={<AnimatedRoute><CivicHome /></AnimatedRoute>} />
                 <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
                 <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
                 
-                <Route path='/civic' element={<AnimatedRoute><SecureCivicGateway><CivicLanding /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><ReportIssue /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><IssueTracker /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><CivicHeatmap /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><TransparencyDashboard /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SecureAdminGate><WardAdmin /></SecureAdminGate></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/dashboard' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicLanding /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><ReportIssue /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><IssueTracker /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
 
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
@@ -382,15 +385,16 @@ export default function App() {
                 <Route path='/download' element={<AnimatedRoute><DownloadPage /></AnimatedRoute>} />
 
                 {/* MOVYRA CIVIC MODULE */}
+                <Route path='/civic' element={<AnimatedRoute><CivicHome /></AnimatedRoute>} />
                 <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
                 <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
                 
-                <Route path='/civic' element={<AnimatedRoute><SecureCivicGateway><CivicLanding /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><ReportIssue /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><IssueTracker /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><CivicHeatmap /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><TransparencyDashboard /></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SecureAdminGate><WardAdmin /></SecureAdminGate></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/dashboard' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicLanding /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><ReportIssue /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><IssueTracker /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
               </>
             )}
           </Routes>
