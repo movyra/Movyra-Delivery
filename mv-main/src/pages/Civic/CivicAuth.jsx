@@ -231,7 +231,7 @@ export default function CivicAuth() {
             }`}>
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
-                        src={theme === 'light' ? '/logo-light.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
@@ -296,11 +296,7 @@ export default function CivicAuth() {
                     }`}
                 >
                     <div className="flex items-center gap-4 mb-8">
-                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border ${
-                            theme === 'light' ? 'bg-[#f5f5f5] border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
-                        }`}>
-                            <ShieldCheck size={24} className={theme === 'light' ? 'text-black' : 'text-white'} />
-                        </div>
+                        
                         <div>
                             <h1 className="text-[1.5rem] font-black tracking-tight leading-tight">
                                 {authMode === 'admin_req' ? "Admin Request" : currentT.title}
