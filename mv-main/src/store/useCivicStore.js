@@ -10,6 +10,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
  * 3. Offline Complaint Drafting & Persistence
  * 4. Persistent Interface Theme Configuration (Light/Dark Mode)
  * 5. Persistent Onboarding Documentation History Tracker
+ * 6. Global Session Termination Logic
  * ============================================================================
  */
 
@@ -117,6 +118,18 @@ export const useCivicStore = create(
       clearAllDrafts: () => 
         set({ 
           offlineDrafts: [] 
+        }),
+
+      // ======================================================================
+      // GLOBAL SESSION TERMINATION PROTOCOL
+      // ======================================================================
+      // This resets all sensitive local data when the user signs out.
+      // We retain the theme and onboarding status so the app looks right upon return.
+      terminateSession: () =>
+        set({
+          currentLocation: { latitude: null, longitude: null, address: '', isTracking: false },
+          activeFilters: { category: 'All', status: 'All', dateRange: '30 Days', ward: 'All' },
+          offlineDrafts: []
         }),
     }),
     {
