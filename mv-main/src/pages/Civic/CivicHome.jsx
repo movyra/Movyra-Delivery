@@ -18,7 +18,8 @@ import {
     Users,
     LayoutDashboard,
     X,
-    Globe
+    Globe,
+    LogOut
 } from 'lucide-react';
 import { useCivicStore } from '../../store/useCivicStore';
 
@@ -386,7 +387,7 @@ export default function CivicHome() {
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-4 sm:gap-6 text-[0.9rem] font-bold">
+                <div className="flex items-center gap-3 sm:gap-6 text-[0.9rem] font-bold">
                     <button 
                         onClick={toggleTheme} 
                         className={`p-2 rounded-full transition-colors outline-none ${
@@ -403,6 +404,13 @@ export default function CivicHome() {
                                 className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
                             >
                                 {currentT.log_out}
+                            </button>
+                            <button 
+                                onClick={handleSignOut} 
+                                className={`p-2 rounded-full transition-colors outline-none block sm:hidden ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                                aria-label="Log Out"
+                            >
+                                <LogOut size={16} />
                             </button>
                             <button 
                                 onClick={() => navigate('/civic/dashboard')} 
