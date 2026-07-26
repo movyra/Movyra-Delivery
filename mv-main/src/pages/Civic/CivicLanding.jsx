@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut } from 'firebase/auth';
 import { 
     AlertTriangle, 
     FileText, 
@@ -12,10 +13,14 @@ import {
     TrendingUp,
     MapPin,
     Sun,
-    Moon
+    Moon,
+    X,
+    Globe,
+    ArrowUp,
+    Home
 } from 'lucide-react';
-import { collection, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
+import { collection, getDocs, query, limit, where } from 'firebase/firestore';
+import { db, auth } from '../../firebaseConfig';
 import { getPublicNotices } from '../../services/civicService';
 import { useCivicStore } from '../../store/useCivicStore';
 
@@ -26,6 +31,7 @@ export default function CivicLanding() {
     const currentLocation = useCivicStore((state) => state.currentLocation);
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
+    const terminateSession = useCivicStore((state) => state.terminateSession);
     
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
@@ -39,8 +45,23 @@ export default function CivicLanding() {
     });
     const [isLoading, setIsLoading] = useState(true);
 
+    const localCity = "Mumbai";
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            terminateSession();
+            navigate('/civic/home');
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     useEffect(() => {
-        // Detect System Language
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
@@ -48,24 +69,19 @@ export default function CivicLanding() {
         const initializeCivicPortal = async () => {
             setIsLoading(true);
             try {
-                // Fetch real-time official notices
                 const fetchedNotices = await getPublicNotices();
                 setNotices(fetchedNotices);
 
-                // Aggregate live health metrics from the complaints collection
                 const complaintsRef = collection(db, 'civic_complaints');
                 
-                // Active issues query
                 const activeQuery = query(complaintsRef, where('status', 'in', ['Submitted', 'Assigned', 'In Progress']));
                 const activeSnapshot = await getDocs(activeQuery);
                 const activeCount = activeSnapshot.size;
 
-                // Resolved issues query (Historical baseline for score generation)
                 const resolvedQuery = query(complaintsRef, where('status', '==', 'Completed'), limit(100));
                 const resolvedSnapshot = await getDocs(resolvedQuery);
                 const resolvedCount = resolvedSnapshot.size;
 
-                // Calculate a basic dynamic health score based on resolution ratio
                 const totalIssues = activeCount + resolvedCount;
                 let currentScore = 100;
                 if (totalIssues > 0) {
@@ -90,11 +106,11 @@ export default function CivicLanding() {
         initializeCivicPortal();
     }, []);
 
-    // 2. 13-LANGUAGE MARKETING DICTIONARY
+    // 2. 13-LANGUAGE DASHBOARD DICTIONARY
     const t = {
         en: {
-            lang: "English", help: "Help Center",
-            main_title: "Smart Infrastructure Management.", main_sub: "A centralized platform for citizens and administrators to monitor public infrastructure, report operational deficiencies, and track resolution timelines with absolute transparency.",
+            lang: "English", log_out: "Log out", careers: "Careers",
+            main_title: "Smart Infrastructure Management.", main_sub: "A centralized platform to monitor infrastructure, report issues, and track resolutions with absolute transparency.",
             report_title: "Report Incident", report_sub: "Submit a new infrastructure deficiency for municipal review.", report_btn: "Initiate Report",
             track_title: "Track Resolution", track_sub: "Monitor the real-time status of active infrastructure repairs.", track_btn: "View Tracker",
             map_title: "Zone Heatmap", map_sub: "Analyze geographic clusters of reported civic deficiencies.", map_btn: "Explore Map",
@@ -103,8 +119,8 @@ export default function CivicLanding() {
             notices: "Official Directives", archive: "View Archive", no_notices: "No Active Directives", no_notices_sub: "There are currently no active public notices for your operational zone."
         },
         hi: {
-            lang: "हिन्दी", help: "सहायता केंद्र",
-            main_title: "स्मार्ट इंफ्रास्ट्रक्चर प्रबंधन।", main_sub: "सार्वजनिक बुनियादी ढांचे की निगरानी, परिचालन कमियों की रिपोर्ट करने और पूर्ण पारदर्शिता के साथ समाधान को ट्रैक करने के लिए एक केंद्रीकृत मंच।",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर",
+            main_title: "स्मार्ट इंफ्रास्ट्रक्चर प्रबंधन।", main_sub: "बुनियादी ढांचे की निगरानी, समस्याओं की रिपोर्ट करने और पारदर्शिता के साथ समाधान ट्रैक करने का एक मंच।",
             report_title: "घटना की रिपोर्ट करें", report_sub: "नगर निगम समीक्षा के लिए एक नई कमी दर्ज करें।", report_btn: "रिपोर्ट शुरू करें",
             track_title: "समाधान ट्रैक करें", track_sub: "सक्रिय मरम्मत की वास्तविक समय स्थिति की निगरानी करें।", track_btn: "ट्रैकर देखें",
             map_title: "ज़ोन हीटमैप", map_sub: "रिपोर्ट की गई नागरिक कमियों के भौगोलिक समूहों का विश्लेषण करें।", map_btn: "मानचित्र देखें",
@@ -113,9 +129,9 @@ export default function CivicLanding() {
             notices: "आधिकारिक निर्देश", archive: "पुरालेख देखें", no_notices: "कोई सक्रिय निर्देश नहीं", no_notices_sub: "आपके परिचालन क्षेत्र के लिए वर्तमान में कोई सक्रिय सार्वजनिक नोटिस नहीं हैं।"
         },
         hinglish: {
-            lang: "Hinglish", help: "Help Center",
-            main_title: "Smart Infrastructure Management.", main_sub: "Public infrastructure monitor karne, deficiencies report karne aur full transparency ke sath resolution track karne ka centralized platform.",
-            report_title: "Incident Report Karein", report_sub: "Municipal review ke liye naya infrastructure issue submit karein.", report_btn: "Report Initiate Karein",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers",
+            main_title: "Smart Infrastructure Management.", main_sub: "Public infrastructure monitor karne aur issues report karne ka centralized platform.",
+            report_title: "Incident Report Karein", report_sub: "Municipal review ke liye naya issue submit karein.", report_btn: "Report Initiate Karein",
             track_title: "Resolution Track Karein", track_sub: "Active repairs ka real-time status monitor karein.", track_btn: "Tracker Dekhein",
             map_title: "Zone Heatmap", map_sub: "Reported civic issues ke geographic clusters analyze karein.", map_btn: "Map Explore Karein",
             data_title: "Performance Data", data_sub: "Department response time aur metrics review karein.", data_btn: "Analytics Access Karein",
@@ -123,8 +139,8 @@ export default function CivicLanding() {
             notices: "Official Directives", archive: "Archive Dekhein", no_notices: "No Active Directives", no_notices_sub: "Aapke zone me abhi koi active public notice nahi hai."
         },
         mr: {
-            lang: "मराठी", help: "मदत केंद्र",
-            main_title: "स्मार्ट इन्फ्रास्ट्रक्चर व्यवस्थापन.", main_sub: "सार्वजनिक पायाभूत सुविधांचे परीक्षण करण्यासाठी, त्रुटी नोंदवण्यासाठी आणि पारदर्शकतेसह रिझोल्यूशन ट्रॅक करण्यासाठी एक केंद्रित व्यासपीठ.",
+            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर",
+            main_title: "स्मार्ट इन्फ्रास्ट्रक्चर व्यवस्थापन.", main_sub: "पायाभूत सुविधांचे परीक्षण करण्यासाठी आणि त्रुटी नोंदवण्यासाठी एक केंद्रित व्यासपीठ.",
             report_title: "घटनेची तक्रार करा", report_sub: "महानगरपालिका पुनरावलोकनासाठी नवीन त्रुटी सबमिट करा.", report_btn: "तक्रार सुरू करा",
             track_title: "रिझोल्यूशन ट्रॅक करा", track_sub: "सक्रिय दुरुस्तीच्या रिअल-टाइम स्थितीचे निरीक्षण करा.", track_btn: "ट्रॅकर पहा",
             map_title: "झोन हीटमॅप", map_sub: "नोंदवलेल्या नागरी त्रुटींच्या भौगोलिक समूहांचे विश्लेषण करा.", map_btn: "नकाशा एक्सप्लोर करा",
@@ -133,18 +149,18 @@ export default function CivicLanding() {
             notices: "अधिकृत निर्देश", archive: "संग्रह पहा", no_notices: "कोणतेही सक्रिय निर्देश नाहीत", no_notices_sub: "तुमच्या झोनसाठी सध्या कोणत्याही सार्वजनिक नोटीस नाहीत."
         },
         gu: {
-            lang: "ગુજરાતી", help: "મદદ કેન્દ્ર",
-            main_title: "સ્માર્ટ ઇન્ફ્રાસ્ટ્રક્ચર મેનેજમેન્ટ.", main_sub: "નાગરિકો અને વહીવટકર્તાઓ માટે જાહેર ઈન્ફ્રાસ્ટ્રક્ચરનું નિરીક્ષણ કરવા અને સંપૂર્ણ પારદર્શિતા સાથે ટ્રેક કરવા માટેનું પ્લેટફોર્મ.",
+            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી",
+            main_title: "સ્માર્ટ ઇન્ફ્રાસ્ટ્રક્ચર મેનેજમેન્ટ.", main_sub: "ઇન્ફ્રાસ્ટ્રક્ચરનું નિરીક્ષણ કરવા અને સંપૂર્ણ પારદર્શિતા સાથે ટ્રેક કરવા માટેનું પ્લેટફોર્મ.",
             report_title: "ઘટનાની જાણ કરો", report_sub: "મ્યુનિસિપલ સમીક્ષા માટે નવી ખામી સબમિટ કરો.", report_btn: "રિપોર્ટ શરૂ કરો",
             track_title: "ઠરાવ ટ્રૅક કરો", track_sub: "સક્રિય સમારકામની વાસ્તવિક સમયની સ્થિતિનું નિરીક્ષણ કરો.", track_btn: "ટ્રેકર જુઓ",
             map_title: "ઝોન હીટમેપ", map_sub: "નાગરિક ખામીઓના ભૌગોલિક ક્લસ્ટરોનું વિશ્લેષણ કરો.", map_btn: "નકશો અન્વેષણ કરો",
             data_title: "પ્રદર્શન ડેટા", data_sub: "વિભાગીય પ્રતિસાદ સમય અને ઠરાવ મેટ્રિક્સની સમીક્ષા કરો.", data_btn: "એનાલિટિક્સ ઍક્સેસ કરો",
-            score: "ઇન્ફ્રાસ્ટ્રક્ચર સ્કોર", localized: "સ્થાનિક", active: "સક્રિય ઘટનાઓ", avg_res: "સરેરાશ ઠરાવ",
+            score: "ઇન્ફ્રાસ્ટ્રક્ચર સ્કોअर", localized: "સ્થાનિક", active: "સક્રિય ઘટનાઓ", avg_res: "સરેરાશ ઠરાવ",
             notices: "સત્તાવાર નિર્દેશો", archive: "આર્કાઇવ જુઓ", no_notices: "કોઈ સક્રિય નિર્દેશો નથી", no_notices_sub: "તમારા ઝોન માટે હાલમાં કોઈ સક્રિય જાહેર સૂચનાઓ નથી."
         },
         te: {
-            lang: "తెలుగు", help: "సహాయ కేంద్రం",
-            main_title: "స్మార్ట్ ఇన్ఫ్రాస్ట్రక్చర్ మేనేజ్‌మెంట్.", main_sub: "పౌరులు మరియు నిర్వాహకుల కోసం పబ్లిక్ మౌలిక సదుపాయాలను పర్యవేక్షించడానికి కేంద్రీకృత వేదిక.",
+            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్",
+            main_title: "స్మార్ట్ ఇన్ఫ్రాస్ట్రక్చర్ మేనేజ్‌మెంట్.", main_sub: "మౌలిక సదుపాయాలను పర్యవేక్షించడానికి మరియు సమస్యలను నివేదించడానికి కేంద్రీకృత వేదిక.",
             report_title: "సంఘటనను నివేదించండి", report_sub: "మున్సిపల్ సమీక్ష కోసం కొత్త లోపాన్ని సమర్పించండి.", report_btn: "నివేదికను ప్రారంభించండి",
             track_title: "ట్రాక్ రిజల్యూషన్", track_sub: "క్రియాశీల మరమ్మతుల నిజ-సమయ స్థితిని పర్యవేక్షించండి.", track_btn: "ట్రాకర్‌ను వీక్షించండి",
             map_title: "జోన్ హీట్‌మ్యాప్", map_sub: "నివేదించబడిన లోపాల భౌగోళిక సమూహాలను విశ్లేషించండి.", map_btn: "మ్యాప్‌ని అన్వేషించండి",
@@ -153,8 +169,8 @@ export default function CivicLanding() {
             notices: "అధికారిక ఆదేశాలు", archive: "ఆర్కైవ్ చూడండి", no_notices: "క్రియాశీల ఆదేశాలు లేవు", no_notices_sub: "మీ ఆపరేషనల్ జోన్ కోసం ప్రస్తుతం పబ్లిక్ నోటీసులు లేవు."
         },
         ta: {
-            lang: "தமிழ்", help: "உதவி மையம்",
-            main_title: "ஸ்மார்ட் உள்கட்டமைப்பு மேலாண்மை.", main_sub: "பொது உள்கட்டமைப்பை கண்காணிக்க குடிமக்கள் மற்றும் நிர்வாகிகளுக்கான மையப்படுத்தப்பட்ட தளம்.",
+            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்",
+            main_title: "ஸ்மார்ட் உள்கட்டமைப்பு மேலாண்மை.", main_sub: "உள்கட்டமைப்பை கண்காணிக்க மற்றும் சிக்கல்களைப் புகாரளிக்க மையப்படுத்தப்பட்ட தளம்.",
             report_title: "சம்பவத்தைப் புகாரளிக்கவும்", report_sub: "நகராட்சி மதிப்பாய்வுக்காக புதிய குறைபாட்டைச் சமர்ப்பிக்கவும்.", report_btn: "அறிக்கையைத் தொடங்கவும்",
             track_title: "தீர்வு கண்காணிக்கவும்", track_sub: "செயலில் உள்ள பழுதுகளின் நேரலை நிலையை கண்காணிக்கவும்.", track_btn: "டிராக்கரைப் பார்க்கவும்",
             map_title: "மண்டல ஹீட்மேப்", map_sub: "அறிக்கையிடப்பட்ட குறைபாடுகளின் புவியியல் தொகுப்புகளை பகுப்பாய்வு செய்யவும்.", map_btn: "வரைபடத்தை ஆராயுங்கள்",
@@ -163,8 +179,8 @@ export default function CivicLanding() {
             notices: "அதிகாரப்பூர்வ உத்தரவுகள்", archive: "காப்பகத்தைக் காண்க", no_notices: "செயலில் உள்ள உத்தரவுகள் இல்லை", no_notices_sub: "உங்கள் மண்டலத்திற்கான பொது அறிவிப்புகள் தற்போது இல்லை."
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ",
-            main_title: "ਸਮਾਰਟ ਬੁਨਿਆਦੀ ਢਾਂਚਾ ਪ੍ਰਬੰਧਨ।", main_sub: "ਨਾਗਰਿਕਾਂ ਅਤੇ ਪ੍ਰਸ਼ਾਸਕਾਂ ਲਈ ਜਨਤਕ ਬੁਨਿਆਦੀ ਢਾਂਚੇ ਦੀ ਨਿਗਰਾਨੀ ਕਰਨ ਲਈ ਇੱਕ ਕੇਂਦਰੀ ਪਲੇਟਫਾਰਮ।",
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ",
+            main_title: "ਸਮਾਰਟ ਬੁਨਿਆਦੀ ਢਾਂਚਾ ਪ੍ਰਬੰਧਨ।", main_sub: "ਬੁਨਿਆਦੀ ਢਾਂਚੇ ਦੀ ਨਿਗਰਾਨੀ ਕਰਨ ਅਤੇ ਸਮੱਸਿਆਵਾਂ ਦੀ ਰਿਪੋਰਟ ਕਰਨ ਲਈ ਇੱਕ ਕੇਂਦਰੀ ਪਲੇਟਫਾਰਮ।",
             report_title: "ਘਟਨਾ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", report_sub: "ਮਿਊਂਸੀਪਲ ਸਮੀਖਿਆ ਲਈ ਨਵੀਂ ਕਮੀ ਜਮ੍ਹਾਂ ਕਰੋ।", report_btn: "ਰਿਪੋਰਟ ਸ਼ੁਰੂ ਕਰੋ",
             track_title: "ਰੈਜ਼ੋਲੂਸ਼ਨ ਟ੍ਰੈਕ ਕਰੋ", track_sub: "ਸਰਗਰਮ ਮੁਰੰਮਤ ਦੀ ਅਸਲ-ਸਮੇਂ ਦੀ ਸਥਿਤੀ ਦੀ ਨਿਗਰਾਨੀ ਕਰੋ।", track_btn: "ਟ੍ਰੈਕਰ ਵੇਖੋ",
             map_title: "ਜ਼ੋਨ ਹੀਟਮੈਪ", map_sub: "ਰਿਪੋਰਟ ਕੀਤੀਆਂ ਕਮੀਆਂ ਦੇ ਭੂਗੋਲਿਕ ਸਮੂਹਾਂ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ।", map_btn: "ਨਕਸ਼ੇ ਦੀ ਪੜਚੋਲ ਕਰੋ",
@@ -173,8 +189,8 @@ export default function CivicLanding() {
             notices: "ਅਧਿਕਾਰਤ ਨਿਰਦੇਸ਼", archive: "ਪੁਰਾਲੇਖ ਵੇਖੋ", no_notices: "ਕੋਈ ਸਰਗਰਮ ਨਿਰਦੇਸ਼ ਨਹੀਂ", no_notices_sub: "ਤੁਹਾਡੇ ਜ਼ੋਨ ਲਈ ਵਰਤਮਾਨ ਵਿੱਚ ਕੋਈ ਜਨਤਕ ਨੋਟਿਸ ਨਹੀਂ ਹਨ।"
         },
         bho: {
-            lang: "भोजपुरी", help: "मदद केंद्र",
-            main_title: "स्मार्ट इंफ्रास्ट्रक्चर मैनेजमेंट।", main_sub: "सार्वजनिक बुनियादी ढांचा के निगरानी खातिर एगो केंद्रीकृत मंच।",
+            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर",
+            main_title: "स्मार्ट इंफ्रास्ट्रक्चर मैनेजमेंट।", main_sub: "बुनियादी ढांचा के निगरानी करे आ समस्या के रिपोर्ट करे खातिर एगो मंच।",
             report_title: "घटना के रिपोर्ट करीं", report_sub: "नगर निगम के समीक्षा खातिर नया कमी दर्ज करीं।", report_btn: "रिपोर्ट शुरू करीं",
             track_title: "समाधान ट्रैक करीं", track_sub: "सक्रिय मरम्मत के वास्तविक समय के स्थिति के निगरानी करीं।", track_btn: "ट्रैकर देखीं",
             map_title: "जोन हीटमैप", map_sub: "रिपोर्ट कइल गइल कमी के भौगोलिक समूह के विश्लेषण करीं।", map_btn: "नक्शा देखीं",
@@ -183,8 +199,8 @@ export default function CivicLanding() {
             notices: "आधिकारिक निर्देश", archive: "पुरालेख देखीं", no_notices: "कौनो सक्रिय निर्देश नइखे", no_notices_sub: "रउआ ज़ोन खातिर वर्तमान में कौनो सार्वजनिक नोटिस नइखे।"
         },
         ar: {
-            lang: "العربية", help: "مركز المساعدة",
-            main_title: "إدارة البنية التحتية الذكية.", main_sub: "منصة مركزية للمواطنين والإداريين لمراقبة البنية التحتية والإبلاغ عن أوجه القصور.",
+            lang: "العربية", log_out: "تسجيل الخروج", careers: "الوظائف",
+            main_title: "إدارة البنية التحتية الذكية.", main_sub: "منصة مركزية لمراقبة البنية التحتية والإبلاغ عن المشكلات بشفافية.",
             report_title: "الإبلاغ عن حادث", report_sub: "تقديم نقص جديد لمراجعة البلدية.", report_btn: "بدء التقرير",
             track_title: "تتبع القرار", track_sub: "مراقبة الحالة في الوقت الفعلي للإصلاحات النشطة.", track_btn: "عرض المتتبع",
             map_title: "الخريطة الحرارية", map_sub: "تحليل المجموعات الجغرافية لأوجه القصور المبلغ عنها.", map_btn: "استكشاف الخريطة",
@@ -193,8 +209,8 @@ export default function CivicLanding() {
             notices: "التوجيهات الرسمية", archive: "عرض الأرشيف", no_notices: "لا توجد توجيهات", no_notices_sub: "لا توجد إشعارات عامة نشطة لمنطقتك حالياً."
         },
         es: {
-            lang: "Español", help: "Centro de ayuda",
-            main_title: "Gestión Inteligente de Infraestructura.", main_sub: "Plataforma centralizada para monitorizar la infraestructura pública, reportar deficiencias y rastrear resoluciones.",
+            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras",
+            main_title: "Gestión Inteligente de Infraestructura.", main_sub: "Plataforma centralizada para monitorizar la infraestructura y reportar deficiencias.",
             report_title: "Reportar Incidente", report_sub: "Envíe una nueva deficiencia para revisión municipal.", report_btn: "Iniciar Reporte",
             track_title: "Rastrear Resolución", track_sub: "Supervise el estado en tiempo real de las reparaciones activas.", track_btn: "Ver Rastreador",
             map_title: "Mapa de Calor", map_sub: "Analice clústeres geográficos de deficiencias reportadas.", map_btn: "Explorar Mapa",
@@ -203,8 +219,8 @@ export default function CivicLanding() {
             notices: "Directivas Oficiales", archive: "Ver Archivo", no_notices: "Sin Directivas Activas", no_notices_sub: "Actualmente no hay avisos públicos para su zona operativa."
         },
         fr: {
-            lang: "Français", help: "Centre d'aide",
-            main_title: "Gestion Intelligente des Infrastructures.", main_sub: "Plateforme centralisée pour surveiller les infrastructures publiques, signaler les lacunes et suivre les résolutions.",
+            lang: "Français", log_out: "Se déconnecter", careers: "Carrières",
+            main_title: "Gestion Intelligente des Infrastructures.", main_sub: "Plateforme centralisée pour surveiller les infrastructures et signaler les problèmes.",
             report_title: "Signaler un Incident", report_sub: "Soumettre une nouvelle lacune pour examen municipal.", report_btn: "Initier le Rapport",
             track_title: "Suivre la Résolution", track_sub: "Surveiller l'état en temps réel des réparations actives.", track_btn: "Voir le Suivi",
             map_title: "Carte Thermique", map_sub: "Analyser les clusters géographiques des lacunes signalées.", map_btn: "Explorer la Carte",
@@ -213,8 +229,8 @@ export default function CivicLanding() {
             notices: "Directives Officielles", archive: "Voir l'Archive", no_notices: "Aucune Directive", no_notices_sub: "Il n'y a actuellement aucun avis public pour votre zone."
         },
         de: {
-            lang: "Deutsch", help: "Hilfezentrum",
-            main_title: "Intelligentes Infrastrukturmanagement.", main_sub: "Zentrale Plattform zur Überwachung der öffentlichen Infrastruktur und zur Verfolgung von Lösungen.",
+            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere",
+            main_title: "Intelligentes Infrastrukturmanagement.", main_sub: "Zentrale Plattform zur Überwachung der Infrastruktur und zur Meldung von Problemen.",
             report_title: "Vorfall Melden", report_sub: "Reichen Sie einen neuen Mangel zur kommunalen Überprüfung ein.", report_btn: "Bericht Starten",
             track_title: "Lösung Verfolgen", track_sub: "Überwachen Sie den Echtzeitstatus aktiver Reparaturen.", track_btn: "Tracker Anzeigen",
             map_title: "Zonen-Heatmap", map_sub: "Analysieren Sie geografische Cluster gemeldeter Mängel.", map_btn: "Karte Erkunden",
@@ -252,12 +268,13 @@ export default function CivicLanding() {
                 {`
                   @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
                   .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
+                  html { scroll-behavior: smooth; }
                 `}
             </style>
 
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -269,18 +286,14 @@ export default function CivicLanding() {
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-6 text-[0.9rem] font-bold">
-                    <span className={`cursor-pointer transition-colors hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
-                        {currentT.help}
-                    </span>
-                    
+                <div className="flex items-center gap-4 sm:gap-6 text-[0.9rem] font-bold">
                     <button 
-                        onClick={() => setShowLangPrompt(true)}
-                        className={`flex items-center gap-2 transition-colors outline-none ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
+                        onClick={handleSignOut} 
+                        className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
                     >
-                        {currentT.lang}
+                        {currentT.log_out}
                     </button>
-
+                    
                     <button 
                         onClick={toggleTheme}
                         className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
@@ -290,12 +303,13 @@ export default function CivicLanding() {
                     </button>
 
                     <button 
-                        onClick={() => navigate('/')} 
-                        className={`px-5 py-2 rounded-full flex items-center gap-2 transition-colors outline-none border ${
+                        onClick={() => navigate('/civic')} 
+                        className={`p-2.5 rounded-full flex items-center justify-center transition-colors outline-none border ${
                             theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
                         }`}
+                        aria-label="Home"
                     >
-                        Home
+                        <Home size={18} />
                     </button>
                 </div>
             </header>
@@ -305,12 +319,12 @@ export default function CivicLanding() {
                 {showLangPrompt && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}
+                        className={`fixed inset-0 z-[9999] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'}`}
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                             className={`w-full max-w-[400px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
-                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#222222]'
                             }`}
                         >
                             <button 
@@ -319,17 +333,10 @@ export default function CivicLanding() {
                                     theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
                                 }`}
                             >
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <X size={18} />
                             </button>
                             
-                            <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center mb-4 ${
-                                theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'
-                            }`}>
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            </div>
-
-                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
-                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Choose your preferred viewing language.</p>
+                            <h2 className={`text-[1.4rem] font-black tracking-tight mb-6 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
                             
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((option) => (
@@ -347,7 +354,6 @@ export default function CivicLanding() {
                                                 ? (lang === option.code ? 'text-black' : 'text-[#666666] group-hover:text-black')
                                                 : (lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white')
                                         }`}>{option.label}</span>
-                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                     </button>
                                 ))}
                             </div>
@@ -587,6 +593,64 @@ export default function CivicLanding() {
                     </motion.div>
                 </div>
             </div>
+
+            {/* FOOTER ALIGNMENT */}
+            <footer className={`w-full mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t opacity-0 animate-fade stagger-3 relative z-10 ${
+                theme === 'light' ? 'border-[#e0e0e0] bg-[#ffffff]' : 'border-[#111111] bg-[#050505]'
+            }`}>
+                
+                {/* Social Icons & Utilities */}
+                <div className="flex flex-wrap items-center gap-6">
+                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
+                        <Globe size={14} /> {currentT.lang}
+                    </button>
+                    <div className={`flex items-center gap-6 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <div className="flex items-center gap-6">
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {localCity}, IN
+                        </div>
+                    </div>
+                    
+                    <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    
+                    {/* Image Attribution Link (Theme Aware) */}
+                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                        Built by 
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                            <img 
+                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
+                                alt="AnyAstro" 
+                                className="h-4 w-auto object-contain" 
+                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
+                            />
+                        </a>
+                    </div>
+                    
+                    {/* Back to Top */}
+                    <button onClick={scrollToTop} className={`p-2 rounded-full transition-colors border outline-none ${theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:bg-[#e0e0e0]' : 'bg-[#111111] border-[#333333] hover:bg-[#222222]'}`}>
+                        <ArrowUp size={16} />
+                    </button>
+                </div>
+            </footer>
         </div>
     );
 }
