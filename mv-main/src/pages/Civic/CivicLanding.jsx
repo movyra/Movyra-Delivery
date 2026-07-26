@@ -17,7 +17,8 @@ import {
     X,
     Globe,
     ArrowUp,
-    Home
+    Home,
+    LogOut
 } from 'lucide-react';
 import { collection, getDocs, query, limit, where } from 'firebase/firestore';
 import { db, auth } from '../../firebaseConfig';
@@ -155,7 +156,7 @@ export default function CivicLanding() {
             track_title: "ઠરાવ ટ્રૅક કરો", track_sub: "સક્રિય સમારકામની વાસ્તવિક સમયની સ્થિતિનું નિરીક્ષણ કરો.", track_btn: "ટ્રેકર જુઓ",
             map_title: "ઝોન હીટમેપ", map_sub: "નાગરિક ખામીઓના ભૌગોલિક ક્લસ્ટરોનું વિશ્લેષણ કરો.", map_btn: "નકશો અન્વેષણ કરો",
             data_title: "પ્રદર્શન ડેટા", data_sub: "વિભાગીય પ્રતિસાદ સમય અને ઠરાવ મેટ્રિક્સની સમીક્ષા કરો.", data_btn: "એનાલિટિક્સ ઍક્સેસ કરો",
-            score: "ઇન્ફ્રાસ્ટ્રક્ચર સ્કોअर", localized: "સ્થાનિક", active: "સક્રિય ઘટનાઓ", avg_res: "સરેરાશ ઠરાવ",
+            score: "ઇન્ફ્રાસ્ટ્રક્ચર સ્કોઅર", localized: "સ્થાનિક", active: "સક્રિય ઘટનાઓ", avg_res: "સરેરાશ ઠરાવ",
             notices: "સત્તાવાર નિર્દેશો", archive: "આર્કાઇવ જુઓ", no_notices: "કોઈ સક્રિય નિર્દેશો નથી", no_notices_sub: "તમારા ઝોન માટે હાલમાં કોઈ સક્રિય જાહેર સૂચનાઓ નથી."
         },
         te: {
@@ -286,7 +287,8 @@ export default function CivicLanding() {
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-4 sm:gap-6 text-[0.9rem] font-bold">
+                <div className="flex items-center gap-3 sm:gap-6 text-[0.9rem] font-bold">
+                    {/* Desktop Text Logout */}
                     <button 
                         onClick={handleSignOut} 
                         className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
@@ -294,6 +296,15 @@ export default function CivicLanding() {
                         {currentT.log_out}
                     </button>
                     
+                    {/* Mobile Icon Logout */}
+                    <button 
+                        onClick={handleSignOut} 
+                        className={`p-2 rounded-full transition-colors outline-none block sm:hidden ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                        aria-label="Log Out"
+                    >
+                        <LogOut size={18} />
+                    </button>
+
                     <button 
                         onClick={toggleTheme}
                         className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
