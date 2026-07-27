@@ -55,7 +55,7 @@ export default function CivicHome() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/civic/home');
+            navigate('/civic');
         } catch (error) {
             console.error("Logout failed:", error);
         }

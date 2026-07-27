@@ -45,7 +45,7 @@ export default function CivicHeatmap() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/civic/home');
+            navigate('/civic');
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -225,7 +225,7 @@ export default function CivicHeatmap() {
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 transition-colors border-b ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-[#e0e0e0] backdrop-blur-md' : 'bg-[#050505]/90 border-[#111111] backdrop-blur-md'
             }`}>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
