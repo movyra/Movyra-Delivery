@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut } from 'firebase/auth';
 import { 
     Map, 
     ArrowLeft, 
@@ -9,12 +10,17 @@ import {
     AlertCircle,
     Activity,
     Sun,
-    Moon
+    Moon,
+    Home,
+    LogOut,
+    X,
+    Globe,
+    ArrowUp
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
+import { db, auth } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 
 export default function CivicHeatmap() {
@@ -23,6 +29,8 @@ export default function CivicHeatmap() {
     // 1. STATE MANAGEMENT
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
+    const terminateSession = useCivicStore((state) => state.terminateSession);
+
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
@@ -31,8 +39,23 @@ export default function CivicHeatmap() {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState('All');
 
+    const localCity = "Mumbai";
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            terminateSession();
+            navigate('/civic/home');
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     useEffect(() => {
-        // Detect System Language
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
@@ -41,7 +64,6 @@ export default function CivicHeatmap() {
             setIsLoading(true);
             try {
                 const complaintsRef = collection(db, 'civic_complaints');
-                // Retrieve only currently active operations to prevent historical data skew
                 const activeQuery = query(
                     complaintsRef, 
                     where('status', 'in', ['Submitted', 'Assigned', 'In Progress'])
@@ -65,7 +87,6 @@ export default function CivicHeatmap() {
         fetchGeographicData();
     }, []);
 
-    // Departmental filtering logic
     useEffect(() => {
         if (selectedCategory === 'All') {
             setFilteredIncidents(activeIncidents);
@@ -78,95 +99,95 @@ export default function CivicHeatmap() {
     // 2. 13-LANGUAGE DICTIONARY (Heatmap Context)
     const t = {
         en: {
-            lang: "English", help: "Help Center", back: "Return to Operations Portal",
-            title: "Geographic Distribution", sub: "Identify high-density infrastructural deficiency zones to optimize municipal resource allocation and deployment routes.",
-            active_plots: "Active Plots", filters: "Departmental Filters", filter_sub: "Isolate data points by operational division.",
-            legend: "Density Legend", iso_inc: "Isolated Incident", high_den: "High-Density Cluster", rendering: "Rendering geographic data points...", status: "Status",
-            cat_all: "All", cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety"
+            lang: "English", help: "Help Center", back: "Return to Dashboard", log_out: "Log out", careers: "Careers",
+            title: "Live Heatmap", sub: "View reported issues on a live geographic map to see problem hotspots in your city.",
+            active_plots: "Active Issues", filters: "Filter by Category", filter_sub: "Select a category to view specific issues.",
+            legend: "Map Legend", iso_inc: "Single Issue", high_den: "Multiple Issues", rendering: "Loading map data...", status: "Status",
+            cat_all: "All Issues", cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety"
         },
         hi: {
-            lang: "हिन्दी", help: "सहायता केंद्र", back: "ऑपरेशंस पोर्टल पर लौटें",
-            title: "भौगोलिक वितरण", sub: "नगर निगम संसाधन आवंटन और तैनाती मार्गों को अनुकूलित करने के लिए उच्च-घनत्व वाले बुनियादी ढांचे की कमी वाले क्षेत्रों की पहचान करें।",
-            active_plots: "सक्रिय प्लॉट्स", filters: "विभागीय फ़िल्टर", filter_sub: "परिचालन प्रभाग द्वारा डेटा बिंदुओं को अलग करें।",
-            legend: "घनत्व किंवदंती", iso_inc: "पृथक घटना", high_den: "उच्च-घनत्व क्लस्टर", rendering: "भौगोलिक डेटा पॉइंट रेंडर किए जा रहे हैं...", status: "स्थिति",
-            cat_all: "सभी", cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवाएं", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
+            lang: "हिन्दी", help: "सहायता केंद्र", back: "डैशबोर्ड पर लौटें", log_out: "लॉग आउट", careers: "करियर",
+            title: "लाइव हीटमैप", sub: "अपने शहर में समस्या वाले स्थानों को देखने के लिए एक लाइव भौगोलिक मानचित्र पर रिपोर्ट की गई समस्याएं देखें।",
+            active_plots: "सक्रिय समस्याएं", filters: "श्रेणी के अनुसार फ़िल्टर करें", filter_sub: "विशिष्ट समस्याओं को देखने के लिए एक श्रेणी चुनें।",
+            legend: "मानचित्र किंवदंती", iso_inc: "एकल समस्या", high_den: "एकाधिक समस्याएं", rendering: "मानचित्र डेटा लोड हो रहा है...", status: "स्थिति",
+            cat_all: "सभी समस्याएं", cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवाएं", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
         },
         hinglish: {
-            lang: "Hinglish", help: "Help Center", back: "Operations Portal par wapas jayein",
-            title: "Geographic Distribution", sub: "Municipal resources aur deployment routes optimize karne ke liye high-density issue zones identify karein.",
-            active_plots: "Active Plots", filters: "Departmental Filters", filter_sub: "Operational division ke hisaab se data points isolate karein.",
-            legend: "Density Legend", iso_inc: "Isolated Incident", high_den: "High-Density Cluster", rendering: "Geographic data points render ho rahe hain...", status: "Status",
-            cat_all: "All", cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety"
+            lang: "Hinglish", help: "Help Center", back: "Dashboard par wapas jayein", log_out: "Log out", careers: "Careers",
+            title: "Live Heatmap", sub: "Apne city ke problem hotspots dekhne ke liye live map par reported issues dekhein.",
+            active_plots: "Active Issues", filters: "Category se Filter karein", filter_sub: "Specific issues dekhne ke liye category select karein.",
+            legend: "Map Legend", iso_inc: "Single Issue", high_den: "Multiple Issues", rendering: "Map data load ho raha hai...", status: "Status",
+            cat_all: "All Issues", cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety"
         },
         mr: {
-            lang: "मराठी", help: "मदत केंद्र", back: "ऑपरेशन्स पोर्टलवर परत जा",
-            title: "भौगोलिक वितरण", sub: "महानगरपालिका संसाधन वाटप आणि उपयोजन मार्ग अनुकूल करण्यासाठी उच्च-घनतेच्या पायाभूत सुविधांच्या त्रुटी क्षेत्रांची ओळख करा.",
-            active_plots: "सक्रिय प्लॉट्स", filters: "विभागीय फिल्टर", filter_sub: "ऑपरेशनल विभागानुसार डेटा पॉइंट्स वेगळे करा.",
-            legend: "घनता लीजेंड", iso_inc: "वेगळी घटना", high_den: "उच्च-घनता क्लस्टर", rendering: "भौगोलिक डेटा पॉइंट्स रेंडर करत आहे...", status: "स्थिती",
-            cat_all: "सर्व", cat_road: "रस्ते देखभाल", cat_san: "स्वच्छता सेवा", cat_water: "पाणी पुरवठा", cat_elec: "विद्युत ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
+            lang: "मराठी", help: "मदत केंद्र", back: "डॅशबोर्डवर परत जा", log_out: "लॉग आउट", careers: "करिअर",
+            title: "थेट हीटमॅप", sub: "तुमच्या शहरातील समस्यांचे हॉटस्पॉट पाहण्यासाठी थेट नकाशावर नोंदवलेल्या समस्या पहा.",
+            active_plots: "सक्रिय समस्या", filters: "श्रेणीनुसार फिल्टर करा", filter_sub: "विशिष्ट समस्या पाहण्यासाठी श्रेणी निवडा.",
+            legend: "नकाशा लीजेंड", iso_inc: "एकल समस्या", high_den: "अनेक समस्या", rendering: "नकाशा डेटा लोड करत आहे...", status: "स्थिती",
+            cat_all: "सर्व समस्या", cat_road: "रस्ते देखभाल", cat_san: "स्वच्छता सेवा", cat_water: "पाणी पुरवठा", cat_elec: "विद्युत ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
         },
         gu: {
-            lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ઓપરેશન્સ પોર્ટલ પર પાછા ફરો",
-            title: "ભૌગોલિક વિતરણ", sub: "મ્યુનિસિપલ સંસાધનની ફાળવણી અને જમાવટના માર્ગોને શ્રેષ્ઠ બનાવવા માટે ઉચ્ચ-ઘનતાવાળા ઇન્ફ્રાસ્ટ્રક્ચર ખામીવાળા વિસ્તારોને ઓળખો.",
-            active_plots: "સક્રિય પ્લોટ્સ", filters: "વિભાગીય ફિલ્ટર્સ", filter_sub: "ઓપરેશનલ વિભાગ દ્વારા ડેટા પોઈન્ટ્સને અલગ કરો.",
-            legend: "ઘનતા લિજેન્ડ", iso_inc: "અલગ ઘટના", high_den: "ઉચ્ચ-ઘનતા ક્લસ્ટર", rendering: "ભૌગોલિક ડેટા પોઈન્ટ રેન્ડર થઈ રહ્યા છે...", status: "સ્થિતિ",
-            cat_all: "બધા", cat_road: "રોડ જાળવણી", cat_san: "સ્વચ્છતા સેવાઓ", cat_water: "પાણી પુરવઠો", cat_elec: "ઇલેક્ટ્રિકલ ગ્રીડ", cat_safe: "જાહેર સુરક્ષા"
+            lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ડેશબોર્ડ પર પાછા ફરો", log_out: "લૉગ આઉટ", careers: "કારકિર્દી",
+            title: "લાઇવ હીટમેપ", sub: "તમારા શહેરમાં સમસ્યાવાળા સ્થાનો જોવા માટે જીવંત નકશા પર નોંધાયેલી સમસ્યાઓ જુઓ.",
+            active_plots: "સક્રિય સમસ્યાઓ", filters: "શ્રેણી દ્વારા ફિલ્ટર કરો", filter_sub: "ચોક્કસ સમસ્યાઓ જોવા માટે શ્રેણી પસંદ કરો.",
+            legend: "નકશો લિજેન્ડ", iso_inc: "એકલ સમસ્યા", high_den: "બહુવિધ સમસ્યાઓ", rendering: "નકશા ડેટા લોડ થઈ રહ્યો છે...", status: "સ્થિતિ",
+            cat_all: "બધી સમસ્યાઓ", cat_road: "રોડ જાળવણી", cat_san: "સ્વચ્છતા સેવાઓ", cat_water: "પાણી પુરવઠો", cat_elec: "ઇલેક્ટ્રિકલ ગ્રીડ", cat_safe: "જાહેર સુરક્ષા"
         },
         te: {
-            lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "ఆపరేషన్స్ పోర్టల్‌కు తిరిగి వెళ్లండి",
-            title: "భౌగోళిక పంపిణీ", sub: "మున్సిపల్ వనరుల కేటాయింపు మరియు విస్తరణ మార్గాలను ఆప్టిమైజ్ చేయడానికి అధిక-సాంద్రత గల మౌలిక సదుపాయాల లోపం ఉన్న ప్రాంతాలను గుర్తించండి.",
-            active_plots: "క్రియాశీల ప్లాట్లు", filters: "డిపార్ట్‌మెంటల్ ఫిల్టర్లు", filter_sub: "కార్యాచరణ విభాగం ద్వారా డేటా పాయింట్లను వేరు చేయండి.",
-            legend: "సాంద్రత లెజెండ్", iso_inc: "వివిక్త సంఘటన", high_den: "అధిక-సాంద్రత క్లస్టర్", rendering: "భౌగోళిక డేటా పాయింట్లను రెండర్ చేస్తోంది...", status: "స్థితి",
-            cat_all: "అన్నీ", cat_road: "రహదారి నిర్వహణ", cat_san: "పారిశుద్ధ్య సేవలు", cat_water: "నీటి సరఫరా", cat_elec: "ఎలక్ట్రికల్ గ్రిడ్", cat_safe: "ప్రజా భద్రత"
+            lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "డ్యాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి", log_out: "లాగౌట్", careers: "కెరీర్స్",
+            title: "లైవ్ హీట్‌మ్యాప్", sub: "మీ నగరంలోని సమస్యల హాట్‌స్పాట్‌లను చూడటానికి ప్రత్యక్ష మ్యాప్‌లో నివేదించబడిన సమస్యలను వీక్షించండి.",
+            active_plots: "క్రియాశీల సమస్యలు", filters: "వర్గం ద్వారా ఫిల్టర్ చేయండి", filter_sub: "నిర్దిష్ట సమస్యలను వీక్షించడానికి ఒక వర్గాన్ని ఎంచుకోండి.",
+            legend: "మ్యాప్ లెజెండ్", iso_inc: "ఒకే సమస్య", high_den: "బహుళ సమస్యలు", rendering: "మ్యాప్ డేటా లోడ్ అవుతోంది...", status: "స్థితి",
+            cat_all: "అన్ని సమస్యలు", cat_road: "రహదారి నిర్వహణ", cat_san: "పారిశుద్ధ్య సేవలు", cat_water: "నీటి సరఫరా", cat_elec: "ఎలక్ట్రికల్ గ్రిడ్", cat_safe: "ప్రజా భద్రత"
         },
         ta: {
-            lang: "தமிழ்", help: "உதவி மையம்", back: "ஆபரேஷன் போர்ட்டலுக்குத் திரும்பு",
-            title: "புவியியல் விநியோகம்", sub: "நகராட்சி வள ஒதுக்கீடு மற்றும் வரிசைப்படுத்தல் வழிகளை மேம்படுத்த அதிக அடர்த்தி கொண்ட உள்கட்டமைப்பு குறைபாடு மண்டலங்களை அடையாளம் காணவும்.",
-            active_plots: "செயலில் உள்ள அடுக்குகள்", filters: "துறை வடிப்பான்கள்", filter_sub: "செயல்பாட்டுப் பிரிவின்படி தரவுப் புள்ளிகளைத் தனிமைப்படுத்தவும்.",
-            legend: "அடர்த்தி லெஜண்ட்", iso_inc: "தனிமைப்படுத்தப்பட்ட சம்பவம்", high_den: "உயர் அடர்த்தி கிளஸ்டர்", rendering: "புவியியல் தரவு புள்ளிகளை ரெண்டரிங் செய்கிறது...", status: "நிலை",
-            cat_all: "அனைத்தும்", cat_road: "சாலை பராமரிப்பு", cat_san: "சுகாதார சேவைகள்", cat_water: "நீர் வழங்கல்", cat_elec: "மின்சார கட்டம்", cat_safe: "பொது பாதுகாப்பு"
+            lang: "தமிழ்", help: "உதவி மையம்", back: "டாஷ்போர்டுக்குத் திரும்பு", log_out: "வெளியேறு", careers: "தொழில்கள்",
+            title: "நேரடி ஹீட்மேப்", sub: "உங்கள் நகரத்தில் உள்ள பிரச்சனைகளின் மையப் பகுதிகளைப் பார்க்க நேரடி வரைபடத்தில் புகாரளிக்கப்பட்ட சிக்கல்களைக் காண்க.",
+            active_plots: "செயலில் உள்ள பிரச்சனைகள்", filters: "வகையின்படி வடிகட்டவும்", filter_sub: "குறிப்பிட்ட சிக்கல்களைக் காண ஒரு வகையைத் தேர்ந்தெடுக்கவும்.",
+            legend: "வரைபட லெஜண்ட்", iso_inc: "ஒற்றை பிரச்சனை", high_den: "பல பிரச்சனைகள்", rendering: "வரைபடத் தரவை ஏற்றுகிறது...", status: "நிலை",
+            cat_all: "அனைத்து பிரச்சனைகள்", cat_road: "சாலை பராமரிப்பு", cat_san: "சுகாதார சேவைகள்", cat_water: "நீர் வழங்கல்", cat_elec: "மின்சார கட்டம்", cat_safe: "பொது பாதுகாப்பு"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਓਪਰੇਸ਼ਨ ਪੋਰਟਲ 'ਤੇ ਵਾਪਸ ਜਾਓ",
-            title: "ਭੂਗੋਲਿਕ ਵੰਡ", sub: "ਮਿਉਂਸਪਲ ਸਰੋਤ ਵੰਡ ਅਤੇ ਤੈਨਾਤੀ ਮਾਰਗਾਂ ਨੂੰ ਅਨੁਕੂਲ ਬਣਾਉਣ ਲਈ ਉੱਚ-ਘਣਤਾ ਵਾਲੇ ਬੁਨਿਆਦੀ ਢਾਂਚੇ ਦੀ ਕਮੀ ਵਾਲੇ ਜ਼ੋਨਾਂ ਦੀ ਪਛਾਣ ਕਰੋ।",
-            active_plots: "ਸਰਗਰਮ ਪਲਾਟ", filters: "ਵਿਭਾਗੀ ਫਿਲਟਰ", filter_sub: "ਕਾਰਜਸ਼ੀਲ ਡਿਵੀਜ਼ਨ ਦੁਆਰਾ ਡੇਟਾ ਪੁਆਇੰਟਾਂ ਨੂੰ ਅਲੱਗ ਕਰੋ।",
-            legend: "ਘਣਤਾ ਦੰਤਕਥਾ", iso_inc: "ਅਲੱਗ-ਥਲੱਗ ਘਟਨਾ", high_den: "ਉੱਚ-ਘਣਤਾ ਕਲੱਸਟਰ", rendering: "ਭੂਗੋਲਿਕ ਡਾਟਾ ਪੁਆਇੰਟ ਰੈਂਡਰ ਕੀਤੇ ਜਾ ਰਹੇ ਹਨ...", status: "ਸਥਿਤੀ",
-            cat_all: "ਸਾਰੇ", cat_road: "ਸੜਕ ਦੀ ਸਾਂਭ-ਸੰਭਾਲ", cat_san: "ਸੈਨੀਟੇਸ਼ਨ ਸੇਵਾਵਾਂ", cat_water: "ਪਾਣੀ ਦੀ ਸਪਲਾਈ", cat_elec: "ਇਲੈਕਟ੍ਰੀਕਲ ਗਰਿੱਡ", cat_safe: "ਜਨਤਕ ਸੁਰੱਖਿਆ"
+            lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ ਜਾਓ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ",
+            title: "ਲਾਈਵ ਹੀਟਮੈਪ", sub: "ਆਪਣੇ ਸ਼ਹਿਰ ਵਿੱਚ ਸਮੱਸਿਆ ਵਾਲੇ ਸਥਾਨਾਂ ਨੂੰ ਦੇਖਣ ਲਈ ਲਾਈਵ ਨਕਸ਼ੇ 'ਤੇ ਰਿਪੋਰਟ ਕੀਤੀਆਂ ਸਮੱਸਿਆਵਾਂ ਦੇਖੋ।",
+            active_plots: "ਸਰਗਰਮ ਸਮੱਸਿਆਵਾਂ", filters: "ਸ਼੍ਰੇਣੀ ਦੁਆਰਾ ਫਿਲਟਰ ਕਰੋ", filter_sub: "ਖਾਸ ਸਮੱਸਿਆਵਾਂ ਨੂੰ ਦੇਖਣ ਲਈ ਇੱਕ ਸ਼੍ਰੇਣੀ ਚੁਣੋ।",
+            legend: "ਨਕਸ਼ਾ ਦੰਤਕਥਾ", iso_inc: "ਇਕੱਲੀ ਸਮੱਸਿਆ", high_den: "ਕਈ ਸਮੱਸਿਆਵਾਂ", rendering: "ਨਕਸ਼ਾ ਡਾਟਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...", status: "ਸਥਿਤੀ",
+            cat_all: "ਸਾਰੀਆਂ ਸਮੱਸਿਆਵਾਂ", cat_road: "ਸੜਕ ਦੀ ਸਾਂਭ-ਸੰਭਾਲ", cat_san: "ਸੈਨੀਟੇਸ਼ਨ ਸੇਵਾਵਾਂ", cat_water: "ਪਾਣੀ ਦੀ ਸਪਲਾਈ", cat_elec: "ਇਲੈਕਟ੍ਰੀਕਲ ਗਰਿੱਡ", cat_safe: "ਜਨਤਕ ਸੁਰੱਖਿਆ"
         },
         bho: {
-            lang: "भोजपुरी", help: "मदद केंद्र", back: "ऑपरेशंस पोर्टल पर वापस जाईं",
-            title: "भौगोलिक वितरण", sub: "नगर निगम संसाधन आवंटन आ तैनाती मार्ग के अनुकूल बनावे खातिर उच्च-घनत्व वाला बुनियादी ढांचा के कमी वाला क्षेत्रन के पहचान करीं।",
-            active_plots: "सक्रिय प्लॉट्स", filters: "विभागीय फिल्टर", filter_sub: "परिचालन प्रभाग द्वारा डेटा बिंदु के अलग करीं।",
-            legend: "घनत्व लीजेंड", iso_inc: "अलग घटना", high_den: "उच्च-घनत्व क्लस्टर", rendering: "भौगोलिक डेटा पॉइंट रेंडर कइल जा रहल बा...", status: "स्थिति",
-            cat_all: "सभ", cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवा", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
+            lang: "भोजपुरी", help: "मदद केंद्र", back: "डैशबोर्ड पर वापस जाईं", log_out: "लॉग आउट", careers: "करियर",
+            title: "लाइव हीटमैप", sub: "आपन शहर में समस्या के हॉटस्पॉट देखे खातिर लाइव नक्शा पर रिपोर्ट कइल गइल समस्या देखीं।",
+            active_plots: "सक्रिय समस्या", filters: "श्रेणी के अनुसार फिल्टर करीं", filter_sub: "विशिष्ट समस्या देखे खातिर श्रेणी चुनीं।",
+            legend: "नक्शा लीजेंड", iso_inc: "एकल समस्या", high_den: "एकाधिक समस्या", rendering: "नक्शा डेटा लोड हो रहल बा...", status: "स्थिति",
+            cat_all: "सभ समस्या", cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवा", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा"
         },
         ar: {
-            lang: "العربية", help: "مركز المساعدة", back: "العودة إلى بوابة العمليات",
-            title: "التوزيع الجغرافي", sub: "تحديد مناطق نقص البنية التحتية عالية الكثافة لتحسين تخصيص الموارد وطرق النشر للبلدية.",
-            active_plots: "النقاط النشطة", filters: "مرشحات الأقسام", filter_sub: "عزل نقاط البيانات حسب القسم التشغيلي.",
-            legend: "مفتاح الكثافة", iso_inc: "حادث معزول", high_den: "مجموعة عالية الكثافة", rendering: "تقديم نقاط البيانات الجغرافية...", status: "الحالة",
-            cat_all: "الكل", cat_road: "صيانة الطرق", cat_san: "خدمات الصرف الصحي", cat_water: "إمدادات المياه", cat_elec: "الشبكة الكهربائية", cat_safe: "السلامة العامة"
+            lang: "العربية", help: "مركز المساعدة", back: "العودة إلى لوحة القيادة", log_out: "تسجيل الخروج", careers: "الوظائف",
+            title: "خريطة حرارية حية", sub: "عرض المشكلات المبلغ عنها على خريطة جغرافية حية لرؤية النقاط الساخنة للمشكلات في مدينتك.",
+            active_plots: "المشكلات النشطة", filters: "تصفية حسب الفئة", filter_sub: "حدد فئة لعرض مشكلات محددة.",
+            legend: "مفتاح الخريطة", iso_inc: "مشكلة واحدة", high_den: "مشكلات متعددة", rendering: "تحميل بيانات الخريطة...", status: "الحالة",
+            cat_all: "جميع المشكلات", cat_road: "صيانة الطرق", cat_san: "خدمات الصرف الصحي", cat_water: "إمدادات المياه", cat_elec: "الشبكة الكهربائية", cat_safe: "السلامة العامة"
         },
         es: {
-            lang: "Español", help: "Centro de ayuda", back: "Volver al Portal de Operaciones",
-            title: "Distribución Geográfica", sub: "Identifique zonas de deficiencia de infraestructura de alta densidad para optimizar la asignación de recursos y rutas de despliegue municipal.",
-            active_plots: "Parcelas Activas", filters: "Filtros Departamentales", filter_sub: "Aísle los puntos de datos por división operativa.",
-            legend: "Leyenda de Densidad", iso_inc: "Incidente Aislado", high_den: "Clúster de Alta Densidad", rendering: "Renderizando puntos de datos geográficos...", status: "Estado",
-            cat_all: "Todos", cat_road: "Mantenimiento de Carreteras", cat_san: "Servicios de Saneamiento", cat_water: "Suministro de Agua", cat_elec: "Red Eléctrica", cat_safe: "Seguridad Pública"
+            lang: "Español", help: "Centro de ayuda", back: "Volver al Tablero", log_out: "Cerrar sesión", careers: "Carreras",
+            title: "Mapa de Calor en Vivo", sub: "Vea los problemas reportados en un mapa para ver los puntos críticos de su ciudad.",
+            active_plots: "Problemas Activos", filters: "Filtrar por Categoría", filter_sub: "Seleccione una categoría para ver problemas específicos.",
+            legend: "Leyenda del Mapa", iso_inc: "Problema Único", high_den: "Múltiples Problemas", rendering: "Cargando datos del mapa...", status: "Estado",
+            cat_all: "Todos los Problemas", cat_road: "Mantenimiento de Carreteras", cat_san: "Servicios de Saneamiento", cat_water: "Suministro de Agua", cat_elec: "Red Eléctrica", cat_safe: "Seguridad Pública"
         },
         fr: {
-            lang: "Français", help: "Centre d'aide", back: "Retour au Portail des Opérations",
-            title: "Distribution Géographique", sub: "Identifiez les zones de déficit d'infrastructure à haute densité pour optimiser l'allocation des ressources municipales et les itinéraires de déploiement.",
-            active_plots: "Parcelles Actives", filters: "Filtres Départementaux", filter_sub: "Isolez les points de données par division opérationnelle.",
-            legend: "Légende de Densité", iso_inc: "Incident Isolé", high_den: "Cluster à Haute Densité", rendering: "Rendu des points de données géographiques...", status: "Statut",
-            cat_all: "Tous", cat_road: "Entretien Routier", cat_san: "Services d'Assainissement", cat_water: "Approvisionnement en Eau", cat_elec: "Réseau Électrique", cat_safe: "Sécurité Publique"
+            lang: "Français", help: "Centre d'aide", back: "Retour au Tableau de bord", log_out: "Se déconnecter", careers: "Carrières",
+            title: "Carte Thermique en Direct", sub: "Consultez les problèmes signalés sur une carte pour voir les points chauds de votre ville.",
+            active_plots: "Problèmes Actifs", filters: "Filtrer par Catégorie", filter_sub: "Sélectionnez une catégorie pour voir des problèmes spécifiques.",
+            legend: "Légende de la Carte", iso_inc: "Problème Unique", high_den: "Problèmes Multiples", rendering: "Chargement des données de la carte...", status: "Statut",
+            cat_all: "Tous les Problèmes", cat_road: "Entretien Routier", cat_san: "Services d'Assainissement", cat_water: "Approvisionnement en Eau", cat_elec: "Réseau Électrique", cat_safe: "Sécurité Publique"
         },
         de: {
-            lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Operationsportal",
-            title: "Geografische Verteilung", sub: "Identifizieren Sie Zonen mit hoher Dichte an Infrastrukturmängeln, um die kommunale Ressourcenallokation und Einsatzrouten zu optimieren.",
-            active_plots: "Aktive Plots", filters: "Abteilungsfilter", filter_sub: "Isolieren Sie Datenpunkte nach operativer Abteilung.",
-            legend: "Dichte-Legende", iso_inc: "Isolierter Vorfall", high_den: "Hochdichter Cluster", rendering: "Geografische Datenpunkte werden gerendert...", status: "Status",
-            cat_all: "Alle", cat_road: "Straßeninstandhaltung", cat_san: "Sanitärdienste", cat_water: "Wasserversorgung", cat_elec: "Stromnetz", cat_safe: "Öffentliche Sicherheit"
+            lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Dashboard", log_out: "Abmelden", careers: "Karriere",
+            title: "Live-Heatmap", sub: "Zeigen Sie gemeldete Probleme auf einer Live-Karte an, um Problem-Hotspots in Ihrer Stadt zu sehen.",
+            active_plots: "Aktive Probleme", filters: "Nach Kategorie Filtern", filter_sub: "Wählen Sie eine Kategorie aus, um bestimmte Probleme anzuzeigen.",
+            legend: "Kartenlegende", iso_inc: "Einzelnes Problem", high_den: "Mehrere Probleme", rendering: "Kartendaten werden geladen...", status: "Status",
+            cat_all: "Alle Probleme", cat_road: "Straßeninstandhaltung", cat_san: "Sanitärdienste", cat_water: "Wasserversorgung", cat_elec: "Stromnetz", cat_safe: "Öffentliche Sicherheit"
         }
     };
 
@@ -204,7 +225,7 @@ export default function CivicHeatmap() {
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 transition-colors border-b ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-[#e0e0e0] backdrop-blur-md' : 'bg-[#050505]/90 border-[#111111] backdrop-blur-md'
             }`}>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -216,18 +237,22 @@ export default function CivicHeatmap() {
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-6 text-[0.9rem] font-bold">
-                    <span className={`cursor-pointer transition-colors hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
-                        {currentT.help}
-                    </span>
+                <div className="flex items-center gap-3 sm:gap-6 text-[0.9rem] font-bold">
+                    <button 
+                        onClick={handleSignOut} 
+                        className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
+                    >
+                        {currentT.log_out}
+                    </button>
                     
                     <button 
-                        onClick={() => setShowLangPrompt(true)}
-                        className={`flex items-center gap-2 transition-colors outline-none ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
+                        onClick={handleSignOut} 
+                        className={`p-2 rounded-full transition-colors outline-none block sm:hidden ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                        aria-label="Log Out"
                     >
-                        {currentT.lang}
+                        <LogOut size={18} />
                     </button>
-
+                    
                     <button 
                         onClick={toggleTheme}
                         className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
@@ -237,12 +262,13 @@ export default function CivicHeatmap() {
                     </button>
 
                     <button 
-                        onClick={() => navigate('/')} 
-                        className={`px-5 py-2 rounded-full flex items-center gap-2 transition-colors outline-none border ${
+                        onClick={() => navigate('/civic')} 
+                        className={`p-2.5 rounded-full flex items-center justify-center transition-colors outline-none border ${
                             theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
                         }`}
+                        aria-label="Home"
                     >
-                        Home
+                        <Home size={18} />
                     </button>
                 </div>
             </header>
@@ -252,12 +278,12 @@ export default function CivicHeatmap() {
                 {showLangPrompt && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}
+                        className={`fixed inset-0 z-[9999] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'}`}
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                             className={`w-full max-w-[400px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
-                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#222222]'
                             }`}
                         >
                             <button 
@@ -266,17 +292,10 @@ export default function CivicHeatmap() {
                                     theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
                                 }`}
                             >
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <X size={18} />
                             </button>
                             
-                            <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center mb-4 ${
-                                theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'
-                            }`}>
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            </div>
-
-                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
-                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Choose your preferred viewing language.</p>
+                            <h2 className={`text-[1.4rem] font-black tracking-tight mb-6 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
                             
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((option) => (
@@ -294,7 +313,6 @@ export default function CivicHeatmap() {
                                                 ? (lang === option.code ? 'text-black' : 'text-[#666666] group-hover:text-black')
                                                 : (lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white')
                                         }`}>{option.label}</span>
-                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                     </button>
                                 ))}
                             </div>
@@ -338,7 +356,7 @@ export default function CivicHeatmap() {
             </div>
 
             {/* Main Visualizer Area */}
-            <div className={`flex-1 flex flex-col md:flex-row border-t relative animate-fade ${theme === 'light' ? 'border-[#e0e0e0]' : 'border-[#333333]'}`}>
+            <div className={`flex-1 flex flex-col md:flex-row border-t border-b relative animate-fade ${theme === 'light' ? 'border-[#e0e0e0]' : 'border-[#333333]'}`}>
                 
                 {/* Control Panel Sidebar */}
                 <div className={`w-full md:w-[350px] shrink-0 border-r flex flex-col z-10 ${
@@ -433,6 +451,57 @@ export default function CivicHeatmap() {
 
             </div>
             
+            {/* FOOTER ALIGNMENT */}
+            <footer className={`w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 ${
+                theme === 'light' ? 'bg-[#ffffff]' : 'bg-[#050505]'
+            }`}>
+                <div className="flex flex-wrap items-center gap-6">
+                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
+                        <Globe size={14} /> {currentT.lang}
+                    </button>
+                    <div className={`flex items-center gap-6 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <div className="flex items-center gap-6">
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {localCity}, IN
+                        </div>
+                    </div>
+                    <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                        Built by 
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                            <img 
+                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
+                                alt="AnyAstro" 
+                                className="h-4 w-auto object-contain" 
+                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
+                            />
+                        </a>
+                    </div>
+                    <button onClick={scrollToTop} className={`p-2 rounded-full transition-colors border outline-none ${theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:bg-[#e0e0e0]' : 'bg-[#111111] border-[#333333] hover:bg-[#222222]'}`}>
+                        <ArrowUp size={16} />
+                    </button>
+                </div>
+            </footer>
+
             {/* Custom CSS overrides for Leaflet Popups */}
             <style>
                 {`
