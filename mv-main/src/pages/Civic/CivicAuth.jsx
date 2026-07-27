@@ -233,7 +233,7 @@ export default function CivicAuth() {
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 transition-colors backdrop-blur-md ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-b border-[#e0e0e0]' : 'bg-[#050505]/90 border-b border-[#111111]'
             }`}>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 

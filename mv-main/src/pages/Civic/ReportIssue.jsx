@@ -101,7 +101,7 @@ export default function ReportIssue() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/civic/home');
+            navigate('/civic');
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -464,7 +464,7 @@ export default function ReportIssue() {
 
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 

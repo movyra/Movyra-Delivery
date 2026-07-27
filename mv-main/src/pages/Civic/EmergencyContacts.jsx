@@ -78,7 +78,7 @@ export default function EmergencyContacts() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/civic/home');
+            navigate('/civic');
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -227,7 +227,7 @@ export default function EmergencyContacts() {
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 transition-colors border-b ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-[#e0e0e0] backdrop-blur-md' : 'bg-[#050505]/90 border-[#111111] backdrop-blur-md'
             }`}>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -352,7 +352,7 @@ export default function EmergencyContacts() {
                             <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Movyra Products</h2>
                             <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Discover our connected platforms.</p>
 
-                            <Link to="/civic/home" className={`group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border ${
+                            <Link to="/civic" className={`group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border ${
                                 theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'
                             }`}>
                                 <div className="flex items-center gap-2 mb-2">

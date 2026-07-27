@@ -45,7 +45,7 @@ export default function WardAdmin() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/civic/home');
+            navigate('/civic');
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -160,7 +160,7 @@ export default function WardAdmin() {
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 transition-colors border-b ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-[#e0e0e0] backdrop-blur-md' : 'bg-[#050505]/90 border-[#111111] backdrop-blur-md'
             }`}>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
                     <img src={theme === 'light' ? '/logo-3.png' : '/logo.png'} alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
                     <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
                         ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Civic</span>

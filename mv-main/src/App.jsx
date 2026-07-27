@@ -99,6 +99,10 @@ import WardAdmin from './pages/Civic/WardAdmin';
 import CivicOnboarding from './pages/Civic/CivicOnboarding';
 import CivicAuth from './pages/Civic/CivicAuth';
 import SessionMonitor from './components/Civic/SessionMonitor';
+import MyReports from './pages/Civic/MyReports';
+import PublicNotices from './pages/Civic/PublicNotices';
+import CitizenFeedback from './pages/Civic/CitizenFeedback';
+import EmergencyContacts from './pages/Civic/EmergencyContacts';
 
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
@@ -255,7 +259,7 @@ const SecureCivicGateway = ({ children }) => {
     return (
       <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center">
         <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-[#888888] font-bold text-[0.9rem]">Verifying identity credentials...</p>
+        <p className="text-[#888888] font-bold text-[0.9rem]">Verifying credentials...</p>
       </div>
     );
   }
@@ -324,6 +328,12 @@ export default function App() {
                 <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                
+                {/* NEW CIVIC PORTALS */}
+                <Route path='/civic/my-reports' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><MyReports /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/notices' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><PublicNotices /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
 
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
@@ -395,6 +405,12 @@ export default function App() {
                 <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                
+                {/* NEW CIVIC PORTALS */}
+                <Route path='/civic/my-reports' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><MyReports /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/notices' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><PublicNotices /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
               </>
             )}
           </Routes>
