@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
-import { Sun, Moon, ShieldCheck, X, Zap, Activity, Lock } from 'lucide-react';
+import { Sun, Moon, ShieldCheck, X, Zap, Activity, Lock, Globe, ArrowUp } from 'lucide-react';
 import { useCivicStore } from '../../store/useCivicStore';
 
 export default function CivicAuth() {
@@ -37,6 +37,10 @@ export default function CivicAuth() {
         const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
     }, []);
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     // 13-Language Dictionary (Simplified Terminology)
     const t = {
@@ -223,13 +227,13 @@ export default function CivicAuth() {
         <div className={`min-h-screen font-sans overflow-x-hidden transition-colors duration-300 flex flex-col ${
             theme === 'light' ? 'bg-[#f5f5f5] text-[#111111] selection:bg-black selection:text-white' : 'bg-[#050505] text-white selection:bg-white selection:text-black'
         }`}>
-            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade { animation: fadeIn 0.5s ease-out forwards; }`}</style>
+            <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } .animate-fade { animation: fadeIn 0.5s ease-out forwards; } html { scroll-behavior: smooth; }`}</style>
             
             {/* MASTER HEADER */}
             <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 z-50 transition-colors backdrop-blur-md ${
                 theme === 'light' ? 'bg-[#f5f5f5]/90 border-b border-[#e0e0e0]' : 'bg-[#050505]/90 border-b border-[#111111]'
             }`}>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -287,7 +291,7 @@ export default function CivicAuth() {
             </AnimatePresence>
 
             {/* AUTHENTICATION GATEWAY SECTION */}
-            <section className="relative pt-40 pb-20 px-6 md:px-12 flex flex-col items-center justify-center min-h-[90vh]">
+            <section className="relative pt-40 pb-20 px-6 md:px-12 flex flex-col items-center justify-center flex-1">
                 <motion.div 
                     initial={{ opacity: 0, y: 20 }} 
                     animate={{ opacity: 1, y: 0 }} 
@@ -424,84 +428,28 @@ export default function CivicAuth() {
                 }`}></div>
             </section>
 
-            {/* SECTION 2: FAST REPORTING */}
-            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
-                <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpAnim}>
-                        <Zap size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
-                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Fast Reporting.</h2>
-                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
-                            Spot an issue? Open the app, snap a photo, and the system automatically tags the location. It is sent instantly to the exact team needed.
-                        </p>
-                    </motion.div>
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex justify-center lg:justify-end">
-                        <svg viewBox="0 0 200 200" className="w-full max-w-[250px] h-auto" fill="none">
-                            <rect x="20" y="40" width="160" height="120" rx="12" fill={theme === 'light' ? '#f0f0f0' : '#1a1a1a'} stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="2" />
-                            <motion.path d="M100 80 L100 120 M80 100 L120 100" stroke={theme === 'light' ? '#111111' : '#ffffff'} strokeWidth="8" strokeLinecap="round" initial={{ scale: 0.5 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}/>
-                        </svg>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* SECTION 3: LIVE TRACKING */}
-            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#050505] border-[#111111]'}`}>
-                <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                    <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="order-2 lg:order-1 flex justify-center lg:justify-start">
-                        <svg viewBox="0 0 300 150" className="w-full max-w-[300px] h-auto" fill="none">
-                            <path d="M20 100 Q 80 100, 150 50 T 280 80" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="4" strokeDasharray="8 8" fill="none"/>
-                            <motion.circle cx="20" cy="100" r="6" fill={theme === 'light' ? '#111111' : '#ffffff'} />
-                            <motion.circle cx="150" cy="50" r="6" fill={theme === 'light' ? '#111111' : '#ffffff'} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ repeat: Infinity, duration: 2 }} />
-                            <motion.circle cx="280" cy="80" r="8" fill="#00aa55" initial={{ scale: 1 }} animate={{ scale: 1.5 }} transition={{ repeat: Infinity, duration: 1, repeatType: "reverse" }} />
-                        </svg>
-                    </motion.div>
-                    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpAnim} className="order-1 lg:order-2">
-                        <Activity size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
-                        <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Live Tracking.</h2>
-                        <p className={`text-[1.1rem] leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
-                            No more guessing. Watch your task move from "Pending" to "Assigned" and finally to "Resolved" with real-time status updates.
-                        </p>
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* SECTION 4: DATA SECURITY */}
-            <section className={`py-24 px-6 md:px-12 border-t ${theme === 'light' ? 'bg-[#ffffff] border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#111111]'}`}>
-                <div className="max-w-[1200px] mx-auto text-center flex flex-col items-center">
-                    <Lock size={32} className={`mb-6 ${theme === 'light' ? 'text-black' : 'text-white'}`} />
-                    <h2 className="text-[2.5rem] font-black tracking-tighter mb-4">Strict Data Security.</h2>
-                    <p className={`text-[1.1rem] max-w-[600px] leading-relaxed mb-12 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>
-                        Your account is protected by enterprise-grade encryption. Administrative access requires strict verification, ensuring only approved staff can modify civic records.
-                    </p>
-                    
-                    <div className="relative w-full max-w-[200px]">
-                        <svg viewBox="0 0 100 120" className="w-full h-auto" fill="none">
-                            <motion.path d="M20 50 V30 C20 10 80 10 80 30 V50" stroke={theme === 'light' ? '#cccccc' : '#333333'} strokeWidth="8" strokeLinecap="round" initial={{ y: 10 }} animate={{ y: 0 }} transition={{ repeat: Infinity, duration: 1.5, repeatType: "reverse" }}/>
-                            <rect x="10" y="45" width="80" height="60" rx="10" fill={theme === 'light' ? '#111111' : '#ffffff'} />
-                            <circle cx="50" cy="75" r="6" fill={theme === 'light' ? '#ffffff' : '#111111'} />
-                        </svg>
-                    </div>
-                </div>
-            </section>
-
             {/* FOOTER ALIGNMENT */}
-            <footer className={`w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t relative z-10 ${
+            <footer className={`w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t relative z-10 ${
                 theme === 'light' ? 'border-[#e0e0e0] bg-[#ffffff]' : 'border-[#111111] bg-[#050505]'
             }`}>
-                
-                {/* Custom SVG Social Icons */}
-                <div className={`flex items-center gap-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
-                    <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
-                    </a>
-                    <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
-                    </a>
-                    <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                    </a>
-                    <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
-                    </a>
+                <div className="flex flex-wrap items-center gap-6">
+                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
+                        <Globe size={14} /> {currentT.lang}
+                    </button>
+                    <div className={`flex items-center gap-6 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                        </a>
+                    </div>
                 </div>
                 
                 <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
@@ -513,15 +461,22 @@ export default function CivicAuth() {
                             {localCity}, IN
                         </div>
                     </div>
-                    
                     <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
-                    
-                    {/* Attribution Link */}
-                    <div className={`text-[0.75rem] uppercase tracking-wider ${theme === 'light' ? 'text-[#888888]' : 'text-[#666666]'}`}>
-                        Built by <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className={`transition-colors underline decoration-[#444444] underline-offset-4 ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>AnyAstro</a>
+                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                        Built by 
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                            <img 
+                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
+                                alt="AnyAstro" 
+                                className="h-4 w-auto object-contain" 
+                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
+                            />
+                        </a>
                     </div>
+                    <button onClick={scrollToTop} className={`p-2 rounded-full transition-colors border outline-none ${theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:bg-[#e0e0e0]' : 'bg-[#111111] border-[#333333] hover:bg-[#222222]'}`}>
+                        <ArrowUp size={16} />
+                    </button>
                 </div>
-
             </footer>
         </div>
     );
