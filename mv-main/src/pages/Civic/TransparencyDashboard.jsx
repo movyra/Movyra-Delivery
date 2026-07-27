@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { signOut } from 'firebase/auth';
 import { 
     ArrowLeft, 
     BarChart, 
@@ -8,10 +9,15 @@ import {
     TrendingUp,
     ShieldCheck,
     Sun,
-    Moon
+    Moon,
+    Home,
+    LogOut,
+    X,
+    Globe,
+    ArrowUp
 } from 'lucide-react';
 import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
+import { db, auth } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 
 export default function TransparencyDashboard() {
@@ -20,6 +26,8 @@ export default function TransparencyDashboard() {
     // 1. STATE MANAGEMENT
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
+    const terminateSession = useCivicStore((state) => state.terminateSession);
+
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -31,8 +39,23 @@ export default function TransparencyDashboard() {
         departmentStats: {}
     });
 
+    const localCity = "Mumbai";
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            terminateSession();
+            navigate('/civic/home');
+        } catch (error) {
+            console.error("Logout failed:", error);
+        }
+    };
+
+    const scrollToTop = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     useEffect(() => {
-        // Detect System Language
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
@@ -41,7 +64,6 @@ export default function TransparencyDashboard() {
             setIsLoading(true);
             try {
                 const complaintsRef = collection(db, 'civic_complaints');
-                // Retrieve a significant operational sample for accurate analytics
                 const analyticsQuery = query(complaintsRef, orderBy('createdAt', 'desc'), limit(500));
                 const snapshot = await getDocs(analyticsQuery);
                 
@@ -88,19 +110,19 @@ export default function TransparencyDashboard() {
 
     // 2. 13-LANGUAGE DICTIONARY (Dashboard Context)
     const t = {
-        en: { lang: "English", help: "Help Center", back: "Return to Operations Portal", title: "Performance Analytics", sub: "Live operational data reflecting municipal efficiency, departmental workloads, and overall resolution rates.", total: "Total Incidents", resolved: "Resolved", eff: "Efficiency Rate", workload: "Workload Progress", concluded: "Concluded", dpt: "Departmental Analysis", no_data: "Insufficient operational data to generate departmental metrics.", processing: "Aggregating live database records...", acc: "Public Accountability" },
-        hi: { lang: "हिन्दी", help: "सहायता केंद्र", back: "ऑपरेशंस पोर्टल पर लौटें", title: "प्रदर्शन विश्लेषण", sub: "नगर निगम दक्षता, विभागीय कार्यभार और समग्र समाधान दरों को दर्शाने वाला लाइव परिचालन डेटा।", total: "कुल घटनाएं", resolved: "समाधान", eff: "दक्षता दर", workload: "कार्यभार प्रगति", concluded: "संपन्न", dpt: "विभागीय विश्लेषण", no_data: "विभागीय मेट्रिक्स उत्पन्न करने के लिए अपर्याप्त परिचालन डेटा।", processing: "लाइव डेटाबेस रिकॉर्ड एकत्र किए जा रहे हैं...", acc: "सार्वजनिक जवाबदेही" },
-        hinglish: { lang: "Hinglish", help: "Help Center", back: "Operations Portal par wapas jayein", title: "Performance Analytics", sub: "Live operational data jo municipal efficiency, departmental workloads, aur overall resolution rates reflect karta hai.", total: "Total Incidents", resolved: "Resolved", eff: "Efficiency Rate", workload: "Workload Progress", concluded: "Concluded", dpt: "Departmental Analysis", no_data: "Departmental metrics generate karne ke liye data insufficient hai.", processing: "Live database records aggregate ho rahe hain...", acc: "Public Accountability" },
-        mr: { lang: "मराठी", help: "मदत केंद्र", back: "ऑपरेशन्स पोर्टलवर परत जा", title: "कामगिरी विश्लेषण", sub: "महानगरपालिका कार्यक्षमता, विभागीय कार्यभार आणि एकूण रिझोल्यूशन दर दर्शवणारा लाइव्ह ऑपरेशनल डेटा.", total: "एकूण घटना", resolved: "सोडवलेले", eff: "कार्यक्षमता दर", workload: "कामाची प्रगती", concluded: "पूर्ण", dpt: "विभागीय विश्लेषण", no_data: "विभागीय मेट्रिक्स तयार करण्यासाठी अपुरा ऑपरेशनल डेटा.", processing: "लाइव्ह डेटाबेस रेकॉर्ड गोळा करत आहे...", acc: "सार्वजनिक उत्तरदायित्व" },
-        gu: { lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ઓપરેશન્સ પોર્ટલ પર પાછા ફરો", title: "પ્રદર્શન વિશ્લેષણ", sub: "મ્યુનિસિપલ કાર્યક્ષમતા, વિભાગીય વર્કલોડ અને એકંદર ઠરાવ દરો દર્શાવતા લાઈવ ઓપરેશનલ ડેટા.", total: "કુલ ઘટનાઓ", resolved: "ઉકેલાયેલ", eff: "કાર્યક્ષમતા દર", workload: "વર્કલોડ પ્રગતિ", concluded: "પૂર્ણ", dpt: "વિભાગીય વિશ્લેષણ", no_data: "વિભાગીય મેટ્રિક્સ બનાવવા માટે અપૂરતો ડેટા.", processing: "લાઈવ ડેટાબેઝ રેકોર્ડ્સ એકત્રિત કરવામાં આવી રહ્યા છે...", acc: "જાહેર જવાબદારી" },
-        te: { lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "ఆపరేషన్స్ పోర్టల్‌కు తిరిగి వెళ్లండి", title: "పనితీరు విశ్లేషణ", sub: "మున్సిపల్ సామర్థ్యం, శాఖల పనిభారం మరియు మొత్తం రిజల్యూషన్ రేట్లను ప్రతిబింబించే లైవ్ ఆపరేషనల్ డేటా.", total: "మొత్తం సంఘటనలు", resolved: "పరిష్కరించబడింది", eff: "సమర్థత రేటు", workload: "పనిభారం పురోగతి", concluded: "ముగిసింది", dpt: "డిపార్ట్‌మెంటల్ విశ్లేషణ", no_data: "డిపార్ట్‌మెంటల్ కొలమానాలను రూపొందించడానికి తగినంత డేటా లేదు.", processing: "లైవ్ డేటాబేస్ రికార్డులను సేకరిస్తోంది...", acc: "ప్రజా జవాబుదారీతనం" },
-        ta: { lang: "தமிழ்", help: "உதவி மையம்", back: "ஆபரேஷன் போர்ட்டலுக்குத் திரும்பு", title: "செயல்திறன் பகுப்பாய்வு", sub: "நகராட்சி செயல்திறன், துறை சார்ந்த பணிச்சுமை மற்றும் ஒட்டுமொத்த தீர்மான விகிதங்களை பிரதிபலிக்கும் நேரலை தரவு.", total: "மொத்த சம்பவங்கள்", resolved: "தீர்க்கப்பட்டது", eff: "செயல்திறன் விகிதம்", workload: "பணிச்சுமை முன்னேற்றம்", concluded: "முடிந்தது", dpt: "துறை பகுப்பாய்வு", no_data: "துறை அளவீடுகளை உருவாக்க போதுமான தரவு இல்லை.", processing: "நேரலை தரவுத்தள பதிவுகள் சேகரிக்கப்படுகின்றன...", acc: "பொது பொறுப்புக்கூறல்" },
-        pa: { lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਓਪਰੇਸ਼ਨ ਪੋਰਟਲ 'ਤੇ ਵਾਪਸ ਜਾਓ", title: "ਪ੍ਰਦਰਸ਼ਨ ਵਿਸ਼ਲੇਸ਼ਣ", sub: "ਮਿਊਂਸੀਪਲ ਕੁਸ਼ਲਤਾ, ਵਿਭਾਗੀ ਕੰਮ ਦੇ ਬੋਝ ਅਤੇ ਸਮੁੱਚੀ ਰੈਜ਼ੋਲਿਊਸ਼ਨ ਦਰਾਂ ਨੂੰ ਦਰਸਾਉਂਦਾ ਲਾਈਵ ਸੰਚਾਲਨ ਡੇਟਾ।", total: "ਕੁੱਲ ਘਟਨਾਵਾਂ", resolved: "ਹੱਲ ਕੀਤਾ ਗਿਆ", eff: "ਕੁਸ਼ਲਤਾ ਦਰ", workload: "ਕੰਮ ਦੇ ਬੋਝ ਦੀ ਪ੍ਰਗਤੀ", concluded: "ਸਮਾਪਤ", dpt: "ਵਿਭਾਗੀ ਵਿਸ਼ਲੇਸ਼ਣ", no_data: "ਵਿਭਾਗੀ ਮੈਟ੍ਰਿਕਸ ਬਣਾਉਣ ਲਈ ਨਾਕਾਫ਼ੀ ਡੇਟਾ।", processing: "ਲਾਈਵ ਡੇਟਾਬੇਸ ਰਿਕਾਰਡ ਇਕੱਠੇ ਕੀਤੇ ਜਾ ਰਹੇ ਹਨ...", acc: "ਜਨਤਕ ਜਵਾਬਦੇਹੀ" },
-        bho: { lang: "भोजपुरी", help: "मदद केंद्र", back: "ऑपरेशंस पोर्टल पर वापस जाईं", title: "प्रदर्शन विश्लेषण", sub: "नगर निगम दक्षता, विभागीय कार्यभार आ समग्र समाधान दर के दर्शावे वाला लाइव परिचालन डेटा।", total: "कुल घटना", resolved: "समाधान", eff: "दक्षता दर", workload: "कार्यभार प्रगति", concluded: "संपन्न", dpt: "विभागीय विश्लेषण", no_data: "विभागीय मेट्रिक्स बनावे खातिर अपर्याप्त परिचालन डेटा।", processing: "लाइव डेटाबेस रिकॉर्ड जमा कइल जा रहल बा...", acc: "सार्वजनिक जवाबदेही" },
-        ar: { lang: "العربية", help: "مركز المساعدة", back: "العودة إلى بوابة العمليات", title: "تحليلات الأداء", sub: "بيانات تشغيلية حية تعكس كفاءة البلدية وأعباء عمل الأقسام ومعدلات الحل الإجمالية.", total: "إجمالي الحوادث", resolved: "تم حلها", eff: "معدل الكفاءة", workload: "تقدم عبء العمل", concluded: "مكتمل", dpt: "تحليل الأقسام", no_data: "بيانات تشغيلية غير كافية لإنشاء مقاييس القسم.", processing: "يتم تجميع سجلات قاعدة البيانات المباشرة...", acc: "المساءلة العامة" },
-        es: { lang: "Español", help: "Centro de ayuda", back: "Volver al Portal de Operaciones", title: "Análisis de Rendimiento", sub: "Datos operativos en vivo que reflejan la eficiencia municipal, cargas de trabajo departamentales y tasas de resolución generales.", total: "Total Incidentes", resolved: "Resueltos", eff: "Tasa de Eficiencia", workload: "Progreso de Carga de Trabajo", concluded: "Concluido", dpt: "Análisis Departamental", no_data: "Datos operativos insuficientes para generar métricas departamentales.", processing: "Agregando registros de base de datos en vivo...", acc: "Responsabilidad Pública" },
-        fr: { lang: "Français", help: "Centre d'aide", back: "Retour au Portail des Opérations", title: "Analyse de Performance", sub: "Données opérationnelles en direct reflétant l'efficacité municipale, les charges de travail départementales et les taux de résolution globaux.", total: "Total Incidents", resolved: "Résolu", eff: "Taux d'Efficacité", workload: "Progression de la Charge", concluded: "Conclu", dpt: "Analyse Départementale", no_data: "Données opérationnelles insuffisantes pour générer des métriques départementales.", processing: "Agrégation des enregistrements en direct...", acc: "Responsabilité Publique" },
-        de: { lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Operationsportal", title: "Leistungsanalyse", sub: "Live-Betriebsdaten, die die kommunale Effizienz, Abteilungsarbeitslasten und allgemeine Lösungsraten widerspiegeln.", total: "Gesamtvorfälle", resolved: "Gelöst", eff: "Effizienzrate", workload: "Arbeitsbelastungsfortschritt", concluded: "Abgeschlossen", dpt: "Abteilungsanalyse", no_data: "Unzureichende Betriebsdaten zur Erstellung von Abteilungsmetriken.", processing: "Live-Datenbankdatensätze werden aggregiert...", acc: "Öffentliche Rechenschaftspflicht" }
+        en: { lang: "English", help: "Help Center", back: "Return to Dashboard", log_out: "Log out", careers: "Careers", title: "Performance Data", sub: "Live data showing city efficiency, department work, and resolution rates.", total: "Total Reports", resolved: "Resolved", eff: "Efficiency Rate", workload: "Work Progress", concluded: "Finished", dpt: "Department Analysis", no_data: "Not enough data to show department metrics.", processing: "Loading live records...", acc: "Public Stats" },
+        hi: { lang: "हिन्दी", help: "सहायता केंद्र", back: "डैशबोर्ड पर लौटें", log_out: "लॉग आउट", careers: "करियर", title: "प्रदर्शन डेटा", sub: "शहर की दक्षता, विभाग के काम और समाधान दरों को दिखाने वाला लाइव डेटा।", total: "कुल रिपोर्ट", resolved: "हल किया गया", eff: "दक्षता दर", workload: "कार्य प्रगति", concluded: "समाप्त", dpt: "विभाग विश्लेषण", no_data: "विभाग मेट्रिक्स दिखाने के लिए पर्याप्त डेटा नहीं है।", processing: "लाइव रिकॉर्ड लोड हो रहे हैं...", acc: "सार्वजनिक आंकड़े" },
+        hinglish: { lang: "Hinglish", help: "Help Center", back: "Dashboard par wapas jayein", log_out: "Log out", careers: "Careers", title: "Performance Data", sub: "City efficiency, department work, aur resolution rates show karne wala live data.", total: "Total Reports", resolved: "Resolved", eff: "Efficiency Rate", workload: "Work Progress", concluded: "Finished", dpt: "Department Analysis", no_data: "Department metrics show karne ke liye data kafi nahi hai.", processing: "Live records load ho rahe hain...", acc: "Public Stats" },
+        mr: { lang: "मराठी", help: "मदत केंद्र", back: "डॅशबोर्डवर परत जा", log_out: "लॉग आउट", careers: "करिअर", title: "कामगिरी डेटा", sub: "शहराची कार्यक्षमता, विभागाचे काम आणि निराकरण दर दर्शवणारा थेट डेटा.", total: "एकूण अहवाल", resolved: "सोडवले", eff: "कार्यक्षमता दर", workload: "कामाची प्रगती", concluded: "पूर्ण झाले", dpt: "विभाग विश्लेषण", no_data: "विभाग मेट्रिक्स दर्शविण्यासाठी पुरेसा डेटा नाही.", processing: "थेट रेकॉर्ड लोड करत आहे...", acc: "सार्वजनिक आकडेवारी" },
+        gu: { lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ડેશબોર્ડ પર પાછા ફરો", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", title: "પ્રદર્શન ડેટા", sub: "શહેરની કાર્યક્ષમતા, વિભાગનું કાર્ય અને ઠરાવ દરો દર્શાવતો લાઇવ ડેટા.", total: "કુલ અહેવાલો", resolved: "ઉકેલાયેલ", eff: "કાર્યક્ષમતા દર", workload: "કાર્ય પ્રગતિ", concluded: "સમાપ્ત", dpt: "વિભાગ વિશ્લેષણ", no_data: "વિભાગ મેટ્રિક્સ બતાવવા માટે પૂરતો ડેટા નથી.", processing: "લાઇવ રેકોર્ડ્સ લોડ થઈ રહ્યાં છે...", acc: "જાહેર આંકડા" },
+        te: { lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "డ్యాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి", log_out: "లాగౌట్", careers: "కెరీర్స్", title: "పనితీరు డేటా", sub: "నగర సామర్థ్యం, డిపార్ట్‌మెంట్ పని మరియు రిజల్యూషన్ రేట్లను చూపే ప్రత్యక్ష డేటా.", total: "మొత్తం నివేదికలు", resolved: "పరిష్కరించబడింది", eff: "సమర్థత రేటు", workload: "పని పురోగతి", concluded: "పూర్తయింది", dpt: "విభాగం విశ్లేషణ", no_data: "విభాగం కొలమానాలను చూపించడానికి తగినంత డేటా లేదు.", processing: "ప్రత్యక్ష రికార్డులను లోడ్ చేస్తోంది...", acc: "ప్రజా గణాంకాలు" },
+        ta: { lang: "தமிழ்", help: "உதவி மையம்", back: "டாஷ்போர்டுக்குத் திரும்பு", log_out: "வெளியேறு", careers: "தொழில்கள்", title: "செயல்திறன் தரவு", sub: "நகர செயல்திறன், துறை வேலை மற்றும் தீர்வு விகிதங்களைக் காட்டும் நேரடி தரவு.", total: "மொத்த அறிக்கைகள்", resolved: "தீர்க்கப்பட்டது", eff: "செயல்திறன் விகிதம்", workload: "பணி முன்னேற்றம்", concluded: "முடிந்தது", dpt: "துறை பகுப்பாய்வு", no_data: "துறை அளவீடுகளைக் காட்ட போதுமான தரவு இல்லை.", processing: "நேரடி பதிவுகளை ஏற்றுகிறது...", acc: "பொது புள்ளிவிவரங்கள்" },
+        pa: { lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ ਜਾਓ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", title: "ਪ੍ਰਦਰਸ਼ਨ ਡੇਟਾ", sub: "ਸ਼ਹਿਰ ਦੀ ਕੁਸ਼ਲਤਾ, ਵਿਭਾਗ ਦੇ ਕੰਮ ਅਤੇ ਰੈਜ਼ੋਲਿਊਸ਼ਨ ਦਰਾਂ ਨੂੰ ਦਿਖਾਉਣ ਵਾਲਾ ਲਾਈਵ ਡੇਟਾ।", total: "ਕੁੱਲ ਰਿਪੋਰਟਾਂ", resolved: "ਹੱਲ ਕੀਤਾ ਗਿਆ", eff: "ਕੁਸ਼ਲਤਾ ਦਰ", workload: "ਕੰਮ ਦੀ ਪ੍ਰਗਤੀ", concluded: "ਖਤਮ ਹੋਇਆ", dpt: "ਵਿਭਾਗ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ", no_data: "ਵਿਭਾਗ ਦੇ ਮੈਟ੍ਰਿਕਸ ਦਿਖਾਉਣ ਲਈ ਲੋੜੀਂਦਾ ਡੇਟਾ ਨਹੀਂ ਹੈ।", processing: "ਲਾਈਵ ਰਿਕਾਰਡ ਲੋਡ ਕੀਤੇ ਜਾ ਰਹੇ ਹਨ...", acc: "ਜਨਤਕ ਅੰਕੜੇ" },
+        bho: { lang: "भोजपुरी", help: "मदद केंद्र", back: "डैशबोर्ड पर वापस जाईं", log_out: "लॉग आउट", careers: "करियर", title: "प्रदर्शन डेटा", sub: "शहर के दक्षता, विभाग के काम आ समाधान दर के देखावे वाला लाइव डेटा।", total: "कुल रिपोर्ट", resolved: "हल हो गइल", eff: "दक्षता दर", workload: "काम के प्रगति", concluded: "खतम हो गइल", dpt: "विभाग विश्लेषण", no_data: "विभाग मेट्रिक्स देखावे खातिर पर्याप्त डेटा नइखे।", processing: "लाइव रिकॉर्ड लोड हो रहल बा...", acc: "सार्वजनिक आँकड़ा" },
+        ar: { lang: "العربية", help: "مركز المساعدة", back: "العودة إلى لوحة القيادة", log_out: "تسجيل الخروج", careers: "الوظائف", title: "بيانات الأداء", sub: "بيانات حية تظهر كفاءة المدينة وعمل الأقسام ومعدلات الحل.", total: "إجمالي التقارير", resolved: "تم الحل", eff: "معدل الكفاءة", workload: "تقدم العمل", concluded: "تم الانتهاء", dpt: "تحليل القسم", no_data: "لا توجد بيانات كافية لإظهار مقاييس القسم.", processing: "تحميل السجلات الحية...", acc: "الإحصاءات العامة" },
+        es: { lang: "Español", help: "Centro de ayuda", back: "Volver al Tablero", log_out: "Cerrar sesión", careers: "Carreras", title: "Datos de Rendimiento", sub: "Datos en vivo que muestran la eficiencia de la ciudad, el trabajo del departamento y las tasas de resolución.", total: "Total de Reportes", resolved: "Resueltos", eff: "Tasa de Eficiencia", workload: "Progreso del Trabajo", concluded: "Terminado", dpt: "Análisis del Departamento", no_data: "No hay suficientes datos para mostrar las métricas del departamento.", processing: "Cargando registros en vivo...", acc: "Estadísticas Públicas" },
+        fr: { lang: "Français", help: "Centre d'aide", back: "Retour au Tableau de bord", log_out: "Se déconnecter", careers: "Carrières", title: "Données de Performance", sub: "Données en direct montrant l'efficacité de la ville, le travail des départements et les taux de résolution.", total: "Rapports Totaux", resolved: "Résolu", eff: "Taux d'Efficacité", workload: "Progression du Travail", concluded: "Terminé", dpt: "Analyse du Département", no_data: "Pas assez de données pour afficher les métriques du département.", processing: "Chargement des enregistrements en direct...", acc: "Statistiques Publiques" },
+        de: { lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Dashboard", log_out: "Abmelden", careers: "Karriere", title: "Leistungsdaten", sub: "Live-Daten, die die Effizienz der Stadt, die Arbeit der Abteilungen und die Lösungsraten zeigen.", total: "Gesamtberichte", resolved: "Gelöst", eff: "Effizienzrate", workload: "Arbeitsfortschritt", concluded: "Beendet", dpt: "Abteilungsanalyse", no_data: "Nicht genügend Daten, um Abteilungsmetriken anzuzeigen.", processing: "Live-Aufzeichnungen werden geladen...", acc: "Öffentliche Statistiken" }
     };
 
     const currentT = t[lang] || t['en'];
@@ -123,12 +145,15 @@ export default function TransparencyDashboard() {
                 {`
                   @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
                   .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
+                  html { scroll-behavior: smooth; }
                 `}
             </style>
             
             {/* TOP HEADER */}
-            <header className="w-full flex items-center justify-between px-6 md:px-12 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-2">
+            <header className={`fixed top-0 left-0 right-0 w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 transition-colors border-b ${
+                theme === 'light' ? 'bg-[#f5f5f5]/90 border-[#e0e0e0] backdrop-blur-md' : 'bg-[#050505]/90 border-[#111111] backdrop-blur-md'
+            }`}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/civic/home')}>
                     <img 
                         src={theme === 'light' ? '/logo-3.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -140,16 +165,20 @@ export default function TransparencyDashboard() {
                     </span>
                 </div>
                 
-                <div className="flex items-center gap-6 text-[0.9rem] font-bold">
-                    <span className={`cursor-pointer transition-colors hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
-                        {currentT.help}
-                    </span>
+                <div className="flex items-center gap-3 sm:gap-6 text-[0.9rem] font-bold">
+                    <button 
+                        onClick={handleSignOut} 
+                        className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
+                    >
+                        {currentT.log_out}
+                    </button>
                     
                     <button 
-                        onClick={() => setShowLangPrompt(true)}
-                        className={`flex items-center gap-2 transition-colors outline-none ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
+                        onClick={handleSignOut} 
+                        className={`p-2 rounded-full transition-colors outline-none block sm:hidden ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
+                        aria-label="Log Out"
                     >
-                        {currentT.lang}
+                        <LogOut size={18} />
                     </button>
 
                     <button 
@@ -161,12 +190,13 @@ export default function TransparencyDashboard() {
                     </button>
 
                     <button 
-                        onClick={() => navigate('/')} 
-                        className={`px-5 py-2 rounded-full flex items-center gap-2 transition-colors outline-none border ${
+                        onClick={() => navigate('/civic')} 
+                        className={`p-2.5 rounded-full flex items-center justify-center transition-colors outline-none border ${
                             theme === 'light' ? 'bg-white border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
                         }`}
+                        aria-label="Home"
                     >
-                        Home
+                        <Home size={18} />
                     </button>
                 </div>
             </header>
@@ -176,12 +206,12 @@ export default function TransparencyDashboard() {
                 {showLangPrompt && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className={`fixed inset-0 z-[60] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/80' : 'bg-black/80'}`}
+                        className={`fixed inset-0 z-[9999] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'}`}
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
                             className={`w-full max-w-[400px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
-                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#050505] border-[#333333]'
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#222222]'
                             }`}
                         >
                             <button 
@@ -190,17 +220,10 @@ export default function TransparencyDashboard() {
                                     theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'
                                 }`}
                             >
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                <X size={18} />
                             </button>
                             
-                            <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center mb-4 ${
-                                theme === 'light' ? 'border-[#cccccc]' : 'border-[#333333]'
-                            }`}>
-                                <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            </div>
-
-                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
-                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Choose your preferred viewing language.</p>
+                            <h2 className={`text-[1.4rem] font-black tracking-tight mb-6 text-center ${theme === 'light' ? 'text-black' : 'text-white'}`}>Select Language</h2>
                             
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((option) => (
@@ -218,7 +241,6 @@ export default function TransparencyDashboard() {
                                                 ? (lang === option.code ? 'text-black' : 'text-[#666666] group-hover:text-black')
                                                 : (lang === option.code ? 'text-white' : 'text-[#888888] group-hover:text-white')
                                         }`}>{option.label}</span>
-                                        {lang === option.code && <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke={theme === 'light' ? 'black' : 'white'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                     </button>
                                 ))}
                             </div>
@@ -227,7 +249,7 @@ export default function TransparencyDashboard() {
                 )}
             </AnimatePresence>
 
-            <div className="flex-1 max-w-[1200px] w-full mx-auto px-6 md:px-12 pb-12 mt-8 animate-fade">
+            <div className="flex-1 max-w-[1200px] w-full mx-auto px-6 md:px-12 pb-12 mt-32 animate-fade">
                 <button 
                     onClick={() => navigate('/civic')} 
                     className={`flex items-center gap-2 mb-10 font-bold text-[0.9rem] transition-colors outline-none ${
@@ -272,7 +294,7 @@ export default function TransparencyDashboard() {
                                     </div>
                                     <div className="text-[3rem] font-black leading-none mb-2">{stat.val}</div>
                                     <p className={`text-[0.85rem] font-bold ${theme === 'light' ? 'text-[#555555]' : 'text-[#555555]'}`}>
-                                        {i === 0 ? "Documented Operational Cycle" : i === 1 ? "Successfully Concluded" : "Aggregate Departmental Output"}
+                                        {i === 0 ? "Documented Reports" : i === 1 ? "Successfully Fixed" : "Aggregate Output"}
                                     </p>
                                 </motion.div>
                             ))}
@@ -321,6 +343,57 @@ export default function TransparencyDashboard() {
                     </motion.div>
                 )}
             </div>
+
+            {/* FOOTER ALIGNMENT */}
+            <footer className={`w-full mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t opacity-0 animate-fade stagger-3 relative z-10 ${
+                theme === 'light' ? 'border-[#e0e0e0] bg-[#ffffff]' : 'border-[#111111] bg-[#050505]'
+            }`}>
+                <div className="flex flex-wrap items-center gap-6">
+                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
+                        <Globe size={14} /> {currentT.lang}
+                    </button>
+                    <div className={`flex items-center gap-6 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        </a>
+                        <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
+                        </a>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
+                    <div className="flex items-center gap-6">
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            {localCity}, IN
+                        </div>
+                    </div>
+                    <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                        Built by 
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                            <img 
+                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
+                                alt="AnyAstro" 
+                                className="h-4 w-auto object-contain" 
+                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
+                            />
+                        </a>
+                    </div>
+                    <button onClick={scrollToTop} className={`p-2 rounded-full transition-colors border outline-none ${theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:bg-[#e0e0e0]' : 'bg-[#111111] border-[#333333] hover:bg-[#222222]'}`}>
+                        <ArrowUp size={16} />
+                    </button>
+                </div>
+            </footer>
         </div>
     );
 }
