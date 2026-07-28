@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { 
@@ -64,20 +64,53 @@ export default function SahayHome() {
             const casesRef = collection(db, 'sahay_cases');
             const orgsRef = collection(db, 'sahay_organizations');
 
-            const totalCasesQuery = query(casesRef);
-            const resolvedCasesQuery = query(casesRef, where('status', '==', 'Closed'));
-            const verifiedOrgsQuery = query(orgsRef, where('verificationStatus', '==', 'Verified'));
-
-            const [totalSnap, resolvedSnap, orgsSnap] = await Promise.all([
-                getCountFromServer(totalCasesQuery),
-                getCountFromServer(resolvedCasesQuery),
-                getCountFromServer(verifiedOrgsQuery)
+            // Pull raw data to process manually for keyword exclusion
+            const [casesSnap, orgsSnap] = await Promise.all([
+                getDocs(query(casesRef)),
+                getDocs(query(orgsRef, where('verificationStatus', '==', 'Verified')))
             ]);
 
+            const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
+            const containsTestKeyword = (str) => {
+                if (!str) return false;
+                const lowerStr = str.toLowerCase();
+                return testKeywords.some(kw => lowerStr.includes(kw));
+            };
+
+            let validCasesCount = 0;
+            let resolvedCasesCount = 0;
+
+            casesSnap.docs.forEach(doc => {
+                const data = doc.data();
+                const isTest = containsTestKeyword(data.description) || 
+                               containsTestKeyword(data.address) || 
+                               containsTestKeyword(data.category) || 
+                               containsTestKeyword(data.assignedToName);
+                
+                if (!isTest) {
+                    validCasesCount++;
+                    if (data.status === 'Closed') {
+                        resolvedCasesCount++;
+                    }
+                }
+            });
+
+            let verifiedOrgsCount = 0;
+            orgsSnap.docs.forEach(doc => {
+                const data = doc.data();
+                const isTest = containsTestKeyword(data.name) || 
+                               containsTestKeyword(data.email) || 
+                               containsTestKeyword(data.description);
+                
+                if (!isTest) {
+                    verifiedOrgsCount++;
+                }
+            });
+
             setMetrics({
-                totalReports: totalSnap.data().count || 0,
-                successfulRescues: resolvedSnap.data().count || 0,
-                verifiedPartners: orgsSnap.data().count || 0
+                totalReports: validCasesCount,
+                successfulRescues: resolvedCasesCount,
+                verifiedPartners: verifiedOrgsCount
             });
         } catch (error) {
             console.error("Failed to fetch Sahay telemetry:", error);
@@ -295,6 +328,41 @@ export default function SahayHome() {
                 </div>
             </header>
 
+            {/* LANGUAGE SELECTOR MODAL */}
+            <AnimatePresence>
+                {showLangPrompt && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/80 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border border-[#E5E7EB]"
+                        >
+                            <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            
+                            <h2 className="text-[1.4rem] font-black tracking-tight mb-6 text-center text-[#111111]">Select Language</h2>
+                            
+                            <div className="flex flex-col gap-2">
+                                {languageOptions.map((option) => (
+                                    <button 
+                                        key={option.code}
+                                        onClick={() => { setLang(option.code); setShowLangPrompt(false); }}
+                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors border outline-none ${
+                                            lang === option.code ? 'bg-[#FF6B35]/10 border-[#FF6B35] text-[#FF6B35]' : 'bg-[#F7F7F7] border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111]'
+                                        }`}
+                                    >
+                                        <span className="font-bold text-[1rem]">{option.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* SITEMAP MODAL */}
             <AnimatePresence>
                 {showSitemap && (
@@ -336,41 +404,6 @@ export default function SahayHome() {
                                         {link.name}
                                         <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </Link>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* LANGUAGE SELECTOR MODAL */}
-            <AnimatePresence>
-                {showLangPrompt && (
-                    <motion.div 
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] bg-[#111111]/80 backdrop-blur-md flex items-center justify-center p-6"
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border border-[#E5E7EB]"
-                        >
-                            <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
-                                <X size={18} />
-                            </button>
-                            
-                            <h2 className="text-[1.4rem] font-black tracking-tight mb-6 text-center text-[#111111]">Select Language</h2>
-                            
-                            <div className="flex flex-col gap-2">
-                                {languageOptions.map((option) => (
-                                    <button 
-                                        key={option.code}
-                                        onClick={() => { setLang(option.code); setShowLangPrompt(false); }}
-                                        className={`w-full p-4 rounded-xl flex items-center justify-between group transition-colors border outline-none ${
-                                            lang === option.code ? 'bg-[#FF6B35]/10 border-[#FF6B35] text-[#FF6B35]' : 'bg-[#F7F7F7] border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111]'
-                                        }`}
-                                    >
-                                        <span className="font-bold text-[1rem]">{option.label}</span>
-                                    </button>
                                 ))}
                             </div>
                         </motion.div>
