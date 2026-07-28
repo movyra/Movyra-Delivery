@@ -323,5 +323,65 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    // ========================================================================
+    // MOVYRA SAHAY MODULE - HUMANITARIAN RESCUE OPERATIONS
+    // ========================================================================
+    
+    match /sahay_cases/{caseId} {
+      // Any authenticated user can read cases and create new reports
+      allow create, read: if isAuthenticated();
+      // Any authenticated user can update cases (needed for community confirmations and NGO assignments)
+      allow update: if isAuthenticated();
+      // Only system administrators can permanently delete records
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_case_updates/{updateId} {
+      allow create, read: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_organizations/{orgId} {
+      // Any authenticated user can apply to be a partner
+      allow create: if isAuthenticated();
+      // Authenticated users can view verified partners
+      allow read: if isAuthenticated();
+      // Only system administrators can approve or remove organizations
+      allow update, delete: if isAdmin();
+    }
+
+    match /sahay_volunteers/{volunteerId} {
+      allow create, read: if isAuthenticated();
+      allow update: if isOwner(volunteerId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_confirmations/{confirmId} {
+      allow create, read: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /sahay_notifications/{notificationId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_emergency_contacts/{contactId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ========================================================================
+    // SYSTEM MAIL TRIGGERS
+    // ========================================================================
+    match /mail/{mailId} {
+      // Authenticated users can generate system emails (e.g. support inquiries)
+      allow create: if isAuthenticated();
+      // Only system administrators can view the email delivery logs
+      allow read, update, delete: if isAdmin();
+    }
+
   }
 }
