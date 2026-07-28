@@ -162,3 +162,76 @@ export const updateCaseStatus = async (caseId, newStatus, userId) => {
         throw new Error("System error during status update.");
     }
 };
+
+/**
+ * Accepts a rescue task, locking it to the assigned user and updating the status.
+ * 
+ * @param {string} caseId - The ID of the case.
+ * @param {string} userId - The ID of the user accepting the task.
+ * @param {string} userName - The name of the user accepting the task.
+ */
+export const acceptSahayTask = async (caseId, userId, userName) => {
+    try {
+        const caseRef = doc(db, 'sahay_cases', caseId);
+        await updateDoc(caseRef, {
+            status: 'Assigned',
+            assignedToId: userId,
+            assignedToName: userName,
+            assignedAt: serverTimestamp()
+        });
+
+        // Automatically post an initial timeline update
+        await postCaseUpdate(caseId, userId, userName, "Task accepted and assistance is on the way.");
+        return true;
+    } catch (error) {
+        console.error("Failed to accept task:", error);
+        throw new Error("System error while accepting the task.");
+    }
+};
+
+/**
+ * Posts a new progress update to the case timeline.
+ * 
+ * @param {string} caseId - The ID of the case.
+ * @param {string} userId - The ID of the user posting the update.
+ * @param {string} userName - The name of the user.
+ * @param {string} message - The update text.
+ */
+export const postCaseUpdate = async (caseId, userId, userName, message) => {
+    try {
+        const updatesRef = collection(db, 'sahay_case_updates');
+        await addDoc(updatesRef, {
+            caseId: caseId,
+            userId: userId,
+            userName: userName,
+            message: message,
+            createdAt: serverTimestamp()
+        });
+        return true;
+    } catch (error) {
+        console.error("Failed to post timeline update:", error);
+        throw new Error("System error while posting update.");
+    }
+};
+
+/**
+ * Fetches the continuous timeline updates for a specific case.
+ * 
+ * @param {string} caseId - The ID of the case.
+ * @returns {Array} - List of timeline update objects.
+ */
+export const getCaseTimeline = async (caseId) => {
+    try {
+        const updatesRef = collection(db, 'sahay_case_updates');
+        const q = query(
+            updatesRef, 
+            where('caseId', '==', caseId), 
+            orderBy('createdAt', 'desc')
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error("Failed to fetch timeline:", error);
+        return [];
+    }
+};
