@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
+import { useCivicStore } from '../../store/useCivicStore';
 import { 
     AlertCircle, 
     HeartHandshake, 
@@ -23,6 +24,9 @@ export default function SahayHome() {
     const navigate = useNavigate();
     
     // 1. STATE MANAGEMENT
+    const theme = useCivicStore((state) => state.theme) || 'light';
+    const terminateSession = useCivicStore((state) => state.terminateSession);
+
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
@@ -37,9 +41,6 @@ export default function SahayHome() {
         successfulRescues: 0,
         verifiedPartners: 0
     });
-
-    // Theme state for footer compatibility (Sahay is strictly Light Mode UI by brand guidelines)
-    const [theme, setTheme] = useState('light');
 
     // 2. AUTHENTICATION & LIVE DATA FETCHING
     useEffect(() => {
@@ -88,6 +89,7 @@ export default function SahayHome() {
     const handleSignOut = async () => {
         try {
             await signOut(auth);
+            terminateSession();
             navigate('/sahay/auth');
         } catch (error) {
             console.error("Logout failed:", error);
@@ -244,11 +246,14 @@ export default function SahayHome() {
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
-                    <div className="w-8 h-8 bg-[#111111] rounded-lg flex items-center justify-center">
-                        <HeartHandshake size={18} className="text-[#FF6B35]" />
-                    </div>
-                    <span className="font-black text-[1.5rem] tracking-tighter text-[#111111]">
-                        MOVYRA <span className="text-[#FF6B35]">SAHAY</span>
+                    <img 
+                        src={theme === 'light' ? '/logo-4.png' : '/logo.png'} 
+                        alt="Movyra" 
+                        className="h-8 w-auto" 
+                        onError={(e) => e.target.style.display = 'none'} 
+                    />
+                    <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
+                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Sahay</span>
                     </span>
                 </div>
                 
@@ -334,7 +339,7 @@ export default function SahayHome() {
                                 <div className="flex items-center gap-2 mb-2">
                                     <img src="/logo-3.png" alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
                                     <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-[#111111]">
-                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Sahay</span>
+                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Civic</span>
                                     </span>
                                 </div>
                                 <div>
