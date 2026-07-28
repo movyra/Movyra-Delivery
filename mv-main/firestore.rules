@@ -271,35 +271,25 @@ service cloud.firestore {
     // MOVYRA CIVIC MODULE (PUBLIC TRANSPARENCY & SMART WARD OPERATIONS)
     // ========================================================================
     match /civic_complaints/{complaintId} {
-      // Authenticated citizens can submit reports
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      // Authenticated session required to view infrastructure records.
-      // Owner can always read their own.
       allow read: if isAuthenticated(); 
-      // Only the citizen who submitted the report or an authorized administrator can modify it
       allow update: if isOwner(resource.data.userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /civic_feedback/{feedbackId} {
-      // Authenticated citizens can submit feedback for their resolved complaints
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      // Allow public transparency for aggregated feedback displays, or limit to owner/admin
       allow read: if isAuthenticated(); 
       allow update, delete: if isAdmin();
     }
 
     match /civic_notices/{noticeId} {
-      // Authenticated session required to view official notices
       allow read: if isAuthenticated();
-      // Strictly restricted to authorized administrators
       allow write: if isAdmin();
     }
 
     match /civic_analytics/{analyticsId} {
-      // Authenticated session required to view performance metrics
       allow read: if isAuthenticated();
-      // Strictly restricted to system generation and administrators
       allow write: if isAdmin();
     }
 
@@ -307,19 +297,15 @@ service cloud.firestore {
     // MOVYRA CIVIC MODULE - NEW ADMINISTRATIVE CAPABILITIES
     // ========================================================================
     match /civic_personnel/{personnelId} {
-      // Strictly restricted to authorized administrators for municipal roster management
       allow read, write: if isAdmin();
     }
 
     match /civic_audit_logs/{logId} {
-      // Strictly restricted to authorized administrators for compliance and accountability tracking
       allow read, write: if isAdmin();
     }
 
     match /civic_admin_requests/{requestId} {
-      // Permit unauthenticated submission of administrative access requests
       allow create: if true;
-      // Strictly restrict review and management to authorized administrators
       allow read, update, delete: if isAdmin();
     }
 
@@ -328,25 +314,26 @@ service cloud.firestore {
     // ========================================================================
     
     match /sahay_cases/{caseId} {
-      // Any authenticated user can read cases and create new reports
-      allow create, read: if isAuthenticated();
-      // Any authenticated user can update cases (needed for community confirmations and NGO assignments)
-      allow update: if isAuthenticated();
+      // Allow public read for live telemetry dashboards
+      allow read: if true;
+      // Authenticated users can create and update reports
+      allow create, update: if isAuthenticated();
       // Only system administrators can permanently delete records
       allow delete: if isAdmin();
     }
 
     match /sahay_case_updates/{updateId} {
+      // Allow public read for continuous timeline updates
       allow read: if true;
       allow create, update: if isAuthenticated();
       allow delete: if isAdmin();
     }
 
     match /sahay_organizations/{orgId} {
+      // Allow public read for live telemetry dashboards
+      allow read: if true;
       // Any authenticated user can apply to be a partner
       allow create: if isAuthenticated();
-      // Authenticated users can view verified partners
-      allow read: if isAuthenticated();
       // Only system administrators can approve or remove organizations
       allow update, delete: if isAdmin();
     }
@@ -371,6 +358,19 @@ service cloud.firestore {
     match /sahay_emergency_contacts/{contactId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    // New Sahay Admin Collections
+    match /sahay_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /sahay_broadcasts/{broadcastId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /sahay_settings/{settingId} {
+      allow read, write: if isAdmin();
     }
 
     // ========================================================================
