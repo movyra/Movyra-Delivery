@@ -70,12 +70,29 @@ export default function SahayCases() {
             const casesRef = collection(db, 'sahay_cases');
             const q = query(casesRef, orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
+
+            const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
+            const containsTestKeyword = (str) => {
+                if (!str) return false;
+                const lowerStr = str.toLowerCase();
+                return testKeywords.some(kw => lowerStr.includes(kw));
+            };
             
-            const records = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                confirmedBy: doc.data().confirmedBy || []
-            }));
+            const records = snapshot.docs
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    confirmedBy: doc.data().confirmedBy || []
+                }))
+                .filter(record => {
+                    if (containsTestKeyword(record.description) ||
+                        containsTestKeyword(record.address) ||
+                        containsTestKeyword(record.category) ||
+                        containsTestKeyword(record.assignedToName)) {
+                        return false;
+                    }
+                    return true;
+                });
             
             setCases(records);
             applyFilters(records, 'All', 'Open', '');
@@ -88,7 +105,22 @@ export default function SahayCases() {
 
     const fetchTimelineForCase = async (caseId) => {
         if (timelineData[caseId]) return; // Already fetched
-        const updates = await getCaseTimeline(caseId);
+        let updates = await getCaseTimeline(caseId);
+
+        const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
+        const containsTestKeyword = (str) => {
+            if (!str) return false;
+            const lowerStr = str.toLowerCase();
+            return testKeywords.some(kw => lowerStr.includes(kw));
+        };
+
+        updates = updates.filter(update => {
+            if (containsTestKeyword(update.message) || containsTestKeyword(update.userName)) {
+                return false;
+            }
+            return true;
+        });
+
         setTimelineData(prev => ({ ...prev, [caseId]: updates }));
     };
 
