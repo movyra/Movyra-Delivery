@@ -334,7 +334,7 @@ export default function SahayHome() {
                                 <div className="flex items-center gap-2 mb-2">
                                     <img src="/logo-3.png" alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
                                     <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-[#111111]">
-                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Civic</span>
+                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Sahay</span>
                                     </span>
                                 </div>
                                 <div>

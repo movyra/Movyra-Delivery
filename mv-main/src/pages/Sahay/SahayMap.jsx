@@ -168,7 +168,7 @@ export default function SahayMap() {
                         onError={(e) => e.target.style.display = 'none'} 
                     />
                     <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
-                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Civic</span>
+                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Sahay</span>
                     </span>
                 </div>
                 
