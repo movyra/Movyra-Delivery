@@ -14,6 +14,7 @@ import {
     X,
     Globe,
     ArrowUp,
+    ArrowLeft, // Added missing import
     Save,
     CheckCircle
 } from 'lucide-react';
