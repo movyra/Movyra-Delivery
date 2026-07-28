@@ -17,7 +17,7 @@ import {
     Globe,
     ArrowUp,
     Building,
-    ArrowRight
+    ArrowLeft
 } from 'lucide-react';
 
 export default function SahayHome() {
@@ -30,6 +30,7 @@ export default function SahayHome() {
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
+    const [showSitemap, setShowSitemap] = useState(false); // Sitemap Control State
     
     const [currentUser, setCurrentUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +61,6 @@ export default function SahayHome() {
     const fetchLiveMetrics = async () => {
         setIsLoading(true);
         try {
-            // Real-time counts using Firestore Aggregation (Cost-effective & Fast)
             const casesRef = collection(db, 'sahay_cases');
             const orgsRef = collection(db, 'sahay_organizations');
 
@@ -100,124 +100,137 @@ export default function SahayHome() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // 3. 13-LANGUAGE DICTIONARY (Simple, Professional, No Jargon)
+    // 3. 13-LANGUAGE DICTIONARY (Simple, Professional, No Jargon + Sitemap Links)
     const t = {
         en: {
-            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In",
+            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
             hero_title: "Report. Connect. Rescue.", hero_sub: "Help us connect homeless individuals, abandoned elderly, and injured animals with verified rescue organizations.",
             btn_report: "Report a Need", btn_partner: "Join as Partner",
             stat_reports: "Total Reports", stat_rescues: "Successful Rescues", stat_partners: "Verified Partners",
             emerg_title: "Emergency Contacts", emerg_sub: "Direct lines for immediate assistance.", 
             call_police: "Police Control", call_medical: "Ambulance", call_women: "Women Helpline", call_rescue: "Animal Rescue",
-            city_select: "Select City", map_link: "View Rescue Map"
+            city_select: "Select City", map_link: "View Rescue Map",
+            sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", sitemap: "प्लेटफ़ॉर्म साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
             hero_title: "रिपोर्ट करें। संपर्क करें। बचाएं।", hero_sub: "बेघर व्यक्तियों, बुजुर्गों और घायल जानवरों को सत्यापित बचाव संगठनों से जोड़ने में हमारी मदद करें।",
             btn_report: "रिपोर्ट दर्ज करें", btn_partner: "पार्टनर के रूप में जुड़ें",
             stat_reports: "कुल रिपोर्ट", stat_rescues: "सफल बचाव", stat_partners: "सत्यापित पार्टनर",
             emerg_title: "आपातकालीन संपर्क", emerg_sub: "तत्काल सहायता के लिए सीधे नंबर।", 
             call_police: "पुलिस कंट्रोल", call_medical: "एम्बुलेंस", call_women: "महिला हेल्पलाइन", call_rescue: "पशु बचाव",
-            city_select: "शहर चुनें", map_link: "बचाव मानचित्र देखें"
+            city_select: "शहर चुनें", map_link: "बचाव मानचित्र देखें",
+            sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करें", sm_cases: "सार्वजनिक फ़ीड", sm_map: "लाइव मानचित्र", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क और पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In", sitemap: "Platform Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
             hero_title: "Report. Connect. Rescue.", hero_sub: "Homeless logo, abandoned elderly, aur injured animals ko verified NGOs se connect karne mein help karein.",
             btn_report: "Report Darj Karein", btn_partner: "Partner Banein",
             stat_reports: "Total Reports", stat_rescues: "Successful Rescues", stat_partners: "Verified Partners",
             emerg_title: "Emergency Contacts", emerg_sub: "Immediate help ke liye direct numbers.", 
             call_police: "Police Control", call_medical: "Ambulance", call_women: "Women Helpline", call_rescue: "Animal Rescue",
-            city_select: "City Select Karein", map_link: "Rescue Map Dekhein"
+            city_select: "City Select Karein", map_link: "Rescue Map Dekhein",
+            sm_home: "Home Gateway", sm_report: "Report Submit Karein", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact aur Inquiries", sm_abt: "Mission ke baare mein", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         mr: {
-            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", sign_in: "साइन इन",
+            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", sign_in: "साइन इन", sitemap: "प्लॅटफॉर्म साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
             hero_title: "अहवाल द्या. संपर्क करा. वाचवा.", hero_sub: "बेघर व्यक्ती, बेवारस वृद्ध आणि जखमी प्राण्यांना सत्यापित बचाव संस्थांशी जोडण्यात आम्हाला मदत करा.",
             btn_report: "अहवाल नोंदवा", btn_partner: "भागीदार म्हणून सामील व्हा",
             stat_reports: "एकूण अहवाल", stat_rescues: "यशस्वी बचाव", stat_partners: "सत्यापित भागीदार",
             emerg_title: "आपत्कालीन संपर्क", emerg_sub: "तात्काळ मदतीसाठी थेट क्रमांक.", 
             call_police: "पोलीस नियंत्रण", call_medical: "रुग्णवाहिका", call_women: "महिला हेल्पलाइन", call_rescue: "प्राणी बचाव",
-            city_select: "शहर निवडा", map_link: "बचाव नकाशा पहा"
+            city_select: "शहर निवडा", map_link: "बचाव नकाशा पहा",
+            sm_home: "होम गेटवे", sm_report: "अहवाल सबमिट करा", sm_cases: "सार्वजनिक फीड", sm_map: "थेट नकाशा", sm_org: "भागीदार डॅशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषण", sm_emg: "आपत्कालीन निर्देशिका", sm_cont: "संपर्क आणि चौकशी", sm_abt: "मिशन बद्दल", sm_auth: "प्रमाणीकरण", sm_adm: "प्रशासन कन्सोल"
         },
         gu: {
-            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", sign_in: "સાઇન ઇન",
+            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", sign_in: "સાઇન ઇન", sitemap: "પ્લેટફોર્મ સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
             hero_title: "રિપોર્ટ. કનેક્ટ. બચાવ.", hero_sub: "બેઘર વ્યક્તિઓ, ત્યજી દેવાયેલા વૃદ્ધો અને ઘાયલ પ્રાણીઓને ચકાસાયેલ બચાવ સંસ્થાઓ સાથે જોડવામાં અમારી સહાય કરો.",
             btn_report: "જરૂરિયાતની જાણ કરો", btn_partner: "ભાગીદાર તરીકે જોડાઓ",
             stat_reports: "કુલ અહેવાલો", stat_rescues: "સફળ બચાવ", stat_partners: "ચકાસાયેલ ભાગીદારો",
             emerg_title: "કટોકટી સંપર્કો", emerg_sub: "તાત્કાલિક સહાય માટે સીધા નંબરો.", 
             call_police: "પોલીસ નિયંત્રણ", call_medical: "એમ્બ્યુલન્સ", call_women: "મહિલા હેલ્પલાઇન", call_rescue: "પ્રાણી બચાવ",
-            city_select: "શહેર પસંદ કરો", map_link: "બચાવ નકશો જુઓ"
+            city_select: "શહેર પસંદ કરો", map_link: "બચાવ નકશો જુઓ",
+            sm_home: "હોમ ગેટવે", sm_report: "રિપોર્ટ સબમિટ કરો", sm_cases: "જાહેર ફીડ", sm_map: "જીવંત નકશો", sm_org: "ભાગીદાર ડેશબોર્ડ", sm_vol: "સ્વયંસેવક પોર્ટલ", sm_imp: "અસર એનાલિટિક્સ", sm_emg: "કટોકટી ડિરેક્ટરી", sm_cont: "સંપર્ક અને પૂછપરછ", sm_abt: "મિશન વિશે", sm_auth: "પ્રમાણીકરણ", sm_adm: "એડમિન કન્સોલ"
         },
         te: {
-            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sign_in: "సైన్ ఇన్",
+            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sign_in: "సైన్ ఇన్", sitemap: "ప్లాట్‌ఫారమ్ సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
             hero_title: "నివేదించండి. కనెక్ట్ చేయండి. రక్షించండి.", hero_sub: "నిరాశ్రయులైన వ్యక్తులు, వదిలివేయబడిన వృద్ధులు మరియు గాయపడిన జంతువులను ధృవీకరించబడిన సంస్థలతో కనెక్ట్ చేయడంలో మాకు సహాయపడండి.",
             btn_report: "అవసరాన్ని నివేదించండి", btn_partner: "భాగస్వామిగా చేరండి",
             stat_reports: "మొత్తం నివేదికలు", stat_rescues: "విజయవంతమైన రక్షణలు", stat_partners: "ధృవీకరించబడిన భాగస్వాములు",
             emerg_title: "అత్యవసర పరిచయాలు", emerg_sub: "తక్షణ సహాయం కోసం ప్రత్యక్ష సంఖ్యలు.", 
             call_police: "పోలీస్ కంట్రోల్", call_medical: "అంబులెన్స్", call_women: "మహిళా హెల్ప్‌లైన్", call_rescue: "జంతు రక్షణ",
-            city_select: "నగరాన్ని ఎంచుకోండి", map_link: "రెస్క్యూ మ్యాప్‌ని వీక్షించండి"
+            city_select: "నగరాన్ని ఎంచుకోండి", map_link: "రెస్క్యూ మ్యాప్‌ని వీక్షించండి",
+            sm_home: "హోమ్ గేట్‌వే", sm_report: "నివేదిక సమర్పించండి", sm_cases: "పబ్లిక్ ఫీడ్", sm_map: "లైవ్ మ్యాప్", sm_org: "భాగస్వామి డాష్‌బోర్డ్", sm_vol: "వాలంటీర్ పోర్టల్", sm_imp: "ఇంపాక్ట్ అనలిటిక్స్", sm_emg: "అత్యవసర డైరెక్టరీ", sm_cont: "సంప్రదింపులు మరియు విచారణలు", sm_abt: "మిషన్ గురించి", sm_auth: "ప్రామాణీకరణ", sm_adm: "అడ్మిన్ కన్సోల్"
         },
         ta: {
-            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", sign_in: "உள்நுழைய",
+            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", sign_in: "உள்நுழைய", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சஹாய் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
             hero_title: "புகாரளி. இணை. காப்பாற்று.", hero_sub: "வீடற்ற நபர்கள், கைவிடப்பட்ட முதியவர்கள் மற்றும் காயமடைந்த விலங்குகளை சரிபார்க்கப்பட்ட அமைப்புகளுடன் இணைக்க உதவுங்கள்.",
             btn_report: "தேவையை புகாரளிக்கவும்", btn_partner: "கூட்டாளராக சேரவும்",
             stat_reports: "மொத்த அறிக்கைகள்", stat_rescues: "வெற்றிகரமான மீட்புகள்", stat_partners: "சரிபார்க்கப்பட்ட கூட்டாளர்கள்",
             emerg_title: "அவசர தொடர்புகள்", emerg_sub: "உடனடி உதவிக்கான நேரடி எண்கள்.", 
             call_police: "காவல்துறை கட்டுப்பாடு", call_medical: "ஆம்புலன்ஸ்", call_women: "பெண்கள் உதவி எண்", call_rescue: "விலங்கு மீட்பு",
-            city_select: "நகரத்தைத் தேர்ந்தெடுக்கவும்", map_link: "மீட்பு வரைபடத்தைக் காண்க"
+            city_select: "நகரத்தைத் தேர்ந்தெடுக்கவும்", map_link: "மீட்பு வரைபடத்தைக் காண்க",
+            sm_home: "முகப்பு நுழைவாயில்", sm_report: "அறிக்கையை சமர்ப்பிக்கவும்", sm_cases: "பொது ஊட்டம்", sm_map: "நேரடி வரைபடம்", sm_org: "கூட்டாளர் டாஷ்போர்டு", sm_vol: "தன்னார்வ போர்டல்", sm_imp: "தாக்க பகுப்பாய்வு", sm_emg: "அவசர அடைவு", sm_cont: "தொடர்பு மற்றும் விசாரணைகள்", sm_abt: "பணி பற்றி", sm_auth: "அங்கீகாரம்", sm_adm: "நிர்வாக கன்சோல்"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sign_in: "ਸਾਈਨ ਇਨ",
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sign_in: "ਸਾਈਨ ਇਨ", sitemap: "ਪਲੇਟਫਾਰਮ ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
             hero_title: "ਰਿਪੋਰਟ. ਕਨੈਕਟ. ਬਚਾਓ.", hero_sub: "ਬੇਘਰ ਵਿਅਕਤੀਆਂ, ਬਜ਼ੁਰਗਾਂ ਅਤੇ ਜ਼ਖਮੀ ਜਾਨਵਰਾਂ ਨੂੰ ਪ੍ਰਮਾਣਿਤ ਬਚਾਅ ਸੰਸਥਾਵਾਂ ਨਾਲ ਜੋੜਨ ਵਿੱਚ ਸਾਡੀ ਮਦਦ ਕਰੋ।",
             btn_report: "ਲੋੜ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", btn_partner: "ਪਾਰਟਨਰ ਵਜੋਂ ਸ਼ਾਮਲ ਹੋਵੋ",
             stat_reports: "ਕੁੱਲ ਰਿਪੋਰਟਾਂ", stat_rescues: "ਸਫਲ ਬਚਾਅ", stat_partners: "ਪ੍ਰਮਾਣਿਤ ਭਾਈਵਾਲ",
             emerg_title: "ਐਮਰਜੈਂਸੀ ਸੰਪਰਕ", emerg_sub: "ਤੁਰੰਤ ਸਹਾਇਤਾ ਲਈ ਸਿੱਧੇ ਨੰਬਰ।", 
             call_police: "ਪੁਲਿਸ ਕੰਟਰੋਲ", call_medical: "ਐਂਬੂਲੈਂਸ", call_women: "ਮਹਿਲਾ ਹੈਲਪਲਾਈਨ", call_rescue: "ਜਾਨਵਰ ਬਚਾਅ",
-            city_select: "ਸ਼ਹਿਰ ਚੁਣੋ", map_link: "ਬਚਾਅ ਨਕਸ਼ਾ ਦੇਖੋ"
+            city_select: "ਸ਼ਹਿਰ ਚੁਣੋ", map_link: "ਬਚਾਅ ਨਕਸ਼ਾ ਦੇਖੋ",
+            sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋਲ"
         },
         bho: {
-            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन",
+            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", sitemap: "प्लेटफॉर्म साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
             hero_title: "रिपोर्ट करीं। संपर्क करीं। बचाईं।", hero_sub: "बेघर लोग, बुजुर्ग आ घायल जानवरन के सत्यापित बचाव संगठनन से जोड़े में हमनी के मदद करीं।",
             btn_report: "जरूरत के रिपोर्ट करीं", btn_partner: "पार्टनर के रूप में जुड़ीं",
             stat_reports: "कुल रिपोर्ट", stat_rescues: "सफल बचाव", stat_partners: "सत्यापित पार्टनर",
             emerg_title: "आपातकालीन संपर्क", emerg_sub: "तुरंत मदद खातिर सीधा नंबर।", 
             call_police: "पुलिस कंट्रोल", call_medical: "एम्बुलेंस", call_women: "महिला हेल्पलाइन", call_rescue: "जानवर बचाव",
-            city_select: "शहर चुनीं", map_link: "बचाव नक्शा देखीं"
+            city_select: "शहर चुनीं", map_link: "बचाव नक्शा देखीं",
+            sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करीं", sm_cases: "सार्वजनिक फीड", sm_map: "लाइव नक्शा", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क आ पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         ar: {
-            lang: "العربية", log_out: "تسجيل الخروج", careers: "الوظائف", products: "المنتجات", sign_in: "تسجيل الدخول",
+            lang: "العربية", log_out: "تسجيل الخروج", careers: "الوظائف", products: "المنتجات", sign_in: "تسجيل الدخول", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات ساهاي.",
             hero_title: "إبلاغ. تواصل. إنقاذ.", hero_sub: "ساعدنا في ربط الأفراد المشردين وكبار السن والحيوانات المصابة بمنظمات الإنقاذ المعتمدة.",
             btn_report: "الإبلاغ عن حاجة", btn_partner: "انضم كشريك",
             stat_reports: "إجمالي التقارير", stat_rescues: "عمليات الإنقاذ الناجحة", stat_partners: "الشركاء المعتمدون",
             emerg_title: "جهات اتصال الطوارئ", emerg_sub: "خطوط مباشرة للمساعدة الفورية.", 
             call_police: "شرطة", call_medical: "إسعاف", call_women: "خط مساعدة النساء", call_rescue: "إنقاذ الحيوانات",
-            city_select: "اختر مدينة", map_link: "عرض خريطة الإنقاذ"
+            city_select: "اختر مدينة", map_link: "عرض خريطة الإنقاذ",
+            sm_home: "البوابة الرئيسية", sm_report: "إرسال تقرير", sm_cases: "الخلاصة العامة", sm_map: "خريطة حية", sm_org: "لوحة تحكم الشريك", sm_vol: "بوابة المتطوعين", sm_imp: "تحليلات التأثير", sm_emg: "دليل الطوارئ", sm_cont: "الاتصال والاستفسارات", sm_abt: "حول المهمة", sm_auth: "المصادقة", sm_adm: "وحدة تحكم الإدارة"
         },
         es: {
-            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras", products: "Productos", sign_in: "Iniciar Sesión",
+            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras", products: "Productos", sign_in: "Iniciar Sesión", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos de Sahay.",
             hero_title: "Reportar. Conectar. Rescatar.", hero_sub: "Ayúdenos a conectar personas sin hogar, ancianos abandonados y animales heridos con organizaciones verificadas.",
             btn_report: "Reportar una Necesidad", btn_partner: "Únete como Socio",
             stat_reports: "Reportes Totales", stat_rescues: "Rescates Exitosos", stat_partners: "Socios Verificados",
             emerg_title: "Contactos de Emergencia", emerg_sub: "Líneas directas para asistencia inmediata.", 
             call_police: "Policía", call_medical: "Ambulancia", call_women: "Ayuda a Mujeres", call_rescue: "Rescate Animal",
-            city_select: "Seleccionar Ciudad", map_link: "Ver Mapa de Rescate"
+            city_select: "Seleccionar Ciudad", map_link: "Ver Mapa de Rescate",
+            sm_home: "Portal de Inicio", sm_report: "Enviar Reporte", sm_cases: "Feed Público", sm_map: "Mapa en Vivo", sm_org: "Panel de Socios", sm_vol: "Portal de Voluntarios", sm_imp: "Análisis de Impacto", sm_emg: "Directorio de Emergencia", sm_cont: "Contacto", sm_abt: "Acerca de la Misión", sm_auth: "Autenticación", sm_adm: "Consola de Administración"
         },
         fr: {
-            lang: "Français", log_out: "Se déconnecter", careers: "Carrières", products: "Produits", sign_in: "Se Connecter",
+            lang: "Français", log_out: "Se déconnecter", careers: "Carrières", products: "Produits", sign_in: "Se Connecter", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Sahay.",
             hero_title: "Signaler. Connecter. Sauver.", hero_sub: "Aidez-nous à connecter les sans-abri, les personnes âgées abandonnées et les animaux blessés avec des organisations vérifiées.",
             btn_report: "Signaler un Besoin", btn_partner: "Rejoindre en tant que Partenaire",
             stat_reports: "Rapports Totaux", stat_rescues: "Sauvetages Réussis", stat_partners: "Partenaires Vérifiés",
             emerg_title: "Contacts d'Urgence", emerg_sub: "Lignes directes pour une assistance immédiate.", 
             call_police: "Police", call_medical: "Ambulance", call_women: "Aide aux Femmes", call_rescue: "Sauvetage Animal",
-            city_select: "Sélectionner la Ville", map_link: "Voir la Carte des Sauvetages"
+            city_select: "Sélectionner la Ville", map_link: "Voir la Carte des Sauvetages",
+            sm_home: "Portail d'Accueil", sm_report: "Soumettre un Rapport", sm_cases: "Flux Public", sm_map: "Carte en Direct", sm_org: "Tableau de Bord", sm_vol: "Portail Bénévole", sm_imp: "Analyse d'Impact", sm_emg: "Annuaire d'Urgence", sm_cont: "Contact", sm_abt: "À Propos", sm_auth: "Authentification", sm_adm: "Console d'Administration"
         },
         de: {
-            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere", products: "Produkte", sign_in: "Anmelden",
+            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere", products: "Produkte", sign_in: "Anmelden", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Sahay-Modulen.",
             hero_title: "Melden. Verbinden. Retten.", hero_sub: "Helfen Sie uns, Obdachlose, verlassene ältere Menschen und verletzte Tiere an verifizierte Organisationen zu vermitteln.",
             btn_report: "Einen Bedarf Melden", btn_partner: "Als Partner Beitreten",
             stat_reports: "Gesamte Berichte", stat_rescues: "Erfolgreiche Rettungen", stat_partners: "Verifizierte Partner",
             emerg_title: "Notfallkontakte", emerg_sub: "Direkte Nummern für sofortige Hilfe.", 
             call_police: "Polizei", call_medical: "Krankenwagen", call_women: "Frauen-Helpline", call_rescue: "Tierrettung",
-            city_select: "Stadt Wählen", map_link: "Rettungskarte Anzeigen"
+            city_select: "Stadt Wählen", map_link: "Rettungskarte Anzeigen",
+            sm_home: "Startportal", sm_report: "Meldung Einreichen", sm_cases: "Öffentlicher Feed", sm_map: "Live-Karte", sm_org: "Partner-Dashboard", sm_vol: "Freiwilligen-Portal", sm_imp: "Auswirkungsanalyse", sm_emg: "Notfallverzeichnis", sm_cont: "Kontakt", sm_abt: "Über die Mission", sm_auth: "Authentifizierung", sm_adm: "Admin-Konsole"
         }
     };
 
@@ -281,6 +294,54 @@ export default function SahayHome() {
                     )}
                 </div>
             </header>
+
+            {/* SITEMAP MODAL */}
+            <AnimatePresence>
+                {showSitemap && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/90 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[600px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowSitemap(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.sitemap}</h2>
+                            <p className="text-[#555555] font-medium mb-6">{currentT.sitemap_desc}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    { path: '/sahay/home', name: currentT.sm_home },
+                                    { path: '/sahay/report', name: currentT.sm_report },
+                                    { path: '/sahay/cases', name: currentT.sm_cases },
+                                    { path: '/sahay/map', name: currentT.sm_map },
+                                    { path: '/sahay/organization', name: currentT.sm_org },
+                                    { path: '/sahay/volunteer', name: currentT.sm_vol },
+                                    { path: '/sahay/impact', name: currentT.sm_imp },
+                                    { path: '/sahay/emergency', name: currentT.sm_emg },
+                                    { path: '/sahay/contact', name: currentT.sm_cont },
+                                    { path: '/sahay/about', name: currentT.sm_abt },
+                                    { path: '/sahay/auth', name: currentT.sm_auth },
+                                    { path: '/sahay/admin', name: currentT.sm_adm }
+                                ].map(link => (
+                                    <Link 
+                                        key={link.path} 
+                                        to={link.path}
+                                        onClick={() => setShowSitemap(false)}
+                                        className="p-4 bg-[#F7F7F7] border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors flex items-center justify-between group outline-none"
+                                    >
+                                        {link.name}
+                                        <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
@@ -519,6 +580,8 @@ export default function SahayHome() {
                 <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
                     <div className="flex items-center gap-6">
                         <button onClick={() => setShowProductsPrompt(true)} className="hover:text-[#111111] transition-colors outline-none">{currentT.products}</button>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
                         <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
                         <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
                     </div>
