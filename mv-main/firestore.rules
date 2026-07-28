@@ -328,10 +328,10 @@ service cloud.firestore {
     // ========================================================================
     
     match /sahay_cases/{caseId} {
-      // Allow public read for live telemetry dashboards
-      allow read: if true;
-      // Authenticated users can create and update reports
-      allow create, update: if isAuthenticated();
+      // Any authenticated user can read cases and create new reports
+      allow create, read: if isAuthenticated();
+      // Any authenticated user can update cases (needed for community confirmations and NGO assignments)
+      allow update: if isAuthenticated();
       // Only system administrators can permanently delete records
       allow delete: if isAdmin();
     }
@@ -343,10 +343,10 @@ service cloud.firestore {
     }
 
     match /sahay_organizations/{orgId} {
-      // Allow public read for live telemetry dashboards
-      allow read: if true;
       // Any authenticated user can apply to be a partner
       allow create: if isAuthenticated();
+      // Authenticated users can view verified partners
+      allow read: if isAuthenticated();
       // Only system administrators can approve or remove organizations
       allow update, delete: if isAdmin();
     }

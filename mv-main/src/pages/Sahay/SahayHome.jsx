@@ -314,7 +314,7 @@ export default function SahayHome() {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[
-                                    { path: '/sahay/home', name: currentT.sm_home },
+                                    { path: '/sahay', name: currentT.sm_home },
                                     { path: '/sahay/report', name: currentT.sm_report },
                                     { path: '/sahay/cases', name: currentT.sm_cases },
                                     { path: '/sahay/map', name: currentT.sm_map },
