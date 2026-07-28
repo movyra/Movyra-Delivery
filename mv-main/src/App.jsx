@@ -104,6 +104,20 @@ import PublicNotices from './pages/Civic/PublicNotices';
 import CitizenFeedback from './pages/Civic/CitizenFeedback';
 import EmergencyContacts from './pages/Civic/EmergencyContacts';
 
+// --- MOVYRA SAHAY MODULE IMPORTS ---
+import SahayHome from './pages/Sahay/SahayHome';
+import SahayReport from './pages/Sahay/SahayReport';
+import SahayMap from './pages/Sahay/SahayMap';
+import SahayCases from './pages/Sahay/SahayCases';
+import SahayOrganization from './pages/Sahay/SahayOrganization';
+import SahayVolunteer from './pages/Sahay/SahayVolunteer';
+import SahayAbout from './pages/Sahay/SahayAbout';
+import SahayImpact from './pages/Sahay/SahayImpact';
+import SahayEmergency from './pages/Sahay/SahayEmergency';
+import SahayContact from './pages/Sahay/SahayContact';
+import SahayAdmin from './pages/Sahay/SahayAdmin';
+import SahayAuth from './pages/Sahay/SahayAuth';
+
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
 // ============================================================================
@@ -335,6 +349,20 @@ export default function App() {
                 <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
 
+                {/* MOVYRA SAHAY MODULE */}
+                <Route path='/sahay' element={<AnimatedRoute><SahayHome /></AnimatedRoute>} />
+                <Route path='/sahay/report' element={<AnimatedRoute><SahayReport /></AnimatedRoute>} />
+                <Route path='/sahay/map' element={<AnimatedRoute><SahayMap /></AnimatedRoute>} />
+                <Route path='/sahay/cases' element={<AnimatedRoute><SahayCases /></AnimatedRoute>} />
+                <Route path='/sahay/organization' element={<AnimatedRoute><SahayOrganization /></AnimatedRoute>} />
+                <Route path='/sahay/volunteer' element={<AnimatedRoute><SahayVolunteer /></AnimatedRoute>} />
+                <Route path='/sahay/about' element={<AnimatedRoute><SahayAbout /></AnimatedRoute>} />
+                <Route path='/sahay/impact' element={<AnimatedRoute><SahayImpact /></AnimatedRoute>} />
+                <Route path='/sahay/emergency' element={<AnimatedRoute><SahayEmergency /></AnimatedRoute>} />
+                <Route path='/sahay/contact' element={<AnimatedRoute><SahayContact /></AnimatedRoute>} />
+                <Route path='/sahay/admin' element={<AnimatedRoute><SahayAdmin /></AnimatedRoute>} />
+                <Route path='/sahay/auth' element={<AnimatedRoute><SahayAuth /></AnimatedRoute>} />
+
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
             ) : (
@@ -411,6 +439,20 @@ export default function App() {
                 <Route path='/civic/notices' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><PublicNotices /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+
+                {/* MOVYRA SAHAY MODULE */}
+                <Route path='/sahay' element={<AnimatedRoute><SahayHome /></AnimatedRoute>} />
+                <Route path='/sahay/report' element={<AnimatedRoute><SahayReport /></AnimatedRoute>} />
+                <Route path='/sahay/map' element={<AnimatedRoute><SahayMap /></AnimatedRoute>} />
+                <Route path='/sahay/cases' element={<AnimatedRoute><SahayCases /></AnimatedRoute>} />
+                <Route path='/sahay/organization' element={<AnimatedRoute><SahayOrganization /></AnimatedRoute>} />
+                <Route path='/sahay/volunteer' element={<AnimatedRoute><SahayVolunteer /></AnimatedRoute>} />
+                <Route path='/sahay/about' element={<AnimatedRoute><SahayAbout /></AnimatedRoute>} />
+                <Route path='/sahay/impact' element={<AnimatedRoute><SahayImpact /></AnimatedRoute>} />
+                <Route path='/sahay/emergency' element={<AnimatedRoute><SahayEmergency /></AnimatedRoute>} />
+                <Route path='/sahay/contact' element={<AnimatedRoute><SahayContact /></AnimatedRoute>} />
+                <Route path='/sahay/admin' element={<AnimatedRoute><SahayAdmin /></AnimatedRoute>} />
+                <Route path='/sahay/auth' element={<AnimatedRoute><SahayAuth /></AnimatedRoute>} />
               </>
             )}
           </Routes>
