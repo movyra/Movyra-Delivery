@@ -337,8 +337,8 @@ service cloud.firestore {
     }
 
     match /sahay_case_updates/{updateId} {
-      allow create, read: if isAuthenticated();
-      allow update: if isAuthenticated();
+      allow read: if true;
+      allow create, update: if isAuthenticated();
       allow delete: if isAdmin();
     }
 
