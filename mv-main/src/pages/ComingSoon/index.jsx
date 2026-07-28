@@ -228,9 +228,9 @@ export default function ComingSoon() {
 
   const currentT = t[lang] || t['en'];
   const languageOptions = [
-    { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
-    { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
-    { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+    { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'mr', label: 'मराठी' },
+    { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' }, { code: 'ta', label: 'தமிழ்' },
+    { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' }, { code: 'hinglish', label: 'Hinglish' },
     { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
     { code: 'de', label: 'Deutsch' }
   ];
@@ -327,6 +327,25 @@ export default function ComingSoon() {
 
               <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center mt-2">Also from us</h2>
               <p className="text-[#888888] text-[0.9rem] text-center mb-8">Discover our other platforms.</p>
+
+              <Link to="/sahay" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                      <img 
+                          src="/logo.png" 
+                          alt="Movyra" 
+                          className="h-6 w-auto" 
+                          onError={(e) => e.target.style.display = 'none'} 
+                      />
+                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
+                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">Sahay</span>
+                      </span>
+                  </div>
+                  <div>
+                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
+                          Humanitarian rescue operations. Connect and report easily.
+                      </p>
+                  </div>
+              </Link>
 
               <Link to="/civic" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none">
                   <div className="flex items-center gap-2 mb-2">
