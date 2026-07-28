@@ -122,7 +122,7 @@ export default function SahayCases() {
         try {
             await signOut(auth);
             terminateSession();
-            navigate('/sahay/home');
+            navigate('/sahay');
         } catch (error) {
             console.error("Logout failed:", error);
         }
@@ -244,7 +244,7 @@ export default function SahayCases() {
 
             {/* TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/sahay/home')}>
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/sahay')}>
                     <img 
                         src={theme === 'light' ? '/logo-4.png' : '/logo.png'} 
                         alt="Movyra" 
@@ -306,7 +306,7 @@ export default function SahayCases() {
 
             <main className="flex-1 max-w-[1000px] w-full mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
                 
-                <button onClick={() => navigate('/sahay/home')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
+                <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
                     <ArrowLeft size={16} /> {currentT.back}
                 </button>
 
