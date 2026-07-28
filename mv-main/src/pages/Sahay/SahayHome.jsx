@@ -123,7 +123,7 @@ export default function SahayHome() {
             sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करें", sm_cases: "सार्वजनिक फ़ीड", sm_map: "लाइव मानचित्र", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क और पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In", sitemap: "Platform Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
             hero_title: "Report. Connect. Rescue.", hero_sub: "Homeless logo, abandoned elderly, aur injured animals ko verified NGOs se connect karne mein help karein.",
             btn_report: "Report Darj Karein", btn_partner: "Partner Banein",
             stat_reports: "Total Reports", stat_rescues: "Successful Rescues", stat_partners: "Verified Partners",
