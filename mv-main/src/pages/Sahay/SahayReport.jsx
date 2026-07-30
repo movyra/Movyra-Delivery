@@ -11,13 +11,13 @@ import {
     MapPin, 
     AlertTriangle, 
     Send, 
-    LogOut,
     X,
     Globe,
     ArrowUp,
     ArrowLeft,
     Save,
-    CheckCircle
+    CheckCircle,
+    User
 } from 'lucide-react';
 
 export default function SahayReport() {
@@ -209,7 +209,7 @@ export default function SahayReport() {
     // 5. DICTIONARY
     const t = {
         en: {
-            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home",
+            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home", sign_in: "Sign In",
             title: "Report a Need", sub: "Help us connect them with verified rescue teams quickly. No account required.",
             draft_saved: "Draft Saved", gps_err: "Could not get location. Please type the address.",
             lbl_reporter: "Your Name (Optional)",
@@ -225,7 +225,7 @@ export default function SahayReport() {
             succ_title: "Report Received", succ_sub: "Organizations have been notified. Thank you.", btn_new: "Report Another"
         },
         hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sign_in: "साइन इन",
             title: "जरूरत की रिपोर्ट करें", sub: "उन्हें बचाव टीमों से जल्दी जोड़ने में हमारी मदद करें। खाते की आवश्यकता नहीं है।",
             draft_saved: "ड्राफ्ट सेव हुआ", gps_err: "लोकेशन नहीं मिल सका। कृपया पता टाइप करें।",
             lbl_reporter: "आपका नाम (वैकल्पिक)",
@@ -241,7 +241,7 @@ export default function SahayReport() {
             succ_title: "रिपोर्ट प्राप्त हुई", succ_sub: "संगठनों को सूचित कर दिया गया है। धन्यवाद।", btn_new: "एक और रिपोर्ट करें"
         },
         hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas", sign_in: "Sign In",
             title: "Report Darj Karein", sub: "Unhe rescue teams se jaldi connect karne mein help karein. Account ki zaroorat nahi hai.",
             draft_saved: "Draft Save Ho Gaya", gps_err: "Location nahi mil paayi. Kripya address type karein.",
             lbl_reporter: "Aapka Naam (Optional)",
@@ -303,17 +303,17 @@ export default function SahayReport() {
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[#555555] hover:text-[#111111] transition-colors outline-none px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:border-[#111111]">
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
-                    {currentUser && (
-                        <>
-                            {/* Desktop Logout Text */}
-                            <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
-                                {currentT.log_out}
-                            </button>
-                            {/* Mobile Logout Icon */}
-                            <button onClick={handleSignOut} className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none block sm:hidden">
-                                <LogOut size={16} />
-                            </button>
-                        </>
+                    {currentUser ? (
+                        <button 
+                            onClick={() => navigate('/sahay/profile')} 
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                        >
+                            <User size={18} />
+                        </button>
+                    ) : (
+                        <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-4 py-2 rounded-full font-bold hover:bg-[#555555] transition-colors outline-none">
+                            {currentT.sign_in}
+                        </button>
                     )}
                 </div>
             </header>
@@ -327,7 +327,7 @@ export default function SahayReport() {
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB]"
+                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
                         >
                             <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
                                 <X size={18} />
