@@ -43,12 +43,8 @@ export default function SahayVolunteer() {
         if (supported.includes(sysLang)) setLang(sysLang);
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setCurrentUser(user);
-                fetchCases();
-            } else {
-                navigate('/sahay/auth');
-            }
+            setCurrentUser(user);
+            fetchCases();
         });
 
         return () => unsubscribe();
@@ -89,13 +85,17 @@ export default function SahayVolunteer() {
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const handleAcceptTask = async (caseId) => {
-        if (!currentUser) return;
+        if (!currentUser) {
+            alert(currentT.login_req);
+            navigate('/sahay/auth');
+            return;
+        }
         setIsUpdating(true);
         try {
             const caseRef = doc(db, 'sahay_cases', caseId);
             await updateDoc(caseRef, {
                 volunteersAssisting: arrayUnion(currentUser.uid),
-                status: 'Assigned' // Update status to show help is on the way
+                status: 'Assigned'
             });
 
             // Update local state instantly
@@ -117,10 +117,7 @@ export default function SahayVolunteer() {
     };
 
     // Filtered Views
-    // Available: Cases that are active and the current user has not accepted yet
     const availableTasks = cases.filter(c => c.status !== 'Closed' && !c.volunteersAssisting.includes(currentUser?.uid));
-    
-    // My Tasks: Cases the current user has explicitly accepted
     const myTasks = cases.filter(c => c.volunteersAssisting.includes(currentUser?.uid));
 
     const displayCases = activeTab === 'Available' ? availableTasks : myTasks;
@@ -132,7 +129,7 @@ export default function SahayVolunteer() {
         return 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35]';
     };
 
-    // 4. 13-LANGUAGE DICTIONARY (Simple Volunteer Context)
+    // 4. DICTIONARY
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", back: "Back to Home",
@@ -141,7 +138,7 @@ export default function SahayVolunteer() {
             btn_accept: "Accept Task", btn_accepted: "Task Accepted",
             lbl_desc: "Details", loading: "Loading tasks...",
             empty_avail: "No available tasks right now.", empty_mine: "You have not accepted any tasks.",
-            lbl_loc: "Location", lbl_time: "Reported"
+            lbl_loc: "Location", lbl_time: "Reported", login_req: "Please sign in to accept tasks."
         },
         hi: {
             lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", back: "होम पर वापस जाएं",
@@ -150,7 +147,7 @@ export default function SahayVolunteer() {
             btn_accept: "कार्य स्वीकार करें", btn_accepted: "कार्य स्वीकार किया गया",
             lbl_desc: "विवरण", loading: "कार्य लोड हो रहे हैं...",
             empty_avail: "अभी कोई कार्य उपलब्ध नहीं है।", empty_mine: "आपने कोई कार्य स्वीकार नहीं किया है।",
-            lbl_loc: "स्थान", lbl_time: "रिपोर्ट किया गया"
+            lbl_loc: "स्थान", lbl_time: "रिपोर्ट किया गया", login_req: "कार्य स्वीकार करने के लिए कृपया साइन इन करें।"
         },
         hinglish: {
             lang: "Hinglish", log_out: "Log out", careers: "Careers", back: "Home par wapas",
@@ -159,7 +156,7 @@ export default function SahayVolunteer() {
             btn_accept: "Task Accept Karein", btn_accepted: "Task Accepted",
             lbl_desc: "Details", loading: "Tasks load ho rahe hain...",
             empty_avail: "Abhi koi task available nahi hai.", empty_mine: "Aapne koi task accept nahi kiya hai.",
-            lbl_loc: "Location", lbl_time: "Reported"
+            lbl_loc: "Location", lbl_time: "Reported", login_req: "Tasks accept karne ke liye sign in karein."
         }
     };
 
@@ -200,7 +197,7 @@ export default function SahayVolunteer() {
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[#555555] hover:text-[#111111] transition-colors outline-none px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:border-[#111111]">
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
-                    {currentUser && (
+                    {currentUser ? (
                         <>
                             <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
                                 {currentT.log_out}
@@ -209,6 +206,10 @@ export default function SahayVolunteer() {
                                 <LogOut size={16} />
                             </button>
                         </>
+                    ) : (
+                        <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-4 py-2 rounded-full font-bold hover:bg-[#555555] transition-colors outline-none">
+                            Sign In
+                        </button>
                     )}
                 </div>
             </header>
@@ -350,7 +351,7 @@ export default function SahayVolunteer() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                 <div className="flex flex-wrap items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                         <Globe size={14} /> {currentT.lang}
