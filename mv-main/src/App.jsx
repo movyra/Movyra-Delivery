@@ -117,6 +117,8 @@ import SahayEmergency from './pages/Sahay/SahayEmergency';
 import SahayContact from './pages/Sahay/SahayContact';
 import SahayAdmin from './pages/Sahay/SahayAdmin';
 import SahayAuth from './pages/Sahay/SahayAuth';
+import SahayProfile from './pages/Sahay/SahayProfile';
+import SahayInactivityTimer from './components/SahayInactivityTimer';
 
 // --- MOVYRA POCKET MODULE IMPORTS ---
 import PocketHome from './pages/Pocket/PocketHome';
@@ -313,6 +315,9 @@ export default function App() {
         <SystemObservers />
         <NetworkMonitor />
         <RouteController />
+        
+        {/* Global Sahay Session Timeout Monitor */}
+        <SahayInactivityTimer />
 
         <AnimatePresence mode="wait">
           <Routes>
@@ -366,6 +371,7 @@ export default function App() {
                 <Route path='/sahay/contact' element={<AnimatedRoute><SahayContact /></AnimatedRoute>} />
                 <Route path='/sahay/admin' element={<AnimatedRoute><SahayAdmin /></AnimatedRoute>} />
                 <Route path='/sahay/auth' element={<AnimatedRoute><SahayAuth /></AnimatedRoute>} />
+                <Route path='/sahay/profile' element={<AnimatedRoute><SahayProfile /></AnimatedRoute>} />
 
                 {/* MOVYRA POCKET MODULE */}
                 <Route path='/pocket' element={<AnimatedRoute><PocketHome /></AnimatedRoute>} />
@@ -475,6 +481,7 @@ export default function App() {
                 <Route path='/sahay/contact' element={<AnimatedRoute><SahayContact /></AnimatedRoute>} />
                 <Route path='/sahay/admin' element={<AnimatedRoute><SahayAdmin /></AnimatedRoute>} />
                 <Route path='/sahay/auth' element={<AnimatedRoute><SahayAuth /></AnimatedRoute>} />
+                <Route path='/sahay/profile' element={<AnimatedRoute><SahayProfile /></AnimatedRoute>} />
               </>
             )}
           </Routes>
