@@ -38,19 +38,20 @@ export default function SahayAdmin() {
     const [activeTab, setActiveTab] = useState('Partners'); 
     const [isUpdating, setIsUpdating] = useState(false);
 
-    // 2. AUTHENTICATION & DATA FETCHING
+    // 2. AUTHENTICATION, STRICT ACCESS CONTROL & DATA FETCHING
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                // In a production app, verify custom claims here (e.g., user.claims.admin)
+            // STRICT ACCESS EVALUATION: Only allow the specific test admin email
+            if (user && user.email === 'testcodecfg@gmail.com') {
                 setCurrentUser(user);
                 fetchDashboardData();
             } else {
-                navigate('/sahay/auth');
+                alert("Unauthorized Access. This portal is restricted to primary administrators.");
+                navigate('/sahay');
             }
         });
 
@@ -133,7 +134,7 @@ export default function SahayAdmin() {
         }
     };
 
-    // 4. 13-LANGUAGE DICTIONARY (Simple Admin Context)
+    // 4. DICTIONARY
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", back: "Back to Home",
