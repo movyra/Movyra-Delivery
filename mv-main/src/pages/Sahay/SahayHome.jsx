@@ -12,7 +12,7 @@ import {
     MapPin, 
     ShieldCheck, 
     Activity,
-    LogOut,
+    User,
     X,
     Globe,
     ArrowUp,
@@ -312,14 +312,12 @@ export default function SahayHome() {
                     </button>
 
                     {currentUser ? (
-                        <>
-                            <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
-                                {currentT.log_out}
-                            </button>
-                            <button onClick={handleSignOut} className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none block sm:hidden">
-                                <LogOut size={16} />
-                            </button>
-                        </>
+                        <button 
+                            onClick={() => navigate('/sahay/profile')} 
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                        >
+                            <User size={18} />
+                        </button>
                     ) : (
                         <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-5 py-2 rounded-full flex items-center gap-2 hover:bg-[#555555] transition-colors outline-none">
                             {currentT.sign_in}
