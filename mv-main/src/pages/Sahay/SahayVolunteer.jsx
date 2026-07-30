@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { 
@@ -17,7 +17,10 @@ import {
     UserCheck,
     HandHeart,
     Map,
-    Clock
+    Clock,
+    ChevronDown,
+    ChevronUp,
+    Trash2
 } from 'lucide-react';
 
 export default function SahayVolunteer() {
@@ -29,12 +32,16 @@ export default function SahayVolunteer() {
 
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
+    const [showSitemap, setShowSitemap] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     
     const [cases, setCases] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Available'); 
     const [isUpdating, setIsUpdating] = useState(false);
+    
+    const [expandedCaseId, setExpandedCaseId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
 
     // 2. AUTHENTICATION & DATA FETCHING
     useEffect(() => {
@@ -44,24 +51,43 @@ export default function SahayVolunteer() {
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
-            fetchCases();
+            fetchCases(user);
         });
 
         return () => unsubscribe();
     }, [navigate]);
 
-    const fetchCases = async () => {
+    const fetchCases = async (user) => {
         setIsLoading(true);
         try {
             const casesRef = collection(db, 'sahay_cases');
             const q = query(casesRef, orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
             
+            const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
+            const containsTestKeyword = (str) => {
+                if (!str) return false;
+                const lowerStr = str.toLowerCase();
+                return testKeywords.some(kw => lowerStr.includes(kw));
+            };
+
             const records = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data(),
                 volunteersAssisting: doc.data().volunteersAssisting || []
-            }));
+            })).filter(record => {
+                // Admins see everything, otherwise filter tests out
+                if (user && user.email === 'testcodecfg@gmail.com') return true;
+                if (containsTestKeyword(record.description) ||
+                    containsTestKeyword(record.condition) ||
+                    containsTestKeyword(record.address) ||
+                    containsTestKeyword(record.category) ||
+                    containsTestKeyword(record.reporterName) ||
+                    containsTestKeyword(record.assignedToName)) {
+                    return false;
+                }
+                return true;
+            });
             
             setCases(records);
         } catch (error) {
@@ -84,7 +110,8 @@ export default function SahayVolunteer() {
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    const handleAcceptTask = async (caseId) => {
+    const handleAcceptTask = async (e, caseId) => {
+        e.stopPropagation();
         if (!currentUser) {
             alert(currentT.login_req);
             navigate('/sahay/auth');
@@ -116,6 +143,23 @@ export default function SahayVolunteer() {
         }
     };
 
+    const handleDeleteCase = async (e, caseId) => {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to permanently delete this report?")) {
+            setDeletingId(caseId);
+            try {
+                await deleteDoc(doc(db, 'sahay_cases', caseId));
+                setCases(cases.filter(c => c.id !== caseId));
+                setExpandedCaseId(null);
+            } catch (error) {
+                console.error("Deletion failed:", error);
+                alert("You do not have permission to delete this record.");
+            } finally {
+                setDeletingId(null);
+            }
+        }
+    };
+
     // Filtered Views
     const availableTasks = cases.filter(c => c.status !== 'Closed' && !c.volunteersAssisting.includes(currentUser?.uid));
     const myTasks = cases.filter(c => c.volunteersAssisting.includes(currentUser?.uid));
@@ -132,35 +176,18 @@ export default function SahayVolunteer() {
     // 4. DICTIONARY
     const t = {
         en: {
-            lang: "English", log_out: "Log out", careers: "Careers", back: "Back to Home",
+            lang: "English", log_out: "Log out", careers: "Careers", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
             title: "Volunteer Portal", sub: "View nearby help requests and provide immediate assistance.",
             tab_avail: "Available Tasks", tab_mine: "My Tasks",
             btn_accept: "Accept Task", btn_accepted: "Task Accepted",
             lbl_desc: "Details", loading: "Loading tasks...",
             empty_avail: "No available tasks right now.", empty_mine: "You have not accepted any tasks.",
-            lbl_loc: "Location", lbl_time: "Reported", login_req: "Please sign in to accept tasks."
-        },
-        hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", back: "होम पर वापस जाएं",
-            title: "स्वयंसेवक पोर्टल", sub: "आस-पास के सहायता अनुरोध देखें और तत्काल सहायता प्रदान करें।",
-            tab_avail: "उपलब्ध कार्य", tab_mine: "मेरे कार्य",
-            btn_accept: "कार्य स्वीकार करें", btn_accepted: "कार्य स्वीकार किया गया",
-            lbl_desc: "विवरण", loading: "कार्य लोड हो रहे हैं...",
-            empty_avail: "अभी कोई कार्य उपलब्ध नहीं है।", empty_mine: "आपने कोई कार्य स्वीकार नहीं किया है।",
-            lbl_loc: "स्थान", lbl_time: "रिपोर्ट किया गया", login_req: "कार्य स्वीकार करने के लिए कृपया साइन इन करें।"
-        },
-        hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", back: "Home par wapas",
-            title: "Volunteer Portal", sub: "Nearby help requests dekhein aur immediate assistance dein.",
-            tab_avail: "Available Tasks", tab_mine: "My Tasks",
-            btn_accept: "Task Accept Karein", btn_accepted: "Task Accepted",
-            lbl_desc: "Details", loading: "Tasks load ho rahe hain...",
-            empty_avail: "Abhi koi task available nahi hai.", empty_mine: "Aapne koi task accept nahi kiya hai.",
-            lbl_loc: "Location", lbl_time: "Reported", login_req: "Tasks accept karne ke liye sign in karein."
+            lbl_loc: "Location", lbl_time: "Reported", login_req: "Please sign in to accept tasks.",
+            sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         }
     };
 
-    const currentT = t[lang] || t['en'];
+    const currentT = t['en'];
     const languageOptions = [
         { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' }
     ];
@@ -214,6 +241,54 @@ export default function SahayVolunteer() {
                 </div>
             </header>
 
+            {/* SITEMAP MODAL */}
+            <AnimatePresence>
+                {showSitemap && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/90 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[600px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowSitemap(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.sitemap}</h2>
+                            <p className="text-[#555555] font-medium mb-6">{currentT.sitemap_desc}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    { path: '/sahay', name: currentT.sm_home },
+                                    { path: '/sahay/report', name: currentT.sm_report },
+                                    { path: '/sahay/cases', name: currentT.sm_cases },
+                                    { path: '/sahay/map', name: currentT.sm_map },
+                                    { path: '/sahay/organization', name: currentT.sm_org },
+                                    { path: '/sahay/volunteer', name: currentT.sm_vol },
+                                    { path: '/sahay/impact', name: currentT.sm_imp },
+                                    { path: '/sahay/emergency', name: currentT.sm_emg },
+                                    { path: '/sahay/contact', name: currentT.sm_cont },
+                                    { path: '/sahay/about', name: currentT.sm_abt },
+                                    { path: '/sahay/auth', name: currentT.sm_auth },
+                                    { path: '/sahay/admin', name: currentT.sm_adm }
+                                ].map(link => (
+                                    <Link 
+                                        key={link.path} 
+                                        to={link.path}
+                                        onClick={() => setShowSitemap(false)}
+                                        className="p-4 bg-[#F7F7F7] border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors flex items-center justify-between group outline-none"
+                                    >
+                                        {link.name}
+                                        <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
                 {showLangPrompt && (
@@ -223,7 +298,7 @@ export default function SahayVolunteer() {
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB]"
+                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
                         >
                             <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
                                 <X size={18} />
@@ -247,9 +322,14 @@ export default function SahayVolunteer() {
 
             <main className="flex-1 max-w-[800px] w-full mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
                 
-                <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
-                    <ArrowLeft size={16} /> {currentT.back}
-                </button>
+                <div className="flex items-center justify-between mb-8">
+                    <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
+                        <ArrowLeft size={16} /> {currentT.back}
+                    </button>
+                    {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                         <span className="text-[#DC2626] font-black text-[0.8rem] uppercase tracking-wider bg-[#DC2626]/10 px-3 py-1 rounded-full">Admin View Active</span>
+                    )}
+                </div>
 
                 <div className="mb-10">
                     <div className="flex items-center gap-3 mb-4 text-[#FF6B35]">
@@ -299,50 +379,148 @@ export default function SahayVolunteer() {
                         {displayCases.map((caseItem) => {
                             const dateString = caseItem.createdAt ? caseItem.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
                             const isAccepted = activeTab === 'Mine';
+                            const isExpanded = expandedCaseId === caseItem.id;
 
                             return (
                                 <motion.div 
                                     variants={itemVariants} 
                                     key={caseItem.id} 
-                                    className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] p-6 shadow-sm flex flex-col"
+                                    className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] overflow-hidden shadow-sm flex flex-col hover:border-[#111111] transition-colors"
                                 >
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <span className="px-3 py-1 bg-[#111111] text-[#FFFFFF] text-[0.75rem] font-black tracking-wider uppercase rounded-full">
-                                            {caseItem.category}
-                                        </span>
-                                        <span className={`px-3 py-1 text-[0.75rem] font-black tracking-wider uppercase rounded-full border ${getSeverityBadge(caseItem.severity)}`}>
-                                            {caseItem.severity}
-                                        </span>
-                                    </div>
-                                    
-                                    <p className="text-[1rem] font-medium text-[#111111] mb-6 leading-relaxed bg-[#F7F7F7] p-4 rounded-xl border border-[#E5E7EB]">
-                                        {caseItem.description}
-                                    </p>
+                                    <div 
+                                        onClick={() => setExpandedCaseId(isExpanded ? null : caseItem.id)}
+                                        className="p-6 md:p-8 cursor-pointer flex flex-col md:flex-row md:items-start justify-between gap-6"
+                                    >
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <span className="px-3 py-1 bg-[#111111] text-[#FFFFFF] text-[0.75rem] font-black tracking-wider uppercase rounded-full">
+                                                    {caseItem.category}
+                                                </span>
+                                                <span className={`px-3 py-1 text-[0.75rem] font-black tracking-wider uppercase rounded-full border ${getSeverityBadge(caseItem.severity)}`}>
+                                                    {caseItem.severity}
+                                                </span>
+                                            </div>
+                                            
+                                            <p className="text-[1.1rem] font-medium text-[#111111] mb-6 line-clamp-2 leading-relaxed">
+                                                {caseItem.condition || caseItem.description}
+                                            </p>
 
-                                    <div className="flex flex-col gap-3 text-[0.9rem] font-bold text-[#555555] mb-6 border-b border-[#E5E7EB] pb-6">
-                                        <span className="flex items-start gap-2">
-                                            <MapPin size={16} className="text-[#00A9F7] mt-0.5 shrink-0" /> 
-                                            <span>{caseItem.address}</span>
-                                        </span>
-                                        <span className="flex items-center gap-2">
-                                            <Clock size={16} className="text-[#555555]" /> 
-                                            {dateString}
-                                        </span>
-                                    </div>
-
-                                    {isAccepted ? (
-                                        <div className="w-full bg-[#16A34A] text-[#FFFFFF] py-4 rounded-xl font-black text-[1rem] flex items-center justify-center gap-2">
-                                            <CheckCircle size={18} /> {currentT.btn_accepted}
+                                            <div className="flex flex-col gap-3 text-[0.9rem] font-bold text-[#555555] mb-2 border-b border-[#E5E7EB] pb-6 md:border-none md:pb-0">
+                                                <span className="flex items-start gap-2">
+                                                    <MapPin size={16} className="text-[#00A9F7] mt-0.5 shrink-0" /> 
+                                                    <span>{caseItem.address}</span>
+                                                </span>
+                                                <span className="flex items-center gap-2">
+                                                    <Clock size={16} className="text-[#555555]" /> 
+                                                    {dateString}
+                                                </span>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleAcceptTask(caseItem.id)}
-                                            disabled={isUpdating}
-                                            className="w-full bg-[#FF6B35] text-[#FFFFFF] py-4 rounded-xl font-black text-[1rem] flex items-center justify-center gap-2 hover:bg-[#E85D2A] transition-colors outline-none disabled:opacity-50"
-                                        >
-                                            <UserCheck size={18} /> {currentT.btn_accept}
-                                        </button>
-                                    )}
+
+                                        <div className="flex flex-col items-end justify-between gap-4 h-full">
+                                            <div className="w-10 h-10 rounded-full flex items-center justify-center border border-[#E5E7EB] bg-[#F7F7F7] text-[#111111] self-end shrink-0">
+                                                {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                            </div>
+
+                                            <div className="flex flex-col items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
+                                                {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteCase(e, caseItem.id)}
+                                                        disabled={deletingId === caseItem.id}
+                                                        className="w-full md:w-auto px-4 py-2 rounded-lg font-bold text-[0.85rem] flex items-center justify-center gap-2 transition-colors outline-none bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626] hover:bg-[#DC2626] hover:text-[#FFFFFF]"
+                                                    >
+                                                        {deletingId === caseItem.id ? (
+                                                            <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <Trash2 size={14} />
+                                                        )}
+                                                        Delete
+                                                    </button>
+                                                )}
+
+                                                {isAccepted ? (
+                                                    <div className="w-full bg-[#16A34A] text-[#FFFFFF] px-6 py-2 rounded-xl font-black text-[0.95rem] flex items-center justify-center gap-2">
+                                                        <CheckCircle size={16} /> {currentT.btn_accepted}
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={(e) => handleAcceptTask(e, caseItem.id)}
+                                                        disabled={isUpdating}
+                                                        className="w-full px-6 py-2 bg-[#FF6B35] text-[#FFFFFF] rounded-xl font-black text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#E85D2A] transition-colors outline-none disabled:opacity-50"
+                                                    >
+                                                        <UserCheck size={16} /> {currentT.btn_accept}
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                        {isExpanded && (
+                                            <motion.div 
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="border-t border-[#E5E7EB] bg-[#F7F7F7] overflow-hidden"
+                                            >
+                                                <div className="p-6 md:p-8">
+                                                    <div className="mb-4 bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
+                                                        <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
+                                                            <AlertTriangle size={18} className="text-[#FF6B35]" /> Full Report Details
+                                                        </h4>
+                                                        
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Needy Person</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.needyName || 'Unknown'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Blood Group</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.bloodGroup || 'Not provided'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Reported By</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.reporterName || 'Anonymous'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Status</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.status}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                            {/* Initial Report Photo */}
+                                                            {caseItem.mediaUrl && (
+                                                                <div>
+                                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-3">Live Evidence (Reporting)</p>
+                                                                    <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden border border-[#E5E7EB] bg-[#F7F7F7]">
+                                                                        <img src={caseItem.mediaUrl} alt="Report Evidence" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {/* Acceptance Verification Photos */}
+                                                            {caseItem.acceptanceNeedyPhotoUrl && (
+                                                                <div>
+                                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-3">Live Evidence (Acceptance)</p>
+                                                                    <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden border border-[#E5E7EB] bg-[#F7F7F7]">
+                                                                        <img src={caseItem.acceptanceNeedyPhotoUrl} alt="Verification Evidence" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {caseItem.volunteerPhotoUrl && (
+                                                                <div>
+                                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-3">Volunteer Selfie (Acceptance)</p>
+                                                                    <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden border border-[#E5E7EB] bg-[#F7F7F7]">
+                                                                        <img src={caseItem.volunteerPhotoUrl} alt="Volunteer Evidence" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             );
                         })}
@@ -366,6 +544,8 @@ export default function SahayVolunteer() {
                 
                 <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
                     <div className="flex items-center gap-6">
+                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
                         <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
                     </div>
                     <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
