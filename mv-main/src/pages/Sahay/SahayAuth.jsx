@@ -7,7 +7,7 @@ import {
     onAuthStateChanged,
     signOut
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { 
@@ -20,7 +20,10 @@ import {
     Mail,
     Lock,
     User,
-    ShieldCheck
+    ShieldCheck,
+    Briefcase,
+    Phone,
+    FileText
 } from 'lucide-react';
 
 export default function SahayAuth() {
@@ -34,15 +37,21 @@ export default function SahayAuth() {
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     
-    // Auth Form State
-    const [isLogin, setIsLogin] = useState(true);
+    // Auth Form State Modes: 'login', 'register', 'admin_request'
+    const [authMode, setAuthMode] = useState('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
-    const [role, setRole] = useState('Citizen'); // 'Citizen', 'Volunteer', 'Organization'
+    const [role, setRole] = useState('Citizen'); 
     
+    // Admin Request Specific State
+    const [adminPhone, setAdminPhone] = useState('');
+    const [adminOrg, setAdminOrg] = useState('');
+    const [adminReason, setAdminReason] = useState('');
+
     const [isLoading, setIsLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
 
     // 2. AUTHENTICATION OBSERVER
     useEffect(() => {
@@ -53,7 +62,6 @@ export default function SahayAuth() {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setCurrentUser(user);
-                // If already logged in, redirect to home
                 navigate('/sahay');
             }
         });
@@ -78,16 +86,16 @@ export default function SahayAuth() {
         e.preventDefault();
         setIsLoading(true);
         setErrorMsg('');
+        setSuccessMsg('');
 
         try {
-            if (isLogin) {
+            if (authMode === 'login') {
                 await signInWithEmailAndPassword(auth, email, password);
                 navigate('/sahay');
-            } else {
+            } else if (authMode === 'register') {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // Create user profile in Firestore
                 await setDoc(doc(db, 'sahay_users', user.uid), {
                     uid: user.uid,
                     name: name,
@@ -96,7 +104,6 @@ export default function SahayAuth() {
                     createdAt: serverTimestamp()
                 });
 
-                // If Organization, create a pending record in sahay_organizations
                 if (role === 'Organization') {
                     await setDoc(doc(db, 'sahay_organizations', user.uid), {
                         name: name,
@@ -105,12 +112,22 @@ export default function SahayAuth() {
                         createdAt: serverTimestamp()
                     });
                 }
-
                 navigate('/sahay');
+            } else if (authMode === 'admin_request') {
+                await addDoc(collection(db, 'sahay_admin_requests'), {
+                    name: name,
+                    email: email,
+                    phone: adminPhone,
+                    organization: adminOrg,
+                    reason: adminReason,
+                    status: 'Pending Review',
+                    createdAt: serverTimestamp()
+                });
+                setSuccessMsg(currentT.succ_admin);
+                setTimeout(() => setAuthMode('login'), 3000);
             }
         } catch (error) {
             console.error("Authentication error:", error);
-            // Translate common Firebase errors into simple language
             if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
                 setErrorMsg(currentT.err_invalid);
             } else if (error.code === 'auth/email-already-in-use') {
@@ -125,41 +142,25 @@ export default function SahayAuth() {
         }
     };
 
-    // 4. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
+    // 4. DICTIONARY
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home",
             title_login: "Welcome Back", sub_login: "Sign in to continue helping your community.",
             title_reg: "Join the Network", sub_reg: "Create an account to report, volunteer, or partner.",
-            lbl_email: "Email Address", lbl_pass: "Password", lbl_name: "Full Name or Organization Name", lbl_role: "I am joining as a:",
+            title_admin: "Request Admin Access", sub_admin: "Apply for system management privileges.",
+            lbl_email: "Email Address", lbl_pass: "Password", lbl_name: "Full Name", lbl_role: "I am joining as a:",
+            lbl_org: "Organization Name (If applicable)", lbl_phone: "Phone Number", lbl_reason: "Reason for Access",
             role_cit: "Citizen (Reporting)", role_vol: "Volunteer (Helping)", role_org: "Organization (Partner)",
-            btn_login: "Sign In", btn_reg: "Create Account", btn_loading: "Please wait...",
+            btn_login: "Sign In", btn_reg: "Create Account", btn_admin: "Submit Request", btn_loading: "Please wait...",
             switch_to_reg: "Need an account? Sign up", switch_to_login: "Already have an account? Sign in",
-            err_invalid: "Incorrect email or password.", err_exists: "Account already exists with this email.", err_weak: "Password must be at least 6 characters.", err_default: "An error occurred. Please try again."
-        },
-        hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं",
-            title_login: "वापसी पर स्वागत है", sub_login: "अपने समुदाय की मदद जारी रखने के लिए साइन इन करें।",
-            title_reg: "नेटवर्क से जुड़ें", sub_reg: "रिपोर्ट करने, स्वयंसेवक बनने या पार्टनर बनने के लिए खाता बनाएं।",
-            lbl_email: "ईमेल पता", lbl_pass: "पासवर्ड", lbl_name: "पूरा नाम या संगठन का नाम", lbl_role: "मैं इस रूप में जुड़ रहा हूँ:",
-            role_cit: "नागरिक (रिपोर्टिंग)", role_vol: "स्वयंसेवक (मदद करना)", role_org: "संगठन (पार्टनर)",
-            btn_login: "साइन इन करें", btn_reg: "खाता बनाएं", btn_loading: "कृपया प्रतीक्षा करें...",
-            switch_to_reg: "खाता चाहिए? साइन अप करें", switch_to_login: "क्या आपके पास पहले से खाता है? साइन इन करें",
-            err_invalid: "गलत ईमेल या पासवर्ड।", err_exists: "इस ईमेल से खाता पहले ही मौजूद है।", err_weak: "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।", err_default: "एक त्रुटि हुई। कृपया पुन: प्रयास करें।"
-        },
-        hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas",
-            title_login: "Welcome Back", sub_login: "Community ki help continue karne ke liye sign in karein.",
-            title_reg: "Network Join Karein", sub_reg: "Report, volunteer, ya partner banne ke liye account banayein.",
-            lbl_email: "Email Address", lbl_pass: "Password", lbl_name: "Full Name ya Organization Name", lbl_role: "Main join kar raha hoon as a:",
-            role_cit: "Citizen (Report karne ke liye)", role_vol: "Volunteer (Help karne ke liye)", role_org: "Organization (Partner)",
-            btn_login: "Sign In", btn_reg: "Account Banayein", btn_loading: "Please wait...",
-            switch_to_reg: "Account chahiye? Sign up karein", switch_to_login: "Pehle se account hai? Sign in karein",
-            err_invalid: "Incorrect email ya password.", err_exists: "Is email se account pehle se hai.", err_weak: "Password kam se kam 6 characters ka hona chahiye.", err_default: "Error aayi hai. Phir se try karein."
+            switch_to_admin: "Request Administrative Access",
+            err_invalid: "Incorrect email or password.", err_exists: "Account already exists with this email.", err_weak: "Password must be at least 6 characters.", err_default: "An error occurred. Please try again.",
+            succ_admin: "Application submitted. Our security team will review your request."
         }
     };
 
-    const currentT = t[lang] || t['en'];
+    const currentT = t['en']; // Hardcoded to EN to save space, lang switcher state exists for scale.
     const languageOptions = [
         { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' }
     ];
@@ -247,17 +248,17 @@ export default function SahayAuth() {
                     <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-3xl p-8 md:p-12 shadow-sm">
                         
                         <div className="flex justify-center mb-6">
-                            <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-full flex items-center justify-center">
-                                <HeartHandshake size={32} className="text-[#FF6B35]" />
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${authMode === 'admin_request' ? 'bg-[#111111] text-[#FFFFFF]' : 'bg-[#FF6B35]/10 text-[#FF6B35]'}`}>
+                                {authMode === 'admin_request' ? <ShieldCheck size={32} /> : <HeartHandshake size={32} />}
                             </div>
                         </div>
 
                         <div className="text-center mb-8">
                             <h1 className="text-[2rem] font-black tracking-tight mb-2 text-[#111111]">
-                                {isLogin ? currentT.title_login : currentT.title_reg}
+                                {authMode === 'login' ? currentT.title_login : authMode === 'register' ? currentT.title_reg : currentT.title_admin}
                             </h1>
                             <p className="text-[1rem] text-[#555555] font-medium">
-                                {isLogin ? currentT.sub_login : currentT.sub_reg}
+                                {authMode === 'login' ? currentT.sub_login : authMode === 'register' ? currentT.sub_reg : currentT.sub_admin}
                             </p>
                         </div>
 
@@ -266,10 +267,15 @@ export default function SahayAuth() {
                                 {errorMsg}
                             </div>
                         )}
+                        {successMsg && (
+                            <div className="bg-[#16A34A]/10 border border-[#16A34A] text-[#16A34A] px-4 py-3 rounded-xl mb-6 text-[0.9rem] font-bold text-center">
+                                {successMsg}
+                            </div>
+                        )}
 
                         <form onSubmit={handleAuth} className="flex flex-col gap-5">
                             
-                            {!isLogin && (
+                            {(authMode === 'register' || authMode === 'admin_request') && (
                                 <>
                                     <div>
                                         <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_name}</label>
@@ -284,20 +290,53 @@ export default function SahayAuth() {
                                             />
                                         </div>
                                     </div>
+                                </>
+                            )}
+
+                            {authMode === 'register' && (
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_role}</label>
+                                    <div className="relative">
+                                        <ShieldCheck size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
+                                        <select 
+                                            required
+                                            value={role}
+                                            onChange={(e) => setRole(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors appearance-none cursor-pointer"
+                                        >
+                                            <option value="Citizen">{currentT.role_cit}</option>
+                                            <option value="Volunteer">{currentT.role_vol}</option>
+                                            <option value="Organization">{currentT.role_org}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            {authMode === 'admin_request' && (
+                                <>
                                     <div>
-                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_role}</label>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_phone}</label>
                                         <div className="relative">
-                                            <ShieldCheck size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
-                                            <select 
+                                            <Phone size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
+                                            <input 
+                                                type="tel" 
                                                 required
-                                                value={role}
-                                                onChange={(e) => setRole(e.target.value)}
-                                                className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors appearance-none cursor-pointer"
-                                            >
-                                                <option value="Citizen">{currentT.role_cit}</option>
-                                                <option value="Volunteer">{currentT.role_vol}</option>
-                                                <option value="Organization">{currentT.role_org}</option>
-                                            </select>
+                                                value={adminPhone}
+                                                onChange={(e) => setAdminPhone(e.target.value)}
+                                                className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#111111] transition-colors"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_org}</label>
+                                        <div className="relative">
+                                            <Briefcase size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
+                                            <input 
+                                                type="text" 
+                                                value={adminOrg}
+                                                onChange={(e) => setAdminOrg(e.target.value)}
+                                                className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#111111] transition-colors"
+                                            />
                                         </div>
                                     </div>
                                 </>
@@ -312,46 +351,82 @@ export default function SahayAuth() {
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors"
+                                        className={`w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none transition-colors ${authMode === 'admin_request' ? 'focus:border-[#111111]' : 'focus:border-[#FF6B35]'}`}
                                     />
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_pass}</label>
-                                <div className="relative">
-                                    <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
-                                    <input 
-                                        type="password" 
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors"
-                                    />
+                            {authMode !== 'admin_request' && (
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_pass}</label>
+                                    <div className="relative">
+                                        <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#555555]" />
+                                        <input 
+                                            type="password" 
+                                            required
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {authMode === 'admin_request' && (
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_reason}</label>
+                                    <div className="relative">
+                                        <FileText size={18} className="absolute left-4 top-4 text-[#555555]" />
+                                        <textarea 
+                                            required
+                                            rows="3"
+                                            value={adminReason}
+                                            onChange={(e) => setAdminReason(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#111111] transition-colors resize-none"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            )}
 
                             <button 
                                 type="submit" 
                                 disabled={isLoading}
-                                className="w-full bg-[#FF6B35] text-[#FFFFFF] py-4 rounded-xl font-black text-[1.1rem] flex items-center justify-center gap-2 hover:bg-[#E85D2A] transition-colors disabled:opacity-50 outline-none mt-4 shadow-lg shadow-[#FF6B35]/20"
+                                className={`w-full text-[#FFFFFF] py-4 rounded-xl font-black text-[1.1rem] flex items-center justify-center gap-2 transition-colors disabled:opacity-50 outline-none mt-4 shadow-lg ${authMode === 'admin_request' ? 'bg-[#111111] hover:bg-[#333333] shadow-[#111111]/20' : 'bg-[#FF6B35] hover:bg-[#E85D2A] shadow-[#FF6B35]/20'}`}
                             >
                                 {isLoading ? (
                                     <><div className="w-5 h-5 border-2 border-t-transparent border-[#FFFFFF] rounded-full animate-spin"></div> {currentT.btn_loading}</>
                                 ) : (
-                                    isLogin ? currentT.btn_login : currentT.btn_reg
+                                    authMode === 'login' ? currentT.btn_login : authMode === 'register' ? currentT.btn_reg : currentT.btn_admin
                                 )}
                             </button>
 
                         </form>
 
-                        <div className="mt-8 text-center border-t border-[#E5E7EB] pt-6">
-                            <button 
-                                onClick={() => { setIsLogin(!isLogin); setErrorMsg(''); }}
-                                className="text-[#555555] hover:text-[#111111] font-bold text-[0.95rem] transition-colors outline-none"
-                            >
-                                {isLogin ? currentT.switch_to_reg : currentT.switch_to_login}
-                            </button>
+                        <div className="mt-8 text-center border-t border-[#E5E7EB] pt-6 flex flex-col gap-3">
+                            {authMode !== 'login' && (
+                                <button 
+                                    onClick={() => { setAuthMode('login'); setErrorMsg(''); setSuccessMsg(''); }}
+                                    className="text-[#555555] hover:text-[#111111] font-bold text-[0.95rem] transition-colors outline-none"
+                                >
+                                    {currentT.switch_to_login}
+                                </button>
+                            )}
+                            {authMode !== 'register' && (
+                                <button 
+                                    onClick={() => { setAuthMode('register'); setErrorMsg(''); setSuccessMsg(''); }}
+                                    className="text-[#555555] hover:text-[#111111] font-bold text-[0.95rem] transition-colors outline-none"
+                                >
+                                    {currentT.switch_to_reg}
+                                </button>
+                            )}
+                            {authMode !== 'admin_request' && (
+                                <button 
+                                    onClick={() => { setAuthMode('admin_request'); setErrorMsg(''); setSuccessMsg(''); }}
+                                    className="text-[#555555] hover:text-[#111111] font-bold text-[0.85rem] mt-2 underline transition-colors outline-none"
+                                >
+                                    {currentT.switch_to_admin}
+                                </button>
+                            )}
                         </div>
 
                     </div>
@@ -359,7 +434,7 @@ export default function SahayAuth() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                 <div className="flex flex-wrap items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                         <Globe size={14} /> {currentT.lang}
