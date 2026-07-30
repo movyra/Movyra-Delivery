@@ -5,6 +5,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
+import { uploadSahayMedia } from '../../services/pocketbase';
 import { 
     Camera, 
     MapPin, 
@@ -14,7 +15,7 @@ import {
     X,
     Globe,
     ArrowUp,
-    ArrowLeft, // Added missing import
+    ArrowLeft,
     Save,
     CheckCircle
 } from 'lucide-react';
@@ -28,11 +29,13 @@ export default function SahayReport() {
 
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
-    const [showProductsPrompt, setShowProductsPrompt] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     
     // Form State
     const [formData, setFormData] = useState({
+        reporterName: '',
+        needyName: '',
+        bloodGroup: '',
         category: '',
         address: '',
         lat: null,
@@ -58,10 +61,9 @@ export default function SahayReport() {
         if (supported.includes(sysLang)) setLang(sysLang);
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
+            // Authentication is now strictly optional for public reporting
             if (user) {
                 setCurrentUser(user);
-            } else {
-                navigate('/sahay/auth');
             }
         });
 
@@ -76,11 +78,11 @@ export default function SahayReport() {
         }
 
         return () => unsubscribe();
-    }, [navigate]);
+    }, []);
 
     // 3. OFFLINE DRAFT & SEVERITY ESTIMATION ENGINE
     useEffect(() => {
-        if (formData.category || formData.address || formData.description) {
+        if (formData.category || formData.address || formData.description || formData.needyName) {
             localStorage.setItem('sahay_report_draft', JSON.stringify(formData));
             setDraftSavedMessage(true);
             const timer = setTimeout(() => setDraftSavedMessage(false), 2000);
@@ -155,50 +157,41 @@ export default function SahayReport() {
         }
     };
 
-    const uploadToPocketBase = async (file) => {
-        const pbUrl = import.meta.env.VITE_POCKETBASE_URL || 'https://your-pocketbase-instance.com';
-        const formData = new FormData();
-        formData.append('media', file);
-        
-        try {
-            const response = await fetch(`${pbUrl}/api/collections/sahay_media/records`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await response.json();
-            return data.id; 
-        } catch (error) {
-            console.warn("PocketBase upload failed.");
-            return null;
-        }
-    };
-
     const submitReport = async (e) => {
         e.preventDefault();
+        
+        if (!photoFile) {
+            alert(currentT.err_photo_req);
+            return;
+        }
+
         setIsSubmitting(true);
         setSubmitStatus('IDLE');
 
         try {
-            let mediaId = null;
-            if (photoFile) {
-                mediaId = await uploadToPocketBase(photoFile);
-            }
+            // Upload to Central PocketBase Client
+            const uploaderType = currentUser ? 'registered_user' : 'anonymous';
+            const mediaUrl = await uploadSahayMedia(photoFile, null, 'needy_photo', uploaderType);
 
+            // Save Metadata to Firestore
             await addDoc(collection(db, 'sahay_cases'), {
-                userId: currentUser.uid,
+                userId: currentUser ? currentUser.uid : 'anonymous',
+                reporterName: formData.reporterName || 'Anonymous',
+                needyName: formData.needyName,
+                bloodGroup: formData.bloodGroup || 'Unknown',
                 category: formData.category,
                 address: formData.address,
                 location: formData.lat ? { lat: formData.lat, lng: formData.lng } : null,
                 danger: formData.danger,
-                description: formData.description,
+                condition: formData.description,
                 severity: estimatedSeverity,
-                mediaId: mediaId,
+                mediaUrl: mediaUrl,
                 status: 'Reported',
                 createdAt: serverTimestamp()
             });
 
             localStorage.removeItem('sahay_report_draft');
-            setFormData({ category: '', address: '', lat: null, lng: null, danger: 'No', description: '' });
+            setFormData({ reporterName: '', needyName: '', bloodGroup: '', category: '', address: '', lat: null, lng: null, danger: 'No', description: '' });
             setPhotoFile(null);
             setPhotoPreview(null);
             
@@ -213,45 +206,54 @@ export default function SahayReport() {
         }
     };
 
-    // 5. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
+    // 5. DICTIONARY
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home",
-            title: "Report a Need", sub: "Help us connect them with verified rescue teams quickly.",
+            title: "Report a Need", sub: "Help us connect them with verified rescue teams quickly. No account required.",
             draft_saved: "Draft Saved", gps_err: "Could not get location. Please type the address.",
-            lbl_cat: "Who needs help?", cat_1: "Homeless Person", cat_2: "Abandoned Elderly", cat_3: "Injured Animal", cat_4: "Medical Emergency",
-            lbl_photo: "Photo Evidence", btn_photo: "Take Photo / Upload",
+            lbl_reporter: "Your Name (Optional)",
+            lbl_needy: "Person in Need Name (Required)",
+            lbl_blood: "Blood Group (Optional)",
+            lbl_cat: "Category", cat_1: "Homeless Person", cat_2: "Abandoned Elderly", cat_3: "Injured Animal", cat_4: "Medical Emergency",
+            lbl_photo: "Live Photo (Required)", btn_photo: "Take Photo / Upload", err_photo_req: "A photo of the person in need is strictly required for verification.",
             lbl_loc: "Where are they?", btn_gps: "Use My Current Location", ph_address: "Or type exact address and landmarks...",
             lbl_danger: "Are they in immediate danger?",
-            lbl_desc: "Details", ph_desc: "Describe their condition, age, injuries, or any helpful details...",
+            lbl_desc: "Condition Details", ph_desc: "Describe their condition, age, injuries, or any helpful details...",
             lbl_severity: "Urgency:",
-            btn_submit: "Send Report", btn_loading: "Sending Data...",
+            btn_submit: "Submit Report", btn_loading: "Uploading Securely...",
             succ_title: "Report Received", succ_sub: "Organizations have been notified. Thank you.", btn_new: "Report Another"
         },
         hi: {
             lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं",
-            title: "जरूरत की रिपोर्ट करें", sub: "उन्हें बचाव टीमों से जल्दी जोड़ने में हमारी मदद करें।",
+            title: "जरूरत की रिपोर्ट करें", sub: "उन्हें बचाव टीमों से जल्दी जोड़ने में हमारी मदद करें। खाते की आवश्यकता नहीं है।",
             draft_saved: "ड्राफ्ट सेव हुआ", gps_err: "लोकेशन नहीं मिल सका। कृपया पता टाइप करें।",
-            lbl_cat: "किसे मदद चाहिए?", cat_1: "बेघर व्यक्ति", cat_2: "अकेले बुजुर्ग", cat_3: "घायल जानवर", cat_4: "चिकित्सा आपातकाल",
-            lbl_photo: "फोटो प्रमाण", btn_photo: "फोटो लें / अपलोड करें",
+            lbl_reporter: "आपका नाम (वैकल्पिक)",
+            lbl_needy: "जरूरतमंद का नाम (आवश्यक)",
+            lbl_blood: "रक्त समूह (वैकल्पिक)",
+            lbl_cat: "श्रेणी", cat_1: "बेघर व्यक्ति", cat_2: "अकेले बुजुर्ग", cat_3: "घायल जानवर", cat_4: "चिकित्सा आपातकाल",
+            lbl_photo: "लाइव फोटो (आवश्यक)", btn_photo: "फोटो लें / अपलोड करें", err_photo_req: "सत्यापन के लिए जरूरतमंद व्यक्ति की फोटो अनिवार्य है।",
             lbl_loc: "वे कहाँ हैं?", btn_gps: "मेरा वर्तमान स्थान उपयोग करें", ph_address: "या सटीक पता और लैंडमार्क टाइप करें...",
             lbl_danger: "क्या वे तत्काल खतरे में हैं?",
-            lbl_desc: "विवरण", ph_desc: "उनकी स्थिति, उम्र, चोटों का वर्णन करें...",
+            lbl_desc: "स्थिति विवरण", ph_desc: "उनकी स्थिति, उम्र, चोटों का वर्णन करें...",
             lbl_severity: "तात्कालिकता:",
-            btn_submit: "रिपोर्ट भेजें", btn_loading: "डेटा भेजा जा रहा है...",
+            btn_submit: "रिपोर्ट सबमिट करें", btn_loading: "अपलोड हो रहा है...",
             succ_title: "रिपोर्ट प्राप्त हुई", succ_sub: "संगठनों को सूचित कर दिया गया है। धन्यवाद।", btn_new: "एक और रिपोर्ट करें"
         },
         hinglish: {
             lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas",
-            title: "Report Darj Karein", sub: "Unhe rescue teams se jaldi connect karne mein help karein.",
+            title: "Report Darj Karein", sub: "Unhe rescue teams se jaldi connect karne mein help karein. Account ki zaroorat nahi hai.",
             draft_saved: "Draft Save Ho Gaya", gps_err: "Location nahi mil paayi. Kripya address type karein.",
-            lbl_cat: "Kisko help chahiye?", cat_1: "Homeless Person", cat_2: "Abandoned Elderly", cat_3: "Injured Animal", cat_4: "Medical Emergency",
-            lbl_photo: "Photo Evidence", btn_photo: "Photo Lein / Upload",
+            lbl_reporter: "Aapka Naam (Optional)",
+            lbl_needy: "Zarooratmand ka Naam (Required)",
+            lbl_blood: "Blood Group (Optional)",
+            lbl_cat: "Category", cat_1: "Homeless Person", cat_2: "Abandoned Elderly", cat_3: "Injured Animal", cat_4: "Medical Emergency",
+            lbl_photo: "Live Photo (Required)", btn_photo: "Photo Lein / Upload", err_photo_req: "Verification ke liye photo strictly required hai.",
             lbl_loc: "Wo kahan hain?", btn_gps: "Mera Current Location Use Karein", ph_address: "Ya exact address type karein...",
             lbl_danger: "Kya wo immediate danger mein hain?",
-            lbl_desc: "Details", ph_desc: "Unki condition, age, injuries batayein...",
+            lbl_desc: "Condition Details", ph_desc: "Unki condition, age, injuries batayein...",
             lbl_severity: "Urgency:",
-            btn_submit: "Report Send Karein", btn_loading: "Bhej rahe hain...",
+            btn_submit: "Report Submit Karein", btn_loading: "Upload ho raha hai...",
             succ_title: "Report Mil Gayi", succ_sub: "Organizations ko notify kar diya gaya hai. Shukriya.", btn_new: "Dusri Report Karein"
         }
     };
@@ -282,7 +284,7 @@ export default function SahayReport() {
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/sahay')}>
                     <img 
-                        src={theme === 'light' ? '/logo-4.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-4.png' : '/logo-4.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
@@ -375,6 +377,42 @@ export default function SahayReport() {
 
                         <form onSubmit={submitReport} className="flex flex-col gap-8 bg-[#F7F7F7] p-6 md:p-10 rounded-3xl border border-[#E5E7EB]">
                             
+                            {/* Identity Section */}
+                            <div>
+                                <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_reporter}</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Anonymous"
+                                    value={formData.reporterName}
+                                    onChange={(e) => setFormData({...formData, reporterName: e.target.value})}
+                                    className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors mb-6"
+                                />
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_needy}</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            placeholder="Name"
+                                            value={formData.needyName}
+                                            onChange={(e) => setFormData({...formData, needyName: e.target.value})}
+                                            className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_blood}</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g. O+"
+                                            value={formData.bloodGroup}
+                                            onChange={(e) => setFormData({...formData, bloodGroup: e.target.value})}
+                                            className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#FF6B35] transition-colors"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Category Selection */}
                             <div>
                                 <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_cat}</label>
@@ -513,7 +551,7 @@ export default function SahayReport() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                 <div className="flex flex-wrap items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                         <Globe size={14} /> {currentT.lang}
@@ -535,7 +573,7 @@ export default function SahayReport() {
                     <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
                         Built by 
                         <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
-                            <img src={theme === 'light' ? '/aat2.png' : '/aat.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
+                            <img src={theme === 'light' ? '/aat2.png' : '/aat2.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
                         </a>
                     </div>
 
