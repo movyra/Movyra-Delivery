@@ -313,6 +313,19 @@ service cloud.firestore {
     // MOVYRA SAHAY MODULE - HUMANITARIAN RESCUE OPERATIONS
     // ========================================================================
     
+    match /sahay_users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_profiles/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_admin_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
     match /sahay_cases/{caseId} {
       // Allow public read for live telemetry dashboards and unauthenticated viewing
       allow read: if true;
