@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -6,6 +6,7 @@ import { collection, query, orderBy, getDocs, doc, updateDoc, arrayUnion } from 
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { acceptSahayTask, getCaseTimeline } from '../../services/sahayService';
+import { uploadVolunteerVerification } from '../../services/pocketbase';
 import { 
     Search, 
     Filter,
@@ -23,7 +24,8 @@ import {
     Clock,
     ShieldCheck,
     Users,
-    MessageSquare
+    MessageSquare,
+    Camera
 } from 'lucide-react';
 
 export default function SahayCases() {
@@ -44,11 +46,22 @@ export default function SahayCases() {
     
     const [searchQuery, setSearchQuery] = useState('');
     const [activeCategory, setActiveCategory] = useState('All');
-    const [activeTab, setActiveTab] = useState('Open'); // 'Open' or 'Accepted'
+    const [activeTab, setActiveTab] = useState('Open');
     
     const [expandedCaseId, setExpandedCaseId] = useState(null);
     const [confirmingId, setConfirmingId] = useState(null);
     const [timelineData, setTimelineData] = useState({});
+
+    // Task Acceptance Modal State
+    const [showAcceptModal, setShowAcceptModal] = useState(false);
+    const [selectedCaseToAccept, setSelectedCaseToAccept] = useState(null);
+    const [volunteerData, setVolunteerData] = useState({ name: '', mobile: '', email: '' });
+    const [volunteerPhoto, setVolunteerPhoto] = useState(null);
+    const [needyPhoto, setNeedyPhoto] = useState(null);
+    const [volunteerPhotoPreview, setVolunteerPhotoPreview] = useState(null);
+    const [needyPhotoPreview, setNeedyPhotoPreview] = useState(null);
+    const volInputRef = useRef(null);
+    const needyInputRef = useRef(null);
 
     // 2. AUTHENTICATION & DATA FETCHING
     useEffect(() => {
@@ -58,7 +71,7 @@ export default function SahayCases() {
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
-            fetchCases(); // Fetch cases whether logged in or not
+            fetchCases();
         });
 
         return () => unsubscribe();
@@ -104,7 +117,7 @@ export default function SahayCases() {
     };
 
     const fetchTimelineForCase = async (caseId) => {
-        if (timelineData[caseId]) return; // Already fetched
+        if (timelineData[caseId]) return;
         let updates = await getCaseTimeline(caseId);
 
         const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
@@ -171,7 +184,6 @@ export default function SahayCases() {
         const isCurrentlyExpanded = expandedCaseId === id;
         setExpandedCaseId(isCurrentlyExpanded ? null : id);
         
-        // Fetch timeline if expanding an assigned/closed case
         if (!isCurrentlyExpanded && (status === 'Assigned' || status === 'In Progress' || status === 'Closed')) {
             fetchTimelineForCase(id);
         }
@@ -205,34 +217,83 @@ export default function SahayCases() {
         }
     };
 
-    const handleAcceptTask = async (e, caseId) => {
+    // Modal Handlers
+    const openAcceptModal = (e, caseItem) => {
         e.stopPropagation();
-        if (!currentUser) {
-            alert(currentT.login_req);
-            navigate('/sahay/auth');
+        setSelectedCaseToAccept(caseItem);
+        if (currentUser) {
+            setVolunteerData({ name: currentUser.displayName || '', mobile: '', email: currentUser.email || '' });
+        } else {
+            setVolunteerData({ name: '', mobile: '', email: '' });
+        }
+        setShowAcceptModal(true);
+    };
+
+    const closeAcceptModal = () => {
+        setShowAcceptModal(false);
+        setSelectedCaseToAccept(null);
+        setVolunteerPhoto(null);
+        setNeedyPhoto(null);
+        setVolunteerPhotoPreview(null);
+        setNeedyPhotoPreview(null);
+    };
+
+    const handlePhotoCapture = (e, type) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (type === 'volunteer') {
+                    setVolunteerPhoto(file);
+                    setVolunteerPhotoPreview(reader.result);
+                } else {
+                    setNeedyPhoto(file);
+                    setNeedyPhotoPreview(reader.result);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const submitTaskAcceptance = async (e) => {
+        e.preventDefault();
+        
+        if (!volunteerPhoto || !needyPhoto) {
+            alert("Both your live photo and a photo of the person in need are required for verification.");
             return;
         }
+
+        setConfirmingId(selectedCaseToAccept.id);
         
-        if (window.confirm("Are you sure you want to accept this task and take responsibility for updating its status?")) {
-            setConfirmingId(caseId);
-            try {
-                // Determine user display name (fallback to email or "Volunteer")
-                const userName = currentUser.displayName || currentUser.email || 'Volunteer';
-                await acceptSahayTask(caseId, currentUser.uid, userName);
-                
-                // Update local state instantly
-                const updatedCases = cases.map(c => {
-                    if (c.id === caseId) return { ...c, status: 'Assigned', assignedToId: currentUser.uid, assignedToName: userName };
-                    return c;
-                });
-                setCases(updatedCases);
-                alert("Task Accepted. Please provide updates in the Accepted tab.");
-            } catch (error) {
-                console.error("Acceptance failed:", error);
-                alert("Error accepting task.");
-            } finally {
-                setConfirmingId(null);
-            }
+        try {
+            // 1. Upload media to PocketBase
+            await uploadVolunteerVerification(
+                selectedCaseToAccept.id,
+                volunteerData.name,
+                volunteerData.mobile,
+                volunteerData.email,
+                volunteerPhoto,
+                needyPhoto
+            );
+
+            // 2. Update Firestore Case
+            const volunteerId = currentUser ? currentUser.uid : 'anonymous_volunteer';
+            await acceptSahayTask(selectedCaseToAccept.id, volunteerId, volunteerData.name);
+            
+            // 3. Update local state
+            const updatedCases = cases.map(c => {
+                if (c.id === selectedCaseToAccept.id) return { ...c, status: 'Assigned', assignedToId: volunteerId, assignedToName: volunteerData.name };
+                return c;
+            });
+            setCases(updatedCases);
+            
+            alert("Task Accepted successfully. Organizations have been notified.");
+            closeAcceptModal();
+        } catch (error) {
+            console.error("Acceptance failed:", error);
+            alert("Error accepting task. Please try again.");
+        } finally {
+            setConfirmingId(null);
         }
     };
 
@@ -248,7 +309,7 @@ export default function SahayCases() {
         return 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35]';
     };
 
-    // 5. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
+    // 5. DICTIONARY
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
@@ -263,11 +324,14 @@ export default function SahayCases() {
             step3: "Assigned", step3_desc: "Rescue team is on the way.",
             step4: "Resolved", step4_desc: "Help provided successfully.",
             lbl_assigned: "Accepted By", updates: "Public Updates", no_updates: "No updates posted yet.",
-            sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
+            sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console",
+            mod_title: "Accept Verification", mod_sub: "To accept this task, you must provide your details and upload live photos for verification.",
+            lbl_name: "Your Name", lbl_mob: "Mobile Number", lbl_email: "Email (Optional)",
+            lbl_vol_photo: "Your Live Photo", lbl_needy_photo: "Photo of Person in Need"
         }
     };
 
-    const currentT = t['en']; // Using English strictly as requested to maintain simplicity, easily expandable via lang state
+    const currentT = t['en'];
     const languageOptions = [
         { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
         { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
@@ -298,7 +362,7 @@ export default function SahayCases() {
             </style>
 
             {/* TOP HEADER */}
-            <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
+            <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-40 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/sahay')}>
                     <img 
                         src={theme === 'light' ? '/logo-4.png' : '/logo-4.png'} 
@@ -406,6 +470,93 @@ export default function SahayCases() {
                                     </button>
                                 ))}
                             </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ACCEPTANCE VERIFICATION MODAL */}
+            <AnimatePresence>
+                {showAcceptModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/90 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[500px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[90vh] overflow-y-auto"
+                        >
+                            <button onClick={closeAcceptModal} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.mod_title}</h2>
+                            <p className="text-[#555555] font-medium mb-6 text-[0.95rem]">{currentT.mod_sub}</p>
+                            
+                            <form onSubmit={submitTaskAcceptance} className="flex flex-col gap-5">
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_name}</label>
+                                    <input 
+                                        type="text" required
+                                        value={volunteerData.name} onChange={e => setVolunteerData({...volunteerData, name: e.target.value})}
+                                        className="w-full p-3 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] outline-none focus:border-[#FF6B35]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_mob}</label>
+                                    <input 
+                                        type="tel" required
+                                        value={volunteerData.mobile} onChange={e => setVolunteerData({...volunteerData, mobile: e.target.value})}
+                                        className="w-full p-3 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] outline-none focus:border-[#FF6B35]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_email}</label>
+                                    <input 
+                                        type="email"
+                                        value={volunteerData.email} onChange={e => setVolunteerData({...volunteerData, email: e.target.value})}
+                                        className="w-full p-3 rounded-xl bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] outline-none focus:border-[#FF6B35]"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4 mt-2">
+                                    <div>
+                                        <label className="block text-[0.8rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_vol_photo}</label>
+                                        <input type="file" accept="image/*" capture="user" ref={volInputRef} onChange={(e) => handlePhotoCapture(e, 'volunteer')} className="hidden" />
+                                        {volunteerPhotoPreview ? (
+                                            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#E5E7EB]">
+                                                <img src={volunteerPhotoPreview} className="w-full h-full object-cover" alt="Volunteer" />
+                                                <button type="button" onClick={() => { setVolunteerPhoto(null); setVolunteerPhotoPreview(null); }} className="absolute top-1 right-1 bg-[#111111] text-white p-1 rounded-full"><X size={12}/></button>
+                                            </div>
+                                        ) : (
+                                            <button type="button" onClick={() => volInputRef.current.click()} className="w-full h-32 rounded-xl bg-[#F7F7F7] border-2 border-dashed border-[#D1D5DB] flex flex-col items-center justify-center text-[#555555] hover:border-[#FF6B35] hover:text-[#FF6B35]">
+                                                <Camera size={24} />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <label className="block text-[0.8rem] font-bold uppercase tracking-wider text-[#555555] mb-2">{currentT.lbl_needy_photo}</label>
+                                        <input type="file" accept="image/*" capture="environment" ref={needyInputRef} onChange={(e) => handlePhotoCapture(e, 'needy')} className="hidden" />
+                                        {needyPhotoPreview ? (
+                                            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#E5E7EB]">
+                                                <img src={needyPhotoPreview} className="w-full h-full object-cover" alt="Needy" />
+                                                <button type="button" onClick={() => { setNeedyPhoto(null); setNeedyPhotoPreview(null); }} className="absolute top-1 right-1 bg-[#111111] text-white p-1 rounded-full"><X size={12}/></button>
+                                            </div>
+                                        ) : (
+                                            <button type="button" onClick={() => needyInputRef.current.click()} className="w-full h-32 rounded-xl bg-[#F7F7F7] border-2 border-dashed border-[#D1D5DB] flex flex-col items-center justify-center text-[#555555] hover:border-[#FF6B35] hover:text-[#FF6B35]">
+                                                <Camera size={24} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <button 
+                                    type="submit" 
+                                    disabled={confirmingId === selectedCaseToAccept?.id}
+                                    className="w-full bg-[#111111] text-[#FFFFFF] py-4 rounded-xl font-black mt-4 hover:bg-[#333333] transition-colors disabled:opacity-50"
+                                >
+                                    {confirmingId === selectedCaseToAccept?.id ? 'Uploading Verification...' : 'Submit & Accept Task'}
+                                </button>
+                            </form>
                         </motion.div>
                     </motion.div>
                 )}
@@ -549,7 +700,7 @@ export default function SahayCases() {
                                             <div className="flex flex-col items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
                                                 {!isAssigned && activeTab === 'Open' && (
                                                     <button
-                                                        onClick={(e) => handleAcceptTask(e, caseItem.id)}
+                                                        onClick={(e) => openAcceptModal(e, caseItem)}
                                                         disabled={confirmingId === caseItem.id}
                                                         className="w-full md:w-auto px-6 py-2 rounded-lg font-black text-[0.85rem] bg-[#111111] text-[#FFFFFF] hover:bg-[#333333] transition-colors outline-none"
                                                     >
@@ -673,7 +824,7 @@ export default function SahayCases() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-                        <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+                        <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                             <div className="flex flex-wrap items-center gap-6">
                                 <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                                     <Globe size={14} /> {currentT.lang}
@@ -685,27 +836,27 @@ export default function SahayCases() {
                                     <a href="#x" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg></a>
                                 </div>
                             </div>
-                
-                <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
-                    <div className="flex items-center gap-6">
-                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
-                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
-                        <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
-                    </div>
-                    <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
-                    
-                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
-                        Built by 
-                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
-                            <img src={theme === 'light' ? '/aat2.png' : '/aat2.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
-                        </a>
-                    </div>
+                            
+                            <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
+                                <div className="flex items-center gap-6">
+                                    <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
+                                    <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                                    <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
+                                </div>
+                                <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                                
+                                <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                                    Built by 
+                                    <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
+                                        <img src={theme === 'light' ? '/aat2.png' : '/aat2.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
+                                    </a>
+                                </div>
 
-                    <button onClick={scrollToTop} className="p-2 rounded-full border border-[#E5E7EB] hover:bg-[#F7F7F7] hover:text-[#111111] transition-colors outline-none">
-                        <ArrowUp size={16} />
-                    </button>
-                </div>
-            </footer>
+                                <button onClick={scrollToTop} className="p-2 rounded-full border border-[#E5E7EB] hover:bg-[#F7F7F7] hover:text-[#111111] transition-colors outline-none">
+                                    <ArrowUp size={16} />
+                                </button>
+                            </div>
+                        </footer>
         </div>
     );
 }
