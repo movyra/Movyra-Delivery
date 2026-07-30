@@ -187,7 +187,7 @@ export default function SahayAdmin() {
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/sahay')}>
                     <img 
-                        src={theme === 'light' ? '/logo-4.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-4.png' : '/logo-4.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 

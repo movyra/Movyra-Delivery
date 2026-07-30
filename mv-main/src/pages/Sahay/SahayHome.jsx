@@ -293,7 +293,7 @@ export default function SahayHome() {
             <header className="w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 bg-[#FFFFFF]/90 border-b border-[#E5E7EB] backdrop-blur-md sticky top-0">
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
                     <img 
-                        src={theme === 'light' ? '/logo-4.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-4.png' : '/logo-4.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
@@ -624,7 +624,7 @@ export default function SahayHome() {
                         Built by 
                         <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
                             <img 
-                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
+                                src={theme === 'light' ? '/aat2.png' : '/aat2.png'} 
                                 alt="AnyAstro" 
                                 className="h-4 w-auto object-contain" 
                                 onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} 
