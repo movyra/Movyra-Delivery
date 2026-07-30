@@ -19,7 +19,9 @@ export const uploadSahayMedia = async (file, caseId, photoType, uploaderType) =>
         });
 
         if (!response.ok) {
-            throw new Error('Media upload communication failed.');
+            const errorData = await response.json().catch(() => ({}));
+            const exactMessage = errorData.message || 'Media upload communication failed.';
+            throw new Error(`PocketBase Rejected: ${exactMessage}`);
         }
 
         const record = await response.json();
@@ -47,7 +49,9 @@ export const uploadVolunteerVerification = async (caseId, volunteerName, volunte
         });
 
         if (!response.ok) {
-            throw new Error('Verification record upload failed.');
+            const errorData = await response.json().catch(() => ({}));
+            const exactMessage = errorData.message || 'Verification record upload failed.';
+            throw new Error(`PocketBase Rejected: ${exactMessage}`);
         }
 
         const record = await response.json();
