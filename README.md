@@ -1,25 +1,48 @@
 <!-- ===================== LOGO ===================== -->
 <p align="center">
-  <!-- Replace the URL below with your actual logo -->
   <img src="https://movyra-customer-prod.web.app/logo.png" alt="Movyra Logo" width="160" height="160" />
 </p>
 
 <h1 align="center">Movyra</h1>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.0.0-blue.svg" />
+  <img src="https://img.shields.io/badge/version-2.0.0-blue.svg" />
   <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" />
   <img src="https://img.shields.io/badge/platform-PWA-lightgrey.svg" />
-  <img src="https://img.shields.io/badge/React-18.2.0-61dafb.svg" />
-  <img src="https://img.shields.io/badge/Firebase-10.8.0-FFCA28.svg" />
+  <img src="https://img.shields.io/badge/React-18.3.1-61dafb.svg" />
+  <img src="https://img.shields.io/badge/Firebase-12.13.0-FFCA28.svg" />
   <img src="https://img.shields.io/badge/region-India-orange.svg" />
 </p>
 
 ## Overview
 
-Movyra is an enterprise-grade, real-time logistics and delivery platform engineered by AnyAstro Techno Solutions. The platform is designed to solve high-frequency logistics challenges across India with a focus on real-time coordination, operational reliability, and scalable system design.
+Movyra is a connected ecosystem offering delivery, smart city management, and humanitarian rescue solutions. It is designed to solve operational challenges with real-time coordination, reliability, and scalable system design.
 
-Movyra operates as a Progressive Web App (PWA), ensuring seamless performance across devices, including low-bandwidth environments. It is built to support customers, delivery partners, and vendors within a unified ecosystem.
+Movyra operates as a Progressive Web App (PWA), ensuring seamless performance across devices. It is built to support customers, partners, and vendors within a unified system.
+
+## Our Solutions
+
+<div>
+  <img src="https://movyra.web.app/logo-3.png" alt="Movyra" height="28" style="vertical-align: middle;" />
+  <span style="font-size: 1.5rem; font-weight: bold; letter-spacing: -1px; margin-left: -5px; color: #ffffff;">ovyra <span style="color: #888888; font-size: 1.2rem;">Civic</span></span>
+</div>
+<p>Smart city management. Report infrastructure issues easily.</p>
+
+<br/>
+
+<div>
+  <img src="https://movyra.web.app/logo-4.png" alt="Movyra" height="28" style="vertical-align: middle;" />
+  <span style="font-size: 1.5rem; font-weight: bold; letter-spacing: -1px; margin-left: -5px; color: #ffffff;">ovyra <span style="color: #888888; font-size: 1.2rem;">Sahay</span></span>
+</div>
+<p>Humanitarian rescue operations. Connect and report live cases.</p>
+
+<br/>
+
+<div>
+  <img src="https://movyra.web.app/logo.png" alt="Movyra" height="28" style="vertical-align: middle;" />
+  <span style="font-size: 1.5rem; font-weight: bold; letter-spacing: -1px; margin-left: -5px; color: #ffffff;">ovyra <span style="color: #888888; font-size: 1.2rem;">Delivery</span></span>
+</div>
+<p>Next-generation urban logistics and enterprise fleet management.</p>
 
 ## Core Architecture and Features
 
@@ -53,13 +76,16 @@ Supports multiple drop-off points within a single request. Includes dynamic rout
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/movyra/Movyra-Delivery.git
-cd Movyra-Delivery
+git clone [https://github.com/movyra/movyra.git](https://github.com/movyra/movyra.git)
+cd movyra
+
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 npm install
+
 ```
 
 ### 3. Environment Setup
@@ -70,13 +96,16 @@ Create a `.env.local` file in the root directory and configure your Firebase cre
 VITE_FIREBASE_API_KEY=your_key
 VITE_FIREBASE_AUTH_DOMAIN=your_domain
 VITE_FIREBASE_PROJECT_ID=your_project_id
+
 ```
 
 Refer to `DEPLOYMENT.md` for full configuration details.
 
 ### 4. Start Development Server
+
 ```bash
 npm run dev
+
 ```
 
 ## Security Notice
@@ -91,9 +120,9 @@ This repository is intended for viewing, learning, and contribution purposes onl
 
 The following actions are not permitted:
 
-- Commercial use of this code  
-- Reproduction of the platform  
-- Creation of competing systems using this codebase  
+* Commercial use of this code
+* Reproduction of the platform
+* Creation of competing systems using this codebase
 
 ## License
 
@@ -104,6 +133,7 @@ All Rights Reserved.
 
 This codebase is proprietary and confidential.
 Unauthorized copying, modification, distribution, or commercial usage is strictly prohibited without explicit permission.
+
 ```
 
 ## Contributing
@@ -112,10 +142,10 @@ We welcome contributions from developers who aim to build scalable, real-world s
 
 Before submitting a pull request:
 
-- Review `CONTRIBUTING.md`  
-- Follow `CODE_OF_CONDUCT.md`  
-- Ensure submissions are practical and aligned with system goals  
+* Review `CONTRIBUTING.md`
+* Follow `CODE_OF_CONDUCT.md`
+* Ensure submissions are practical and aligned with system goals
 
 ## Vision
 
-Movyra is focused on building a reliable, scalable, and safety-driven logistics network designed for real-world conditions in India. The system aims to create a balanced ecosystem for customers, partners, and vendors while maintaining operational efficiency and trust.
+Movyra is focused on building a reliable, scalable, and safety-driven logistics and other great network designed for real-world conditions in India. The system aims to create a balanced ecosystem for customers, partners, and vendors while maintaining operational efficiency and trust.
