@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, doc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { acceptSahayTask, getCaseTimeline } from '../../services/sahayService';
@@ -25,7 +25,8 @@ import {
     ShieldCheck,
     Users,
     MessageSquare,
-    Camera
+    Camera,
+    Trash2
 } from 'lucide-react';
 
 export default function SahayCases() {
@@ -50,6 +51,7 @@ export default function SahayCases() {
     
     const [expandedCaseId, setExpandedCaseId] = useState(null);
     const [confirmingId, setConfirmingId] = useState(null);
+    const [deletingId, setDeletingId] = useState(null);
     const [timelineData, setTimelineData] = useState({});
 
     // Task Acceptance Modal State
@@ -98,9 +100,12 @@ export default function SahayCases() {
                     confirmedBy: doc.data().confirmedBy || []
                 }))
                 .filter(record => {
-                    if (containsTestKeyword(record.description) ||
+                    // Admins see everything, otherwise filter tests out
+                    if (currentUser && currentUser.email === 'testcodecfg@gmail.com') return true;
+                    if (containsTestKeyword(record.condition) ||
                         containsTestKeyword(record.address) ||
                         containsTestKeyword(record.category) ||
+                        containsTestKeyword(record.reporterName) ||
                         containsTestKeyword(record.assignedToName)) {
                         return false;
                     }
@@ -128,6 +133,7 @@ export default function SahayCases() {
         };
 
         updates = updates.filter(update => {
+            if (currentUser && currentUser.email === 'testcodecfg@gmail.com') return true;
             if (containsTestKeyword(update.message) || containsTestKeyword(update.userName)) {
                 return false;
             }
@@ -155,8 +161,9 @@ export default function SahayCases() {
             const lowerQuery = queryText.toLowerCase();
             result = result.filter(c => 
                 (c.address && c.address.toLowerCase().includes(lowerQuery)) || 
-                (c.description && c.description.toLowerCase().includes(lowerQuery)) ||
-                (c.category && c.category.toLowerCase().includes(lowerQuery))
+                (c.condition && c.condition.toLowerCase().includes(lowerQuery)) ||
+                (c.category && c.category.toLowerCase().includes(lowerQuery)) ||
+                (c.needyName && c.needyName.toLowerCase().includes(lowerQuery))
             );
         }
 
@@ -217,6 +224,23 @@ export default function SahayCases() {
         }
     };
 
+    const handleDeleteCase = async (e, caseId) => {
+        e.stopPropagation();
+        if (window.confirm("Are you sure you want to permanently delete this report?")) {
+            setDeletingId(caseId);
+            try {
+                await deleteDoc(doc(db, 'sahay_cases', caseId));
+                setCases(cases.filter(c => c.id !== caseId));
+                setExpandedCaseId(null);
+            } catch (error) {
+                console.error("Deletion failed:", error);
+                alert("You do not have permission to delete this record.");
+            } finally {
+                setDeletingId(null);
+            }
+        }
+    };
+
     // Modal Handlers
     const openAcceptModal = (e, caseItem) => {
         e.stopPropagation();
@@ -266,8 +290,7 @@ export default function SahayCases() {
         setConfirmingId(selectedCaseToAccept.id);
         
         try {
-            // 1. Upload media to PocketBase
-            await uploadVolunteerVerification(
+            const verificationMedia = await uploadVolunteerVerification(
                 selectedCaseToAccept.id,
                 volunteerData.name,
                 volunteerData.mobile,
@@ -276,13 +299,26 @@ export default function SahayCases() {
                 needyPhoto
             );
 
-            // 2. Update Firestore Case
             const volunteerId = currentUser ? currentUser.uid : 'anonymous_volunteer';
             await acceptSahayTask(selectedCaseToAccept.id, volunteerId, volunteerData.name);
             
-            // 3. Update local state
+            const caseRef = doc(db, 'sahay_cases', selectedCaseToAccept.id);
+            await updateDoc(caseRef, {
+                volunteerPhotoUrl: verificationMedia.volunteerPhotoUrl,
+                acceptanceNeedyPhotoUrl: verificationMedia.needyPhotoUrl
+            });
+
             const updatedCases = cases.map(c => {
-                if (c.id === selectedCaseToAccept.id) return { ...c, status: 'Assigned', assignedToId: volunteerId, assignedToName: volunteerData.name };
+                if (c.id === selectedCaseToAccept.id) {
+                    return { 
+                        ...c, 
+                        status: 'Assigned', 
+                        assignedToId: volunteerId, 
+                        assignedToName: volunteerData.name,
+                        volunteerPhotoUrl: verificationMedia.volunteerPhotoUrl,
+                        acceptanceNeedyPhotoUrl: verificationMedia.needyPhotoUrl
+                    };
+                }
                 return c;
             });
             setCases(updatedCases);
@@ -564,9 +600,15 @@ export default function SahayCases() {
 
             <main className="flex-1 max-w-[1000px] w-full mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
                 
-                <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
-                    <ArrowLeft size={16} /> {currentT.back}
-                </button>
+                <div className="flex items-center justify-between mb-8">
+                    <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors">
+                        <ArrowLeft size={16} /> {currentT.back}
+                    </button>
+                    {/* Placeholder for future admin dashboard link if needed */}
+                    {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                         <span className="text-[#DC2626] font-black text-[0.8rem] uppercase tracking-wider bg-[#DC2626]/10 px-3 py-1 rounded-full">Admin View Active</span>
+                    )}
+                </div>
 
                 <div className="mb-10">
                     <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
@@ -674,7 +716,7 @@ export default function SahayCases() {
                                             </div>
                                             
                                             <h3 className="text-[1.1rem] font-medium text-[#111111] mb-4 line-clamp-2 leading-relaxed">
-                                                {caseItem.description}
+                                                {caseItem.condition || caseItem.description}
                                             </h3>
 
                                             <div className="flex items-center gap-4 text-[0.8rem] font-bold text-[#555555] mb-2">
@@ -683,7 +725,6 @@ export default function SahayCases() {
                                                 <span className="flex items-center gap-1"><Clock size={14} /> {dateString}</span>
                                             </div>
 
-                                            {/* Show Assigned User info if applicable */}
                                             {isAssigned && caseItem.assignedToName && (
                                                 <div className="flex items-center gap-2 mt-4 text-[0.85rem] font-bold text-[#16A34A] bg-[#16A34A]/10 px-3 py-1.5 rounded-lg border border-[#16A34A] inline-flex">
                                                     <Users size={14} /> {currentT.lbl_assigned}: {caseItem.assignedToName}
@@ -696,8 +737,23 @@ export default function SahayCases() {
                                                 {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                             </div>
 
-                                            {/* Task Acceptance & Community Confirmation Logic */}
                                             <div className="flex flex-col items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
+                                                {/* Admin Deletion Action */}
+                                                {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteCase(e, caseItem.id)}
+                                                        disabled={deletingId === caseItem.id}
+                                                        className="w-full md:w-auto px-4 py-2 rounded-lg font-bold text-[0.85rem] flex items-center justify-center gap-2 transition-colors outline-none bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626] hover:bg-[#DC2626] hover:text-[#FFFFFF]"
+                                                    >
+                                                        {deletingId === caseItem.id ? (
+                                                            <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+                                                        ) : (
+                                                            <Trash2 size={14} />
+                                                        )}
+                                                        Delete
+                                                    </button>
+                                                )}
+
                                                 {!isAssigned && activeTab === 'Open' && (
                                                     <button
                                                         onClick={(e) => openAcceptModal(e, caseItem)}
@@ -740,7 +796,6 @@ export default function SahayCases() {
                                         </div>
                                     </div>
 
-                                    {/* Expandable Timeline & Public Updates Drawer */}
                                     <AnimatePresence>
                                         {isExpanded && (
                                             <motion.div 
@@ -749,69 +804,118 @@ export default function SahayCases() {
                                                 exit={{ height: 0, opacity: 0 }}
                                                 className="border-t border-[#E5E7EB] bg-[#F7F7F7] overflow-hidden"
                                             >
-                                                <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                                <div className="p-6 md:p-8">
                                                     
-                                                    {/* Standard Status Timeline */}
-                                                    <div>
-                                                        <h4 className="text-[1.1rem] font-black text-[#111111] mb-6">Status Tracker</h4>
-                                                        <div className="relative">
-                                                            <div className="absolute left-[19px] top-4 bottom-4 w-[2px] z-0 bg-[#D1D5DB]"></div>
-                                                            <div className="flex flex-col gap-8 relative z-10">
-                                                                {timelineSteps.map((step, index) => {
-                                                                    const currentStage = getTimelineStage(caseItem.status);
-                                                                    const isCompleted = index <= currentStage;
-                                                                    const isCurrent = index === currentStage;
-                                                                    const StepIcon = step.icon;
-
-                                                                    return (
-                                                                        <div key={index} className="flex gap-6">
-                                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 ${
-                                                                                isCompleted 
-                                                                                    ? 'bg-[#111111] border-[#111111] text-[#FFFFFF]'
-                                                                                    : 'bg-[#FFFFFF] border-[#D1D5DB] text-[#D1D5DB]'
-                                                                            }`}>
-                                                                                <StepIcon size={18} />
-                                                                            </div>
-                                                                            <div className="pt-1">
-                                                                                <h4 className={`text-[1.05rem] font-black ${isCompleted ? 'text-[#111111]' : 'text-[#555555]'}`}>
-                                                                                    {step.title}
-                                                                                </h4>
-                                                                                <p className={`text-[0.9rem] mt-1 font-medium ${isCurrent ? 'text-[#FF6B35]' : 'text-[#555555]'}`}>
-                                                                                    {step.desc}
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
+                                                    {/* PUBLIC DETAILS & MEDIA DISPLAY (NEW) */}
+                                                    <div className="mb-10 bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
+                                                        <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
+                                                            <AlertTriangle size={18} className="text-[#FF6B35]" /> Full Report Details
+                                                        </h4>
+                                                        
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Needy Person</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.needyName || 'Unknown'}</p>
                                                             </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Blood Group</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.bloodGroup || 'Not provided'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Reported By</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.reporterName || 'Anonymous'}</p>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Status</p>
+                                                                <p className="text-[1rem] font-bold text-[#111111]">{caseItem.status}</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                            {/* Initial Report Photo */}
+                                                            {caseItem.mediaUrl && (
+                                                                <div>
+                                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-3">Live Evidence (Reporting)</p>
+                                                                    <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden border border-[#E5E7EB] bg-[#F7F7F7]">
+                                                                        <img src={caseItem.mediaUrl} alt="Report Evidence" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {/* Acceptance Verification Photo */}
+                                                            {caseItem.acceptanceNeedyPhotoUrl && (
+                                                                <div>
+                                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-3">Live Evidence (Acceptance)</p>
+                                                                    <div className="w-full h-48 md:h-64 rounded-xl overflow-hidden border border-[#E5E7EB] bg-[#F7F7F7]">
+                                                                        <img src={caseItem.acceptanceNeedyPhotoUrl} alt="Verification Evidence" className="w-full h-full object-cover" />
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
-                                                    {/* Public Updates Feed (For Accepted Tasks) */}
-                                                    {isAssigned && (
-                                                        <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
-                                                            <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
-                                                                <MessageSquare size={18} className="text-[#00A9F7]" /> {currentT.updates}
-                                                            </h4>
-                                                            <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2">
-                                                                {!timelineData[caseItem.id] ? (
-                                                                    <p className="text-[#555555] text-[0.9rem] animate-pulse">Loading updates...</p>
-                                                                ) : timelineData[caseItem.id].length === 0 ? (
-                                                                    <p className="text-[#555555] text-[0.9rem]">{currentT.no_updates}</p>
-                                                                ) : (
-                                                                    timelineData[caseItem.id].map(update => (
-                                                                        <div key={update.id} className="bg-[#F7F7F7] border border-[#E5E7EB] p-4 rounded-xl">
-                                                                            <p className="text-[#111111] font-medium text-[0.95rem] mb-2">{update.message}</p>
-                                                                            <div className="flex items-center justify-between text-[0.75rem] font-bold text-[#555555]">
-                                                                                <span>{update.userName}</span>
-                                                                                <span>{update.createdAt ? update.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}</span>
+                                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                                        {/* Standard Status Timeline */}
+                                                        <div>
+                                                            <h4 className="text-[1.1rem] font-black text-[#111111] mb-6">Status Tracker</h4>
+                                                            <div className="relative">
+                                                                <div className="absolute left-[19px] top-4 bottom-4 w-[2px] z-0 bg-[#D1D5DB]"></div>
+                                                                <div className="flex flex-col gap-8 relative z-10">
+                                                                    {timelineSteps.map((step, index) => {
+                                                                        const currentStage = getTimelineStage(caseItem.status);
+                                                                        const isCompleted = index <= currentStage;
+                                                                        const isCurrent = index === currentStage;
+                                                                        const StepIcon = step.icon;
+
+                                                                        return (
+                                                                            <div key={index} className="flex gap-6">
+                                                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 border-2 ${
+                                                                                    isCompleted 
+                                                                                        ? 'bg-[#111111] border-[#111111] text-[#FFFFFF]'
+                                                                                        : 'bg-[#FFFFFF] border-[#D1D5DB] text-[#D1D5DB]'
+                                                                                }`}>
+                                                                                    <StepIcon size={18} />
+                                                                                </div>
+                                                                                <div className="pt-1">
+                                                                                    <h4 className={`text-[1.05rem] font-black ${isCompleted ? 'text-[#111111]' : 'text-[#555555]'}`}>
+                                                                                        {step.title}
+                                                                                    </h4>
+                                                                                    <p className={`text-[0.9rem] mt-1 font-medium ${isCurrent ? 'text-[#FF6B35]' : 'text-[#555555]'}`}>
+                                                                                        {step.desc}
+                                                                                    </p>
+                                                                                </div>
                                                                             </div>
-                                                                        </div>
-                                                                    ))
-                                                                )}
+                                                                        );
+                                                                    })}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    )}
+
+                                                        {/* Public Updates Feed */}
+                                                        {isAssigned && (
+                                                            <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
+                                                                <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
+                                                                    <MessageSquare size={18} className="text-[#00A9F7]" /> {currentT.updates}
+                                                                </h4>
+                                                                <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2">
+                                                                    {!timelineData[caseItem.id] ? (
+                                                                        <p className="text-[#555555] text-[0.9rem] animate-pulse">Loading updates...</p>
+                                                                    ) : timelineData[caseItem.id].length === 0 ? (
+                                                                        <p className="text-[#555555] text-[0.9rem]">{currentT.no_updates}</p>
+                                                                    ) : (
+                                                                        timelineData[caseItem.id].map(update => (
+                                                                            <div key={update.id} className="bg-[#F7F7F7] border border-[#E5E7EB] p-4 rounded-xl">
+                                                                                <p className="text-[#111111] font-medium text-[0.95rem] mb-2">{update.message}</p>
+                                                                                <div className="flex items-center justify-between text-[0.75rem] font-bold text-[#555555]">
+                                                                                    <span>{update.userName}</span>
+                                                                                    <span>{update.createdAt ? update.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now'}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         )}
@@ -824,39 +928,39 @@ export default function SahayCases() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-                        <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
-                            <div className="flex flex-wrap items-center gap-6">
-                                <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
-                                    <Globe size={14} /> {currentT.lang}
-                                </button>
-                                <div className="flex items-center gap-6 text-[#555555]">
-                                    <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
-                                    <a href="#youtube" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
-                                    <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-                                    <a href="#x" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg></a>
-                                </div>
-                            </div>
-                            
-                            <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
-                                <div className="flex items-center gap-6">
-                                    <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
-                                    <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
-                                    <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
-                                </div>
-                                <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
-                                
-                                <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
-                                    Built by 
-                                    <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
-                                        <img src={theme === 'light' ? '/aat2.png' : '/aat2.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
-                                    </a>
-                                </div>
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
+                <div className="flex flex-wrap items-center gap-6">
+                    <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
+                        <Globe size={14} /> {currentT.lang}
+                    </button>
+                    <div className="flex items-center gap-6 text-[#555555]">
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+                        <a href="#youtube" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg></a>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+                        <a href="#x" className="hover:text-[#111111] transition-colors outline-none"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg></a>
+                    </div>
+                </div>
+                
+                <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
+                    <div className="flex items-center gap-6">
+                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                        <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
+                    </div>
+                    <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                    
+                    <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
+                        Built by 
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
+                            <img src={theme === 'light' ? '/aat2.png' : '/aat2.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} />
+                        </a>
+                    </div>
 
-                                <button onClick={scrollToTop} className="p-2 rounded-full border border-[#E5E7EB] hover:bg-[#F7F7F7] hover:text-[#111111] transition-colors outline-none">
-                                    <ArrowUp size={16} />
-                                </button>
-                            </div>
-                        </footer>
+                    <button onClick={scrollToTop} className="p-2 rounded-full border border-[#E5E7EB] hover:bg-[#F7F7F7] hover:text-[#111111] transition-colors outline-none">
+                        <ArrowUp size={16} />
+                    </button>
+                </div>
+            </footer>
         </div>
     );
 }
