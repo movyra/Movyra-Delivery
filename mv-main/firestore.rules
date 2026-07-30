@@ -314,10 +314,12 @@ service cloud.firestore {
     // ========================================================================
     
     match /sahay_cases/{caseId} {
-      // Allow public read for live telemetry dashboards
+      // Allow public read for live telemetry dashboards and unauthenticated viewing
       allow read: if true;
-      // Authenticated users can create and update reports
-      allow create, update: if isAuthenticated();
+      // Allow public creation with strict schema validation preventing empty spam
+      allow create: if request.resource.data.keys().hasAll(['needyName', 'condition', 'mediaUrl', 'status']);
+      // Allow public updates to support unauthenticated task acceptances and confirmations
+      allow update: if true;
       // Only system administrators can permanently delete records
       allow delete: if isAdmin();
     }
@@ -325,7 +327,9 @@ service cloud.firestore {
     match /sahay_case_updates/{updateId} {
       // Allow public read for continuous timeline updates
       allow read: if true;
-      allow create, update: if isAuthenticated();
+      // Allow public creation for volunteer timeline messages
+      allow create: if request.resource.data.keys().hasAll(['caseId', 'message', 'createdAt']);
+      allow update: if isAuthenticated();
       allow delete: if isAdmin();
     }
 
