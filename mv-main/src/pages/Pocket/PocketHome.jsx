@@ -6,8 +6,8 @@ import { useCivicStore } from '../../store/useCivicStore';
 import { 
     Moon, Sun, Globe, LogOut, X, 
     FileText, Scan, FileCode, QrCode, Link as LinkIcon,
-    Mic, Clipboard, Key, Share2, Scale, Calculator, 
-    FolderOpen, ShieldAlert, Users, Bot, ArrowUp, ArrowLeft 
+    Mic, Key, Share2, Scale, Calculator, 
+    FolderOpen, ShieldAlert, Users, Bot, ArrowUp
 } from 'lucide-react';
 
 export default function PocketHome() {
@@ -57,12 +57,12 @@ export default function PocketHome() {
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 4. DICTIONARY & CONTENT
+    // 4. DICTIONARY & CONTENT (13 Languages, Simple Terms)
     const t = {
         en: {
-            lang: "English", log_out: "Log out", sign_in: "Sign In", products: "Products", careers: "Careers", sitemap: "Pocket Sitemap",
-            hero_title: "Everyday tools.", hero_title_2: "One secure place.", hero_sub: "A privacy-first digital utility platform for daily tasks.",
-            cat_1: "Phase 1: Daily Utilities", cat_2: "Phase 2: Organization", cat_3: "Phase 3: Advanced",
+            lang: "English", log_out: "Log out", sign_in: "Sign In", products: "Products", careers: "Careers", sitemap: "Sitemap",
+            hero_title: "Everyday tools.", hero_title_2: "One secure place.", hero_sub: "A private digital toolbox for your daily tasks.",
+            cat_work: "Work & Study", cat_links: "Smart Links", cat_math: "Math & Measures", cat_files: "Storage & Sharing", cat_sec: "Security Hub", cat_safe: "Family & Safety",
             t_notes: "Smart Notes", t_notes_sub: "Write, translate, and organize.",
             t_scan: "Document Scanner", t_scan_sub: "Digitize ID cards instantly.",
             t_pdf: "PDF Toolkit", t_pdf_sub: "Merge, compress, and edit.",
@@ -77,42 +77,274 @@ export default function PocketHome() {
             t_ai: "AI Helper", t_ai_sub: "Summarize and explain documents.",
             t_emg: "Emergency Card", t_emg_sub: "Medical and contact details.",
             t_fam: "Family Locker", t_emg_fam: "Shared secure storage."
+        },
+        hi: {
+            lang: "हिन्दी", log_out: "लॉग आउट", sign_in: "साइन इन", products: "उत्पाद", careers: "करियर", sitemap: "साइटमैप",
+            hero_title: "रोजमर्रा के उपकरण।", hero_title_2: "एक सुरक्षित जगह।", hero_sub: "आपके दैनिक कार्यों के लिए एक निजी डिजिटल टूलबॉक्स।",
+            cat_work: "काम और पढ़ाई", cat_links: "स्मार्ट लिंक", cat_math: "गणित और माप", cat_files: "स्टोरेज और शेयरिंग", cat_sec: "सुरक्षा हब", cat_safe: "परिवार और सुरक्षा",
+            t_notes: "स्मार्ट नोट्स", t_notes_sub: "लिखें, अनुवाद करें और व्यवस्थित करें।",
+            t_scan: "दस्तावेज़ स्कैनर", t_scan_sub: "आईडी कार्ड को तुरंत डिजिटल बनाएं।",
+            t_pdf: "पीडीएफ टूलकिट", t_pdf_sub: "मर्ज करें, छोटा करें और संपादित करें।",
+            t_qrg: "क्यूआर जेनरेटर", t_qrg_sub: "कस्टम क्यूआर कोड बनाएं।",
+            t_qrs: "क्यूआर स्कैनर", t_qrs_sub: "लिंक को सुरक्षित रूप से स्कैन करें।",
+            t_calc: "कैलकुलेटर", t_calc_sub: "मानक और कर गणना।",
+            t_unit: "इकाई कनवर्टर", t_unit_sub: "भूमि, वजन और मुद्रा बदलें।",
+            t_doc: "दस्तावेज़ आयोजक", t_doc_sub: "सुरक्षित डिजिटल लॉकर।",
+            t_voice: "वॉयस नोट्स", t_voice_sub: "ऑडियो रिकॉर्ड करें और लिखें।",
+            t_share: "फ़ाइल शेयरिंग", t_share_sub: "फ़ाइलें सुरक्षित रूप से भेजें।",
+            t_pass: "पासवर्ड मैनेजर", t_pass_sub: "पासवर्ड सुरक्षित रखें।",
+            t_ai: "एआई हेल्पर", t_ai_sub: "दस्तावेजों को समझें।",
+            t_emg: "आपातकालीन कार्ड", t_emg_sub: "चिकित्सा और संपर्क विवरण।",
+            t_fam: "फैमिली लॉकर", t_emg_fam: "साझा सुरक्षित स्टोरेज।"
+        },
+        hinglish: {
+            lang: "Hinglish", log_out: "Log out", sign_in: "Sign In", products: "Products", careers: "Careers", sitemap: "Sitemap",
+            hero_title: "Daily tools.", hero_title_2: "Ek secure jagah.", hero_sub: "Aapke daily tasks ke liye private digital toolbox.",
+            cat_work: "Work aur Study", cat_links: "Smart Links", cat_math: "Math aur Measures", cat_files: "Storage aur Share", cat_sec: "Security Hub", cat_safe: "Family aur Safety",
+            t_notes: "Smart Notes", t_notes_sub: "Likhein, translate aur organize karein.",
+            t_scan: "Document Scanner", t_scan_sub: "ID cards scan karein.",
+            t_pdf: "PDF Toolkit", t_pdf_sub: "PDF merge, compress aur edit karein.",
+            t_qrg: "QR Generator", t_qrg_sub: "Apne QR codes banayein.",
+            t_qrs: "QR Scanner", t_qrs_sub: "Safe scanning karein.",
+            t_calc: "Calculator", t_calc_sub: "Normal aur tax calculations.",
+            t_unit: "Unit Converter", t_unit_sub: "Land, weight aur currency convert karein.",
+            t_doc: "Document Organizer", t_doc_sub: "Secure digital locker.",
+            t_voice: "Voice Notes", t_voice_sub: "Audio record karein.",
+            t_share: "File Sharing", t_share_sub: "Files safely send karein.",
+            t_pass: "Password Manager", t_pass_sub: "Passwords safe rakhein.",
+            t_ai: "AI Helper", t_ai_sub: "Documents samajhne me help.",
+            t_emg: "Emergency Card", t_emg_sub: "Medical aur contact details.",
+            t_fam: "Family Locker", t_emg_fam: "Shared secure storage."
+        },
+        mr: {
+            lang: "मराठी", log_out: "लॉग आउट", sign_in: "साइन इन", products: "उत्पादने", careers: "करिअर", sitemap: "साइटमॅप",
+            hero_title: "रोजची साधने.", hero_title_2: "एक सुरक्षित जागा.", hero_sub: "तुमच्या दैनंदिन कामांसाठी खाजगी डिजिटल टूलबॉक्स.",
+            cat_work: "काम आणि अभ्यास", cat_links: "स्मार्ट लिंक्स", cat_math: "गणित आणि मोजमाप", cat_files: "स्टोरेज आणि शेअरिंग", cat_sec: "सुरक्षा", cat_safe: "कुटुंब आणि सुरक्षा",
+            t_notes: "स्मार्ट नोट्स", t_notes_sub: "लिहा, भाषांतर करा आणि व्यवस्थापित करा.",
+            t_scan: "दस्तऐवज स्कॅनर", t_scan_sub: "आयडी कार्ड त्वरित डिजिटल करा.",
+            t_pdf: "पीडीएफ टूलकिट", t_pdf_sub: "मर्ज, कॉम्प्रेस आणि संपादित करा.",
+            t_qrg: "क्यूआर जनरेटर", t_qrg_sub: "कस्टम क्यूआर कोड तयार करा.",
+            t_qrs: "क्यूआर स्कॅनर", t_qrs_sub: "लिंक सुरक्षितपणे स्कॅन करा.",
+            t_calc: "कॅल्क्युलेटर", t_calc_sub: "प्रमाणित आणि कर गणना.",
+            t_unit: "युनिट कनव्हर्टर", t_unit_sub: "जमीन, वजन आणि चलन बदला.",
+            t_doc: "दस्तऐवज व्यवस्थापक", t_doc_sub: "सुरक्षित डिजिटल लॉकर.",
+            t_voice: "व्हॉइस नोट्स", t_voice_sub: "ऑडिओ रेकॉर्ड करा.",
+            t_share: "फाईल शेअरिंग", t_share_sub: "फाईल्स सुरक्षितपणे पाठवा.",
+            t_pass: "पासवर्ड मॅनेजर", t_pass_sub: "पासवर्ड सुरक्षित ठेवा.",
+            t_ai: "एआय मदतनीस", t_ai_sub: "दस्तऐवज समजून घ्या.",
+            t_emg: "आणीबाणी कार्ड", t_emg_sub: "वैद्यकीय आणि संपर्क तपशील.",
+            t_fam: "फॅमिली लॉकर", t_emg_fam: "सामायिक सुरक्षित स्टोरेज."
+        },
+        gu: {
+            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", sign_in: "સાઇન ઇન", products: "ઉત્પાદનો", careers: "કારકિર્દી", sitemap: "સાઇટમેપ",
+            hero_title: "રોજિંદા સાધનો.", hero_title_2: "એક સુરક્ષિત જગ્યા.", hero_sub: "તમારા દૈનિક કાર્યો માટે એક ખાનગી ડિજિટલ ટૂલબોક્સ.",
+            cat_work: "કામ અને અભ્યાસ", cat_links: "સ્માર્ટ લિંક્સ", cat_math: "ગણિત અને માપ", cat_files: "સ્ટોરેજ અને શેરિંગ", cat_sec: "સુરક્ષા", cat_safe: "કુટુંબ અને સલામતી",
+            t_notes: "સ્માર્ટ નોટ્સ", t_notes_sub: "લખો, અનુવાદ કરો અને ગોઠવો.",
+            t_scan: "દસ્તાવેજ સ્કેનર", t_scan_sub: "આઈડી કાર્ડને તરત જ ડિજિટલ બનાવો.",
+            t_pdf: "પીડીએફ ટૂલકિટ", t_pdf_sub: "મર્જ કરો, સંકુચિત કરો અને સંપાદિત કરો.",
+            t_qrg: "ક્યૂઆર જનરેટર", t_qrg_sub: "કસ્ટમ ક્યૂઆર કોડ બનાવો.",
+            t_qrs: "ક્યૂઆર સ્કેનર", t_qrs_sub: "લિંક્સને સુરક્ષિત રીતે સ્કેન કરો.",
+            t_calc: "કેલ્ક્યુલેટર", t_calc_sub: "પ્રમાણભૂત અને કર ગણતરીઓ.",
+            t_unit: "યુનિટ કન્વર્ટર", t_unit_sub: "જમીન, વજન અને ચલણ બદલો.",
+            t_doc: "દસ્તાવેજ આયોજક", t_doc_sub: "સુરક્ષિત ડિજિટલ લોકર.",
+            t_voice: "વોઇસ નોટ્સ", t_voice_sub: "ઓડિયો રેકોર્ડ કરો.",
+            t_share: "ફાઇલ શેરિંગ", t_share_sub: "ફાઇલો સુરક્ષિત રીતે મોકલો.",
+            t_pass: "પાસવર્ડ મેનેજર", t_pass_sub: "પાસવર્ડ સુરક્ષિત રાખો.",
+            t_ai: "એઆઈ હેલ્પર", t_ai_sub: "દસ્તાવેજો સમજો.",
+            t_emg: "ઇમરજન્સી કાર્ડ", t_emg_sub: "તબીબી અને સંપર્ક વિગતો.",
+            t_fam: "ફેમિલી લોકર", t_emg_fam: "શેર કરેલ સુરક્ષિત સ્ટોરેજ."
+        },
+        te: {
+            lang: "తెలుగు", log_out: "లాగ్ అవుట్", sign_in: "సైన్ ఇన్", products: "ఉత్పత్తులు", careers: "కెరీర్స్", sitemap: "సైట్‌మ్యాప్",
+            hero_title: "రోజువారీ సాధనాలు.", hero_title_2: "ఒక సురక్షిత ప్రదేశం.", hero_sub: "మీ పనుల కోసం డిజిటల్ టూల్‌బాక్స్.",
+            cat_work: "పని & అధ్యయనం", cat_links: "స్మార్ట్ లింకులు", cat_math: "గణితం & కొలతలు", cat_files: "నిల్వ & భాగస్వామ్యం", cat_sec: "భద్రతా హబ్", cat_safe: "కుటుంబం & భద్రత",
+            t_notes: "స్మార్ట్ నోట్స్", t_notes_sub: "వ్రాయండి మరియు నిర్వహించండి.",
+            t_scan: "డాక్యుమెంట్ స్కానర్", t_scan_sub: "ID కార్డ్‌లను స్కాన్ చేయండి.",
+            t_pdf: "PDF టూల్‌కిట్", t_pdf_sub: "కలపండి మరియు సవరించండి.",
+            t_qrg: "QR జనరేటర్", t_qrg_sub: "QR కోడ్‌లను సృష్టించండి.",
+            t_qrs: "QR స్కానర్", t_qrs_sub: "సురక్షితంగా స్కాన్ చేయండి.",
+            t_calc: "క్యాలిక్యులేటర్", t_calc_sub: "ప్రామాణిక మరియు పన్ను గణనలు.",
+            t_unit: "యూనిట్ కన్వర్టర్", t_unit_sub: "భూమి మరియు బరువు మార్చండి.",
+            t_doc: "డాక్యుమెంట్ ఆర్గనైజర్", t_doc_sub: "సురక్షిత డిజిటల్ లాకర్.",
+            t_voice: "వాయిస్ నోట్స్", t_voice_sub: "ఆడియోను రికార్డ్ చేయండి.",
+            t_share: "ఫైల్ షేరింగ్", t_share_sub: "ఫైల్‌లను సురక్షితంగా పంపండి.",
+            t_pass: "పాస్‌వర్డ్ మేనేజర్", t_pass_sub: "పాస్‌వర్డ్‌లను సేవ్ చేయండి.",
+            t_ai: "AI సహాయకుడు", t_ai_sub: "పత్రాలను అర్థం చేసుకోండి.",
+            t_emg: "ఎమర్జెన్సీ కార్డ్", t_emg_sub: "వైద్య మరియు సంప్రదింపు వివరాలు.",
+            t_fam: "ఫ్యామిలీ లాకర్", t_emg_fam: "భాగస్వామ్య నిల్వ."
+        },
+        ta: {
+            lang: "தமிழ்", log_out: "வெளியேறு", sign_in: "உள்நுழைய", products: "தயாரிப்புகள்", careers: "தொழில்", sitemap: "தளவரைபடம்",
+            hero_title: "தினசரி கருவிகள்.", hero_title_2: "ஒரு பாதுகாப்பான இடம்.", hero_sub: "உங்கள் பணிகளுக்கான டிஜிட்டல் கருவிப்பெட்டி.",
+            cat_work: "வேலை & படிப்பு", cat_links: "ஸ்மார்ட் இணைப்புகள்", cat_math: "கணிதம் & அளவுகள்", cat_files: "சேமிப்பு & பகிர்வு", cat_sec: "பாதுகாப்பு", cat_safe: "குடும்பம் & பாதுகாப்பு",
+            t_notes: "ஸ்மார்ட் குறிப்புகள்", t_notes_sub: "எழுதுங்கள் மற்றும் ஒழுங்கமைக்கவும்.",
+            t_scan: "ஆவண ஸ்கேனர்", t_scan_sub: "அடையாள அட்டைகளை ஸ்கேன் செய்யவும்.",
+            t_pdf: "PDF கருவி", t_pdf_sub: "இணைக்கவும் மற்றும் திருத்தவும்.",
+            t_qrg: "QR ஜெனரேட்டர்", t_qrg_sub: "QR குறியீடுகளை உருவாக்கவும்.",
+            t_qrs: "QR ஸ்கேனர்", t_qrs_sub: "பாதுகாப்பாக ஸ்கேன் செய்யவும்.",
+            t_calc: "கால்குலேட்டர்", t_calc_sub: "நிலையான மற்றும் வரி கணக்கீடுகள்.",
+            t_unit: "அலகு மாற்றி", t_unit_sub: "நிலம் மற்றும் எடையை மாற்றவும்.",
+            t_doc: "ஆவண அமைப்பாளர்", t_doc_sub: "பாதுகாப்பான டிஜிட்டல் லாக்கர்.",
+            t_voice: "குரல் குறிப்புகள்", t_voice_sub: "ஆடியோவை பதிவு செய்யவும்.",
+            t_share: "கோப்பு பகிர்வு", t_share_sub: "கோப்புகளைப் பாதுகாப்பாக அனுப்பவும்.",
+            t_pass: "கடவுச்சொல் மேலாளர்", t_pass_sub: "கடவுச்சொற்களைச் சேமிக்கவும்.",
+            t_ai: "AI உதவியாளர்", t_ai_sub: "ஆவணங்களைப் புரிந்து கொள்ளுங்கள்.",
+            t_emg: "அவசர அட்டை", t_emg_sub: "மருத்துவ மற்றும் தொடர்பு விவரங்கள்.",
+            t_fam: "குடும்ப லாக்கர்", t_emg_fam: "பகிரப்பட்ட சேமிப்பு."
+        },
+        pa: {
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", sign_in: "ਸਾਈਨ ਇਨ", products: "ਉਤਪਾਦ", careers: "ਕਰੀਅਰ", sitemap: "ਸਾਈਟਮੈਪ",
+            hero_title: "ਰੋਜ਼ਾਨਾ ਟੂਲ.", hero_title_2: "ਇੱਕ ਸੁਰੱਖਿਅਤ ਜਗ੍ਹਾ.", hero_sub: "ਤੁਹਾਡੇ ਰੋਜ਼ਾਨਾ ਕੰਮਾਂ ਲਈ ਇੱਕ ਨਿੱਜੀ ਡਿਜੀਟਲ ਟੂਲਬਾਕਸ।",
+            cat_work: "ਕੰਮ ਅਤੇ ਪੜ੍ਹਾਈ", cat_links: "ਸਮਾਰਟ ਲਿੰਕ", cat_math: "ਗਣਿਤ ਅਤੇ ਮਾਪ", cat_files: "ਸਟੋਰੇਜ ਅਤੇ ਸ਼ੇਅਰਿੰਗ", cat_sec: "ਸੁਰੱਖਿਆ", cat_safe: "ਪਰਿਵਾਰ ਅਤੇ ਸੁਰੱਖਿਆ",
+            t_notes: "ਸਮਾਰਟ ਨੋਟਸ", t_notes_sub: "ਲਿਖੋ ਅਤੇ ਪ੍ਰਬੰਧਿਤ ਕਰੋ.",
+            t_scan: "ਦਸਤਾਵੇਜ਼ ਸਕੈਨਰ", t_scan_sub: "ਆਈਡੀ ਕਾਰਡ ਸਕੈਨ ਕਰੋ.",
+            t_pdf: "ਪੀਡੀਐਫ ਟੂਲਕਿੱਟ", t_pdf_sub: "ਮਿਲਾਓ ਅਤੇ ਸੰਪਾਦਿਤ ਕਰੋ.",
+            t_qrg: "ਕਿਊਆਰ ਜਨਰੇਟਰ", t_qrg_sub: "ਕਿਊਆਰ ਕੋਡ ਬਣਾਓ.",
+            t_qrs: "ਕਿਊਆਰ ਸਕੈਨਰ", t_qrs_sub: "ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਕੈਨ ਕਰੋ.",
+            t_calc: "ਕੈਲਕੁਲੇਟਰ", t_calc_sub: "ਆਮ ਅਤੇ ਟੈਕਸ ਗਣਨਾ.",
+            t_unit: "ਯੂਨਿਟ ਕਨਵਰਟਰ", t_unit_sub: "ਜ਼ਮੀਨ ਅਤੇ ਭਾਰ ਬਦਲੋ.",
+            t_doc: "ਦਸਤਾਵੇਜ਼ ਆਯੋਜਕ", t_doc_sub: "ਸੁਰੱਖਿਅਤ ਡਿਜੀਟਲ ਲਾਕਰ.",
+            t_voice: "ਵੌਇਸ ਨੋਟਸ", t_voice_sub: "ਆਡੀਓ ਰਿਕਾਰਡ ਕਰੋ.",
+            t_share: "ਫਾਈਲ ਸ਼ੇਅਰਿੰਗ", t_share_sub: "ਫਾਈਲਾਂ ਸੁਰੱਖਿਅਤ ਭੇਜੋ.",
+            t_pass: "ਪਾਸਵਰਡ ਮੈਨੇਜਰ", t_pass_sub: "ਪਾਸਵਰਡ ਸੁਰੱਖਿਅਤ ਰੱਖੋ.",
+            t_ai: "ਏਆਈ ਹੈਲਪਰ", t_ai_sub: "ਦਸਤਾਵੇਜ਼ ਸਮਝੋ.",
+            t_emg: "ਐਮਰਜੈਂਸੀ ਕਾਰਡ", t_emg_sub: "ਡਾਕਟਰੀ ਅਤੇ ਸੰਪਰਕ ਵੇਰਵੇ.",
+            t_fam: "ਫੈਮਿਲੀ ਲਾਕਰ", t_emg_fam: "ਸਾਂਝੀ ਸਟੋਰੇਜ."
+        },
+        bho: {
+            lang: "भोजपुरी", log_out: "लॉग आउट", sign_in: "साइन इन", products: "उत्पाद", careers: "करियर", sitemap: "साइटमैप",
+            hero_title: "रोज के टूल।", hero_title_2: "एक सुरक्षित जगह।", hero_sub: "रउआ दैनिक काम खातिर डिजिटल टूलबॉक्स।",
+            cat_work: "काम आ पढ़ाई", cat_links: "स्मार्ट लिंक", cat_math: "गणित आ माप", cat_files: "स्टोरेज आ शेयरिंग", cat_sec: "सुरक्षा", cat_safe: "परिवार आ सुरक्षा",
+            t_notes: "स्मार्ट नोट्स", t_notes_sub: "लिखीं आ व्यवस्थित करीं।",
+            t_scan: "दस्तावेज़ स्कैनर", t_scan_sub: "आईडी कार्ड स्कैन करीं।",
+            t_pdf: "पीडीएफ टूलकिट", t_pdf_sub: "मर्ज आ एडिट करीं।",
+            t_qrg: "क्यूआर जेनरेटर", t_qrg_sub: "क्यूआर कोड बनाईं।",
+            t_qrs: "क्यूआर स्कैनर", t_qrs_sub: "सुरक्षित स्कैनिंग।",
+            t_calc: "कैलकुलेटर", t_calc_sub: "सामान्य आ टैक्स गणना।",
+            t_unit: "इकाई कनवर्टर", t_unit_sub: "जमीन आ वजन बदलीं।",
+            t_doc: "दस्तावेज़ आयोजक", t_doc_sub: "सुरक्षित डिजिटल लॉकर।",
+            t_voice: "वॉयस नोट्स", t_voice_sub: "ऑडियो रिकॉर्ड करीं।",
+            t_share: "फ़ाइल शेयरिंग", t_share_sub: "फ़ाइल सुरक्षित भेजीं।",
+            t_pass: "पासवर्ड मैनेजर", t_pass_sub: "पासवर्ड सेव रखीं।",
+            t_ai: "एआई हेल्पर", t_ai_sub: "दस्तावेज़ समझीं।",
+            t_emg: "आपातकालीन कार्ड", t_emg_sub: "मेडिकल आ संपर्क।",
+            t_fam: "फैमिली लॉकर", t_emg_fam: "साझा स्टोरेज।"
+        },
+        ar: {
+            lang: "العربية", log_out: "تسجيل خروج", sign_in: "تسجيل الدخول", products: "منتجات", careers: "وظائف", sitemap: "خريطة الموقع",
+            hero_title: "أدوات يومية.", hero_title_2: "مكان واحد آمن.", hero_sub: "صندوق أدوات رقمي خاص لمهامك اليومية.",
+            cat_work: "العمل والدراسة", cat_links: "روابط ذكية", cat_math: "الرياضيات والقياسات", cat_files: "التخزين والمشاركة", cat_sec: "الأمان", cat_safe: "العائلة والسلامة",
+            t_notes: "ملاحظات ذكية", t_notes_sub: "الكتابة والتنظيم.",
+            t_scan: "ماسح المستندات", t_scan_sub: "مسح بطاقات الهوية.",
+            t_pdf: "أدوات PDF", t_pdf_sub: "الدمج والتعديل.",
+            t_qrg: "صانع QR", t_qrg_sub: "إنشاء رموز QR.",
+            t_qrs: "ماسح QR", t_qrs_sub: "المسح بأمان.",
+            t_calc: "آلة حاسبة", t_calc_sub: "الحسابات القياسية.",
+            t_unit: "محول الوحدات", t_unit_sub: "تحويل الأوزان والعملات.",
+            t_doc: "منظم المستندات", t_doc_sub: "خزانة رقمية آمنة.",
+            t_voice: "ملاحظات صوتية", t_voice_sub: "تسجيل الصوت.",
+            t_share: "مشاركة الملفات", t_share_sub: "إرسال الملفات بأمان.",
+            t_pass: "مدير كلمات المرور", t_pass_sub: "حفظ كلمات المرور.",
+            t_ai: "مساعد ذكي", t_ai_sub: "فهم المستندات.",
+            t_emg: "بطاقة الطوارئ", t_emg_sub: "التفاصيل الطبية.",
+            t_fam: "خزانة العائلة", t_emg_fam: "تخزين مشترك آمن."
+        },
+        es: {
+            lang: "Español", log_out: "Cerrar sesión", sign_in: "Iniciar sesión", products: "Productos", careers: "Carreras", sitemap: "Mapa del sitio",
+            hero_title: "Herramientas diarias.", hero_title_2: "Un lugar seguro.", hero_sub: "Una caja de herramientas digital privada.",
+            cat_work: "Trabajo y Estudio", cat_links: "Enlaces", cat_math: "Matemáticas y Medidas", cat_files: "Archivos", cat_sec: "Seguridad", cat_safe: "Familia y Seguridad",
+            t_notes: "Notas", t_notes_sub: "Escribir y organizar.",
+            t_scan: "Escáner", t_scan_sub: "Escanear documentos.",
+            t_pdf: "Herramientas PDF", t_pdf_sub: "Combinar y editar.",
+            t_qrg: "Crear QR", t_qrg_sub: "Generar códigos QR.",
+            t_qrs: "Escanear QR", t_qrs_sub: "Escanear de forma segura.",
+            t_calc: "Calculadora", t_calc_sub: "Cálculos estándar.",
+            t_unit: "Convertidor", t_unit_sub: "Convertir unidades.",
+            t_doc: "Documentos", t_doc_sub: "Armario digital seguro.",
+            t_voice: "Notas de voz", t_voice_sub: "Grabar audio.",
+            t_share: "Compartir", t_share_sub: "Enviar archivos.",
+            t_pass: "Contraseñas", t_pass_sub: "Guardar contraseñas.",
+            t_ai: "Asistente AI", t_ai_sub: "Entender documentos.",
+            t_emg: "Tarjeta de emergencia", t_emg_sub: "Detalles médicos.",
+            t_fam: "Armario familiar", t_emg_fam: "Almacenamiento compartido."
+        },
+        fr: {
+            lang: "Français", log_out: "Déconnexion", sign_in: "Se connecter", products: "Produits", careers: "Carrières", sitemap: "Plan du site",
+            hero_title: "Outils quotidiens.", hero_title_2: "Un endroit sûr.", hero_sub: "Une boîte à outils numérique privée.",
+            cat_work: "Travail et Études", cat_links: "Liens", cat_math: "Mathématiques", cat_files: "Fichiers", cat_sec: "Sécurité", cat_safe: "Famille et Sécurité",
+            t_notes: "Notes", t_notes_sub: "Écrire et organiser.",
+            t_scan: "Scanner", t_scan_sub: "Numériser des documents.",
+            t_pdf: "Outils PDF", t_pdf_sub: "Fusionner et modifier.",
+            t_qrg: "Créer QR", t_qrg_sub: "Générer des codes QR.",
+            t_qrs: "Scanner QR", t_qrs_sub: "Scanner en toute sécurité.",
+            t_calc: "Calculatrice", t_calc_sub: "Calculs standards.",
+            t_unit: "Convertisseur", t_unit_sub: "Convertir des unités.",
+            t_doc: "Documents", t_doc_sub: "Casier numérique sûr.",
+            t_voice: "Notes vocales", t_voice_sub: "Enregistrer l'audio.",
+            t_share: "Partager", t_share_sub: "Envoyer des fichiers.",
+            t_pass: "Mots de passe", t_pass_sub: "Enregistrer les mots de passe.",
+            t_ai: "Assistant IA", t_ai_sub: "Comprendre les documents.",
+            t_emg: "Carte d'urgence", t_emg_sub: "Détails médicaux.",
+            t_fam: "Casier familial", t_emg_fam: "Stockage partagé."
+        },
+        de: {
+            lang: "Deutsch", log_out: "Abmelden", sign_in: "Anmelden", products: "Produkte", careers: "Karriere", sitemap: "Seitenübersicht",
+            hero_title: "Tägliche Werkzeuge.", hero_title_2: "Ein sicherer Ort.", hero_sub: "Ein privater digitaler Werkzeugkasten.",
+            cat_work: "Arbeit & Studium", cat_links: "Links", cat_math: "Mathematik", cat_files: "Dateien", cat_sec: "Sicherheit", cat_safe: "Familie & Sicherheit",
+            t_notes: "Notizen", t_notes_sub: "Schreiben und organisieren.",
+            t_scan: "Scanner", t_scan_sub: "Dokumente scannen.",
+            t_pdf: "PDF-Werkzeuge", t_pdf_sub: "Zusammenführen und bearbeiten.",
+            t_qrg: "QR erstellen", t_qrg_sub: "QR-Codes generieren.",
+            t_qrs: "QR scannen", t_qrs_sub: "Sicher scannen.",
+            t_calc: "Taschenrechner", t_calc_sub: "Standardberechnungen.",
+            t_unit: "Konverter", t_unit_sub: "Einheiten umrechnen.",
+            t_doc: "Dokumente", t_doc_sub: "Sicheres digitales Schließfach.",
+            t_voice: "Sprachnotizen", t_voice_sub: "Audio aufnehmen.",
+            t_share: "Teilen", t_share_sub: "Dateien senden.",
+            t_pass: "Passwörter", t_pass_sub: "Passwörter speichern.",
+            t_ai: "KI-Helfer", t_ai_sub: "Dokumente verstehen.",
+            t_emg: "Notfallkarte", t_emg_sub: "Medizinische Details.",
+            t_fam: "Familienschließfach", t_emg_fam: "Geteilter Speicher."
         }
     };
 
-    const currentT = t['en']; // Hardcoded to English for structural generation, language array maps to this.
+    const currentT = t[lang] || t['en'];
     const languageOptions = [
         { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
         { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
-        { code: 'ta', label: 'தமிழ்' }
+        { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+        { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+        { code: 'de', label: 'Deutsch' }
     ];
 
     const pocketTools = [
-        { id: 'notes', name: currentT.t_notes, desc: currentT.t_notes_sub, icon: FileText, path: '/pocket/notes', phase: 1 },
-        { id: 'scanner', name: currentT.t_scan, desc: currentT.t_scan_sub, icon: Scan, path: '/pocket/scanner', phase: 1 },
-        { id: 'pdf', name: currentT.t_pdf, desc: currentT.t_pdf_sub, icon: FileCode, path: '/pocket/pdf', phase: 1 },
-        { id: 'qr-gen', name: currentT.t_qrg, desc: currentT.t_qrg_sub, icon: QrCode, path: '/pocket/qr-generate', phase: 1 },
-        { id: 'qr-scan', name: currentT.t_qrs, desc: currentT.t_qrs_sub, icon: LinkIcon, path: '/pocket/qr-scan', phase: 1 },
-        { id: 'calc', name: currentT.t_calc, desc: currentT.t_calc_sub, icon: Calculator, path: '/pocket/calculator', phase: 1 },
-        { id: 'unit', name: currentT.t_unit, desc: currentT.t_unit_sub, icon: Scale, path: '/pocket/converter', phase: 1 },
+        { id: 'notes', name: currentT.t_notes, desc: currentT.t_notes_sub, icon: FileText, path: '/pocket/notes', category: 'work' },
+        { id: 'scanner', name: currentT.t_scan, desc: currentT.t_scan_sub, icon: Scan, path: '/pocket/scanner', category: 'work' },
+        { id: 'pdf', name: currentT.t_pdf, desc: currentT.t_pdf_sub, icon: FileCode, path: '/pocket/pdf', category: 'work' },
         
-        { id: 'docs', name: currentT.t_doc, desc: currentT.t_doc_sub, icon: FolderOpen, path: '/pocket/documents', phase: 2 },
-        { id: 'voice', name: currentT.t_voice, desc: currentT.t_voice_sub, icon: Mic, path: '/pocket/voice', phase: 2 },
-        { id: 'share', name: currentT.t_share, desc: currentT.t_share_sub, icon: Share2, path: '/pocket/share', phase: 2 },
+        { id: 'qr-gen', name: currentT.t_qrg, desc: currentT.t_qrg_sub, icon: QrCode, path: '/pocket/qr-generate', category: 'links' },
+        { id: 'qr-scan', name: currentT.t_qrs, desc: currentT.t_qrs_sub, icon: LinkIcon, path: '/pocket/qr-scan', category: 'links' },
         
-        { id: 'pass', name: currentT.t_pass, desc: currentT.t_pass_sub, icon: Key, path: '/pocket/passwords', phase: 3 },
-        { id: 'ai', name: currentT.t_ai, desc: currentT.t_ai_sub, icon: Bot, path: '/pocket/ai', phase: 3 },
-        { id: 'emerg', name: currentT.t_emg, desc: currentT.t_emg_sub, icon: ShieldAlert, path: '/pocket/emergency', phase: 3 },
-        { id: 'family', name: currentT.t_fam, desc: currentT.t_emg_fam, icon: Users, path: '/pocket/family', phase: 3 },
+        { id: 'calc', name: currentT.t_calc, desc: currentT.t_calc_sub, icon: Calculator, path: '/pocket/calculator', category: 'math' },
+        { id: 'unit', name: currentT.t_unit, desc: currentT.t_unit_sub, icon: Scale, path: '/pocket/converter', category: 'math' },
+        
+        { id: 'docs', name: currentT.t_doc, desc: currentT.t_doc_sub, icon: FolderOpen, path: '/pocket/documents', category: 'files' },
+        { id: 'voice', name: currentT.t_voice, desc: currentT.t_voice_sub, icon: Mic, path: '/pocket/voice', category: 'files' },
+        { id: 'share', name: currentT.t_share, desc: currentT.t_share_sub, icon: Share2, path: '/pocket/share', category: 'files' },
+        
+        { id: 'pass', name: currentT.t_pass, desc: currentT.t_pass_sub, icon: Key, path: '/pocket/passwords', category: 'security' },
+        { id: 'ai', name: currentT.t_ai, desc: currentT.t_ai_sub, icon: Bot, path: '/pocket/ai', category: 'security' },
+        
+        { id: 'emerg', name: currentT.t_emg, desc: currentT.t_emg_sub, icon: ShieldAlert, path: '/pocket/emergency', category: 'safety' },
+        { id: 'family', name: currentT.t_fam, desc: currentT.t_emg_fam, icon: Users, path: '/pocket/family', category: 'safety' },
     ];
 
-    // Theme mapping
-    const isLight = theme === 'light';
-    const bgClass = isLight ? 'bg-[#FFFFFF]' : 'bg-[#0a0a0a]';
-    const textClass = isLight ? 'text-[#111111]' : 'text-[#FFFFFF]';
-    const borderClass = isLight ? 'border-[#E5E7EB]' : 'border-[#333333]';
-    const cardBgClass = isLight ? 'bg-[#F7F7F7]' : 'bg-[#111111]';
-    const mutedTextClass = isLight ? 'text-[#555555]' : 'text-[#888888]';
+    // Responsive UI Classes based on live theme state
+    const bgClass = theme === 'light' ? 'bg-[#FFFFFF]' : 'bg-[#0a0a0a]';
+    const textClass = theme === 'light' ? 'text-[#111111]' : 'text-[#FFFFFF]';
+    const borderClass = theme === 'light' ? 'border-[#E5E7EB]' : 'border-[#333333]';
+    const cardBgClass = theme === 'light' ? 'bg-[#F7F7F7]' : 'bg-[#111111]';
+    const mutedTextClass = theme === 'light' ? 'text-[#555555]' : 'text-[#888888]';
 
     return (
         <div className={`min-h-screen font-sans overflow-x-hidden flex flex-col relative transition-colors duration-300 ${bgClass} ${textClass} selection:bg-[#6C5CE7] selection:text-white`}>
@@ -129,19 +361,19 @@ export default function PocketHome() {
             <header className={`w-full flex items-center justify-between px-6 md:px-12 py-6 animate-fade z-50 border-b ${borderClass} backdrop-blur-md sticky top-0 bg-transparent`}>
                 <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/pocket')}>
                     <img 
-                        src={isLight ? '/logo-5.png' : '/logo.png'} 
+                        src={theme === 'light' ? '/logo-5.png' : '/logo.png'} 
                         alt="Movyra" 
                         className="h-8 w-auto" 
                         onError={(e) => e.target.style.display = 'none'} 
                     />
                     <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">
-                        ovyra <span className={`${isLight ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Pocket</span>
+                        ovyra <span className={`${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'} font-medium text-[1.2rem] ml-1`}>Pocket</span>
                     </span>
                 </div>
                 
                 <div className="flex items-center gap-3 md:gap-6 font-bold text-[0.9rem]">
                     <button onClick={toggleTheme} className={`p-2 rounded-full border ${borderClass} hover:border-[#6C5CE7] hover:text-[#6C5CE7] transition-colors outline-none`}>
-                        {isLight ? <Moon size={16} /> : <Sun size={16} />}
+                        {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
                     </button>
                     
                     <button onClick={() => setShowLangPrompt(true)} className={`p-2 rounded-full border ${borderClass} hover:border-[#6C5CE7] hover:text-[#6C5CE7] transition-colors outline-none flex items-center gap-2`}>
@@ -194,14 +426,14 @@ export default function PocketHome() {
                             <div className="flex flex-col gap-4">
                                 <Link to="/civic" className={`group flex flex-col items-center gap-4 ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#00A9F7] transition-colors text-center w-full outline-none`}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <img src={isLight ? '/logo-3.png' : '/logo.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                                        <img src={theme === 'light' ? '/logo-3.png' : '/logo.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
                                         <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px]">ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">Civic</span></span>
                                     </div>
                                     <p className={`${mutedTextClass} text-[0.85rem] leading-relaxed group-hover:${textClass} transition-colors`}>Smart city management. Report issues easily.</p>
                                 </Link>
                                 <Link to="/sahay" className={`group flex flex-col items-center gap-4 ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#FF6B35] transition-colors text-center w-full outline-none`}>
                                     <div className="flex items-center gap-2 mb-2">
-                                        <img src={isLight ? '/logo-4.png' : '/logo.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                                        <img src={theme === 'light' ? '/logo-4.png' : '/logo.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
                                         <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px]">ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">Sahay</span></span>
                                     </div>
                                     <p className={`${mutedTextClass} text-[0.85rem] leading-relaxed group-hover:${textClass} transition-colors`}>Humanitarian rescue operations and support.</p>
@@ -242,27 +474,11 @@ export default function PocketHome() {
                     </p>
                 </div>
 
-                {/* PHASE 1 GRID */}
+                {/* Section 1: Work & Study */}
                 <div className="mb-16">
-                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_1}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {pocketTools.filter(t => t.phase === 1).map(tool => (
-                            <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
-                                <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
-                                    <tool.icon size={24} className="text-[#6C5CE7]" />
-                                </div>
-                                <h4 className="font-black text-[1.1rem] mb-2 group-hover:text-[#6C5CE7] transition-colors">{tool.name}</h4>
-                                <p className={`text-[0.85rem] ${mutedTextClass} font-medium`}>{tool.desc}</p>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-
-                {/* PHASE 2 GRID */}
-                <div className="mb-16">
-                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_2}</h3>
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_work}</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {pocketTools.filter(t => t.phase === 2).map(tool => (
+                        {pocketTools.filter(t => t.category === 'work').map(tool => (
                             <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
                                 <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
                                     <tool.icon size={24} className="text-[#6C5CE7]" />
@@ -274,11 +490,75 @@ export default function PocketHome() {
                     </div>
                 </div>
 
-                {/* PHASE 3 GRID */}
+                {/* Section 2: Smart Links */}
+                <div className="mb-16">
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_links}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {pocketTools.filter(t => t.category === 'links').map(tool => (
+                            <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
+                                <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
+                                    <tool.icon size={24} className="text-[#6C5CE7]" />
+                                </div>
+                                <h4 className="font-black text-[1.1rem] mb-2 group-hover:text-[#6C5CE7] transition-colors">{tool.name}</h4>
+                                <p className={`text-[0.85rem] ${mutedTextClass} font-medium`}>{tool.desc}</p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Section 3: Math & Measures */}
+                <div className="mb-16">
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_math}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {pocketTools.filter(t => t.category === 'math').map(tool => (
+                            <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
+                                <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
+                                    <tool.icon size={24} className="text-[#6C5CE7]" />
+                                </div>
+                                <h4 className="font-black text-[1.1rem] mb-2 group-hover:text-[#6C5CE7] transition-colors">{tool.name}</h4>
+                                <p className={`text-[0.85rem] ${mutedTextClass} font-medium`}>{tool.desc}</p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Section 4: Storage & Sharing */}
+                <div className="mb-16">
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_files}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {pocketTools.filter(t => t.category === 'files').map(tool => (
+                            <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
+                                <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
+                                    <tool.icon size={24} className="text-[#6C5CE7]" />
+                                </div>
+                                <h4 className="font-black text-[1.1rem] mb-2 group-hover:text-[#6C5CE7] transition-colors">{tool.name}</h4>
+                                <p className={`text-[0.85rem] ${mutedTextClass} font-medium`}>{tool.desc}</p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Section 5: Security Hub */}
+                <div className="mb-16">
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_sec}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {pocketTools.filter(t => t.category === 'security').map(tool => (
+                            <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
+                                <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
+                                    <tool.icon size={24} className="text-[#6C5CE7]" />
+                                </div>
+                                <h4 className="font-black text-[1.1rem] mb-2 group-hover:text-[#6C5CE7] transition-colors">{tool.name}</h4>
+                                <p className={`text-[0.85rem] ${mutedTextClass} font-medium`}>{tool.desc}</p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Section 6: Family & Safety */}
                 <div>
-                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_3}</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {pocketTools.filter(t => t.phase === 3).map(tool => (
+                    <h3 className={`text-[0.85rem] uppercase tracking-widest font-black ${mutedTextClass} mb-6 border-b ${borderClass} pb-4`}>{currentT.cat_safe}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {pocketTools.filter(t => t.category === 'safety').map(tool => (
                             <Link key={tool.id} to={tool.path} className={`group ${cardBgClass} border ${borderClass} p-6 rounded-2xl hover:border-[#6C5CE7] transition-all duration-300 hover:-translate-y-1 outline-none flex flex-col`}>
                                 <div className="w-12 h-12 bg-[#6C5CE7]/10 rounded-xl flex items-center justify-center mb-6">
                                     <tool.icon size={24} className="text-[#6C5CE7]" />
@@ -313,7 +593,7 @@ export default function PocketHome() {
                     <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
                         Built by 
                         <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
-                            <img src={isLight ? '/aat2.png' : '/aat.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', `<span class="underline ${textClass}">AnyAstro</span>`); }} />
+                            <img src={theme === 'light' ? '/aat2.png' : '/aat.png'} alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', `<span class="underline ${textClass}">AnyAstro</span>`); }} />
                         </a>
                     </div>
 
