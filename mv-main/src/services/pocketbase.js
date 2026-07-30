@@ -66,3 +66,28 @@ export const uploadVolunteerVerification = async (caseId, volunteerName, volunte
         throw error;
     }
 };
+
+export const uploadUserProfilePicture = async (userId, avatarFile) => {
+    try {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        formData.append('avatar', avatarFile);
+
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/user_avatars/records`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const exactMessage = errorData.message || 'Avatar upload communication failed.';
+            throw new Error(`PocketBase Rejected: ${exactMessage}`);
+        }
+
+        const record = await response.json();
+        return `${POCKETBASE_URL}/api/files/${record.collectionId}/${record.id}/${record.avatar}`;
+    } catch (error) {
+        console.error('PocketBase Avatar Upload Error:', error);
+        throw error;
+    }
+};
