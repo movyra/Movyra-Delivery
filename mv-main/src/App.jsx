@@ -118,6 +118,10 @@ import SahayContact from './pages/Sahay/SahayContact';
 import SahayAdmin from './pages/Sahay/SahayAdmin';
 import SahayAuth from './pages/Sahay/SahayAuth';
 
+// --- MOVYRA POCKET MODULE IMPORTS ---
+import PocketHome from './pages/Pocket/PocketHome';
+import PocketAuth from './pages/Pocket/PocketAuth';
+
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
 // ============================================================================
@@ -362,6 +366,24 @@ export default function App() {
                 <Route path='/sahay/contact' element={<AnimatedRoute><SahayContact /></AnimatedRoute>} />
                 <Route path='/sahay/admin' element={<AnimatedRoute><SahayAdmin /></AnimatedRoute>} />
                 <Route path='/sahay/auth' element={<AnimatedRoute><SahayAuth /></AnimatedRoute>} />
+
+                {/* MOVYRA POCKET MODULE */}
+                <Route path='/pocket' element={<AnimatedRoute><PocketHome /></AnimatedRoute>} />
+                <Route path='/pocket/auth' element={<AnimatedRoute><PocketAuth /></AnimatedRoute>} />
+                <Route path='/pocket/notes' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/scanner' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/pdf' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/qr-generate' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/qr-scan' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/calculator' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/converter' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/documents' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/voice' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/share' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/passwords' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/ai' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/emergency' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
+                <Route path='/pocket/family' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
 
                 <Route path='*' element={<AnimatedRoute><ComingSoon /></AnimatedRoute>} />
               </>
