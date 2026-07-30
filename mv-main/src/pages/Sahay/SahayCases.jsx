@@ -11,7 +11,6 @@ import {
     Search, 
     Filter,
     ArrowLeft, 
-    LogOut,
     X,
     Globe,
     ArrowUp,
@@ -26,7 +25,8 @@ import {
     Users,
     MessageSquare,
     Camera,
-    Trash2
+    Trash2,
+    User
 } from 'lucide-react';
 
 export default function SahayCases() {
@@ -175,16 +175,6 @@ export default function SahayCases() {
     }, [searchQuery, activeCategory, activeTab, cases]);
 
     // 4. FUNCTIONAL LOGIC
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth);
-            terminateSession();
-            navigate('/sahay');
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
-
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const toggleTimeline = (id, status) => {
@@ -416,14 +406,12 @@ export default function SahayCases() {
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
                     {currentUser ? (
-                        <>
-                            <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
-                                {currentT.log_out}
-                            </button>
-                            <button onClick={handleSignOut} className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none block sm:hidden">
-                                <LogOut size={16} />
-                            </button>
-                        </>
+                        <button 
+                            onClick={() => navigate('/sahay/profile')} 
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                        >
+                            <User size={18} />
+                        </button>
                     ) : (
                         <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-4 py-2 rounded-full font-bold hover:bg-[#555555] transition-colors outline-none">
                             Sign In
@@ -725,6 +713,7 @@ export default function SahayCases() {
                                                 <span className="flex items-center gap-1"><Clock size={14} /> {dateString}</span>
                                             </div>
 
+                                            {/* Show Assigned User info if applicable */}
                                             {isAssigned && caseItem.assignedToName && (
                                                 <div className="flex items-center gap-2 mt-4 text-[0.85rem] font-bold text-[#16A34A] bg-[#16A34A]/10 px-3 py-1.5 rounded-lg border border-[#16A34A] inline-flex">
                                                     <Users size={14} /> {currentT.lbl_assigned}: {caseItem.assignedToName}
@@ -737,6 +726,7 @@ export default function SahayCases() {
                                                 {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                             </div>
 
+                                            {/* Task Acceptance & Community Confirmation Logic */}
                                             <div className="flex flex-col items-end gap-3 w-full md:w-auto mt-4 md:mt-0">
                                                 {/* Admin Deletion Action */}
                                                 {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
@@ -796,6 +786,7 @@ export default function SahayCases() {
                                         </div>
                                     </div>
 
+                                    {/* Expandable Timeline & Public Updates Drawer */}
                                     <AnimatePresence>
                                         {isExpanded && (
                                             <motion.div 
@@ -806,7 +797,7 @@ export default function SahayCases() {
                                             >
                                                 <div className="p-6 md:p-8">
                                                     
-                                                    {/* PUBLIC DETAILS & MEDIA DISPLAY (NEW) */}
+                                                    {/* PUBLIC DETAILS & MEDIA DISPLAY */}
                                                     <div className="mb-10 bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
                                                         <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
                                                             <AlertTriangle size={18} className="text-[#FF6B35]" /> Full Report Details
@@ -890,7 +881,7 @@ export default function SahayCases() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Public Updates Feed */}
+                                                        {/* Public Updates Feed (For Accepted Tasks) */}
                                                         {isAssigned && (
                                                             <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-2xl p-6 shadow-sm">
                                                                 <h4 className="text-[1.1rem] font-black text-[#111111] mb-6 flex items-center gap-2">
