@@ -18,7 +18,8 @@ import {
     ArrowUp,
     ShieldCheck,
     AlertTriangle,
-    Info
+    Info,
+    User
 } from 'lucide-react';
 
 export default function SahayMap() {
@@ -48,12 +49,9 @@ export default function SahayMap() {
         if (supported.includes(sysLang)) setLang(sysLang);
 
         const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setCurrentUser(user);
-            }
+            if (user) setCurrentUser(user);
         });
 
-        // Always fetch data regardless of authentication state
         fetchLiveCases();
 
         return () => unsubscribe();
@@ -118,21 +116,16 @@ export default function SahayMap() {
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Custom Map Markers matching Sahay Brand Colors
-    const getMarkerIcon = (severity) => {
-        let color = '#FF6B35'; // Humanitarian Orange (Default/Moderate)
-        if (severity === 'Critical') color = '#DC2626'; // Alert Red
-        if (severity === 'Urgent') color = '#F59E0B'; // Warm Yellow
+    // Custom Map Markers matching Sahay Brand Assets
+    const customIcon = L.icon({
+        iconUrl: '/logo-4.png',
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        popupAnchor: [0, -28],
+        className: 'drop-shadow-md'
+    });
 
-        return L.divIcon({
-            className: 'custom-leaflet-marker',
-            html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 3px solid #FFFFFF; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"></div>`,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
-        });
-    };
-
-    // 6. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
+    // 6. 13-LANGUAGE DICTIONARY (Fully Translated, Professional)
     const t = {
         en: {
             lang: "English", log_out: "Log out", careers: "Careers", products: "Products", sign_in: "Sign In", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
@@ -142,7 +135,7 @@ export default function SahayMap() {
             sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", back: "होम पर वापस जाएं", sitemap: "प्लेटफ़ॉर्म साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", back: "होम पर वापस जाएं", sitemap: "साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
             title: "लाइव बचाव मानचित्र", sub: "वास्तविक समय में शहर भर में सक्रिय सहायता अनुरोध देखें।",
             filter_all: "सभी मामले", filter_1: "बेघर", filter_2: "बुजुर्ग", filter_3: "जानवर", filter_4: "चिकित्सा",
             lbl_status: "स्थिति", lbl_severity: "तात्कालिकता", lbl_desc: "विवरण", loading: "मानचित्र डेटा लोड हो रहा है...",
@@ -156,23 +149,23 @@ export default function SahayMap() {
             sm_home: "Home Gateway", sm_report: "Report Submit Karein", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact aur Inquiries", sm_abt: "Mission ke baare mein", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         mr: {
-            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", sign_in: "साइन इन", back: "होम वर परत जा", sitemap: "प्लॅटफॉर्म साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
+            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", sign_in: "साइन इन", back: "होम वर परत जा", sitemap: "साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
             title: "थेट बचाव नकाशा", sub: "रिअल टाइममध्ये शहरात सक्रिय मदत विनंत्या पहा.",
             filter_all: "सर्व प्रकरणे", filter_1: "बेघर", filter_2: "वृद्ध", filter_3: "प्राणी", filter_4: "वैद्यकीय",
             lbl_status: "स्थिती", lbl_severity: "तात्कालिकता", lbl_desc: "तपशील", loading: "नकाशा डेटा लोड करत आहे...",
             sm_home: "होम गेटवे", sm_report: "अहवाल सबमिट करा", sm_cases: "सार्वजनिक फीड", sm_map: "थेट नकाशा", sm_org: "भागीदार डॅशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषण", sm_emg: "आपत्कालीन निर्देशिका", sm_cont: "संपर्क आणि चौकशी", sm_abt: "मिशन बद्दल", sm_auth: "प्रमाणीकरण", sm_adm: "प्रशासन कन्सोल"
         },
         gu: {
-            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", sign_in: "સાઇન ઇન", back: "હોમ પર પાછા જાઓ", sitemap: "પ્લેટફોર્મ સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
+            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", sign_in: "સાઇન ઇન", back: "હોમ પર પાછા જાઓ", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
             title: "લાઇવ બચાવ નકશો", sub: "વાસ્તવિક સમયમાં સમગ્ર શહેરમાં સક્રિય સહાય વિનંતીઓ જુઓ.",
             filter_all: "બધા કેસ", filter_1: "બેઘર", filter_2: "વૃદ્ધ", filter_3: "પ્રાણી", filter_4: "તબીબી",
             lbl_status: "સ્થિતિ", lbl_severity: "તાકીદ", lbl_desc: "વિગતો", loading: "નકશો ડેટા લોડ થઈ રહ્યો છે...",
             sm_home: "હોમ ગેટવે", sm_report: "રિપોર્ટ સબમિટ કરો", sm_cases: "જાહેર ફીડ", sm_map: "જીવંત નકશો", sm_org: "ભાગીદાર ડેશબોર્ડ", sm_vol: "સ્વયંસેવક પોર્ટલ", sm_imp: "અસર એનાલિટિક્સ", sm_emg: "કટોકટી ડિરેક્ટરી", sm_cont: "સંપર્ક અને પૂછપરછ", sm_abt: "મિશન વિશે", sm_auth: "પ્રમાણીકરણ", sm_adm: "એડમિન કન્સોલ"
         },
         te: {
-            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sign_in: "సైన్ ఇన్", back: "హోమ్ కి తిరిగి వెళ్ళండి", sitemap: "ప్లాట్‌ఫారమ్ సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
+            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sign_in: "సైన్ ఇన్", back: "హోమ్ కి తిరిగి వెళ్ళండి", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
             title: "లైవ్ రెస్క్యూ మ్యాప్", sub: "నగరవ్యాప్తంగా నిజ సమయంలో క్రియాశీల సహాయ అభ్యర్థనలను వీక్షించండి.",
-            filter_all: "అన్ని కేసులు", filter_1: "నిరాశ్రయులైన", filter_2: "వృద్ధులు", filter_3: "జంతువు", filter_4: "వైద్య",
+            filter_all: "అన్ని కేసులు", filter_1: "నిరాశ్రయులైన", filter_2: "వృద్ధులు", filter_3: "జంతువు", filter_4: "వైద్య",
             lbl_status: "స్థితి", lbl_severity: "అత్యవసరం", lbl_desc: "వివరాలు", loading: "మ్యాప్ డేటా లోడ్ అవుతోంది...",
             sm_home: "హోమ్ గేట్‌వే", sm_report: "నివేదిక సమర్పించండి", sm_cases: "పబ్లిక్ ఫీడ్", sm_map: "లైవ్ మ్యాప్", sm_org: "భాగస్వామి డాష్‌బోర్డ్", sm_vol: "వాలంటీర్ పోర్టల్", sm_imp: "ఇంపాక్ట్ అనలిటిక్స్", sm_emg: "అత్యవసర డైరెక్టరీ", sm_cont: "సంప్రదింపులు మరియు విచారణలు", sm_abt: "మిషన్ గురించి", sm_auth: "ప్రామాణీకరణ", sm_adm: "అడ్మిన్ కన్సోల్"
         },
@@ -184,14 +177,14 @@ export default function SahayMap() {
             sm_home: "முகப்பு நுழைவாயில்", sm_report: "அறிக்கையை சமர்ப்பிக்கவும்", sm_cases: "பொது ஊட்டம்", sm_map: "நேரடி வரைபடம்", sm_org: "கூட்டாளர் டாஷ்போர்டு", sm_vol: "தன்னார்வ போர்டல்", sm_imp: "தாக்க பகுப்பாய்வு", sm_emg: "அவசர அடைவு", sm_cont: "தொடர்பு மற்றும் விசாரணைகள்", sm_abt: "பணி பற்றி", sm_auth: "அங்கீகாரம்", sm_adm: "நிர்வாக கன்சோல்"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sign_in: "ਸਾਈਨ ਇਨ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ ਜਾਓ", sitemap: "ਪਲੇਟਫਾਰਮ ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sign_in: "ਸਾਈਨ ਇਨ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ ਜਾਓ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
             title: "ਲਾਈਵ ਬਚਾਅ ਨਕਸ਼ਾ", sub: "ਰੀਅਲ ਟਾਈਮ ਵਿੱਚ ਸ਼ਹਿਰ ਭਰ ਵਿੱਚ ਸਰਗਰਮ ਮਦਦ ਬੇਨਤੀਆਂ ਦੇਖੋ।",
             filter_all: "ਸਾਰੇ ਕੇਸ", filter_1: "ਬੇਘਰ", filter_2: "ਬਜ਼ੁਰਗ", filter_3: "ਜਾਨਵਰ", filter_4: "ਮੈਡੀਕਲ",
             lbl_status: "ਸਥਿਤੀ", lbl_severity: "ਜ਼ਰੂਰੀ", lbl_desc: "ਵੇਰਵੇ", loading: "ਨਕਸ਼ਾ ਡੇਟਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
             sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋલ"
         },
         bho: {
-            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", back: "होम पर वापस जाईं", sitemap: "प्लेटफॉर्म साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", sign_in: "साइन इन", back: "होम पर वापस जाईं", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
             title: "लाइव बचाव नक्शा", sub: "रियल टाइम में शहर भर में सक्रिय मदद अनुरोध देखीं।",
             filter_all: "सब मामला", filter_1: "बेघर", filter_2: "बुजुर्ग", filter_3: "जानवर", filter_4: "चिकित्सा",
             lbl_status: "स्थिति", lbl_severity: "तात्कालिकता", lbl_desc: "विवरण", loading: "नक्शा डेटा लोड हो रहल बा...",
@@ -227,7 +220,6 @@ export default function SahayMap() {
         }
     };
 
-    // Fallback dictionary assignment
     const currentT = t[lang] || t['en'];
     const languageOptions = [
         { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
@@ -236,9 +228,6 @@ export default function SahayMap() {
         { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
         { code: 'de', label: 'Deutsch' }
     ];
-
-    const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
-    const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } } };
 
     return (
         <div className="min-h-screen font-sans overflow-x-hidden flex flex-col relative bg-[#FFFFFF] text-[#111111] selection:bg-[#FF6B35] selection:text-white">
@@ -249,7 +238,7 @@ export default function SahayMap() {
                   .animate-fade { animation: fadeIn 0.8s ease-out forwards; }
                   html { scroll-behavior: smooth; }
                   .leaflet-container { z-index: 10; font-family: inherit; }
-                  .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; }
+                  .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
                   .leaflet-popup-content { margin: 0; width: 280px !important; }
                   .leaflet-popup-tip-container { display: none; }
                 `}
@@ -274,16 +263,14 @@ export default function SahayMap() {
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
                     {currentUser ? (
-                        <>
-                            <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
-                                {currentT.log_out}
-                            </button>
-                            <button onClick={handleSignOut} className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none block sm:hidden">
-                                <LogOut size={16} />
-                            </button>
-                        </>
+                        <button 
+                            onClick={() => navigate('/sahay/profile')} 
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                        >
+                            <User size={18} />
+                        </button>
                     ) : (
-                        <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-5 py-2 rounded-full flex items-center gap-2 hover:bg-[#555555] transition-colors outline-none">
+                        <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-4 py-2 rounded-full font-bold hover:bg-[#555555] transition-colors outline-none">
                             {currentT.sign_in}
                         </button>
                     )}
@@ -338,42 +325,6 @@ export default function SahayMap() {
                 )}
             </AnimatePresence>
 
-            {/* PRODUCTS ECOSYSTEM MODAL */}
-            <AnimatePresence>
-                {showProductsPrompt && (
-                    <motion.div 
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[9999] bg-[#111111]/80 backdrop-blur-md flex items-center justify-center p-6"
-                    >
-                        <motion.div 
-                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[500px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB]"
-                        >
-                            <button onClick={() => setShowProductsPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
-                                <X size={18} />
-                            </button>
-
-                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 text-[#111111]">Also from us</h2>
-                            <p className="text-[#555555] text-[0.9rem] text-center mb-8">Discover our connected platforms.</p>
-
-                            <Link to="/civic/" className="group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border bg-[#F7F7F7] border-[#E5E7EB] hover:border-[#111111]">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <img src="/logo-3.png" alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
-                                    <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-[#111111]">
-                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Civic</span>
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-[0.85rem] leading-relaxed transition-colors text-[#555555] group-hover:text-[#111111]">
-                                        Smart city management. Report issues easily.
-                                    </p>
-                                </div>
-                            </Link>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
                 {showLangPrompt && (
@@ -405,7 +356,7 @@ export default function SahayMap() {
                 )}
             </AnimatePresence>
 
-            <main className="flex-1 w-full max-w-[1400px] mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
+            <main className="flex-1 w-full max-w-[1200px] mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
                 
                 <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
                     <ArrowLeft size={16} /> {currentT.back}
@@ -446,8 +397,8 @@ export default function SahayMap() {
                     ))}
                 </div>
 
-                {/* Map Container */}
-                <div className="w-full flex-1 min-h-[500px] rounded-3xl overflow-hidden border border-[#E5E7EB] relative shadow-sm">
+                {/* Map Container - STYLED TO FIX RENDERING ISSUES */}
+                <div className="w-full flex-1 min-h-[60vh] md:min-h-[500px] rounded-3xl overflow-hidden border border-[#E5E7EB] relative shadow-sm z-10">
                     {isLoading && (
                         <div className="absolute inset-0 z-20 bg-[#FFFFFF]/80 backdrop-blur-sm flex flex-col items-center justify-center">
                             <div className="w-8 h-8 border-2 border-t-transparent border-[#FF6B35] rounded-full animate-spin mb-4"></div>
@@ -455,7 +406,7 @@ export default function SahayMap() {
                         </div>
                     )}
                     
-                    <MapContainer center={defaultCenter} zoom={12} className="w-full h-full">
+                    <MapContainer center={defaultCenter} zoom={12} scrollWheelZoom={true} className="w-full h-full min-h-[500px] z-0">
                         <TileLayer
                             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
                             attribution='&copy; <a href="https://carto.com/">Carto</a>'
@@ -464,7 +415,7 @@ export default function SahayMap() {
                             <Marker 
                                 key={caseItem.id} 
                                 position={[caseItem.location.lat, caseItem.location.lng]}
-                                icon={getMarkerIcon(caseItem.severity)}
+                                icon={customIcon}
                             >
                                 <Popup>
                                     <div className="p-5 flex flex-col bg-[#FFFFFF] text-[#111111]">
@@ -502,7 +453,7 @@ export default function SahayMap() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                 <div className="flex flex-wrap items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                         <Globe size={14} /> {currentT.lang}
