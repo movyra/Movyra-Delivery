@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, getDocs, getCountFromServer, orderBy, limit } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, query, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { 
     ArrowLeft, 
-    LogOut,
     X,
     Globe,
     ArrowUp,
     BarChart,
     ShieldCheck,
     HeartHandshake,
-    Building,
+    Users,
     Clock,
     MapPin,
-    Activity
+    Activity,
+    User
 } from 'lucide-react';
 
 export default function SahayImpact() {
@@ -25,152 +25,226 @@ export default function SahayImpact() {
     
     // 1. STATE MANAGEMENT
     const theme = useCivicStore((state) => state.theme) || 'light'; 
-    const terminateSession = useCivicStore((state) => state.terminateSession);
 
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
+    const [showSitemap, setShowSitemap] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     
     const [isLoading, setIsLoading] = useState(true);
     const [globalMetrics, setGlobalMetrics] = useState({
         totalReports: 0,
         successfulRescues: 0,
-        verifiedNGOs: 0,
+        activeVolunteers: 0,
         avgResponseTime: 'Calculating...'
     });
     const [cityStats, setCityStats] = useState([]);
 
-    // 2. AUTHENTICATION & DATA FETCHING
+    // 2. AUTHENTICATION & LIVE DATA FETCHING
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
 
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
             setCurrentUser(user);
         });
 
-        fetchImpactData();
+        // LIVE FIRESTORE LISTENER (STRICT DATA FILTERING)
+        const casesRef = collection(db, 'sahay_cases');
+        const q = query(casesRef);
+        
+        const unsubscribeData = onSnapshot(q, (snapshot) => {
+            const testKeywords = ['test', 'testing', 'testcodecfg@gmail.com'];
+            const containsTestKeyword = (str) => {
+                if (!str) return false;
+                const lowerStr = str.toLowerCase();
+                return testKeywords.some(kw => lowerStr.includes(kw));
+            };
 
-        return () => unsubscribe();
-    }, []);
-
-    const fetchImpactData = async () => {
-        setIsLoading(true);
-        try {
-            const casesRef = collection(db, 'sahay_cases');
-            const orgsRef = collection(db, 'sahay_organizations');
-
-            // 1. Get Global Counts
-            const totalCasesQuery = query(casesRef);
-            const resolvedCasesQuery = query(casesRef, where('status', '==', 'Closed'));
-            const verifiedOrgsQuery = query(orgsRef, where('verificationStatus', '==', 'Verified'));
-
-            const [totalSnap, resolvedSnap, orgsSnap] = await Promise.all([
-                getCountFromServer(totalCasesQuery),
-                getCountFromServer(resolvedCasesQuery),
-                getCountFromServer(verifiedOrgsQuery)
-            ]);
-
-            // 2. Calculate Response Times and City Distribution from recent resolved cases
-            const recentResolvedQuery = query(casesRef, where('status', '==', 'Closed'), orderBy('closedAt', 'desc'), limit(100));
-            const recentResolvedData = await getDocs(recentResolvedQuery);
-            
+            let validReports = 0;
+            let resolvedCases = 0;
+            let activeVolunteersSet = new Set();
             let totalHours = 0;
             let validTimeRecords = 0;
-            const cityCounts = { 'Mumbai': 0, 'Delhi': 0, 'Bengaluru': 0, 'Pune': 0, 'Hyderabad': 0, 'Other': 0 };
+            const cityCounts = { 'Mumbai': 0, 'Delhi': 0, 'Bengaluru': 0, 'Pune': 0, 'Hyderabad': 0, 'Chennai': 0, 'Jaipur': 0, 'Ahmedabad': 0, 'Other': 0 };
 
-            recentResolvedData.forEach(doc => {
+            snapshot.forEach(doc => {
                 const data = doc.data();
-                
-                // Calculate time difference
-                if (data.createdAt && data.closedAt) {
-                    const created = data.createdAt.toDate();
-                    const closed = data.closedAt.toDate();
-                    const diffHours = (closed - created) / (1000 * 60 * 60);
-                    if (diffHours >= 0) {
-                        totalHours += diffHours;
-                        validTimeRecords++;
-                    }
-                }
+                const isTest = containsTestKeyword(data.description) || 
+                               containsTestKeyword(data.condition) ||
+                               containsTestKeyword(data.address) || 
+                               containsTestKeyword(data.category) || 
+                               containsTestKeyword(data.reporterName) || 
+                               containsTestKeyword(data.assignedToName) ||
+                               (data.userId === 'testcodecfg@gmail.com');
 
-                // Categorize by city
-                const addressStr = (data.address || '').toLowerCase();
-                let matched = false;
-                Object.keys(cityCounts).forEach(city => {
-                    if (city !== 'Other' && addressStr.includes(city.toLowerCase())) {
-                        cityCounts[city]++;
-                        matched = true;
+                if (!isTest) {
+                    validReports++;
+                    
+                    if (data.status === 'Closed') {
+                        resolvedCases++;
+                        if (data.createdAt && data.closedAt) {
+                            const created = data.createdAt.toDate();
+                            const closed = data.closedAt.toDate();
+                            const diffHours = (closed - created) / (1000 * 60 * 60);
+                            if (diffHours >= 0) {
+                                totalHours += diffHours;
+                                validTimeRecords++;
+                            }
+                        }
                     }
-                });
-                if (!matched) cityCounts['Other']++;
+
+                    if (data.volunteersAssisting && Array.isArray(data.volunteersAssisting)) {
+                        data.volunteersAssisting.forEach(v => activeVolunteersSet.add(v));
+                    }
+                    if (data.assignedToId) {
+                        activeVolunteersSet.add(data.assignedToId);
+                    }
+
+                    const addressStr = (data.address || '').toLowerCase();
+                    let matched = false;
+                    Object.keys(cityCounts).forEach(city => {
+                        if (city !== 'Other' && addressStr.includes(city.toLowerCase())) {
+                            cityCounts[city]++;
+                            matched = true;
+                        }
+                    });
+                    if (!matched) cityCounts['Other']++;
+                }
             });
 
             const avgHours = validTimeRecords > 0 ? (totalHours / validTimeRecords).toFixed(1) : '24.0';
             
-            // Format city array for charting
             const formattedCityStats = Object.keys(cityCounts)
                 .filter(city => cityCounts[city] > 0)
                 .map(city => ({ name: city, count: cityCounts[city] }))
                 .sort((a, b) => b.count - a.count);
 
             setGlobalMetrics({
-                totalReports: totalSnap.data().count || 0,
-                successfulRescues: resolvedSnap.data().count || 0,
-                verifiedNGOs: orgsSnap.data().count || 0,
+                totalReports: validReports,
+                successfulRescues: resolvedCases,
+                activeVolunteers: activeVolunteersSet.size,
                 avgResponseTime: validTimeRecords > 0 ? `${avgHours} Hours` : 'Pending Data'
             });
 
             setCityStats(formattedCityStats);
-
-        } catch (error) {
-            console.error("Failed to load impact data:", error);
-        } finally {
             setIsLoading(false);
-        }
-    };
+        }, (error) => {
+            console.error("Impact listener error:", error);
+            setIsLoading(false);
+        });
 
-    // 3. OPERATIONAL LOGIC
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth);
-            terminateSession();
-            navigate('/sahay');
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
+        return () => {
+            unsubscribeAuth();
+            unsubscribeData();
+        };
+    }, []);
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // 4. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
+    // 3. 13-LANGUAGE DICTIONARY (Fully Translated, Professional)
     const t = {
         en: {
-            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home",
-            title: "Impact Dashboard", sub: "Real-time statistics on rescues and response times.",
-            lbl_reports: "Total Reports", lbl_rescues: "People & Animals Helped", lbl_orgs: "Verified Partners", lbl_time: "Avg. Response Time",
+            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
+            title: "Impact Dashboard", sub: "Real-time statistics on rescue operations.",
+            lbl_reports: "Total Reports", lbl_rescues: "Successful Rescues", lbl_vols: "Active Volunteers", lbl_time: "Avg. Response Time",
             sec_city: "City Performance", sec_city_sub: "Where help is reaching the fastest.",
             loading: "Loading statistics...", empty: "Not enough data yet."
         },
         hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं",
-            title: "प्रभाव डैशबोर्ड", sub: "बचाव और प्रतिक्रिया समय पर वास्तविक समय के आंकड़े।",
-            lbl_reports: "कुल रिपोर्ट", lbl_rescues: "मदद किए गए लोग और जानवर", lbl_orgs: "सत्यापित पार्टनर", lbl_time: "औसत प्रतिक्रिया समय",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sign_in: "साइन इन", sitemap: "साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            title: "प्रभाव डैशबोर्ड", sub: "बचाव कार्यों पर वास्तविक समय के आंकड़े।",
+            lbl_reports: "कुल रिपोर्ट", lbl_rescues: "सफल बचाव", lbl_vols: "सक्रिय स्वयंसेवक", lbl_time: "औसत प्रतिक्रिया समय",
             sec_city: "शहर का प्रदर्शन", sec_city_sub: "जहां मदद सबसे तेजी से पहुंच रही है।",
             loading: "आंकड़े लोड हो रहे हैं...", empty: "अभी पर्याप्त डेटा नहीं है।"
         },
         hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas",
-            title: "Impact Dashboard", sub: "Rescues aur response time ke real-time stats.",
-            lbl_reports: "Total Reports", lbl_rescues: "People & Animals Helped", lbl_orgs: "Verified Partners", lbl_time: "Avg. Response Time",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
+            title: "Impact Dashboard", sub: "Rescue operations ke real-time stats.",
+            lbl_reports: "Total Reports", lbl_rescues: "Successful Rescues", lbl_vols: "Active Volunteers", lbl_time: "Avg. Response Time",
             sec_city: "City Performance", sec_city_sub: "Kahan help sabse jaldi pahunch rahi hai.",
             loading: "Stats load ho rahe hain...", empty: "Abhi data available nahi hai."
+        },
+        mr: {
+            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", back: "मुख्यपृष्ठावर परत", sign_in: "साइन इन", sitemap: "साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
+            title: "प्रभाव डॅशबोर्ड", sub: "बचाव कार्यावरील रिअल-टाइम आकडेवारी.",
+            lbl_reports: "एकूण अहवाल", lbl_rescues: "यशस्वी बचाव", lbl_vols: "सक्रिय स्वयंसेवक", lbl_time: "सरासरी प्रतिसाद वेळ",
+            sec_city: "शहराची कामगिरी", sec_city_sub: "जिथे मदत सर्वात वेगाने पोहोचत आहे.",
+            loading: "आकडेवारी लोड करत आहे...", empty: "अद्याप पुरेसा डेटा नाही."
+        },
+        gu: {
+            lang: "ગુજરાતી", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", back: "હોમ પર પાછા ફરો", sign_in: "સાઇન ઇન", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
+            title: "પ્રભાવ ડેશબોર્ડ", sub: "બચાવ કામગીરી પર રીઅલ-ટાઇમ આંકડા.",
+            lbl_reports: "કુલ અહેવાલો", lbl_rescues: "સફળ બચાવ", lbl_vols: "સક્રિય સ્વયંસેવકો", lbl_time: "સરેરાશ પ્રતિસાદ સમય",
+            sec_city: "શહેરની કામગીરી", sec_city_sub: "જ્યાં મદદ સૌથી ઝડપથી પહોંચી રહી છે.",
+            loading: "આંકડા લોડ થઈ રહ્યા છે...", empty: "હજી પૂરતો ડેટા નથી."
+        },
+        te: {
+            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", back: "హోమ్‌కు తిరిగి వెళ్లండి", sign_in: "సైన్ ఇన్", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
+            title: "ప్రభావ డాష్‌బోర్డ్", sub: "రెస్క్యూ ఆపరేషన్లపై నిజ-సమయ గణాంకాలు.",
+            lbl_reports: "మొత్తం నివేదికలు", lbl_rescues: "విజయవంతమైన రక్షణలు", lbl_vols: "క్రియాశీల వాలంటీర్లు", lbl_time: "సగటు ప్రతిస్పందన సమయం",
+            sec_city: "నగర పనితీరు", sec_city_sub: "సహాయం వేగంగా ఎక్కడ చేరుతోంది.",
+            loading: "గణాంకాలు లోడ్ అవుతున్నాయి...", empty: "ఇంకా తగినంత డేటా లేదు."
+        },
+        ta: {
+            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", back: "முகப்புக்குத் திரும்பு", sign_in: "உள்நுழைய", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சஹாய் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
+            title: "தாக்க டாஷ்போர்டு", sub: "மீட்பு நடவடிக்கைகளின் நிகழ்நேர புள்ளிவிவரங்கள்.",
+            lbl_reports: "மொத்த அறிக்கைகள்", lbl_rescues: "வெற்றிகரமான மீட்புகள்", lbl_vols: "செயலில் உள்ள தன்னார்வலர்கள்", lbl_time: "சராசரி பதில் நேரம்",
+            sec_city: "நகர செயல்திறன்", sec_city_sub: "உதவி எங்கே வேகமாக சென்றடைகிறது.",
+            loading: "புள்ளிவிவரங்கள் ஏற்றப்படுகின்றன...", empty: "போதுமான தரவு இன்னும் இல்லை."
+        },
+        pa: {
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ", sign_in: "ਸਾਈਨ ਇਨ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
+            title: "ਪ੍ਰਭਾਵ ਡੈਸ਼ਬੋਰਡ", sub: "ਬਚਾਅ ਕਾਰਜਾਂ 'ਤੇ ਰੀਅਲ-ਟਾਈਮ ਅੰਕੜੇ।",
+            lbl_reports: "ਕੁੱਲ ਰਿਪੋਰਟਾਂ", lbl_rescues: "ਸਫਲ ਬਚਾਅ", lbl_vols: "ਸਰਗਰਮ ਵਲੰਟੀਅਰ", lbl_time: "ਔਸਤ ਜਵਾਬ ਸਮਾਂ",
+            sec_city: "ਸ਼ਹਿਰ ਦਾ ਪ੍ਰਦਰਸ਼ਨ", sec_city_sub: "ਜਿੱਥੇ ਮਦਦ ਸਭ ਤੋਂ ਤੇਜ਼ੀ ਨਾਲ ਪਹੁੰਚ ਰਹੀ ਹੈ।",
+            loading: "ਅੰਕੜੇ ਲੋਡ ਕੀਤੇ ਜਾ ਰਹੇ ਹਨ...", empty: "ਹਾਲੇ ਕਾਫ਼ੀ ਡਾਟਾ ਨਹੀਂ ਹੈ।"
+        },
+        bho: {
+            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sign_in: "साइन इन", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            title: "प्रभाव डैशबोर्ड", sub: "बचाव काम पर रीयल-टाइम आँकड़ा।",
+            lbl_reports: "कुल रिपोर्ट", lbl_rescues: "सफल बचाव", lbl_vols: "सक्रिय स्वयंसेवक", lbl_time: "औसत प्रतिक्रिया समय",
+            sec_city: "शहर के प्रदर्शन", sec_city_sub: "जहाँ मदद सबसे तेजी से पहुँच रहल बा।",
+            loading: "आँकड़ा लोड हो रहल बा...", empty: "अभी पर्याप्त डेटा नईखे।"
+        },
+        ar: {
+            lang: "العربية", log_out: "تسجيل الخروج", careers: "الوظائف", products: "المنتجات", back: "العودة إلى الصفحة الرئيسية", sign_in: "تسجيل الدخول", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات ساهاي.",
+            title: "لوحة التأثير", sub: "إحصائيات في الوقت الفعلي لعمليات الإنقاذ.",
+            lbl_reports: "إجمالي التقارير", lbl_rescues: "عمليات الإنقاذ الناجحة", lbl_vols: "المتطوعون النشطون", lbl_time: "متوسط وقت الاستجابة",
+            sec_city: "أداء المدينة", sec_city_sub: "حيث تصل المساعدة بأسرع ما يمكن.",
+            loading: "جاري تحميل الإحصائيات...", empty: "لا توجد بيانات كافية بعد."
+        },
+        es: {
+            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras", products: "Productos", back: "Volver a Inicio", sign_in: "Iniciar Sesión", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos de Sahay.",
+            title: "Panel de Impacto", sub: "Estadísticas en tiempo real sobre rescates.",
+            lbl_reports: "Reportes Totales", lbl_rescues: "Rescates Exitosos", lbl_vols: "Voluntarios Activos", lbl_time: "Tiempo de Respuesta",
+            sec_city: "Rendimiento de la Ciudad", sec_city_sub: "Dónde llega la ayuda más rápido.",
+            loading: "Cargando estadísticas...", empty: "Aún no hay suficientes datos."
+        },
+        fr: {
+            lang: "Français", log_out: "Se déconnecter", careers: "Carrières", products: "Produits", back: "Retour à l'accueil", sign_in: "Se Connecter", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Sahay.",
+            title: "Tableau d'Impact", sub: "Statistiques en temps réel sur les sauvetages.",
+            lbl_reports: "Rapports Totaux", lbl_rescues: "Sauvetages Réussis", lbl_vols: "Bénévoles Actifs", lbl_time: "Temps de Réponse",
+            sec_city: "Performance de la Ville", sec_city_sub: "Où l'aide arrive le plus vite.",
+            loading: "Chargement des statistiques...", empty: "Pas encore assez de données."
+        },
+        de: {
+            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere", products: "Produkte", back: "Zurück zur Startseite", sign_in: "Anmelden", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Sahay-Modulen.",
+            title: "Auswirkungs-Dashboard", sub: "Echtzeitstatistiken zu Rettungseinsätzen.",
+            lbl_reports: "Gesamte Berichte", lbl_rescues: "Erfolgreiche Rettungen", lbl_vols: "Aktive Freiwillige", lbl_time: "Reaktionszeit",
+            sec_city: "Stadtleistung", sec_city_sub: "Wo Hilfe am schnellsten ankommt.",
+            loading: "Statistiken werden geladen...", empty: "Noch nicht genügend Daten vorhanden."
         }
     };
 
     const currentT = t[lang] || t['en'];
     const languageOptions = [
-        { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' }
+        { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
+        { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
+        { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+        { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+        { code: 'de', label: 'Deutsch' }
     ];
 
     const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -205,18 +279,68 @@ export default function SahayImpact() {
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[#555555] hover:text-[#111111] transition-colors outline-none px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:border-[#111111]">
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
-                    {currentUser && (
-                        <>
-                            <button onClick={handleSignOut} className="text-[#555555] hover:text-[#111111] transition-colors outline-none hidden sm:block">
-                                {currentT.log_out}
-                            </button>
-                            <button onClick={handleSignOut} className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none block sm:hidden">
-                                <LogOut size={16} />
-                            </button>
-                        </>
+                    {currentUser ? (
+                        <button 
+                            onClick={() => navigate('/sahay/profile')} 
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                        >
+                            <User size={18} />
+                        </button>
+                    ) : (
+                        <button onClick={() => navigate('/sahay/auth')} className="bg-[#111111] text-[#FFFFFF] px-4 py-2 rounded-full font-bold hover:bg-[#555555] transition-colors outline-none">
+                            {currentT.sign_in}
+                        </button>
                     )}
                 </div>
             </header>
+
+            {/* SITEMAP MODAL */}
+            <AnimatePresence>
+                {showSitemap && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/90 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[600px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowSitemap(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.sitemap}</h2>
+                            <p className="text-[#555555] font-medium mb-6">{currentT.sitemap_desc}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    { path: '/sahay', name: currentT.sm_home },
+                                    { path: '/sahay/report', name: currentT.sm_report },
+                                    { path: '/sahay/cases', name: currentT.sm_cases },
+                                    { path: '/sahay/map', name: currentT.sm_map },
+                                    { path: '/sahay/organization', name: currentT.sm_org },
+                                    { path: '/sahay/volunteer', name: currentT.sm_vol },
+                                    { path: '/sahay/impact', name: currentT.sm_imp },
+                                    { path: '/sahay/emergency', name: currentT.sm_emg },
+                                    { path: '/sahay/contact', name: currentT.sm_cont },
+                                    { path: '/sahay/about', name: currentT.sm_abt },
+                                    { path: '/sahay/auth', name: currentT.sm_auth },
+                                    { path: '/sahay/admin', name: currentT.sm_adm }
+                                ].map(link => (
+                                    <Link 
+                                        key={link.path} 
+                                        to={link.path}
+                                        onClick={() => setShowSitemap(false)}
+                                        className="p-4 bg-[#F7F7F7] border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors flex items-center justify-between group outline-none"
+                                    >
+                                        {link.name}
+                                        <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
@@ -227,7 +351,7 @@ export default function SahayImpact() {
                     >
                         <motion.div 
                             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB]"
+                            className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
                         >
                             <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
                                 <X size={18} />
@@ -295,10 +419,10 @@ export default function SahayImpact() {
 
                             <motion.div variants={itemVariants} className="bg-[#F7F7F7] border border-[#E5E7EB] p-8 rounded-3xl flex flex-col">
                                 <div className="w-12 h-12 bg-[#FFFFFF] border border-[#E5E7EB] rounded-full flex items-center justify-center mb-6">
-                                    <Building size={20} className="text-[#00A9F7]" />
+                                    <Users size={20} className="text-[#00A9F7]" />
                                 </div>
-                                <h3 className="text-[2.5rem] font-black text-[#00A9F7] leading-none mb-2">{globalMetrics.verifiedNGOs}</h3>
-                                <p className="text-[#555555] font-bold text-[0.85rem] uppercase tracking-wider">{currentT.lbl_orgs}</p>
+                                <h3 className="text-[2.5rem] font-black text-[#00A9F7] leading-none mb-2">{globalMetrics.activeVolunteers}</h3>
+                                <p className="text-[#555555] font-bold text-[0.85rem] uppercase tracking-wider">{currentT.lbl_vols}</p>
                             </motion.div>
 
                             <motion.div variants={itemVariants} className="bg-[#F7F7F7] border border-[#E5E7EB] p-8 rounded-3xl flex flex-col">
@@ -325,7 +449,6 @@ export default function SahayImpact() {
                             ) : (
                                 <div className="flex flex-col gap-6">
                                     {cityStats.map((stat, idx) => {
-                                        // Calculate percentage for progress bar based on top city
                                         const maxCount = cityStats[0].count;
                                         const percentage = Math.round((stat.count / maxCount) * 100);
 
@@ -355,7 +478,7 @@ export default function SahayImpact() {
             </main>
 
             {/* FOOTER ALIGNMENT */}
-            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade">
+            <footer className="w-full mx-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-12 border-t border-[#E5E7EB] bg-[#FFFFFF] relative z-10 animate-fade mt-auto">
                 <div className="flex flex-wrap items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border border-[#E5E7EB] text-[#555555] hover:border-[#111111] hover:text-[#111111] outline-none">
                         <Globe size={14} /> {currentT.lang}
@@ -370,6 +493,8 @@ export default function SahayImpact() {
                 
                 <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
                     <div className="flex items-center gap-6">
+                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
                         <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
                     </div>
                     <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
