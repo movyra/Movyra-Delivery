@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { uploadSahayMedia } from '../../services/pocketbase';
@@ -29,6 +29,8 @@ export default function SahayReport() {
 
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
+    const [showSitemap, setShowSitemap] = useState(false);
+    const [showProductsPrompt, setShowProductsPrompt] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
     
     // Form State
@@ -155,7 +157,7 @@ export default function SahayReport() {
             } catch (error) {
                 console.error("Geocoding failed:", error);
             }
-        }, 600); // 600ms debounce to prevent API rate limits
+        }, 600);
     };
 
     const selectSuggestion = (suggestion) => {
@@ -209,6 +211,7 @@ export default function SahayReport() {
         }
     };
 
+    // RESTRUCTURED SUBMISSION SEQUENCE
     const submitReport = async (e) => {
         e.preventDefault();
         
@@ -221,10 +224,8 @@ export default function SahayReport() {
         setSubmitStatus('IDLE');
 
         try {
-            const uploaderType = currentUser ? 'registered_user' : 'anonymous';
-            const mediaUrl = await uploadSahayMedia(photoFile, null, 'needy_photo', uploaderType);
-
-            await addDoc(collection(db, 'sahay_cases'), {
+            // STEP 1: Create the Firestore Document FIRST to generate a unique case ID
+            const newCaseRef = await addDoc(collection(db, 'sahay_cases'), {
                 userId: currentUser ? currentUser.uid : 'anonymous',
                 reporterName: formData.reporterName || 'Anonymous',
                 needyName: formData.needyName,
@@ -235,11 +236,21 @@ export default function SahayReport() {
                 danger: formData.danger,
                 condition: formData.description,
                 severity: estimatedSeverity,
-                mediaUrl: mediaUrl,
+                mediaUrl: '', // Temporary placeholder
                 status: 'Reported',
                 createdAt: serverTimestamp()
             });
 
+            // STEP 2: Upload Media to PocketBase passing the newly generated case ID
+            const uploaderType = currentUser ? 'registered_user' : 'anonymous';
+            const mediaUrl = await uploadSahayMedia(photoFile, newCaseRef.id, 'needy_photo', uploaderType);
+
+            // STEP 3: Update the Firestore document with the actual media URL
+            await updateDoc(doc(db, 'sahay_cases', newCaseRef.id), {
+                mediaUrl: mediaUrl
+            });
+
+            // Cleanup local state
             localStorage.removeItem('sahay_report_draft');
             setFormData({ reporterName: '', needyName: '', bloodGroup: '', category: '', address: '', lat: null, lng: null, danger: 'No', description: '' });
             setPhotoFile(null);
@@ -259,7 +270,7 @@ export default function SahayReport() {
     // 5. 13-LANGUAGE DICTIONARY (Fully Translated, Professional, Simple Terms)
     const t = {
         en: {
-            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home", sign_in: "Sign In",
+            lang: "English", log_out: "Log out", careers: "Careers", products: "Products", back: "Back to Home", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
             title: "Report a Need", sub: "Help us connect them with verified rescue teams quickly. No account required.",
             draft_saved: "Draft Saved", gps_err: "Could not get location. Please type the address.",
             lbl_reporter: "Your Name (Optional)", lbl_needy: "Person in Need Name (Required)", lbl_blood: "Blood Group (Optional)",
@@ -270,10 +281,11 @@ export default function SahayReport() {
             lbl_desc: "Condition Details", ph_desc: "Describe their condition, age, injuries, or any helpful details...",
             lbl_severity: "Urgency:",
             btn_submit: "Submit Report", btn_loading: "Uploading Securely...",
-            succ_title: "Report Received", succ_sub: "Organizations have been notified. Thank you.", btn_new: "Report Another"
+            succ_title: "Report Received", succ_sub: "Organizations have been notified. Thank you.", btn_new: "Report Another",
+            sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         hi: {
-            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sign_in: "साइन इन",
+            lang: "हिन्दी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sign_in: "साइन इन", sitemap: "साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
             title: "सहायता की रिपोर्ट करें", sub: "उन्हें सत्यापित बचाव दलों से जल्दी जोड़ने में हमारी मदद करें। किसी खाते की आवश्यकता नहीं है।",
             draft_saved: "ड्राफ्ट सहेजा गया", gps_err: "स्थान प्राप्त नहीं हो सका। कृपया पता टाइप करें।",
             lbl_reporter: "आपका नाम (वैकल्पिक)", lbl_needy: "जरूरतमंद का नाम (आवश्यक)", lbl_blood: "रक्त समूह (वैकल्पिक)",
@@ -284,10 +296,11 @@ export default function SahayReport() {
             lbl_desc: "स्थिति का विवरण", ph_desc: "उनकी स्थिति, आयु, चोट या कोई सहायक विवरण बताएं...",
             lbl_severity: "तात्कालिकता:",
             btn_submit: "रिपोर्ट जमा करें", btn_loading: "सुरक्षित रूप से अपलोड हो रहा है...",
-            succ_title: "रिपोर्ट प्राप्त हुई", succ_sub: "संगठनों को सूचित कर दिया गया है। धन्यवाद।", btn_new: "एक और रिपोर्ट करें"
+            succ_title: "रिपोर्ट प्राप्त हुई", succ_sub: "संगठनों को सूचित कर दिया गया है। धन्यवाद।", btn_new: "एक और रिपोर्ट करें",
+            sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करें", sm_cases: "सार्वजनिक फ़ीड", sm_map: "लाइव मानचित्र", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क और पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         hinglish: {
-            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas", sign_in: "Sign In",
+            lang: "Hinglish", log_out: "Log out", careers: "Careers", products: "Products", back: "Home par wapas", sign_in: "Sign In", sitemap: "Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
             title: "Report Darj Karein", sub: "Unhe verified rescue teams se jaldi connect karne mein help karein. Account ki zaroorat nahi hai.",
             draft_saved: "Draft Save Ho Gaya", gps_err: "Location nahi mil paayi. Kripya address type karein.",
             lbl_reporter: "Aapka Naam (Optional)", lbl_needy: "Zarooratmand ka Naam (Required)", lbl_blood: "Blood Group (Optional)",
@@ -298,10 +311,11 @@ export default function SahayReport() {
             lbl_desc: "Condition Details", ph_desc: "Unki condition, age, injuries ya koi helpful details batayein...",
             lbl_severity: "Urgency:",
             btn_submit: "Report Submit Karein", btn_loading: "Securely upload ho raha hai...",
-            succ_title: "Report Mil Gayi", succ_sub: "Organizations ko notify kar diya gaya hai. Shukriya.", btn_new: "Dusri Report Karein"
+            succ_title: "Report Mil Gayi", succ_sub: "Organizations ko notify kar diya gaya hai. Shukriya.", btn_new: "Dusri Report Karein",
+            sm_home: "Home Gateway", sm_report: "Report Submit Karein", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact aur Inquiries", sm_abt: "Mission ke baare mein", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         mr: {
-            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", back: "मुख्यपृष्ठावर परत", sign_in: "साइन इन",
+            lang: "मराठी", log_out: "लॉग आउट", careers: "करिअर", products: "उत्पादने", back: "मुख्यपृष्ठावर परत", sign_in: "साइन इन", sitemap: "साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
             title: "गरजेचा अहवाल द्या", sub: "त्यांना सत्यापित बचाव पथकांशी त्वरित जोडण्यास आम्हाला मदत करा. खात्याची आवश्यकता नाही.",
             draft_saved: "मसुदा जतन केला", gps_err: "स्थान मिळू शकले नाही. कृपया पत्ता टाइप करा.",
             lbl_reporter: "तुमचे नाव (पर्यायी)", lbl_needy: "गरजू व्यक्तीचे नाव (आवश्यक)", lbl_blood: "रक्तगट (पर्यायी)",
@@ -312,10 +326,11 @@ export default function SahayReport() {
             lbl_desc: "स्थिती तपशील", ph_desc: "त्यांची स्थिती, वय, जखम किंवा कोणतेही उपयुक्त तपशील वर्णन करा...",
             lbl_severity: "तात्कालिकता:",
             btn_submit: "अहवाल सादर करा", btn_loading: "सुरक्षितपणे अपलोड होत आहे...",
-            succ_title: "अहवाल प्राप्त झाला", succ_sub: "संस्थांना सूचित केले आहे. धन्यवाद.", btn_new: "दुसरा अहवाल द्या"
+            succ_title: "अहवाल प्राप्त झाला", succ_sub: "संस्थांना सूचित केले आहे. धन्यवाद.", btn_new: "दुसरा अहवाल द्या",
+            sm_home: "होम गेटवे", sm_report: "अहवाल सबमिट करा", sm_cases: "सार्वजनिक फीड", sm_map: "थेट नकाशा", sm_org: "भागीदार डॅशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषण", sm_emg: "आपत्कालीन निर्देशिका", sm_cont: "संपर्क आणि चौकशी", sm_abt: "मिशन बद्दल", sm_auth: "प्रमाणीकरण", sm_adm: "प्रशासन कन्सोल"
         },
         gu: {
-            lang: "ગુજરાતી", log_out: "લોગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", back: "હોમ પર પાછા ફરો", sign_in: "સાઇન ઇન",
+            lang: "ગુજરાતી", log_out: "લોગ આઉટ", careers: "કારકિર્દી", products: "ઉત્પાદનો", back: "હોમ પર પાછા ફરો", sign_in: "સાઇન ઇન", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
             title: "જરૂરિયાતની જાણ કરો", sub: "તેમને ચકાસાયેલ બચાવ ટીમો સાથે ઝડપથી જોડવામાં અમારી સહાય કરો. ખાતાની જરૂર નથી.",
             draft_saved: "ડ્રાફ્ટ સાચવેલ છે", gps_err: "સ્થાન મેળવી શક્યા નથી. કૃપા કરીને સરનામું લખો.",
             lbl_reporter: "તમારું નામ (વૈકલ્પિક)", lbl_needy: "જરૂરિયાતમંદનું નામ (આવશ્યક)", lbl_blood: "રક્ત જૂથ (વૈકલ્પિક)",
@@ -326,10 +341,11 @@ export default function SahayReport() {
             lbl_desc: "સ્થિતિ વિગતો", ph_desc: "તેમની સ્થિતિ, ઉંમર, ઇજાઓ અથવા કોઈપણ મદદરૂપ વિગતો વર્ણવો...",
             lbl_severity: "તાકીદ:",
             btn_submit: "અહેવાલ સબમિટ કરો", btn_loading: "સુરક્ષિત રીતે અપલોડ થઈ રહ્યું છે...",
-            succ_title: "અહેવાલ પ્રાપ્ત થયો", succ_sub: "સંસ્થાઓને જાણ કરવામાં આવી છે. આભાર.", btn_new: "બીજો અહેવાલ આપો"
+            succ_title: "અહેવાલ પ્રાપ્ત થયો", succ_sub: "સંસ્થાઓને જાણ કરવામાં આવી છે. આભાર.", btn_new: "બીજો અહેવાલ આપો",
+            sm_home: "હોમ ગેટવે", sm_report: "રિપોર્ટ સબમિટ કરો", sm_cases: "જાહેર ફીડ", sm_map: "જીવંત નકશો", sm_org: "ભાગીદાર ડેશબોર્ડ", sm_vol: "સ્વયંસેવક પોર્ટલ", sm_imp: "અસર એનાલિટિક્સ", sm_emg: "કટોકટી ડિરેક્ટરી", sm_cont: "સંપર્ક અને પૂછપરછ", sm_abt: "મિશન વિશે", sm_auth: "પ્રમાણીકરણ", sm_adm: "એડમિન કન્સોલ"
         },
         te: {
-            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", back: "హోమ్‌కు తిరిగి వెళ్లండి", sign_in: "సైన్ ఇన్",
+            lang: "తెలుగు", log_out: "లాగౌట్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", back: "హోమ్‌కు తిరిగి వెళ్లండి", sign_in: "సైన్ ఇన్", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
             title: "అవసరాన్ని నివేదించండి", sub: "ధృవీకరించబడిన రెస్క్యూ బృందాలతో వారిని త్వరగా కనెక్ట్ చేయడంలో మాకు సహాయపడండి. ఖాతా అవసరం లేదు.",
             draft_saved: "డ్రాఫ్ట్ సేవ్ చేయబడింది", gps_err: "స్థానాన్ని పొందలేకపోయాము. దయచేసి చిరునామాను టైప్ చేయండి.",
             lbl_reporter: "మీ పేరు (ఐచ్ఛికం)", lbl_needy: "అవసరమైన వ్యక్తి పేరు (తప్పనిసరి)", lbl_blood: "రక్త వర్గం (ఐచ్ఛికం)",
@@ -340,10 +356,11 @@ export default function SahayReport() {
             lbl_desc: "పరిస్థితి వివరాలు", ph_desc: "వారి పరిస్థితి, వయస్సు, గాయాలు లేదా ఏదైనా సహాయకరమైన వివరాలను వివరించండి...",
             lbl_severity: "అత్యవసరం:",
             btn_submit: "నివేదికను సమర్పించండి", btn_loading: "సురక్షితంగా అప్‌లోడ్ చేయబడుతోంది...",
-            succ_title: "నివేదిక స్వీకరించబడింది", succ_sub: "సంస్థలకు తెలియజేయబడింది. ధన్యవాదాలు.", btn_new: "మరొకటి నివేదించండి"
+            succ_title: "నివేదిక స్వీకరించబడింది", succ_sub: "సంస్థలకు తెలియజేయబడింది. ధన్యవాదాలు.", btn_new: "మరొకటి నివేదించండి",
+            sm_home: "హోమ్ గేట్‌వే", sm_report: "నివేదిక సమర్పించండి", sm_cases: "పబ్లిక్ ఫీడ్", sm_map: "లైవ్ మ్యాప్", sm_org: "భాగస్వామి డాష్‌బోర్డ్", sm_vol: "వాలంటీర్ పోర్టల్", sm_imp: "ఇంపాక్ట్ అనలిటిక్స్", sm_emg: "అత్యవసర డైరెక్టరీ", sm_cont: "సంప్రదింపులు మరియు విచారణలు", sm_abt: "మిషన్ గురించి", sm_auth: "ప్రామాణీకరణ", sm_adm: "అడ్మిన్ కన్సోల్"
         },
         ta: {
-            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", back: "முகப்புக்குத் திரும்பு", sign_in: "உள்நுழைய",
+            lang: "தமிழ்", log_out: "வெளியேறு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", back: "முகப்புக்குத் திரும்பு", sign_in: "உள்நுழைய", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சஹாய் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
             title: "தேவையை புகாரளிக்கவும்", sub: "சரிபார்க்கப்பட்ட மீட்புக் குழுக்களுடன் அவர்களை விரைவாக இணைக்க எங்களுக்கு உதவுங்கள். கணக்கு தேவையில்லை.",
             draft_saved: "வரைவு சேமிக்கப்பட்டது", gps_err: "இருப்பிடத்தைப் பெற முடியவில்லை. முகவரியைத் தட்டச்சு செய்யவும்.",
             lbl_reporter: "உங்கள் பெயர் (விருப்பம்)", lbl_needy: "தேவையுள்ள நபரின் பெயர் (கட்டாயம்)", lbl_blood: "இரத்த வகை (விருப்பம்)",
@@ -354,10 +371,11 @@ export default function SahayReport() {
             lbl_desc: "நிலை விவரங்கள்", ph_desc: "அவர்களின் நிலை, வயது, காயங்கள் அல்லது ஏதேனும் பயனுள்ள விவரங்களை விவரிக்கவும்...",
             lbl_severity: "அவசரம்:",
             btn_submit: "அறிக்கையை சமர்ப்பிக்கவும்", btn_loading: "பாதுகாப்பாக பதிவேற்றப்படுகிறது...",
-            succ_title: "அறிக்கை பெறப்பட்டது", succ_sub: "அமைப்புகளுக்கு அறிவிக்கப்பட்டுள்ளது. நன்றி.", btn_new: "மற்றொன்றை புகாரளிக்கவும்"
+            succ_title: "அறிக்கை பெறப்பட்டது", succ_sub: "அமைப்புகளுக்கு அறிவிக்கப்பட்டுள்ளது. நன்றி.", btn_new: "மற்றொன்றை புகாரளிக்கவும்",
+            sm_home: "முகப்பு நுழைவாயில்", sm_report: "அறிக்கையை சமர்ப்பிக்கவும்", sm_cases: "பொது ஊட்டம்", sm_map: "நேரடி வரைபடம்", sm_org: "கூட்டாளர் டாஷ்போர்டு", sm_vol: "தன்னார்வ போர்டல்", sm_imp: "தாக்க பகுப்பாய்வு", sm_emg: "அவசர அடைவு", sm_cont: "தொடர்பு மற்றும் விசாரணைகள்", sm_abt: "பணி பற்றி", sm_auth: "அங்கீகாரம்", sm_adm: "நிர்வாக கன்சோல்"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ", sign_in: "ਸਾਈਨ ਇਨ",
+            lang: "ਪੰਜਾਬੀ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ", sign_in: "ਸਾਈਨ ਇਨ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
             title: "ਲੋੜ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", sub: "ਪ੍ਰਮਾਣਿਤ ਬਚਾਅ ਟੀਮਾਂ ਨਾਲ ਉਹਨਾਂ ਨੂੰ ਜਲਦੀ ਜੋੜਨ ਵਿੱਚ ਸਾਡੀ ਮਦਦ ਕਰੋ। ਕਿਸੇ ਖਾਤੇ ਦੀ ਲੋੜ ਨਹੀਂ।",
             draft_saved: "ਡਰਾਫਟ ਸੁਰੱਖਿਅਤ ਕੀਤਾ ਗਿਆ", gps_err: "ਸਥਾਨ ਪ੍ਰਾਪਤ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਪਤਾ ਟਾਈਪ ਕਰੋ।",
             lbl_reporter: "ਤੁਹਾਡਾ ਨਾਮ (ਵਿਕਲਪਿਕ)", lbl_needy: "ਲੋੜਵੰਦ ਦਾ ਨਾਮ (ਲਾਜ਼ਮੀ)", lbl_blood: "ਬਲੱਡ ਗਰੁੱਪ (ਵਿਕਲਪਿਕ)",
@@ -368,10 +386,11 @@ export default function SahayReport() {
             lbl_desc: "ਸਥਿਤੀ ਦੇ ਵੇਰਵੇ", ph_desc: "ਉਹਨਾਂ ਦੀ ਸਥਿਤੀ, ਉਮਰ, ਸੱਟਾਂ ਜਾਂ ਕੋਈ ਮਦਦਗਾਰ ਵੇਰਵਿਆਂ ਦਾ ਵਰਣਨ ਕਰੋ...",
             lbl_severity: "ਜ਼ਰੂਰੀ:",
             btn_submit: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", btn_loading: "ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਅੱਪਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
-            succ_title: "ਰਿਪੋਰਟ ਪ੍ਰਾਪਤ ਹੋਈ", succ_sub: "ਸੰਸਥਾਵਾਂ ਨੂੰ ਸੂਚਿਤ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਧੰਨਵਾਦ।", btn_new: "ਇੱਕ ਹੋਰ ਰਿਪੋਰਟ ਕਰੋ"
+            succ_title: "ਰਿਪੋਰਟ ਪ੍ਰਾਪਤ ਹੋਈ", succ_sub: "ਸੰਸਥਾਵਾਂ ਨੂੰ ਸੂਚਿਤ ਕਰ ਦਿੱਤਾ ਗਿਆ ਹੈ। ਧੰਨਵਾਦ।", btn_new: "ਇੱਕ ਹੋਰ ਰਿਪੋਰਟ ਕਰੋ",
+            sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋਲ"
         },
         bho: {
-            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sign_in: "साइन इन",
+            lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sign_in: "साइन इन", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
             title: "जरूरत के रिपोर्ट करीं", sub: "सत्यापित बचाव टीम के साथ जल्दी से जोड़े में हमनी के मदद करीं। कवनो खाता के जरूरत नईखे।",
             draft_saved: "ड्राफ्ट सेव हो गईल", gps_err: "लोकेशन ना मिल पावल। कृपया पता टाइप करीं।",
             lbl_reporter: "रउरा नाम (वैकल्पिक)", lbl_needy: "जरूरतमंद के नाम (जरूरी)", lbl_blood: "ब्लड ग्रुप (वैकल्पिक)",
@@ -382,10 +401,11 @@ export default function SahayReport() {
             lbl_desc: "स्थिति विवरण", ph_desc: "उनकर स्थिति, उम्र, चोट भा कवनो मददगार जानकारी बताईं...",
             lbl_severity: "तात्कालिकता:",
             btn_submit: "रिपोर्ट जमा करीं", btn_loading: "सुरक्षित रूप से अपलोड हो रहल बा...",
-            succ_title: "रिपोर्ट मिल गईल", succ_sub: "संगठन के सूचित कर दिहल गइल बा। धन्यवाद।", btn_new: "दोसर रिपोर्ट करीं"
+            succ_title: "रिपोर्ट मिल गईल", succ_sub: "संगठन के सूचित कर दिहल गइल बा। धन्यवाद।", btn_new: "दोसर रिपोर्ट करीं",
+            sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करीं", sm_cases: "सार्वजनिक फीड", sm_map: "लाइव नक्शा", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क आ पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         ar: {
-            lang: "العربية", log_out: "تسجيل الخروج", careers: "وظائف", products: "منتجات", back: "العودة إلى الصفحة الرئيسية", sign_in: "تسجيل الدخول",
+            lang: "العربية", log_out: "تسجيل الخروج", careers: "وظائف", products: "منتجات", back: "العودة إلى الصفحة الرئيسية", sign_in: "تسجيل الدخول", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات ساهاي.",
             title: "الإبلاغ عن حاجة", sub: "ساعدنا في ربطهم بفرق الإنقاذ المعتمدة بسرعة. لا يشترط وجود حساب.",
             draft_saved: "تم حفظ المسودة", gps_err: "تعذر الحصول على الموقع. يرجى كتابة العنوان.",
             lbl_reporter: "اسمك (اختياري)", lbl_needy: "اسم المحتاج (مطلوب)", lbl_blood: "فصيلة الدم (اختياري)",
@@ -396,10 +416,11 @@ export default function SahayReport() {
             lbl_desc: "تفاصيل الحالة", ph_desc: "صف حالتهم، عمرهم، إصاباتهم، أو أي تفاصيل مفيدة...",
             lbl_severity: "درجة الإلحاح:",
             btn_submit: "إرسال التقرير", btn_loading: "جاري التحميل بأمان...",
-            succ_title: "تم استلام التقرير", succ_sub: "تم إخطار المنظمات. شكراً لك.", btn_new: "الإبلاغ عن حالة أخرى"
+            succ_title: "تم استلام التقرير", succ_sub: "تم إخطار المنظمات. شكراً لك.", btn_new: "الإبلاغ عن حالة أخرى",
+            sm_home: "البوابة الرئيسية", sm_report: "إرسال تقرير", sm_cases: "الخلاصة العامة", sm_map: "خريطة حية", sm_org: "لوحة تحكم الشريك", sm_vol: "بوابة المتطوعين", sm_imp: "تحليلات التأثير", sm_emg: "دليل الطوارئ", sm_cont: "الاتصال والاستفسارات", sm_abt: "حول المهمة", sm_auth: "المصادقة", sm_adm: "وحدة تحكم الإدارة"
         },
         es: {
-            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras", products: "Productos", back: "Volver a Inicio", sign_in: "Iniciar sesión",
+            lang: "Español", log_out: "Cerrar sesión", careers: "Carreras", products: "Productos", back: "Volver a Inicio", sign_in: "Iniciar sesión", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos de Sahay.",
             title: "Reportar una Necesidad", sub: "Ayúdenos a conectarlos rápidamente con equipos de rescate. No requiere cuenta.",
             draft_saved: "Borrador guardado", gps_err: "No se pudo obtener la ubicación. Por favor escriba la dirección.",
             lbl_reporter: "Su Nombre (Opcional)", lbl_needy: "Nombre del Necesitado (Requerido)", lbl_blood: "Grupo Sanguíneo (Opcional)",
@@ -410,10 +431,11 @@ export default function SahayReport() {
             lbl_desc: "Detalles de la condición", ph_desc: "Describa su estado, edad, lesiones o cualquier detalle útil...",
             lbl_severity: "Urgencia:",
             btn_submit: "Enviar Reporte", btn_loading: "Subiendo de forma segura...",
-            succ_title: "Reporte Recibido", succ_sub: "Las organizaciones han sido notificadas. Gracias.", btn_new: "Reportar Otro"
+            succ_title: "Reporte Recibido", succ_sub: "Las organizaciones han sido notificadas. Gracias.", btn_new: "Reportar Otro",
+            sm_home: "Portal de Inicio", sm_report: "Enviar Reporte", sm_cases: "Feed Público", sm_map: "Mapa en Vivo", sm_org: "Panel de Socios", sm_vol: "Portal de Voluntarios", sm_imp: "Análisis de Impacto", sm_emg: "Directorio de Emergencia", sm_cont: "Contacto", sm_abt: "Acerca de la Misión", sm_auth: "Autenticación", sm_adm: "Consola de Administración"
         },
         fr: {
-            lang: "Français", log_out: "Se déconnecter", careers: "Carrières", products: "Produits", back: "Retour à l'accueil", sign_in: "Se connecter",
+            lang: "Français", log_out: "Se déconnecter", careers: "Carrières", products: "Produits", back: "Retour à l'accueil", sign_in: "Se connecter", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Sahay.",
             title: "Signaler un Besoin", sub: "Aidez-nous à les connecter rapidement aux équipes de sauvetage. Aucun compte requis.",
             draft_saved: "Brouillon enregistré", gps_err: "Impossible d'obtenir l'emplacement. Veuillez saisir l'adresse.",
             lbl_reporter: "Votre Nom (Optionnel)", lbl_needy: "Nom de la personne (Requis)", lbl_blood: "Groupe Sanguin (Optionnel)",
@@ -424,10 +446,11 @@ export default function SahayReport() {
             lbl_desc: "Détails de l'état", ph_desc: "Décrivez leur état, âge, blessures ou tout détail utile...",
             lbl_severity: "Urgence :",
             btn_submit: "Soumettre le rapport", btn_loading: "Téléchargement sécurisé...",
-            succ_title: "Rapport Reçu", succ_sub: "Les organisations ont été informées. Merci.", btn_new: "Signaler un autre"
+            succ_title: "Rapport Reçu", succ_sub: "Les organisations ont été informées. Merci.", btn_new: "Signaler un autre",
+            sm_home: "Portail d'Accueil", sm_report: "Soumettre un Rapport", sm_cases: "Flux Public", sm_map: "Carte en Direct", sm_org: "Tableau de Bord", sm_vol: "Portail Bénévole", sm_imp: "Analyse d'Impact", sm_emg: "Annuaire d'Urgence", sm_cont: "Contact", sm_abt: "À Propos", sm_auth: "Authentification", sm_adm: "Console d'Administration"
         },
         de: {
-            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere", products: "Produkte", back: "Zurück zur Startseite", sign_in: "Anmelden",
+            lang: "Deutsch", log_out: "Abmelden", careers: "Karriere", products: "Produkte", back: "Zurück zur Startseite", sign_in: "Anmelden", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Sahay-Modulen.",
             title: "Bedarf Melden", sub: "Helfen Sie uns, sie schnell mit Rettungsteams zu verbinden. Kein Konto erforderlich.",
             draft_saved: "Entwurf gespeichert", gps_err: "Standort konnte nicht ermittelt werden. Bitte Adresse eingeben.",
             lbl_reporter: "Ihr Name (Optional)", lbl_needy: "Name der hilfsbedürftigen Person (Erforderlich)", lbl_blood: "Blutgruppe (Optional)",
@@ -438,7 +461,8 @@ export default function SahayReport() {
             lbl_desc: "Zustandsdetails", ph_desc: "Beschreiben Sie ihren Zustand, Alter, Verletzungen oder hilfreiche Details...",
             lbl_severity: "Dringlichkeit:",
             btn_submit: "Bericht einreichen", btn_loading: "Sicher hochladen...",
-            succ_title: "Bericht Erhalten", succ_sub: "Organisationen wurden benachrichtigt. Danke.", btn_new: "Weiteren Bericht melden"
+            succ_title: "Bericht Erhalten", succ_sub: "Organisationen wurden benachrichtigt. Danke.", btn_new: "Weiteren Bericht melden",
+            sm_home: "Startportal", sm_report: "Meldung Einreichen", sm_cases: "Öffentlicher Feed", sm_map: "Live-Karte", sm_org: "Partner-Dashboard", sm_vol: "Freiwilligen-Portal", sm_imp: "Auswirkungsanalyse", sm_emg: "Notfallverzeichnis", sm_cont: "Kontakt", sm_abt: "Über die Mission", sm_auth: "Authentifizierung", sm_adm: "Admin-Konsole"
         }
     };
 
@@ -505,6 +529,90 @@ export default function SahayReport() {
                     )}
                 </div>
             </header>
+
+            {/* SITEMAP MODAL */}
+            <AnimatePresence>
+                {showSitemap && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/90 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[600px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB] max-h-[80vh] overflow-y-auto"
+                        >
+                            <button onClick={() => setShowSitemap(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+                            <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.sitemap}</h2>
+                            <p className="text-[#555555] font-medium mb-6">{currentT.sitemap_desc}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    { path: '/sahay', name: currentT.sm_home },
+                                    { path: '/sahay/report', name: currentT.sm_report },
+                                    { path: '/sahay/cases', name: currentT.sm_cases },
+                                    { path: '/sahay/map', name: currentT.sm_map },
+                                    { path: '/sahay/organization', name: currentT.sm_org },
+                                    { path: '/sahay/volunteer', name: currentT.sm_vol },
+                                    { path: '/sahay/impact', name: currentT.sm_imp },
+                                    { path: '/sahay/emergency', name: currentT.sm_emg },
+                                    { path: '/sahay/contact', name: currentT.sm_cont },
+                                    { path: '/sahay/about', name: currentT.sm_abt },
+                                    { path: '/sahay/auth', name: currentT.sm_auth },
+                                    { path: '/sahay/admin', name: currentT.sm_adm }
+                                ].map(link => (
+                                    <Link 
+                                        key={link.path} 
+                                        to={link.path}
+                                        onClick={() => setShowSitemap(false)}
+                                        className="p-4 bg-[#F7F7F7] border border-[#E5E7EB] rounded-xl font-bold text-[#111111] hover:border-[#FF6B35] hover:text-[#FF6B35] transition-colors flex items-center justify-between group outline-none"
+                                    >
+                                        {link.name}
+                                        <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PRODUCTS ECOSYSTEM MODAL */}
+            <AnimatePresence>
+                {showProductsPrompt && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[9999] bg-[#111111]/80 backdrop-blur-md flex items-center justify-center p-6"
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-[500px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E5E7EB]"
+                        >
+                            <button onClick={() => setShowProductsPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#111111] transition-colors outline-none">
+                                <X size={18} />
+                            </button>
+
+                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 text-[#111111]">Also from us</h2>
+                            <p className="text-[#555555] text-[0.9rem] text-center mb-8">Discover our connected platforms.</p>
+
+                            <Link to="/civic/" className="group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border bg-[#F7F7F7] border-[#E5E7EB] hover:border-[#111111]">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <img src="/logo-3.png" alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                                    <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-[#111111]">
+                                        ovyra <span className="text-[#555555] font-medium text-[1rem] ml-1">Civic</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className="text-[0.85rem] leading-relaxed transition-colors text-[#555555] group-hover:text-[#111111]">
+                                        Smart city management. Report issues easily.
+                                    </p>
+                                </div>
+                            </Link>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
@@ -777,6 +885,10 @@ export default function SahayReport() {
                 
                 <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#555555]">
                     <div className="flex items-center gap-6">
+                        <button onClick={() => setShowProductsPrompt(true)} className="hover:text-[#111111] transition-colors outline-none">{currentT.products}</button>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
+                        <span onClick={() => setShowSitemap(true)} className="cursor-pointer hover:text-[#111111] transition-colors underline outline-none">{currentT.sitemap}</span>
+                        <span className="w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
                         <Link to="/careers" className="hover:text-[#111111] transition-colors outline-none">{currentT.careers}</Link>
                     </div>
                     <span className="hidden md:block w-1 h-1 bg-[#E5E7EB] rounded-full"></span>
