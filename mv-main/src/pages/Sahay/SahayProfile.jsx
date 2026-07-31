@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { uploadUserProfilePicture } from '../../services/pocketbase';
@@ -110,14 +110,14 @@ export default function SahayProfile() {
                 finalAvatarUrl = await uploadUserProfilePicture(currentUser.uid, avatarFile);
             }
 
-            // Update Firestore Profile
+            // Securely create or update the profile document without failing if it's missing
             const userRef = doc(db, 'sahay_users', currentUser.uid);
-            await updateDoc(userRef, {
+            await setDoc(userRef, {
                 name: profileData.name,
                 phone: profileData.phone,
                 location: profileData.location,
                 avatarUrl: finalAvatarUrl
-            });
+            }, { merge: true });
 
             setProfileData(prev => ({ ...prev, avatarUrl: finalAvatarUrl }));
             setAvatarFile(null);
