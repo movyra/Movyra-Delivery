@@ -94,16 +94,16 @@ export const uploadUserProfilePicture = async (userId, avatarFile) => {
 
 /**
  * Uploads organization verification documents and profile photo.
- * @param {string} userId - The authenticated user's ID.
+ * @param {string} applicationId - The anonymously generated application ID.
  * @param {string} orgName - The name of the organization.
  * @param {File} idDocumentFile - The verification ID document (Aadhar, PAN, etc.).
  * @param {File} orgPhotoFile - The organization's profile picture or logo.
  * @returns {Promise<Object>} An object containing the secure URLs for both uploaded files.
  */
-export const uploadOrganizationVerification = async (userId, orgName, idDocumentFile, orgPhotoFile) => {
+export const uploadOrganizationVerification = async (applicationId, orgName, idDocumentFile, orgPhotoFile) => {
     try {
         const formData = new FormData();
-        formData.append('user_id', userId);
+        formData.append('application_id', applicationId);
         formData.append('organization_name', orgName);
         formData.append('id_document', idDocumentFile);
         formData.append('org_photo', orgPhotoFile);
