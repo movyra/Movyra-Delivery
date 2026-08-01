@@ -91,3 +91,44 @@ export const uploadUserProfilePicture = async (userId, avatarFile) => {
         throw error;
     }
 };
+
+/**
+ * Uploads organization verification documents and profile photo.
+ * @param {string} userId - The authenticated user's ID.
+ * @param {string} orgName - The name of the organization.
+ * @param {File} idDocumentFile - The verification ID document (Aadhar, PAN, etc.).
+ * @param {File} orgPhotoFile - The organization's profile picture or logo.
+ * @returns {Promise<Object>} An object containing the secure URLs for both uploaded files.
+ */
+export const uploadOrganizationVerification = async (userId, orgName, idDocumentFile, orgPhotoFile) => {
+    try {
+        const formData = new FormData();
+        formData.append('user_id', userId);
+        formData.append('organization_name', orgName);
+        formData.append('id_document', idDocumentFile);
+        formData.append('org_photo', orgPhotoFile);
+        formData.append('verification_status', 'pending');
+
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/organization_verifications/records`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const exactMessage = errorData.message || 'Organization verification upload failed.';
+            throw new Error(`PocketBase Rejected: ${exactMessage}`);
+        }
+
+        const record = await response.json();
+        
+        return {
+            recordId: record.id,
+            idDocumentUrl: `${POCKETBASE_URL}/api/files/${record.collectionId}/${record.id}/${record.id_document}`,
+            orgPhotoUrl: `${POCKETBASE_URL}/api/files/${record.collectionId}/${record.id}/${record.org_photo}`
+        };
+    } catch (error) {
+        console.error('PocketBase Organization Verification Error:', error);
+        throw error;
+    }
+};
