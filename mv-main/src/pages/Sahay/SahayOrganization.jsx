@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, serverTimestamp, arrayUnion, deleteDoc, setDoc, where } from 'firebase/firestore';
-import { auth, db } from '../../firebaseConfig';
+import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, serverTimestamp, arrayUnion, setDoc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { uploadOrganizationVerification } from '../../services/pocketbase';
 import { 
@@ -19,11 +18,9 @@ import {
     Send,
     Users,
     Clock,
-    User,
-    Trash2,
+    LogOut,
     Image as ImageIcon,
-    FileText,
-    Camera
+    FileText
 } from 'lucide-react';
 
 export default function SahayOrganization() {
@@ -31,15 +28,13 @@ export default function SahayOrganization() {
     
     // 1. STATE MANAGEMENT
     const theme = useCivicStore((state) => state.theme) || 'light'; 
-    const terminateSession = useCivicStore((state) => state.terminateSession);
 
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
     const [showSitemap, setShowSitemap] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
     
-    // Auth & Pipeline States
+    // Pipeline States
     const [isLoading, setIsLoading] = useState(true);
     const [accessState, setAccessState] = useState('CHECKING'); // 'CHECKING', 'FORM', 'PENDING', 'APPROVED'
     
@@ -49,7 +44,6 @@ export default function SahayOrganization() {
     const [noteText, setNoteText] = useState('');
     const [activeNoteCaseId, setActiveNoteCaseId] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
-    const [deletingId, setDeletingId] = useState(null);
 
     // Registration Form States
     const [orgData, setOrgData] = useState({ name: '', phone: '', email: '', address: '' });
@@ -57,63 +51,45 @@ export default function SahayOrganization() {
     const [photoFile, setPhotoFile] = useState(null);
     const [isSubmittingForm, setIsSubmittingForm] = useState(false);
 
-    // 2. AUTHENTICATION & MULTI-STATE GATEWAY
+    // 2. UNAUTHENTICATED MULTI-STATE GATEWAY
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
 
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                setCurrentUser(user);
-                
-                if (user.email === 'testcodecfg@gmail.com') {
-                    setAccessState('APPROVED');
-                    fetchCases();
-                    return;
-                }
+        checkSession();
+    }, []);
 
-                try {
-                    // Check User Role First
-                    const userDoc = await getDoc(doc(db, 'sahay_users', user.uid));
-                    if (userDoc.exists() && userDoc.data().role === 'Organization') {
+    const checkSession = async () => {
+        const sessionId = localStorage.getItem('sahay_org_session');
+        
+        if (sessionId) {
+            try {
+                const orgDoc = await getDoc(doc(db, 'sahay_organizations', sessionId));
+                if (orgDoc.exists()) {
+                    const app = orgDoc.data();
+                    if (app.verificationStatus === 'Pending') {
+                        setAccessState('PENDING');
+                    } else if (app.verificationStatus === 'Verified') {
                         setAccessState('APPROVED');
                         fetchCases();
-                        return;
-                    }
-
-                    // Check for Pending Application
-                    const orgsRef = collection(db, 'sahay_organizations');
-                    const q = query(orgsRef, where('userId', '==', user.uid));
-                    const snapshot = await getDocs(q);
-
-                    if (!snapshot.empty) {
-                        const app = snapshot.docs[0].data();
-                        if (app.verificationStatus === 'Pending') {
-                            setAccessState('PENDING');
-                        } else if (app.verificationStatus === 'Verified') {
-                            // Failsafe: Should be caught by user role, but just in case
-                            setAccessState('APPROVED');
-                            fetchCases();
-                        } else {
-                            setAccessState('FORM'); // Rejected, let them apply again
-                        }
                     } else {
-                        setAccessState('FORM');
+                        localStorage.removeItem('sahay_org_session');
+                        setAccessState('FORM'); 
                     }
-                } catch (error) {
-                    console.error("Authorization check failed:", error);
+                } else {
+                    localStorage.removeItem('sahay_org_session');
                     setAccessState('FORM');
-                } finally {
-                    setIsLoading(false);
                 }
-            } else {
-                navigate('/sahay/auth');
+            } catch (error) {
+                console.error("Session verification failed:", error);
+                setAccessState('FORM');
             }
-        });
-
-        return () => unsubscribe();
-    }, [navigate]);
+        } else {
+            setAccessState('FORM');
+        }
+        setIsLoading(false);
+    };
 
     // 3. DASHBOARD LOGIC
     const fetchCases = async () => {
@@ -139,17 +115,30 @@ export default function SahayOrganization() {
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    const handleExitSession = () => {
+        localStorage.removeItem('sahay_org_session');
+        setAccessState('FORM');
+        setCases([]);
+        setOrgData({ name: '', phone: '', email: '', address: '' });
+        setIdFile(null);
+        setPhotoFile(null);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handleClaimCase = async (caseId) => {
+        const currentSessionId = localStorage.getItem('sahay_org_session');
+        if (!currentSessionId) return;
+        
         setIsUpdating(true);
         try {
             const caseRef = doc(db, 'sahay_cases', caseId);
             await updateDoc(caseRef, {
                 status: 'Assigned',
-                assignedToId: currentUser.uid,
+                assignedToId: currentSessionId,
                 assignedAt: serverTimestamp()
             });
 
-            setCases(cases.map(c => c.id === caseId ? { ...c, status: 'Assigned', assignedToId: currentUser.uid } : c));
+            setCases(cases.map(c => c.id === caseId ? { ...c, status: 'Assigned', assignedToId: currentSessionId } : c));
         } catch (error) {
             console.error("Failed to claim case:", error);
         } finally {
@@ -176,13 +165,14 @@ export default function SahayOrganization() {
 
     const handleAddNote = async (e, caseId) => {
         e.preventDefault();
-        if (!noteText.trim()) return;
-        setIsUpdating(true);
+        const currentSessionId = localStorage.getItem('sahay_org_session');
+        if (!noteText.trim() || !currentSessionId) return;
         
+        setIsUpdating(true);
         try {
             const newNote = {
                 text: noteText,
-                authorId: currentUser.uid,
+                authorId: currentSessionId,
                 timestamp: new Date().toISOString()
             };
 
@@ -207,21 +197,6 @@ export default function SahayOrganization() {
         }
     };
 
-    const handleDeleteCase = async (caseId) => {
-        if (!window.confirm("Are you sure you want to permanently delete this report?")) return;
-        
-        setDeletingId(caseId);
-        try {
-            await deleteDoc(doc(db, 'sahay_cases', caseId));
-            setCases(cases.filter(c => c.id !== caseId));
-        } catch (error) {
-            console.error("Deletion failed:", error);
-            alert("Delete failed. Insufficient permissions.");
-        } finally {
-            setDeletingId(null);
-        }
-    };
-
     // 4. REGISTRATION SUBMISSION LOGIC
     const handleRegistrationSubmit = async (e) => {
         e.preventDefault();
@@ -232,13 +207,17 @@ export default function SahayOrganization() {
 
         setIsSubmittingForm(true);
         try {
+            // Generate a secure anonymous ID
+            const orgsRef = collection(db, 'sahay_organizations');
+            const newOrgRef = doc(orgsRef);
+            const generatedSessionId = newOrgRef.id;
+
             // Upload to PocketBase securely
-            const mediaData = await uploadOrganizationVerification(currentUser.uid, orgData.name, idFile, photoFile);
+            const mediaData = await uploadOrganizationVerification(generatedSessionId, orgData.name, idFile, photoFile);
 
             // Create Application Record
-            const orgRef = doc(db, 'sahay_organizations', currentUser.uid);
-            await setDoc(orgRef, {
-                userId: currentUser.uid,
+            await setDoc(newOrgRef, {
+                userId: generatedSessionId,
                 name: orgData.name,
                 email: orgData.email,
                 phone: orgData.phone,
@@ -249,6 +228,8 @@ export default function SahayOrganization() {
                 submittedAt: serverTimestamp()
             });
 
+            // Save session to Local Storage
+            localStorage.setItem('sahay_org_session', generatedSessionId);
             setAccessState('PENDING');
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -261,8 +242,9 @@ export default function SahayOrganization() {
     };
 
     // Filtered Views
+    const currentSessionId = localStorage.getItem('sahay_org_session');
     const newCases = cases.filter(c => c.status === 'Reported' || c.status === 'Verified');
-    const activeOperations = cases.filter(c => (c.status === 'Assigned' || c.status === 'In Progress') && c.assignedToId === currentUser?.uid);
+    const activeOperations = cases.filter(c => (c.status === 'Assigned' || c.status === 'In Progress') && c.assignedToId === currentSessionId);
     const displayCases = activeTab === 'New' ? newCases : activeOperations;
 
     const getSeverityBadge = (sev) => {
@@ -274,7 +256,7 @@ export default function SahayOrganization() {
     // 5. 13-LANGUAGE DICTIONARY (Fully Translated, Professional)
     const t = {
         en: {
-            lang: "English", careers: "Careers", products: "Products", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
+            lang: "English", careers: "Careers", products: "Products", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.", exit: "Exit Session",
             title: "Partner Dashboard", sub: "Manage active rescues, dispatch help, and log operational notes.",
             tab_new: "New Requests", tab_active: "My Operations",
             btn_claim: "Accept Case", btn_resolve: "Mark as Resolved", btn_note: "Add Note", btn_cancel: "Cancel",
@@ -288,7 +270,7 @@ export default function SahayOrganization() {
             sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         hi: {
-            lang: "हिन्दी", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sitemap: "साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            lang: "हिन्दी", careers: "करियर", products: "उत्पाद", back: "होम पर वापस जाएं", sitemap: "साइटमैप", sitemap_desc: "सभी सहाय मॉड्यूल पर सीधा नेविगेशन।", exit: "सत्र से बाहर निकलें",
             title: "पार्टनर डैशबोर्ड", sub: "सक्रिय बचाव का प्रबंधन करें, सहायता भेजें, और नोट्स लॉग करें।",
             tab_new: "नए अनुरोध", tab_active: "मेरे ऑपरेशंस",
             btn_claim: "केस स्वीकार करें", btn_resolve: "हल के रूप में चिह्नित करें", btn_note: "नोट जोड़ें", btn_cancel: "रद्द करें",
@@ -302,7 +284,7 @@ export default function SahayOrganization() {
             sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करें", sm_cases: "सार्वजनिक फ़ीड", sm_map: "लाइव मानचित्र", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क और पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         hinglish: {
-            lang: "Hinglish", careers: "Careers", products: "Products", back: "Home par wapas", sitemap: "Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.",
+            lang: "Hinglish", careers: "Careers", products: "Products", back: "Home par wapas", sitemap: "Sitemap", sitemap_desc: "Sabhi Sahay modules ka direct navigation.", exit: "Exit Session",
             title: "Partner Dashboard", sub: "Active rescues manage karein, help bhejein, aur notes log karein.",
             tab_new: "New Requests", tab_active: "My Operations",
             btn_claim: "Case Accept Karein", btn_resolve: "Resolved Mark Karein", btn_note: "Note Add Karein", btn_cancel: "Cancel",
@@ -316,7 +298,7 @@ export default function SahayOrganization() {
             sm_home: "Home Gateway", sm_report: "Report Submit Karein", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact aur Inquiries", sm_abt: "Mission ke baare mein", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         mr: {
-            lang: "मराठी", careers: "करिअर", products: "उत्पादने", back: "मुख्यपृष्ठावर परत", sitemap: "साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
+            lang: "मराठी", careers: "करिअर", products: "उत्पादने", back: "मुख्यपृष्ठावर परत", sitemap: "साइटमॅप", sitemap_desc: "सर्व सहाय मॉड्यूल्ससाठी थेट नेव्हिगेशन.", exit: "सत्र बाहेर पडा",
             title: "भागीदार डॅशबोर्ड", sub: "सक्रिय बचाव व्यवस्थापित करा, मदत पाठवा आणि नोट्स नोंदवा.",
             tab_new: "नवीन विनंत्या", tab_active: "माझे ऑपरेशन्स",
             btn_claim: "केस स्वीकारा", btn_resolve: "निराकरण म्हणून चिन्हांकित करा", btn_note: "नोट जोडा", btn_cancel: "रद्द करा",
@@ -330,7 +312,7 @@ export default function SahayOrganization() {
             sm_home: "होम गेटवे", sm_report: "अहवाल सबमिट करा", sm_cases: "सार्वजनिक फीड", sm_map: "थेट नकाशा", sm_org: "भागीदार डॅशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषण", sm_emg: "आपत्कालीन निर्देशिका", sm_cont: "संपर्क आणि चौकशी", sm_abt: "मिशन बद्दल", sm_auth: "प्रमाणीकरण", sm_adm: "प्रशासन कन्सोल"
         },
         gu: {
-            lang: "ગુજરાતી", careers: "કારકિર્દી", products: "ઉત્પાદનો", back: "હોમ પર પાછા ફરો", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.",
+            lang: "ગુજરાતી", careers: "કારકિર્દી", products: "ઉત્પાદનો", back: "હોમ પર પાછા ફરો", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સહાય મોડ્યુલો માટે સીધું નેવિગેશન.", exit: "સત્રમાંથી બહાર નીકળો",
             title: "ભાગીદાર ડેશબોર્ડ", sub: "સક્રિય બચાવનું સંચાલન કરો, મદદ મોકલો અને નોંધો લોગ કરો.",
             tab_new: "નવી વિનંતીઓ", tab_active: "મારી કામગીરી",
             btn_claim: "કેસ સ્વીકારો", btn_resolve: "ઉકેલાયેલ તરીકે ચિહ્નિત કરો", btn_note: "નોંધ ઉમેરો", btn_cancel: "રદ કરો",
@@ -344,7 +326,7 @@ export default function SahayOrganization() {
             sm_home: "હોમ ગેટવે", sm_report: "રિપોર્ટ સબમિટ કરો", sm_cases: "જાહેર ફીડ", sm_map: "જીવંત નકશો", sm_org: "ભાગીદાર ડેશબોર્ડ", sm_vol: "સ્વયંસેવક પોર્ટલ", sm_imp: "અસર એનાલિટિક્સ", sm_emg: "કટોકટી ડિરેક્ટરી", sm_cont: "સંપર્ક અને પૂછપરછ", sm_abt: "મિશન વિશે", sm_auth: "પ્રમાણીકરણ", sm_adm: "એડમિન કન્સોલ"
         },
         te: {
-            lang: "తెలుగు", careers: "కెరీర్స్", products: "ఉత్పత్తులు", back: "హోమ్‌కు తిరిగి వెళ్లండి", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
+            lang: "తెలుగు", careers: "కెరీర్స్", products: "ఉత్పత్తులు", back: "హోమ్‌కు తిరిగి వెళ్లండి", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సహాయ్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.", exit: "సెషన్ నుండి నిష్క్రమించండి",
             title: "భాగస్వామి డాష్‌బోర్డ్", sub: "క్రియాశీల రక్షణలను నిర్వహించండి, సహాయాన్ని పంపండి మరియు గమనికలను లాగ్ చేయండి.",
             tab_new: "కొత్త అభ్యర్థనలు", tab_active: "నా కార్యకలాపాలు",
             btn_claim: "కేసును అంగీకరించండి", btn_resolve: "పరిష్కరించబడినట్లుగా గుర్తించండి", btn_note: "గమనికను జోడించండి", btn_cancel: "రద్దు చేయండి",
@@ -358,7 +340,7 @@ export default function SahayOrganization() {
             sm_home: "హోమ్ గేట్‌వే", sm_report: "నివేదిక సమర్పించండి", sm_cases: "పబ్లిక్ ఫీడ్", sm_map: "లైవ్ మ్యాప్", sm_org: "భాగస్వామి డాష్‌బోర్డ్", sm_vol: "వాలంటీర్ పోర్టల్", sm_imp: "ఇంపాక్ట్ అనలిటిక్స్", sm_emg: "అత్యవసర డైరెక్టరీ", sm_cont: "సంప్రదింపులు మరియు విచారణలు", sm_abt: "మిషన్ గురించి", sm_auth: "ప్రామాణీకరణ", sm_adm: "అడ్మిన్ కన్సోల్"
         },
         ta: {
-            lang: "தமிழ்", careers: "தொழில்கள்", products: "தயாரிப்புகள்", back: "முகப்புக்குத் திரும்பு", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சஹாய் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
+            lang: "தமிழ்", careers: "தொழில்கள்", products: "தயாரிப்புகள்", back: "முகப்புக்குத் திரும்பு", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சஹாய் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.", exit: "அமர்விலிருந்து வெளியேறு",
             title: "கூட்டாளர் டாஷ்போர்டு", sub: "செயலில் உள்ள மீட்புகளை நிர்வகிக்கவும், உதவியை அனுப்பவும் மற்றும் குறிப்புகளை பதிவு செய்யவும்.",
             tab_new: "புதிய கோரிக்கைகள்", tab_active: "எனது செயல்பாடுகள்",
             btn_claim: "வழக்கை ஏற்கவும்", btn_resolve: "தீர்க்கப்பட்டதாகக் குறிக்கவும்", btn_note: "குறிப்பைச் சேர்", btn_cancel: "ரத்துசெய்",
@@ -372,7 +354,7 @@ export default function SahayOrganization() {
             sm_home: "முகப்பு நுழைவாயில்", sm_report: "அறிக்கையை சமர்ப்பிக்கவும்", sm_cases: "பொது ஊட்டம்", sm_map: "நேரடி வரைபடம்", sm_org: "கூட்டாளர் டாஷ்போர்டு", sm_vol: "தன்னார்வ போர்டல்", sm_imp: "தாக்க பகுப்பாய்வு", sm_emg: "அவசர அடைவு", sm_cont: "தொடர்பு மற்றும் விசாரணைகள்", sm_abt: "பணி பற்றி", sm_auth: "அங்கீகாரம்", sm_adm: "நிர்வாக கன்சோல்"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
+            lang: "ਪੰਜਾਬੀ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", back: "ਹੋਮ 'ਤੇ ਵਾਪਸ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਹਾਏ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।", exit: "ਸੈਸ਼ਨ ਤੋਂ ਬਾਹਰ ਆਓ",
             title: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sub: "ਸਰਗਰਮ ਬਚਾਅ ਕਾਰਜਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ, ਮਦਦ ਭੇਜੋ, ਅਤੇ ਨੋਟਸ ਲੌਗ ਕਰੋ।",
             tab_new: "ਨਵੀਆਂ ਬੇਨਤੀਆਂ", tab_active: "ਮੇਰੇ ਓਪਰੇਸ਼ਨ",
             btn_claim: "ਕੇਸ ਸਵੀਕਾਰ ਕਰੋ", btn_resolve: "ਹੱਲ ਕੀਤੇ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ", btn_note: "ਨੋਟ ਸ਼ਾਮਲ ਕਰੋ", btn_cancel: "ਰੱਦ ਕਰੋ",
@@ -386,7 +368,7 @@ export default function SahayOrganization() {
             sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋਲ"
         },
         bho: {
-            lang: "भोजपुरी", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
+            lang: "भोजपुरी", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।", exit: "सत्र से बाहर निकलीं",
             title: "पार्टनर डैशबोर्ड", sub: "सक्रिय बचाव के प्रबंधन करीं, मदद भेजीं, आ नोट लॉग करीं।",
             tab_new: "नया अनुरोध", tab_active: "हमार ऑपरेशंस",
             btn_claim: "केस स्वीकार करीं", btn_resolve: "हल के रूप में चिह्नित करीं", btn_note: "नोट जोड़ीं", btn_cancel: "रद्द करीं",
@@ -400,7 +382,7 @@ export default function SahayOrganization() {
             sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करीं", sm_cases: "सार्वजनिक फीड", sm_map: "लाइव नक्शा", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क आ पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         ar: {
-            lang: "العربية", careers: "الوظائف", products: "المنتجات", back: "العودة إلى الصفحة الرئيسية", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات ساهاي.",
+            lang: "العربية", careers: "الوظائف", products: "المنتجات", back: "العودة إلى الصفحة الرئيسية", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات ساهاي.", exit: "إنهاء الجلسة",
             title: "لوحة تحكم الشريك", sub: "إدارة عمليات الإنقاذ النشطة، إرسال المساعدة، وتسجيل الملاحظات.",
             tab_new: "الطلبات الجديدة", tab_active: "عملياتي",
             btn_claim: "قبول الحالة", btn_resolve: "وضع علامة كمنجز", btn_note: "إضافة ملاحظة", btn_cancel: "إلغاء",
@@ -414,7 +396,7 @@ export default function SahayOrganization() {
             sm_home: "البوابة الرئيسية", sm_report: "إرسال تقرير", sm_cases: "الخلاصة العامة", sm_map: "خريطة حية", sm_org: "لوحة تحكم الشريك", sm_vol: "بوابة المتطوعين", sm_imp: "تحليلات التأثير", sm_emg: "دليل الطوارئ", sm_cont: "الاتصال والاستفسارات", sm_abt: "حول المهمة", sm_auth: "المصادقة", sm_adm: "وحدة تحكم الإدارة"
         },
         es: {
-            lang: "Español", careers: "Carreras", products: "Productos", back: "Volver a Inicio", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos de Sahay.",
+            lang: "Español", careers: "Carreras", products: "Productos", back: "Volver a Inicio", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos de Sahay.", exit: "Salir de Sesión",
             title: "Panel de Socios", sub: "Gestione rescates activos, envíe ayuda y registre notas.",
             tab_new: "Nuevas Solicitudes", tab_active: "Mis Operaciones",
             btn_claim: "Aceptar Caso", btn_resolve: "Marcar como Resuelto", btn_note: "Añadir Nota", btn_cancel: "Cancelar",
@@ -428,7 +410,7 @@ export default function SahayOrganization() {
             sm_home: "Portal de Inicio", sm_report: "Enviar Reporte", sm_cases: "Feed Público", sm_map: "Mapa en Vivo", sm_org: "Panel de Socios", sm_vol: "Portal de Voluntarios", sm_imp: "Análisis de Impacto", sm_emg: "Directorio de Emergencia", sm_cont: "Contacto", sm_abt: "Acerca de la Misión", sm_auth: "Autenticación", sm_adm: "Consola de Administración"
         },
         fr: {
-            lang: "Français", careers: "Carrières", products: "Produits", back: "Retour à l'accueil", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Sahay.",
+            lang: "Français", careers: "Carrières", products: "Produits", back: "Retour à l'accueil", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Sahay.", exit: "Quitter la Session",
             title: "Tableau de Bord Partenaire", sub: "Gérez les sauvetages actifs, envoyez de l'aide et enregistrez des notes.",
             tab_new: "Nouvelles Demandes", tab_active: "Mes Opérations",
             btn_claim: "Accepter le Cas", btn_resolve: "Marquer comme Résolu", btn_note: "Ajouter une Note", btn_cancel: "Annuler",
@@ -442,7 +424,7 @@ export default function SahayOrganization() {
             sm_home: "Portail d'Accueil", sm_report: "Soumettre un Rapport", sm_cases: "Flux Public", sm_map: "Carte en Direct", sm_org: "Tableau de Bord", sm_vol: "Portail Bénévole", sm_imp: "Analyse d'Impact", sm_emg: "Annuaire d'Urgence", sm_cont: "Contact", sm_abt: "À Propos", sm_auth: "Authentification", sm_adm: "Console d'Administration"
         },
         de: {
-            lang: "Deutsch", careers: "Karriere", products: "Produkte", back: "Zurück zur Startseite", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Sahay-Modulen.",
+            lang: "Deutsch", careers: "Karriere", products: "Produkte", back: "Zurück zur Startseite", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Sahay-Modulen.", exit: "Sitzung beenden",
             title: "Partner-Dashboard", sub: "Verwalten Sie aktive Rettungen, senden Sie Hilfe und protokollieren Sie Notizen.",
             tab_new: "Neue Anfragen", tab_active: "Meine Operationen",
             btn_claim: "Fall Akzeptieren", btn_resolve: "Als Gelöst Markieren", btn_note: "Notiz Hinzufügen", btn_cancel: "Abbrechen",
@@ -508,12 +490,13 @@ export default function SahayOrganization() {
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[#555555] hover:text-[#111111] transition-colors outline-none px-3 py-1.5 rounded-full border border-[#E5E7EB] hover:border-[#111111]">
                         <Globe size={14} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
-                    {currentUser && (
+                    {currentSessionId && (
                         <button 
-                            onClick={() => navigate('/sahay/profile')} 
-                            className="p-2 rounded-full bg-[#F7F7F7] text-[#111111] border border-[#E5E7EB] hover:border-[#111111] hover:bg-[#E5E7EB] transition-colors outline-none flex items-center justify-center"
+                            onClick={handleExitSession} 
+                            title={currentT.exit}
+                            className="p-2 rounded-full bg-[#F7F7F7] text-[#DC2626] border border-[#E5E7EB] hover:border-[#DC2626] hover:bg-[#DC2626]/10 transition-colors outline-none flex items-center justify-center"
                         >
-                            <User size={18} />
+                            <LogOut size={18} />
                         </button>
                     )}
                 </div>
@@ -702,11 +685,11 @@ export default function SahayOrganization() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_id}</label>
-                                    <input type="file" accept="image/*,.pdf" onChange={(e) => setIdFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium" required />
+                                    <input type="file" accept="image/*,.pdf" onChange={(e) => setIdFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium cursor-pointer" required />
                                 </div>
                                 <div>
                                     <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_photo}</label>
-                                    <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium" required />
+                                    <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium cursor-pointer" required />
                                 </div>
                             </div>
 
@@ -737,21 +720,16 @@ export default function SahayOrganization() {
                 {/* RENDER STATE: APPROVED (DASHBOARD) */}
                 {accessState === 'APPROVED' && (
                     <>
-                        <div className="flex items-center justify-between mb-10">
-                            <div>
-                                <div className="flex items-center gap-3 mb-4 text-[#16A34A]">
-                                    <Building size={28} />
-                                </div>
-                                <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
-                                    {currentT.title}
-                                </h1>
-                                <p className="text-[1.1rem] text-[#555555] font-medium">
-                                    {currentT.sub}
-                                </p>
+                        <div className="mb-10">
+                            <div className="flex items-center gap-3 mb-4 text-[#16A34A]">
+                                <Building size={28} />
                             </div>
-                            {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
-                                <span className="text-[#DC2626] font-black text-[0.8rem] uppercase tracking-wider bg-[#DC2626]/10 px-3 py-1 rounded-full hidden md:block">Super Admin</span>
-                            )}
+                            <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
+                                {currentT.title}
+                            </h1>
+                            <p className="text-[1.1rem] text-[#555555] font-medium">
+                                {currentT.sub}
+                            </p>
                         </div>
 
                         {/* Dashboard Tabs */}
@@ -917,21 +895,6 @@ export default function SahayOrganization() {
                                                                 </button>
                                                             )}
                                                         </>
-                                                    )}
-
-                                                    {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
-                                                        <button
-                                                            onClick={() => handleDeleteCase(caseItem.id)}
-                                                            disabled={deletingId === caseItem.id}
-                                                            className="w-full mt-auto bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#DC2626] hover:text-[#FFFFFF] transition-colors outline-none disabled:opacity-50"
-                                                        >
-                                                            {deletingId === caseItem.id ? (
-                                                                <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
-                                                            ) : (
-                                                                <Trash2 size={16} />
-                                                            )}
-                                                            Delete Case
-                                                        </button>
                                                     )}
                                                 </div>
                                             </div>
