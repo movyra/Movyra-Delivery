@@ -349,8 +349,9 @@ service cloud.firestore {
     match /sahay_organizations/{orgId} {
       // Allow public read for live telemetry dashboards
       allow read: if true;
-      // The user creating the record must be authenticated and own the record, or be an admin
-      allow create, update: if isOwner(orgId) || isAdmin();
+      // Allow public creation and updates for unauthenticated organization onboarding
+      allow create: if true;
+      allow update: if true;
       // Only system administrators can delete organizations entirely
       allow delete: if isAdmin();
     }
