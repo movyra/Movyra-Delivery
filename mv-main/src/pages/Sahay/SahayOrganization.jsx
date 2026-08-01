@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, serverTimestamp, arrayUnion, deleteDoc } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, getDoc, updateDoc, serverTimestamp, arrayUnion, deleteDoc, setDoc, where } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
+import { uploadOrganizationVerification } from '../../services/pocketbase';
 import { 
     ArrowLeft, 
     X,
@@ -20,7 +21,9 @@ import {
     Clock,
     User,
     Trash2,
-    Image as ImageIcon
+    Image as ImageIcon,
+    FileText,
+    Camera
 } from 'lucide-react';
 
 export default function SahayOrganization() {
@@ -35,18 +38,26 @@ export default function SahayOrganization() {
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
     const [showSitemap, setShowSitemap] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [isAuthorized, setIsAuthorized] = useState(false);
     
-    const [cases, setCases] = useState([]);
+    // Auth & Pipeline States
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('New'); 
+    const [accessState, setAccessState] = useState('CHECKING'); // 'CHECKING', 'FORM', 'PENDING', 'APPROVED'
     
+    // Dashboard States
+    const [cases, setCases] = useState([]);
+    const [activeTab, setActiveTab] = useState('New'); 
     const [noteText, setNoteText] = useState('');
     const [activeNoteCaseId, setActiveNoteCaseId] = useState(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
 
-    // 2. AUTHENTICATION & ROLE VERIFICATION
+    // Registration Form States
+    const [orgData, setOrgData] = useState({ name: '', phone: '', email: '', address: '' });
+    const [idFile, setIdFile] = useState(null);
+    const [photoFile, setPhotoFile] = useState(null);
+    const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+
+    // 2. AUTHENTICATION & MULTI-STATE GATEWAY
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
@@ -56,24 +67,45 @@ export default function SahayOrganization() {
             if (user) {
                 setCurrentUser(user);
                 
-                // Strict Role-Based Access Control (RBAC)
                 if (user.email === 'testcodecfg@gmail.com') {
-                    setIsAuthorized(true);
+                    setAccessState('APPROVED');
                     fetchCases();
-                } else {
-                    try {
-                        const userDoc = await getDoc(doc(db, 'sahay_users', user.uid));
-                        if (userDoc.exists() && userDoc.data().role === 'Organization') {
-                            setIsAuthorized(true);
+                    return;
+                }
+
+                try {
+                    // Check User Role First
+                    const userDoc = await getDoc(doc(db, 'sahay_users', user.uid));
+                    if (userDoc.exists() && userDoc.data().role === 'Organization') {
+                        setAccessState('APPROVED');
+                        fetchCases();
+                        return;
+                    }
+
+                    // Check for Pending Application
+                    const orgsRef = collection(db, 'sahay_organizations');
+                    const q = query(orgsRef, where('userId', '==', user.uid));
+                    const snapshot = await getDocs(q);
+
+                    if (!snapshot.empty) {
+                        const app = snapshot.docs[0].data();
+                        if (app.verificationStatus === 'Pending') {
+                            setAccessState('PENDING');
+                        } else if (app.verificationStatus === 'Verified') {
+                            // Failsafe: Should be caught by user role, but just in case
+                            setAccessState('APPROVED');
                             fetchCases();
                         } else {
-                            alert(currentT.err_auth);
-                            navigate('/sahay');
+                            setAccessState('FORM'); // Rejected, let them apply again
                         }
-                    } catch (error) {
-                        console.error("Authorization check failed:", error);
-                        navigate('/sahay');
+                    } else {
+                        setAccessState('FORM');
                     }
+                } catch (error) {
+                    console.error("Authorization check failed:", error);
+                    setAccessState('FORM');
+                } finally {
+                    setIsLoading(false);
                 }
             } else {
                 navigate('/sahay/auth');
@@ -83,6 +115,7 @@ export default function SahayOrganization() {
         return () => unsubscribe();
     }, [navigate]);
 
+    // 3. DASHBOARD LOGIC
     const fetchCases = async () => {
         setIsLoading(true);
         try {
@@ -104,7 +137,6 @@ export default function SahayOrganization() {
         }
     };
 
-    // 3. OPERATIONAL LOGIC
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
     const handleClaimCase = async (caseId) => {
@@ -190,10 +222,47 @@ export default function SahayOrganization() {
         }
     };
 
+    // 4. REGISTRATION SUBMISSION LOGIC
+    const handleRegistrationSubmit = async (e) => {
+        e.preventDefault();
+        if (!idFile || !photoFile) {
+            alert("Both ID Document and Organization Photo are required for verification.");
+            return;
+        }
+
+        setIsSubmittingForm(true);
+        try {
+            // Upload to PocketBase securely
+            const mediaData = await uploadOrganizationVerification(currentUser.uid, orgData.name, idFile, photoFile);
+
+            // Create Application Record
+            const orgRef = doc(db, 'sahay_organizations', currentUser.uid);
+            await setDoc(orgRef, {
+                userId: currentUser.uid,
+                name: orgData.name,
+                email: orgData.email,
+                phone: orgData.phone,
+                address: orgData.address,
+                idDocumentUrl: mediaData.idDocumentUrl,
+                orgPhotoUrl: mediaData.orgPhotoUrl,
+                verificationStatus: 'Pending',
+                submittedAt: serverTimestamp()
+            });
+
+            setAccessState('PENDING');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        } catch (error) {
+            console.error("Registration failed:", error);
+            alert("Failed to submit application. Please try again.");
+        } finally {
+            setIsSubmittingForm(false);
+        }
+    };
+
     // Filtered Views
     const newCases = cases.filter(c => c.status === 'Reported' || c.status === 'Verified');
     const activeOperations = cases.filter(c => (c.status === 'Assigned' || c.status === 'In Progress') && c.assignedToId === currentUser?.uid);
-
     const displayCases = activeTab === 'New' ? newCases : activeOperations;
 
     const getSeverityBadge = (sev) => {
@@ -202,7 +271,7 @@ export default function SahayOrganization() {
         return 'bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35]';
     };
 
-    // 4. 13-LANGUAGE DICTIONARY (Fully Translated, Professional)
+    // 5. 13-LANGUAGE DICTIONARY (Fully Translated, Professional)
     const t = {
         en: {
             lang: "English", careers: "Careers", products: "Products", back: "Back to Home", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Sahay modules.",
@@ -211,8 +280,11 @@ export default function SahayOrganization() {
             btn_claim: "Accept Case", btn_resolve: "Mark as Resolved", btn_note: "Add Note", btn_cancel: "Cancel",
             lbl_desc: "Description", lbl_note_ph: "Type a private medical or rescue note...", loading: "Loading dashboard...",
             empty_new: "No new requests.", empty_active: "You have no active operations.",
-            err_auth: "Unauthorized. Organization access required.",
             lbl_reporter: "Reporter", lbl_needy: "Person in Need", lbl_blood: "Blood Group", lbl_media: "Attached Evidence",
+            reg_title: "Partner Registration", reg_sub: "Submit your organization details to get verified and access rescue operations.",
+            lbl_org: "Organization Name", lbl_phone: "Contact Number", lbl_email: "Official Email", lbl_address: "Headquarters Address",
+            lbl_id: "Government ID Proof", lbl_photo: "Organization Logo / Photo", btn_submit: "Submit Application", btn_loading: "Uploading Securely...",
+            pend_title: "Verification Pending", pend_sub: "Your application is currently under review by our administration team. You will be granted access once verified.",
             sm_home: "Home Gateway", sm_report: "Submit Report", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact & Inquiries", sm_abt: "About Mission", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         hi: {
@@ -222,8 +294,11 @@ export default function SahayOrganization() {
             btn_claim: "केस स्वीकार करें", btn_resolve: "हल के रूप में चिह्नित करें", btn_note: "नोट जोड़ें", btn_cancel: "रद्द करें",
             lbl_desc: "विवरण", lbl_note_ph: "एक निजी चिकित्सा या बचाव नोट टाइप करें...", loading: "डैशबोर्ड लोड हो रहा है...",
             empty_new: "कोई नया अनुरोध नहीं।", empty_active: "आपके पास कोई सक्रिय ऑपरेशन नहीं है।",
-            err_auth: "अनधिकृत। संगठन पहुंच आवश्यक है।",
             lbl_reporter: "रिपोर्टर", lbl_needy: "जरूरतमंद व्यक्ति", lbl_blood: "रक्त समूह", lbl_media: "संलग्न साक्ष्य",
+            reg_title: "पार्टनर पंजीकरण", reg_sub: "सत्यापित होने और बचाव कार्यों तक पहुंचने के लिए अपने संगठन का विवरण प्रस्तुत करें।",
+            lbl_org: "संगठन का नाम", lbl_phone: "संपर्क नंबर", lbl_email: "आधिकारिक ईमेल", lbl_address: "मुख्यालय का पता",
+            lbl_id: "सरकारी आईडी प्रमाण", lbl_photo: "संगठन का लोगो / फोटो", btn_submit: "आवेदन जमा करें", btn_loading: "सुरक्षित रूप से अपलोड हो रहा है...",
+            pend_title: "सत्यापन लंबित", pend_sub: "आपका आवेदन वर्तमान में हमारी प्रशासन टीम द्वारा समीक्षा के अधीन है। सत्यापित होने पर आपको पहुंच प्रदान की जाएगी।",
             sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करें", sm_cases: "सार्वजनिक फ़ीड", sm_map: "लाइव मानचित्र", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क और पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         hinglish: {
@@ -233,8 +308,11 @@ export default function SahayOrganization() {
             btn_claim: "Case Accept Karein", btn_resolve: "Resolved Mark Karein", btn_note: "Note Add Karein", btn_cancel: "Cancel",
             lbl_desc: "Details", lbl_note_ph: "Ek private medical ya rescue note type karein...", loading: "Dashboard load ho raha hai...",
             empty_new: "Koi nayi request nahi.", empty_active: "Aapke paas koi active operation nahi hai.",
-            err_auth: "Unauthorized. Organization access required hai.",
             lbl_reporter: "Reporter", lbl_needy: "Zarooratmand", lbl_blood: "Blood Group", lbl_media: "Attached Evidence",
+            reg_title: "Partner Registration", reg_sub: "Verify hone aur rescue operations access karne ke liye apni organization details submit karein.",
+            lbl_org: "Organization Name", lbl_phone: "Contact Number", lbl_email: "Official Email", lbl_address: "Headquarters Address",
+            lbl_id: "Government ID Proof", lbl_photo: "Organization Logo / Photo", btn_submit: "Application Submit Karein", btn_loading: "Securely upload ho raha hai...",
+            pend_title: "Verification Pending", pend_sub: "Aapki application review mein hai. Verify hone ke baad aapko access mil jayega.",
             sm_home: "Home Gateway", sm_report: "Report Submit Karein", sm_cases: "Public Feed", sm_map: "Live Map", sm_org: "Partner Dashboard", sm_vol: "Volunteer Portal", sm_imp: "Impact Analytics", sm_emg: "Emergency Directory", sm_cont: "Contact aur Inquiries", sm_abt: "Mission ke baare mein", sm_auth: "Authentication", sm_adm: "Admin Console"
         },
         mr: {
@@ -244,8 +322,11 @@ export default function SahayOrganization() {
             btn_claim: "केस स्वीकारा", btn_resolve: "निराकरण म्हणून चिन्हांकित करा", btn_note: "नोट जोडा", btn_cancel: "रद्द करा",
             lbl_desc: "तपशील", lbl_note_ph: "खाजगी वैद्यकीय किंवा बचाव नोट टाइप करा...", loading: "डॅशबोर्ड लोड करत आहे...",
             empty_new: "कोणत्याही नवीन विनंत्या नाहीत.", empty_active: "तुमचे कोणतेही सक्रिय ऑपरेशन्स नाहीत.",
-            err_auth: "अनधिकृत. संस्था प्रवेश आवश्यक आहे.",
             lbl_reporter: "अहवाल देणारा", lbl_needy: "गरजू व्यक्ती", lbl_blood: "रक्तगट", lbl_media: "संलग्न पुरावा",
+            reg_title: "भागीदार नोंदणी", reg_sub: "सत्यापित होण्यासाठी आणि बचाव कार्यांमध्ये प्रवेश मिळवण्यासाठी तुमच्या संस्थेचे तपशील सबमिट करा.",
+            lbl_org: "संस्थेचे नाव", lbl_phone: "संपर्क क्रमांक", lbl_email: "अधिकृत ईमेल", lbl_address: "मुख्यालयाचा पत्ता",
+            lbl_id: "शासकीय ओळखपत्र", lbl_photo: "संस्थेचा लोगो / फोटो", btn_submit: "अर्ज सबमिट करा", btn_loading: "सुरक्षितपणे अपलोड होत आहे...",
+            pend_title: "सत्यापन प्रलंबित", pend_sub: "तुमचा अर्ज सध्या आमच्या प्रशासनाद्वारे पुनरावलोकनाधीन आहे. सत्यापित झाल्यावर तुम्हाला प्रवेश दिला जाईल.",
             sm_home: "होम गेटवे", sm_report: "अहवाल सबमिट करा", sm_cases: "सार्वजनिक फीड", sm_map: "थेट नकाशा", sm_org: "भागीदार डॅशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषण", sm_emg: "आपत्कालीन निर्देशिका", sm_cont: "संपर्क आणि चौकशी", sm_abt: "मिशन बद्दल", sm_auth: "प्रमाणीकरण", sm_adm: "प्रशासन कन्सोल"
         },
         gu: {
@@ -255,8 +336,11 @@ export default function SahayOrganization() {
             btn_claim: "કેસ સ્વીકારો", btn_resolve: "ઉકેલાયેલ તરીકે ચિહ્નિત કરો", btn_note: "નોંધ ઉમેરો", btn_cancel: "રદ કરો",
             lbl_desc: "વિગતો", lbl_note_ph: "ખાનગી તબીબી અથવા બચાવ નોંધ લખો...", loading: "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
             empty_new: "કોઈ નવી વિનંતીઓ નથી.", empty_active: "તમારી પાસે કોઈ સક્રિય કામગીરી નથી.",
-            err_auth: "અનધિકૃત. સંસ્થાની ઍક્સેસ આવશ્યક છે.",
             lbl_reporter: "રિપોર્ટર", lbl_needy: "જરૂરિયાતમંદ વ્યક્તિ", lbl_blood: "રક્ત જૂથ", lbl_media: "જોડાયેલ પુરાવા",
+            reg_title: "ભાગીદાર નોંધણી", reg_sub: "ચકાસણી મેળવવા અને બચાવ કામગીરી ઍક્સેસ કરવા માટે તમારી સંસ્થાની વિગતો સબમિટ કરો.",
+            lbl_org: "સંસ્થાનું નામ", lbl_phone: "સંપર્ક નંબર", lbl_email: "સત્તાવાર ઇમેઇલ", lbl_address: "મુખ્ય મથકનું સરનામું",
+            lbl_id: "સરકારી આઈડી પ્રૂફ", lbl_photo: "સંસ્થાનો લોગો / ફોટો", btn_submit: "અરજી સબમિટ કરો", btn_loading: "સુરક્ષિત રીતે અપલોડ થઈ રહ્યું છે...",
+            pend_title: "ચકાસણી બાકી છે", pend_sub: "તમારી અરજી હાલમાં અમારી વહીવટી ટીમ દ્વારા સમીક્ષા હેઠળ છે. ચકાસાયેલ થયા પછી તમને ઍક્સેસ આપવામાં આવશે.",
             sm_home: "હોમ ગેટવે", sm_report: "રિપોર્ટ સબમિટ કરો", sm_cases: "જાહેર ફીડ", sm_map: "જીવંત નકશો", sm_org: "ભાગીદાર ડેશબોર્ડ", sm_vol: "સ્વયંસેવક પોર્ટલ", sm_imp: "અસર એનાલિટિક્સ", sm_emg: "કટોકટી ડિરેક્ટરી", sm_cont: "સંપર્ક અને પૂછપરછ", sm_abt: "મિશન વિશે", sm_auth: "પ્રમાણીકરણ", sm_adm: "એડમિન કન્સોલ"
         },
         te: {
@@ -266,8 +350,11 @@ export default function SahayOrganization() {
             btn_claim: "కేసును అంగీకరించండి", btn_resolve: "పరిష్కరించబడినట్లుగా గుర్తించండి", btn_note: "గమనికను జోడించండి", btn_cancel: "రద్దు చేయండి",
             lbl_desc: "వివరాలు", lbl_note_ph: "ప్రైవేట్ వైద్య లేదా రెస్క్యూ నోట్‌ను టైప్ చేయండి...", loading: "డాష్‌బోర్డ్ లోడ్ అవుతోంది...",
             empty_new: "కొత్త అభ్యర్థనలు లేవు.", empty_active: "మీకు క్రియాశీల కార్యకలాపాలు లేవు.",
-            err_auth: "అనధికారికం. సంస్థ యాక్సెస్ అవసరం.",
             lbl_reporter: "రిపోర్టర్", lbl_needy: "అవసరమైన వ్యక్తి", lbl_blood: "రక్త వర్గం", lbl_media: "జోడించిన సాక్ష్యం",
+            reg_title: "భాగస్వామి నమోదు", reg_sub: "ధృవీకరణ పొందడానికి మరియు రెస్క్యూ కార్యకలాపాలను యాక్సెస్ చేయడానికి మీ సంస్థ వివరాలను సమర్పించండి.",
+            lbl_org: "సంస్థ పేరు", lbl_phone: "సంప్రదింపు సంఖ్య", lbl_email: "అధికారిక ఇమెయిల్", lbl_address: "ప్రధాన కార్యాలయ చిరునామా",
+            lbl_id: "ప్రభుత్వ ID ప్రూఫ్", lbl_photo: "సంస్థ లోగో / ఫోటో", btn_submit: "అప్లికేషన్ సమర్పించండి", btn_loading: "సురక్షితంగా అప్‌లోడ్ చేయబడుతోంది...",
+            pend_title: "ధృవీకరణ పెండింగ్‌లో ఉంది", pend_sub: "మీ అప్లికేషన్ ప్రస్తుతం మా బృందం సమీక్షలో ఉంది. ధృవీకరించబడిన తర్వాత మీకు యాక్సెస్ మంజూరు చేయబడుతుంది.",
             sm_home: "హోమ్ గేట్‌వే", sm_report: "నివేదిక సమర్పించండి", sm_cases: "పబ్లిక్ ఫీడ్", sm_map: "లైవ్ మ్యాప్", sm_org: "భాగస్వామి డాష్‌బోర్డ్", sm_vol: "వాలంటీర్ పోర్టల్", sm_imp: "ఇంపాక్ట్ అనలిటిక్స్", sm_emg: "అత్యవసర డైరెక్టరీ", sm_cont: "సంప్రదింపులు మరియు విచారణలు", sm_abt: "మిషన్ గురించి", sm_auth: "ప్రామాణీకరణ", sm_adm: "అడ్మిన్ కన్సోల్"
         },
         ta: {
@@ -277,8 +364,11 @@ export default function SahayOrganization() {
             btn_claim: "வழக்கை ஏற்கவும்", btn_resolve: "தீர்க்கப்பட்டதாகக் குறிக்கவும்", btn_note: "குறிப்பைச் சேர்", btn_cancel: "ரத்துசெய்",
             lbl_desc: "விவரங்கள்", lbl_note_ph: "ஒரு தனிப்பட்ட மருத்துவ அல்லது மீட்பு குறிப்பை தட்டச்சு செய்யவும்...", loading: "டாஷ்போர்டு ஏற்றப்படுகிறது...",
             empty_new: "புதிய கோரிக்கைகள் இல்லை.", empty_active: "உங்களுக்கு செயலில் உள்ள செயல்பாடுகள் எதுவும் இல்லை.",
-            err_auth: "அங்கீகரிக்கப்படாதது. நிறுவன அணுகல் தேவை.",
             lbl_reporter: "நிருபர்", lbl_needy: "தேவையுள்ள நபர்", lbl_blood: "இரத்த வகை", lbl_media: "இணைக்கப்பட்ட சான்று",
+            reg_title: "கூட்டாளர் பதிவு", reg_sub: "சரிபார்ப்பு பெறவும் மீட்பு நடவடிக்கைகளை அணுகவும் உங்கள் நிறுவனத்தின் விவரங்களை சமர்ப்பிக்கவும்.",
+            lbl_org: "நிறுவனத்தின் பெயர்", lbl_phone: "தொடர்பு எண்", lbl_email: "அதிகாரப்பூர்வ மின்னஞ்சல்", lbl_address: "தலைமையக முகவரி",
+            lbl_id: "அரசு ஐடி சான்று", lbl_photo: "நிறுவனத்தின் லோகோ / புகைப்படம்", btn_submit: "விண்ணப்பத்தை சமர்ப்பிக்கவும்", btn_loading: "பாதுகாப்பாக பதிவேற்றப்படுகிறது...",
+            pend_title: "சரிபார்ப்பு நிலுவையில் உள்ளது", pend_sub: "உங்கள் விண்ணப்பம் தற்போது மதிப்பாய்வில் உள்ளது. சரிபார்க்கப்பட்டதும் அணுகல் வழங்கப்படும்.",
             sm_home: "முகப்பு நுழைவாயில்", sm_report: "அறிக்கையை சமர்ப்பிக்கவும்", sm_cases: "பொது ஊட்டம்", sm_map: "நேரடி வரைபடம்", sm_org: "கூட்டாளர் டாஷ்போர்டு", sm_vol: "தன்னார்வ போர்டல்", sm_imp: "தாக்க பகுப்பாய்வு", sm_emg: "அவசர அடைவு", sm_cont: "தொடர்பு மற்றும் விசாரணைகள்", sm_abt: "பணி பற்றி", sm_auth: "அங்கீகாரம்", sm_adm: "நிர்வாக கன்சோல்"
         },
         pa: {
@@ -288,8 +378,11 @@ export default function SahayOrganization() {
             btn_claim: "ਕੇਸ ਸਵੀਕਾਰ ਕਰੋ", btn_resolve: "ਹੱਲ ਕੀਤੇ ਵਜੋਂ ਨਿਸ਼ਾਨਬੱਧ ਕਰੋ", btn_note: "ਨੋਟ ਸ਼ਾਮਲ ਕਰੋ", btn_cancel: "ਰੱਦ ਕਰੋ",
             lbl_desc: "ਵੇਰਵੇ", lbl_note_ph: "ਇੱਕ ਨਿੱਜੀ ਮੈਡੀਕਲ ਜਾਂ ਬਚਾਅ ਨੋਟ ਟਾਈਪ ਕਰੋ...", loading: "ਡੈਸ਼ਬੋਰਡ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
             empty_new: "ਕੋਈ ਨਵੀਆਂ ਬੇਨਤੀਆਂ ਨਹੀਂ।", empty_active: "ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਸਰਗਰਮ ਕਾਰਜ ਨਹੀਂ ਹੈ।",
-            err_auth: "ਅਣਅਧਿਕਾਰਤ। ਸੰਗਠਨ ਦੀ ਪਹੁੰਚ ਜ਼ਰੂਰੀ ਹੈ।",
             lbl_reporter: "ਰਿਪੋਰਟਰ", lbl_needy: "ਲੋੜਵੰਦ ਵਿਅਕਤੀ", lbl_blood: "ਬਲੱਡ ਗਰੁੱਪ", lbl_media: "ਨੱਥੀ ਸਬੂਤ",
+            reg_title: "ਪਾਰਟਨਰ ਰਜਿਸਟ੍ਰੇਸ਼ਨ", reg_sub: "ਤਸਦੀਕ ਕਰਵਾਉਣ ਅਤੇ ਬਚਾਅ ਕਾਰਜਾਂ ਤੱਕ ਪਹੁੰਚਣ ਲਈ ਆਪਣੇ ਸੰਗਠਨ ਦੇ ਵੇਰਵੇ ਦਰਜ ਕਰੋ।",
+            lbl_org: "ਸੰਗਠਨ ਦਾ ਨਾਮ", lbl_phone: "ਸੰਪਰਕ ਨੰਬਰ", lbl_email: "ਅਧਿਕਾਰਤ ਈਮੇਲ", lbl_address: "ਹੈੱਡਕੁਆਰਟਰ ਦਾ ਪਤਾ",
+            lbl_id: "ਸਰਕਾਰੀ ਆਈਡੀ ਸਬੂਤ", lbl_photo: "ਸੰਗਠਨ ਦਾ ਲੋਗੋ / ਫੋਟੋ", btn_submit: "ਐਪਲੀਕੇਸ਼ਨ ਦਰਜ ਕਰੋ", btn_loading: "ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਅੱਪਲੋਡ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+            pend_title: "ਤਸਦੀਕ ਲੰਬਿਤ ਹੈ", pend_sub: "ਤੁਹਾਡੀ ਅਰਜ਼ੀ ਵਰਤਮਾਨ ਵਿੱਚ ਸਾਡੀ ਟੀਮ ਦੁਆਰਾ ਸਮੀਖਿਆ ਅਧੀਨ ਹੈ। ਤਸਦੀਕ ਹੋਣ ਤੋਂ ਬਾਅਦ ਤੁਹਾਨੂੰ ਪਹੁੰਚ ਦਿੱਤੀ ਜਾਵੇਗੀ।",
             sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋਲ"
         },
         bho: {
@@ -299,8 +392,11 @@ export default function SahayOrganization() {
             btn_claim: "केस स्वीकार करीं", btn_resolve: "हल के रूप में चिह्नित करीं", btn_note: "नोट जोड़ीं", btn_cancel: "रद्द करीं",
             lbl_desc: "विवरण", lbl_note_ph: "एगो निजी मेडिकल भा बचाव नोट टाइप करीं...", loading: "डैशबोर्ड लोड हो रहल बा...",
             empty_new: "कवनो नया अनुरोध नईखे।", empty_active: "रउरा पास कवनो सक्रिय ऑपरेशन नईखे।",
-            err_auth: "अनधिकृत। संगठन के पहुँच जरूरी बा।",
             lbl_reporter: "रिपोर्टर", lbl_needy: "जरूरतमंद व्यक्ति", lbl_blood: "रक्त समूह", lbl_media: "संलग्न साक्ष्य",
+            reg_title: "पार्टनर पंजीकरण", reg_sub: "सत्यापित होखे आ बचाव काम तक पहुंचे खातिर अपना संगठन के जानकारी जमा करीं।",
+            lbl_org: "संगठन के नाम", lbl_phone: "संपर्क नंबर", lbl_email: "आधिकारिक ईमेल", lbl_address: "मुख्यालय के पता",
+            lbl_id: "सरकारी आईडी प्रमाण", lbl_photo: "संगठन के लोगो / फोटो", btn_submit: "आवेदन जमा करीं", btn_loading: "सुरक्षित रूप से अपलोड हो रहल बा...",
+            pend_title: "सत्यापन लंबित बा", pend_sub: "रउरा आवेदन के समीक्षा हो रहल बा। सत्यापित भइला पर रउरा के पहुँच दिहल जाई।",
             sm_home: "होम गेटवे", sm_report: "रिपोर्ट सबमिट करीं", sm_cases: "सार्वजनिक फीड", sm_map: "लाइव नक्शा", sm_org: "पार्टनर डैशबोर्ड", sm_vol: "स्वयंसेवक पोर्टल", sm_imp: "प्रभाव विश्लेषिकी", sm_emg: "आपातकालीन निर्देशिका", sm_cont: "संपर्क आ पूछताछ", sm_abt: "मिशन के बारे में", sm_auth: "प्रमाणीकरण", sm_adm: "एडमिन कंसोल"
         },
         ar: {
@@ -310,8 +406,11 @@ export default function SahayOrganization() {
             btn_claim: "قبول الحالة", btn_resolve: "وضع علامة كمنجز", btn_note: "إضافة ملاحظة", btn_cancel: "إلغاء",
             lbl_desc: "التفاصيل", lbl_note_ph: "اكتب ملاحظة طبية أو إنقاذ خاصة...", loading: "جاري تحميل لوحة التحكم...",
             empty_new: "لا توجد طلبات جديدة.", empty_active: "ليس لديك عمليات نشطة.",
-            err_auth: "غير مصرح به. مطلوب وصول المنظمة.",
             lbl_reporter: "المراسل", lbl_needy: "الشخص المحتاج", lbl_blood: "فصيلة الدم", lbl_media: "الأدلة المرفقة",
+            reg_title: "تسجيل الشريك", reg_sub: "أرسل تفاصيل منظمتك للتحقق والوصول إلى عمليات الإنقاذ.",
+            lbl_org: "اسم المنظمة", lbl_phone: "رقم الاتصال", lbl_email: "البريد الإلكتروني الرسمي", lbl_address: "عنوان المقر",
+            lbl_id: "إثبات الهوية الحكومي", lbl_photo: "شعار / صورة المنظمة", btn_submit: "تقديم الطلب", btn_loading: "جاري التحميل بأمان...",
+            pend_title: "التحقق قيد الانتظار", pend_sub: "طلبك قيد المراجعة حالياً من قبل فريق الإدارة. سيتم منحك الوصول بمجرد التحقق.",
             sm_home: "البوابة الرئيسية", sm_report: "إرسال تقرير", sm_cases: "الخلاصة العامة", sm_map: "خريطة حية", sm_org: "لوحة تحكم الشريك", sm_vol: "بوابة المتطوعين", sm_imp: "تحليلات التأثير", sm_emg: "دليل الطوارئ", sm_cont: "الاتصال والاستفسارات", sm_abt: "حول المهمة", sm_auth: "المصادقة", sm_adm: "وحدة تحكم الإدارة"
         },
         es: {
@@ -321,8 +420,11 @@ export default function SahayOrganization() {
             btn_claim: "Aceptar Caso", btn_resolve: "Marcar como Resuelto", btn_note: "Añadir Nota", btn_cancel: "Cancelar",
             lbl_desc: "Detalles", lbl_note_ph: "Escriba una nota médica o de rescate privada...", loading: "Cargando panel...",
             empty_new: "No hay nuevas solicitudes.", empty_active: "No tiene operaciones activas.",
-            err_auth: "No autorizado. Se requiere acceso de organización.",
             lbl_reporter: "Reportero", lbl_needy: "Persona Necesitada", lbl_blood: "Grupo Sanguíneo", lbl_media: "Evidencia Adjunta",
+            reg_title: "Registro de Socios", reg_sub: "Envíe los detalles de su organización para verificarse y acceder a rescates.",
+            lbl_org: "Nombre de la Organización", lbl_phone: "Número de Contacto", lbl_email: "Correo Oficial", lbl_address: "Dirección Principal",
+            lbl_id: "Identificación Gubernamental", lbl_photo: "Logo / Foto de Organización", btn_submit: "Enviar Solicitud", btn_loading: "Subiendo de forma segura...",
+            pend_title: "Verificación Pendiente", pend_sub: "Su solicitud está bajo revisión. Se le otorgará acceso una vez verificada.",
             sm_home: "Portal de Inicio", sm_report: "Enviar Reporte", sm_cases: "Feed Público", sm_map: "Mapa en Vivo", sm_org: "Panel de Socios", sm_vol: "Portal de Voluntarios", sm_imp: "Análisis de Impacto", sm_emg: "Directorio de Emergencia", sm_cont: "Contacto", sm_abt: "Acerca de la Misión", sm_auth: "Autenticación", sm_adm: "Consola de Administración"
         },
         fr: {
@@ -332,8 +434,11 @@ export default function SahayOrganization() {
             btn_claim: "Accepter le Cas", btn_resolve: "Marquer comme Résolu", btn_note: "Ajouter une Note", btn_cancel: "Annuler",
             lbl_desc: "Détails", lbl_note_ph: "Tapez une note médicale ou de sauvetage privée...", loading: "Chargement du tableau de bord...",
             empty_new: "Pas de nouvelles demandes.", empty_active: "Vous n'avez aucune opération active.",
-            err_auth: "Non autorisé. Accès organisation requis.",
             lbl_reporter: "Signaleur", lbl_needy: "Personne dans le Besoin", lbl_blood: "Groupe Sanguin", lbl_media: "Preuve Jointe",
+            reg_title: "Inscription Partenaire", reg_sub: "Soumettez les détails de votre organisation pour être vérifié.",
+            lbl_org: "Nom de l'organisation", lbl_phone: "Numéro de contact", lbl_email: "Email Officiel", lbl_address: "Adresse du siège",
+            lbl_id: "Pièce d'identité officielle", lbl_photo: "Logo / Photo de l'organisation", btn_submit: "Soumettre la demande", btn_loading: "Téléchargement sécurisé...",
+            pend_title: "Vérification en attente", pend_sub: "Votre demande est en cours d'examen. L'accès vous sera accordé une fois vérifié.",
             sm_home: "Portail d'Accueil", sm_report: "Soumettre un Rapport", sm_cases: "Flux Public", sm_map: "Carte en Direct", sm_org: "Tableau de Bord", sm_vol: "Portail Bénévole", sm_imp: "Analyse d'Impact", sm_emg: "Annuaire d'Urgence", sm_cont: "Contact", sm_abt: "À Propos", sm_auth: "Authentification", sm_adm: "Console d'Administration"
         },
         de: {
@@ -343,8 +448,11 @@ export default function SahayOrganization() {
             btn_claim: "Fall Akzeptieren", btn_resolve: "Als Gelöst Markieren", btn_note: "Notiz Hinzufügen", btn_cancel: "Abbrechen",
             lbl_desc: "Details", lbl_note_ph: "Geben Sie eine private medizinische oder Rettungsnotiz ein...", loading: "Dashboard wird geladen...",
             empty_new: "Keine neuen Anfragen.", empty_active: "Sie haben keine aktiven Operationen.",
-            err_auth: "Nicht autorisiert. Organisationszugriff erforderlich.",
             lbl_reporter: "Melder", lbl_needy: "Bedürftige Person", lbl_blood: "Blutgruppe", lbl_media: "Angehängter Beweis",
+            reg_title: "Partner-Registrierung", reg_sub: "Reichen Sie Ihre Organisationsdetails ein, um verifiziert zu werden.",
+            lbl_org: "Name der Organisation", lbl_phone: "Kontaktnummer", lbl_email: "Offizielle E-Mail", lbl_address: "Hauptsitz Adresse",
+            lbl_id: "Amtlicher Lichtbildausweis", lbl_photo: "Organisationslogo / Foto", btn_submit: "Antrag einreichen", btn_loading: "Sicher hochladen...",
+            pend_title: "Überprüfung ausstehend", pend_sub: "Ihr Antrag wird derzeit geprüft. Nach Überprüfung wird Ihnen Zugriff gewährt.",
             sm_home: "Startportal", sm_report: "Meldung Einreichen", sm_cases: "Öffentlicher Feed", sm_map: "Live-Karte", sm_org: "Partner-Dashboard", sm_vol: "Freiwilligen-Portal", sm_imp: "Auswirkungsanalyse", sm_emg: "Notfallverzeichnis", sm_cont: "Kontakt", sm_abt: "Über die Mission", sm_auth: "Authentifizierung", sm_adm: "Admin-Konsole"
         }
     };
@@ -361,11 +469,12 @@ export default function SahayOrganization() {
     const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
     const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } } };
 
-    if (!isAuthorized) {
+    // 6. RENDER STATE: CHECKING
+    if (accessState === 'CHECKING' || isLoading) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFFFF] text-[#111111]">
                 <div className="w-8 h-8 border-2 border-t-transparent border-[#16A34A] rounded-full animate-spin mb-4"></div>
-                <p className="font-bold text-[#555555]">Verifying access permissions...</p>
+                <p className="font-bold text-[#555555]">Authenticating Secure Portal...</p>
             </div>
         );
     }
@@ -527,257 +636,351 @@ export default function SahayOrganization() {
 
             <main className="flex-1 max-w-[1200px] w-full mx-auto px-6 md:px-12 py-12 animate-fade flex flex-col">
                 
-                <div className="flex items-center justify-between mb-8">
-                    <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
-                        <ArrowLeft size={16} /> {currentT.back}
-                    </button>
-                    {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
-                         <span className="text-[#DC2626] font-black text-[0.8rem] uppercase tracking-wider bg-[#DC2626]/10 px-3 py-1 rounded-full">Super Admin</span>
-                    )}
-                </div>
+                <button onClick={() => navigate('/sahay')} className="flex items-center gap-2 mb-8 outline-none font-bold text-[0.9rem] text-[#555555] hover:text-[#111111] transition-colors self-start">
+                    <ArrowLeft size={16} /> {currentT.back}
+                </button>
 
-                <div className="mb-10">
-                    <div className="flex items-center gap-3 mb-4 text-[#16A34A]">
-                        <Building size={28} />
-                    </div>
-                    <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
-                        {currentT.title}
-                    </h1>
-                    <p className="text-[1.1rem] text-[#555555] font-medium">
-                        {currentT.sub}
-                    </p>
-                </div>
+                {/* RENDER STATE: FORM */}
+                {accessState === 'FORM' && (
+                    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="max-w-[800px] w-full mx-auto">
+                        <div className="mb-10">
+                            <div className="flex items-center gap-3 mb-4 text-[#16A34A]">
+                                <Building size={28} />
+                            </div>
+                            <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
+                                {currentT.reg_title}
+                            </h1>
+                            <p className="text-[1.1rem] text-[#555555] font-medium">
+                                {currentT.reg_sub}
+                            </p>
+                        </div>
 
-                {/* Dashboard Tabs */}
-                <div className="flex gap-4 mb-8 border-b border-[#E5E7EB]">
-                    <button 
-                        onClick={() => setActiveTab('New')}
-                        className={`pb-4 px-2 font-black text-[1.1rem] outline-none transition-colors relative ${activeTab === 'New' ? 'text-[#111111]' : 'text-[#555555] hover:text-[#111111]'}`}
-                    >
-                        {currentT.tab_new}
-                        {activeTab === 'New' && <motion.div layoutId="tabIndicator" className="absolute bottom-0 left-0 right-0 h-1 bg-[#111111]" />}
-                    </button>
-                    <button 
-                        onClick={() => setActiveTab('Active')}
-                        className={`pb-4 px-2 font-black text-[1.1rem] outline-none transition-colors relative ${activeTab === 'Active' ? 'text-[#111111]' : 'text-[#555555] hover:text-[#111111]'}`}
-                    >
-                        {currentT.tab_active}
-                        {activeTab === 'Active' && <motion.div layoutId="tabIndicator" className="absolute bottom-0 left-0 right-0 h-1 bg-[#111111]" />}
-                    </button>
-                </div>
+                        <form onSubmit={handleRegistrationSubmit} className="flex flex-col gap-8 bg-[#F7F7F7] p-6 md:p-10 rounded-3xl border border-[#E5E7EB]">
+                            <div>
+                                <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_org}</label>
+                                <input 
+                                    type="text" 
+                                    required
+                                    value={orgData.name}
+                                    onChange={(e) => setOrgData({...orgData, name: e.target.value})}
+                                    className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#16A34A] transition-colors mb-6"
+                                />
 
-                {/* Dashboard Feed */}
-                {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20">
-                        <div className="w-8 h-8 border-2 border-t-transparent border-[#16A34A] rounded-full animate-spin mb-4"></div>
-                        <span className="text-[0.9rem] font-bold text-[#555555]">{currentT.loading}</span>
-                    </div>
-                ) : displayCases.length === 0 ? (
-                    <div className="rounded-3xl p-12 text-center border border-dashed border-[#D1D5DB] bg-[#F7F7F7] flex flex-col items-center justify-center">
-                        <CheckCircle size={48} className="mb-6 text-[#D1D5DB]" />
-                        <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-[#111111]">
-                            {activeTab === 'New' ? currentT.empty_new : currentT.empty_active}
-                        </h2>
-                    </div>
-                ) : (
-                    <motion.div initial="hidden" animate="visible" variants={containerVariants} className="flex flex-col gap-6">
-                        {displayCases.map((caseItem) => {
-                            const dateString = caseItem.createdAt ? caseItem.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
-                            const confirmCount = caseItem.confirmedBy ? caseItem.confirmedBy.length : 0;
-                            const isNoteOpen = activeNoteCaseId === caseItem.id;
-
-                            return (
-                                <motion.div 
-                                    variants={itemVariants} 
-                                    key={caseItem.id} 
-                                    className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] overflow-hidden shadow-sm"
-                                >
-                                    <div className="p-6 md:p-8 flex flex-col lg:flex-row justify-between gap-10">
-                                        
-                                        {/* Main Details Panel */}
-                                        <div className="flex-1">
-                                            <div className="flex flex-wrap items-center gap-3 mb-6">
-                                                <span className="px-3 py-1 bg-[#111111] text-[#FFFFFF] text-[0.75rem] font-black tracking-wider uppercase rounded-full">
-                                                    {caseItem.category}
-                                                </span>
-                                                <span className={`px-3 py-1 text-[0.75rem] font-black tracking-wider uppercase rounded-full border ${getSeverityBadge(caseItem.severity)}`}>
-                                                    {caseItem.severity}
-                                                </span>
-                                                {confirmCount > 0 && (
-                                                    <span className="px-3 py-1 bg-[#F7F7F7] text-[#555555] border border-[#E5E7EB] text-[0.75rem] font-bold rounded-full flex items-center gap-1">
-                                                        <Users size={12}/> {confirmCount} confirms
-                                                    </span>
-                                                )}
-                                                <span className="ml-auto md:ml-0 px-3 py-1 bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.75rem] rounded-full flex items-center gap-1">
-                                                    <Clock size={12} /> {dateString}
-                                                </span>
-                                            </div>
-
-                                            {/* Data Grid */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-[#F7F7F7] p-6 rounded-2xl border border-[#E5E7EB]">
-                                                <div>
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_reporter}</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.reporterName || 'Anonymous'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_needy}</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.needyName || 'Unknown'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_blood}</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.bloodGroup || 'Not Provided'}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Status</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.status}</p>
-                                                </div>
-                                                <div className="md:col-span-2 border-t border-[#E5E7EB] pt-4 mt-2">
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-2 flex items-center gap-1"><MapPin size={12}/> Location</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111] leading-relaxed">{caseItem.address}</p>
-                                                </div>
-                                                <div className="md:col-span-2 border-t border-[#E5E7EB] pt-4 mt-2">
-                                                    <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-2">{currentT.lbl_desc}</p>
-                                                    <p className="text-[0.95rem] font-bold text-[#111111] leading-relaxed bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB]">
-                                                        {caseItem.description}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {/* Media Gallery */}
-                                            {(caseItem.mediaUrl || caseItem.acceptanceNeedyPhotoUrl || caseItem.volunteerPhotoUrl) && (
-                                                <div className="mb-6">
-                                                    <p className="text-[0.8rem] font-bold text-[#555555] uppercase tracking-wider mb-3 flex items-center gap-2">
-                                                        <ImageIcon size={14} /> {currentT.lbl_media}
-                                                    </p>
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                                        {caseItem.mediaUrl && (
-                                                            <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
-                                                                <img src={caseItem.mediaUrl} alt="Initial Report" className="w-full h-full object-cover" />
-                                                                <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Reported</div>
-                                                            </div>
-                                                        )}
-                                                        {caseItem.acceptanceNeedyPhotoUrl && (
-                                                            <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
-                                                                <img src={caseItem.acceptanceNeedyPhotoUrl} alt="Verified Person" className="w-full h-full object-cover" />
-                                                                <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Verified Needy</div>
-                                                            </div>
-                                                        )}
-                                                        {caseItem.volunteerPhotoUrl && (
-                                                            <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
-                                                                <img src={caseItem.volunteerPhotoUrl} alt="Assigned Volunteer" className="w-full h-full object-cover" />
-                                                                <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Assigned Volunteer</div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Private Notes Section (Visible only in Active Tab) */}
-                                            {activeTab === 'Active' && caseItem.privateNotes.length > 0 && (
-                                                <div className="mb-6 pt-6 border-t border-[#E5E7EB]">
-                                                    <h4 className="text-[0.8rem] font-bold uppercase tracking-wider text-[#555555] mb-3">Internal Operational Notes</h4>
-                                                    <div className="flex flex-col gap-3">
-                                                        {caseItem.privateNotes.map((note, idx) => (
-                                                            <div key={idx} className="bg-[#16A34A]/5 border border-[#16A34A]/20 p-4 rounded-xl text-[0.95rem] text-[#111111] font-medium">
-                                                                {note.text}
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Action Sidebar */}
-                                        <div className="flex flex-col items-stretch justify-start gap-3 w-full lg:w-[220px] shrink-0 border-t lg:border-t-0 lg:border-l border-[#E5E7EB] pt-6 lg:pt-0 lg:pl-8">
-                                            {activeTab === 'New' ? (
-                                                <button
-                                                    onClick={() => handleClaimCase(caseItem.id)}
-                                                    disabled={isUpdating}
-                                                    className="w-full bg-[#111111] text-[#FFFFFF] px-4 py-4 rounded-xl font-bold text-[0.95rem] hover:bg-[#333333] transition-colors outline-none disabled:opacity-50"
-                                                >
-                                                    {currentT.btn_claim}
-                                                </button>
-                                            ) : (
-                                                <>
-                                                    <button
-                                                        onClick={() => handleResolveCase(caseItem.id)}
-                                                        disabled={isUpdating}
-                                                        className="w-full bg-[#16A34A] text-[#FFFFFF] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#15803D] transition-colors outline-none disabled:opacity-50"
-                                                    >
-                                                        <CheckCircle size={16} /> {currentT.btn_resolve}
-                                                    </button>
-                                                    
-                                                    {!isNoteOpen && (
-                                                        <button
-                                                            onClick={() => setActiveNoteCaseId(caseItem.id)}
-                                                            className="w-full bg-[#FFFFFF] text-[#111111] border border-[#E5E7EB] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:border-[#111111] transition-colors outline-none"
-                                                        >
-                                                            <ClipboardEdit size={16} /> {currentT.btn_note}
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-
-                                            {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
-                                                <button
-                                                    onClick={() => handleDeleteCase(caseItem.id)}
-                                                    disabled={deletingId === caseItem.id}
-                                                    className="w-full mt-auto bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#DC2626] hover:text-[#FFFFFF] transition-colors outline-none disabled:opacity-50"
-                                                >
-                                                    {deletingId === caseItem.id ? (
-                                                        <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
-                                                    ) : (
-                                                        <Trash2 size={16} />
-                                                    )}
-                                                    Delete Case
-                                                </button>
-                                            )}
-                                        </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_phone}</label>
+                                        <input 
+                                            type="tel" 
+                                            required
+                                            value={orgData.phone}
+                                            onChange={(e) => setOrgData({...orgData, phone: e.target.value})}
+                                            className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#16A34A] transition-colors"
+                                        />
                                     </div>
+                                    <div>
+                                        <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_email}</label>
+                                        <input 
+                                            type="email" 
+                                            required
+                                            value={orgData.email}
+                                            onChange={(e) => setOrgData({...orgData, email: e.target.value})}
+                                            className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#16A34A] transition-colors"
+                                        />
+                                    </div>
+                                </div>
 
-                                    {/* Note Input Drawer */}
-                                    <AnimatePresence>
-                                        {isNoteOpen && (
-                                            <motion.div 
-                                                initial={{ height: 0, opacity: 0 }}
-                                                animate={{ height: 'auto', opacity: 1 }}
-                                                exit={{ height: 0, opacity: 0 }}
-                                                className="border-t border-[#E5E7EB] bg-[#F7F7F7]"
-                                            >
-                                                <form onSubmit={(e) => handleAddNote(e, caseItem.id)} className="p-6 md:p-8 flex flex-col gap-4">
-                                                    <textarea 
-                                                        autoFocus
-                                                        required
-                                                        rows="3"
-                                                        placeholder={currentT.lbl_note_ph}
-                                                        value={noteText}
-                                                        onChange={(e) => setNoteText(e.target.value)}
-                                                        className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-medium text-[0.95rem] outline-none focus:border-[#111111] transition-colors resize-none shadow-sm"
-                                                    ></textarea>
-                                                    <div className="flex items-center justify-end gap-3">
-                                                        <button 
-                                                            type="button"
-                                                            onClick={() => { setActiveNoteCaseId(null); setNoteText(''); }}
-                                                            className="px-6 py-3 rounded-xl font-bold text-[0.9rem] text-[#555555] hover:bg-[#E5E7EB] transition-colors outline-none"
-                                                        >
-                                                            {currentT.btn_cancel}
-                                                        </button>
-                                                        <button 
-                                                            type="submit"
-                                                            disabled={isUpdating || !noteText.trim()}
-                                                            className="bg-[#111111] text-[#FFFFFF] px-8 py-3 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 hover:bg-[#333333] transition-colors disabled:opacity-50 outline-none shadow-md"
-                                                        >
-                                                            <Send size={14} /> {currentT.btn_note}
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </motion.div>
-                            );
-                        })}
+                                <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_address}</label>
+                                <input 
+                                    type="text" 
+                                    required
+                                    value={orgData.address}
+                                    onChange={(e) => setOrgData({...orgData, address: e.target.value})}
+                                    className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-bold text-[0.95rem] outline-none focus:border-[#16A34A] transition-colors mb-6"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_id}</label>
+                                    <input type="file" accept="image/*,.pdf" onChange={(e) => setIdFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium" required />
+                                </div>
+                                <div>
+                                    <label className="block text-[0.85rem] font-bold uppercase tracking-wider text-[#555555] mb-3">{currentT.lbl_photo}</label>
+                                    <input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files[0])} className="w-full p-3 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[0.9rem] font-medium" required />
+                                </div>
+                            </div>
+
+                            <button 
+                                type="submit" 
+                                disabled={isSubmittingForm}
+                                className="w-full bg-[#111111] text-[#FFFFFF] py-4 rounded-xl font-black text-[1.1rem] flex items-center justify-center gap-2 hover:bg-[#333333] transition-colors disabled:opacity-50 outline-none mt-4 shadow-lg"
+                            >
+                                {isSubmittingForm ? (
+                                    <><div className="w-5 h-5 border-2 border-t-transparent border-[#FFFFFF] rounded-full animate-spin"></div> {currentT.btn_loading}</>
+                                ) : (
+                                    <><Send size={18} /> {currentT.btn_submit}</>
+                                )}
+                            </button>
+                        </form>
                     </motion.div>
+                )}
+
+                {/* RENDER STATE: PENDING */}
+                {accessState === 'PENDING' && (
+                    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-[600px] mx-auto bg-[#F7F7F7] border border-[#E5E7EB] rounded-3xl p-12 text-center flex flex-col items-center">
+                        <Clock size={64} className="text-[#F59E0B] mb-6" />
+                        <h2 className="text-[2rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.pend_title}</h2>
+                        <p className="text-[#555555] text-[1.1rem] mb-8">{currentT.pend_sub}</p>
+                    </motion.div>
+                )}
+
+                {/* RENDER STATE: APPROVED (DASHBOARD) */}
+                {accessState === 'APPROVED' && (
+                    <>
+                        <div className="flex items-center justify-between mb-10">
+                            <div>
+                                <div className="flex items-center gap-3 mb-4 text-[#16A34A]">
+                                    <Building size={28} />
+                                </div>
+                                <h1 className="text-[2.5rem] md:text-[3.5rem] font-black leading-[1.1] tracking-tighter mb-4 text-[#111111]">
+                                    {currentT.title}
+                                </h1>
+                                <p className="text-[1.1rem] text-[#555555] font-medium">
+                                    {currentT.sub}
+                                </p>
+                            </div>
+                            {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                                <span className="text-[#DC2626] font-black text-[0.8rem] uppercase tracking-wider bg-[#DC2626]/10 px-3 py-1 rounded-full hidden md:block">Super Admin</span>
+                            )}
+                        </div>
+
+                        {/* Dashboard Tabs */}
+                        <div className="flex gap-4 mb-8 border-b border-[#E5E7EB]">
+                            <button 
+                                onClick={() => setActiveTab('New')}
+                                className={`pb-4 px-2 font-black text-[1.1rem] outline-none transition-colors relative ${activeTab === 'New' ? 'text-[#111111]' : 'text-[#555555] hover:text-[#111111]'}`}
+                            >
+                                {currentT.tab_new}
+                                {activeTab === 'New' && <motion.div layoutId="tabIndicator" className="absolute bottom-0 left-0 right-0 h-1 bg-[#111111]" />}
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('Active')}
+                                className={`pb-4 px-2 font-black text-[1.1rem] outline-none transition-colors relative ${activeTab === 'Active' ? 'text-[#111111]' : 'text-[#555555] hover:text-[#111111]'}`}
+                            >
+                                {currentT.tab_active}
+                                {activeTab === 'Active' && <motion.div layoutId="tabIndicator" className="absolute bottom-0 left-0 right-0 h-1 bg-[#111111]" />}
+                            </button>
+                        </div>
+
+                        {/* Dashboard Feed */}
+                        {displayCases.length === 0 ? (
+                            <div className="rounded-3xl p-12 text-center border border-dashed border-[#D1D5DB] bg-[#F7F7F7] flex flex-col items-center justify-center">
+                                <CheckCircle size={48} className="mb-6 text-[#D1D5DB]" />
+                                <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-[#111111]">
+                                    {activeTab === 'New' ? currentT.empty_new : currentT.empty_active}
+                                </h2>
+                            </div>
+                        ) : (
+                            <motion.div initial="hidden" animate="visible" variants={containerVariants} className="flex flex-col gap-6">
+                                {displayCases.map((caseItem) => {
+                                    const dateString = caseItem.createdAt ? caseItem.createdAt.toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+                                    const confirmCount = caseItem.confirmedBy ? caseItem.confirmedBy.length : 0;
+                                    const isNoteOpen = activeNoteCaseId === caseItem.id;
+
+                                    return (
+                                        <motion.div 
+                                            variants={itemVariants} 
+                                            key={caseItem.id} 
+                                            className="rounded-2xl border border-[#E5E7EB] bg-[#FFFFFF] overflow-hidden shadow-sm"
+                                        >
+                                            <div className="p-6 md:p-8 flex flex-col lg:flex-row justify-between gap-10">
+                                                
+                                                {/* Main Details Panel */}
+                                                <div className="flex-1">
+                                                    <div className="flex flex-wrap items-center gap-3 mb-6">
+                                                        <span className="px-3 py-1 bg-[#111111] text-[#FFFFFF] text-[0.75rem] font-black tracking-wider uppercase rounded-full">
+                                                            {caseItem.category}
+                                                        </span>
+                                                        <span className={`px-3 py-1 text-[0.75rem] font-black tracking-wider uppercase rounded-full border ${getSeverityBadge(caseItem.severity)}`}>
+                                                            {caseItem.severity}
+                                                        </span>
+                                                        {confirmCount > 0 && (
+                                                            <span className="px-3 py-1 bg-[#F7F7F7] text-[#555555] border border-[#E5E7EB] text-[0.75rem] font-bold rounded-full flex items-center gap-1">
+                                                                <Users size={12}/> {confirmCount} confirms
+                                                            </span>
+                                                        )}
+                                                        <span className="ml-auto md:ml-0 px-3 py-1 bg-[#F7F7F7] border border-[#E5E7EB] text-[#111111] font-bold text-[0.75rem] rounded-full flex items-center gap-1">
+                                                            <Clock size={12} /> {dateString}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Data Grid */}
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6 bg-[#F7F7F7] p-6 rounded-2xl border border-[#E5E7EB]">
+                                                        <div>
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_reporter}</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.reporterName || 'Anonymous'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_needy}</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.needyName || 'Unknown'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">{currentT.lbl_blood}</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.bloodGroup || 'Not Provided'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-1">Status</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111]">{caseItem.status}</p>
+                                                        </div>
+                                                        <div className="md:col-span-2 border-t border-[#E5E7EB] pt-4 mt-2">
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-2 flex items-center gap-1"><MapPin size={12}/> Location</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111] leading-relaxed">{caseItem.address}</p>
+                                                        </div>
+                                                        <div className="md:col-span-2 border-t border-[#E5E7EB] pt-4 mt-2">
+                                                            <p className="text-[0.75rem] font-bold text-[#888888] uppercase tracking-wider mb-2">{currentT.lbl_desc}</p>
+                                                            <p className="text-[0.95rem] font-bold text-[#111111] leading-relaxed bg-[#FFFFFF] p-4 rounded-xl border border-[#E5E7EB]">
+                                                                {caseItem.description}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Media Gallery */}
+                                                    {(caseItem.mediaUrl || caseItem.acceptanceNeedyPhotoUrl || caseItem.volunteerPhotoUrl) && (
+                                                        <div className="mb-6">
+                                                            <p className="text-[0.8rem] font-bold text-[#555555] uppercase tracking-wider mb-3 flex items-center gap-2">
+                                                                <ImageIcon size={14} /> {currentT.lbl_media}
+                                                            </p>
+                                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                                                {caseItem.mediaUrl && (
+                                                                    <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
+                                                                        <img src={caseItem.mediaUrl} alt="Initial Report" className="w-full h-full object-cover" />
+                                                                        <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Reported</div>
+                                                                    </div>
+                                                                )}
+                                                                {caseItem.acceptanceNeedyPhotoUrl && (
+                                                                    <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
+                                                                        <img src={caseItem.acceptanceNeedyPhotoUrl} alt="Verified Person" className="w-full h-full object-cover" />
+                                                                        <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Verified Needy</div>
+                                                                    </div>
+                                                                )}
+                                                                {caseItem.volunteerPhotoUrl && (
+                                                                    <div className="relative group rounded-xl overflow-hidden border border-[#E5E7EB] aspect-square bg-[#F7F7F7]">
+                                                                        <img src={caseItem.volunteerPhotoUrl} alt="Assigned Volunteer" className="w-full h-full object-cover" />
+                                                                        <div className="absolute inset-x-0 bottom-0 bg-[#111111]/80 text-[#FFFFFF] text-[0.7rem] font-bold px-2 py-1 text-center truncate">Assigned Volunteer</div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Private Notes Section */}
+                                                    {activeTab === 'Active' && caseItem.privateNotes.length > 0 && (
+                                                        <div className="mb-6 pt-6 border-t border-[#E5E7EB]">
+                                                            <h4 className="text-[0.8rem] font-bold uppercase tracking-wider text-[#555555] mb-3">Internal Operational Notes</h4>
+                                                            <div className="flex flex-col gap-3">
+                                                                {caseItem.privateNotes.map((note, idx) => (
+                                                                    <div key={idx} className="bg-[#16A34A]/5 border border-[#16A34A]/20 p-4 rounded-xl text-[0.95rem] text-[#111111] font-medium">
+                                                                        {note.text}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Action Sidebar */}
+                                                <div className="flex flex-col items-stretch justify-start gap-3 w-full lg:w-[220px] shrink-0 border-t lg:border-t-0 lg:border-l border-[#E5E7EB] pt-6 lg:pt-0 lg:pl-8">
+                                                    {activeTab === 'New' ? (
+                                                        <button
+                                                            onClick={() => handleClaimCase(caseItem.id)}
+                                                            disabled={isUpdating}
+                                                            className="w-full bg-[#111111] text-[#FFFFFF] px-4 py-4 rounded-xl font-bold text-[0.95rem] hover:bg-[#333333] transition-colors outline-none disabled:opacity-50"
+                                                        >
+                                                            {currentT.btn_claim}
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleResolveCase(caseItem.id)}
+                                                                disabled={isUpdating}
+                                                                className="w-full bg-[#16A34A] text-[#FFFFFF] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#15803D] transition-colors outline-none disabled:opacity-50"
+                                                            >
+                                                                <CheckCircle size={16} /> {currentT.btn_resolve}
+                                                            </button>
+                                                            
+                                                            {!isNoteOpen && (
+                                                                <button
+                                                                    onClick={() => setActiveNoteCaseId(caseItem.id)}
+                                                                    className="w-full bg-[#FFFFFF] text-[#111111] border border-[#E5E7EB] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:border-[#111111] transition-colors outline-none"
+                                                                >
+                                                                    <ClipboardEdit size={16} /> {currentT.btn_note}
+                                                                </button>
+                                                            )}
+                                                        </>
+                                                    )}
+
+                                                    {currentUser && currentUser.email === 'testcodecfg@gmail.com' && (
+                                                        <button
+                                                            onClick={() => handleDeleteCase(caseItem.id)}
+                                                            disabled={deletingId === caseItem.id}
+                                                            className="w-full mt-auto bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626] px-4 py-4 rounded-xl font-bold text-[0.95rem] flex items-center justify-center gap-2 hover:bg-[#DC2626] hover:text-[#FFFFFF] transition-colors outline-none disabled:opacity-50"
+                                                        >
+                                                            {deletingId === caseItem.id ? (
+                                                                <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+                                                            ) : (
+                                                                <Trash2 size={16} />
+                                                            )}
+                                                            Delete Case
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Note Input Drawer */}
+                                            <AnimatePresence>
+                                                {isNoteOpen && (
+                                                    <motion.div 
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        exit={{ height: 0, opacity: 0 }}
+                                                        className="border-t border-[#E5E7EB] bg-[#F7F7F7]"
+                                                    >
+                                                        <form onSubmit={(e) => handleAddNote(e, caseItem.id)} className="p-6 md:p-8 flex flex-col gap-4">
+                                                            <textarea 
+                                                                autoFocus
+                                                                required
+                                                                rows="3"
+                                                                placeholder={currentT.lbl_note_ph}
+                                                                value={noteText}
+                                                                onChange={(e) => setNoteText(e.target.value)}
+                                                                className="w-full p-4 rounded-xl bg-[#FFFFFF] border border-[#E5E7EB] text-[#111111] font-medium text-[0.95rem] outline-none focus:border-[#111111] transition-colors resize-none shadow-sm"
+                                                            ></textarea>
+                                                            <div className="flex items-center justify-end gap-3">
+                                                                <button 
+                                                                    type="button"
+                                                                    onClick={() => { setActiveNoteCaseId(null); setNoteText(''); }}
+                                                                    className="px-6 py-3 rounded-xl font-bold text-[0.9rem] text-[#555555] hover:bg-[#E5E7EB] transition-colors outline-none"
+                                                                >
+                                                                    {currentT.btn_cancel}
+                                                                </button>
+                                                                <button 
+                                                                    type="submit"
+                                                                    disabled={isUpdating || !noteText.trim()}
+                                                                    className="bg-[#111111] text-[#FFFFFF] px-8 py-3 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 hover:bg-[#333333] transition-colors disabled:opacity-50 outline-none shadow-md"
+                                                                >
+                                                                    <Send size={14} /> {currentT.btn_note}
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
+                                        </motion.div>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </>
                 )}
             </main>
 
