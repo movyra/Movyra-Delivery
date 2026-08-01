@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, orderBy, getDocs, doc, updateDoc, setDoc, deleteDoc, where, serverTimestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, deleteDoc, where, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../firebaseConfig';
 import { useCivicStore } from '../../store/useCivicStore';
 import { 
@@ -18,8 +18,7 @@ import {
     Merge,
     FileText,
     MapPin,
-    XCircle,
-    Image as ImageIcon
+    XCircle
 } from 'lucide-react';
 
 export default function SahayAdmin() {
@@ -99,24 +98,19 @@ export default function SahayAdmin() {
 
     const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Approve Partner & Upgrade Role
+    // Approve Partner (Refactored for Unauthenticated Session Architecture)
     const handleApprovePartner = async (orgId) => {
         if (!currentUser) return;
         setIsUpdating(true);
         try {
-            // 1. Update Organization Verification Status
+            // Update Organization Verification Status ONLY
             const orgRef = doc(db, 'sahay_organizations', orgId);
             await updateDoc(orgRef, {
                 verificationStatus: 'Verified',
                 verifiedAt: serverTimestamp()
             });
 
-            // 2. Upgrade User Role to grant Organization Access
-            const userRef = doc(db, 'sahay_users', orgId);
-            await setDoc(userRef, {
-                role: 'Organization'
-            }, { merge: true });
-
+            // Remove from local pending list
             setPendingPartners(pendingPartners.filter(p => p.id !== orgId));
         } catch (error) {
             console.error("Failed to approve partner:", error);
@@ -241,7 +235,7 @@ export default function SahayAdmin() {
             lbl_docs: "ਤਸਦੀਕ ਦਸਤਾਵੇਜ਼", loading: "ਡੇਟਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
             empty_part: "ਕੋਈ ਲੰਬਿਤ ਪਾਰਟਨਰ ਐਪਲੀਕੇਸ਼ਨ ਨਹੀਂ।", empty_cases: "ਸੰਚਾਲਨ ਲਈ ਕੋਈ ਹਾਲੀਆ ਰਿਪੋਰਟਾਂ ਨਹੀਂ।",
             lbl_loc: "ਸਥਾਨ", lbl_cat: "ਕਿਸਮ", lbl_id: "ਸਰਕਾਰੀ ਆਈ.ਡੀ", lbl_photo: "ਸੰਗਠਨ ਦੀ ਫੋਟੋ",
-            sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋਲ"
+            sm_home: "ਹੋਮ ਗੇਟਵੇ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_cases: "ਜਨਤਕ ਫੀਡ", sm_map: "ਲਾਈਵ ਨਕਸ਼ਾ", sm_org: "ਪਾਰਟਨਰ ਡੈਸ਼ਬੋਰਡ", sm_vol: "ਵਲੰਟੀਅਰ ਪੋਰਟਲ", sm_imp: "ਪ੍ਰਭਾਵ ਵਿਸ਼ਲੇਸ਼ਣ", sm_emg: "ਐਮਰਜੈਂਸੀ ਡਾਇਰੈਕਟਰੀ", sm_cont: "ਸੰਪਰਕ ਅਤੇ ਪੁੱਛਗਿੱਛ", sm_abt: "ਮਿਸ਼ਨ ਬਾਰੇ", sm_auth: "ਪ੍ਰਮਾਣਿਕਤਾ", sm_adm: "ਐਡਮਿਨ ਕੰਸੋલ"
         },
         bho: {
             lang: "भोजपुरी", log_out: "लॉग आउट", careers: "करियर", products: "उत्पाद", back: "होम पर वापस", sitemap: "साइटमैप", sitemap_desc: "सब सहाय मॉड्यूल पर सीधा नेविगेशन।",
