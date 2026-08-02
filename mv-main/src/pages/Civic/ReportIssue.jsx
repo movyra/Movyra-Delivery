@@ -4,12 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { signOut } from 'firebase/auth';
 import { 
     MapPin, 
     UploadCloud, 
     CheckCircle, 
-    AlertTriangle, 
     ArrowLeft,
     FileText,
     Wand2,
@@ -17,22 +15,22 @@ import {
     Sun,
     Moon,
     Home,
-    LogOut,
     X,
     Globe,
-    ArrowUp
+    ArrowUp,
+    User,
+    Phone
 } from 'lucide-react';
 
 import { 
-    uploadCivicEvidence, 
     submitCivicComplaint, 
     findNearbyDuplicate,
     addCommunitySupport
 } from '../../services/civicService';
+import { uploadCivicMedia } from '../../services/pocketbase';
 import { useCivicStore } from '../../store/useCivicStore';
-import { auth } from '../../firebaseConfig';
 
-// Import newly created mapping and interception components
+// Import mapping and interception components
 import LocationPicker from '../../components/Civic/LocationPicker';
 import DuplicateWarning from '../../components/Civic/DuplicateWarning';
 
@@ -79,15 +77,17 @@ const generateGeohash = (latitude, longitude, precision = 7) => {
 export default function ReportIssue() {
     const navigate = useNavigate();
     const saveDraft = useCivicStore((state) => state.saveDraft);
-    const terminateSession = useCivicStore((state) => state.terminateSession);
     
     // 1. STATE MANAGEMENT
     const theme = useCivicStore((state) => state.theme);
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
+    const [showProductsPrompt, setShowProductsPrompt] = useState(false);
+    const [showSitemap, setShowSitemap] = useState(false);
 
     const [selectedLocation, setSelectedLocation] = useState(null);
+    const [resolvedAddress, setResolvedAddress] = useState('');
     const [evidenceFile, setEvidenceFile] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [duplicateFound, setDuplicateFound] = useState(null);
@@ -95,224 +95,256 @@ export default function ReportIssue() {
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const fileInputRef = useRef(null);
 
-    const localCity = "Mumbai";
-
-    const handleSignOut = async () => {
-        try {
-            await signOut(auth);
-            terminateSession();
-            navigate('/civic');
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
-    };
-
     const scrollToTop = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
-        const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
+        const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
     }, []);
+
+    // Reverse Geocoding Effect
+    useEffect(() => {
+        const fetchAddress = async () => {
+            if (selectedLocation) {
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedLocation[0]}&lon=${selectedLocation[1]}`);
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        setResolvedAddress(data.display_name);
+                    }
+                } catch (error) {
+                    console.error("Reverse geocoding failed:", error);
+                }
+            }
+        };
+        fetchAddress();
+    }, [selectedLocation]);
 
     // 2. 13-LANGUAGE DICTIONARY (Reporting Context)
     const t = {
         en: {
-            lang: "English", help: "Help Center", back: "Return to Dashboard", log_out: "Log out", careers: "Careers",
+            lang: "English", help: "Help Center", back: "Return to Dashboard", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Civic modules.",
             title: "Report Issue", sub: "Complete the form below to notify administrators of required infrastructure maintenance.",
             form_cat: "Categorization", form_title_label: "Report Title", form_title_ph: "Brief identification of the issue",
             form_div_label: "Category", form_div_ph: "Select Division...", 
             cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety",
             form_pri_label: "Priority", pri_std: "Standard Maintenance", pri_high: "High Urgency", pri_crit: "Critical Hazard",
             form_desc_label: "Details", form_desc_btn: "Structure Text", form_desc_ph: "Provide details about the issue...",
+            lbl_reporter: "Your Name (Optional)", lbl_phone: "Contact Number (Optional)",
             priv_title: "Anonymous Submission", priv_sub: "Hide your identity from the public record.",
             submit_btn: "Submit Report", submit_proc: "Submitting...",
-            map_title: "Location", ev_title: "Visual Evidence", ev_sub: "Select Image", ev_sub2: "JPEG, PNG supported", ev_ready: "Ready for upload",
+            map_title: "Location", ev_title: "Visual Evidence", ev_sub: "Select Image", ev_sub2: "JPEG, PNG, MP4 supported", ev_ready: "Ready for upload",
             err_title: "Title must contain at least 5 characters", err_cat: "Please select a category", err_desc: "Please provide a more detailed description (min 20 characters)",
             alert_map: "Please identify the exact location on the map before proceeding.", alert_fail: "Submission failed. Your report has been saved as a draft.",
-            succ_title: "Report Submitted", succ_sub: "The issue has been registered. Teams will be dispatched according to priority."
+            succ_title: "Report Submitted", succ_sub: "The issue has been registered. Teams will be dispatched according to priority.",
+            sm_home: "Public Portal", sm_report: "File a Report", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
         },
         hi: {
-            lang: "हिन्दी", help: "सहायता केंद्र", back: "डैशबोर्ड पर लौटें", log_out: "लॉग आउट", careers: "करियर",
+            lang: "हिन्दी", help: "सहायता केंद्र", back: "डैशबोर्ड पर लौटें", careers: "करियर", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सभी सिविक मॉड्यूल पर सीधा नेविगेशन।",
             title: "समस्या की रिपोर्ट करें", sub: "बुनियादी ढांचे के रखरखाव को सूचित करने के लिए नीचे दिया गया फॉर्म भरें।",
             form_cat: "वर्गीकरण", form_title_label: "रिपोर्ट का शीर्षक", form_title_ph: "समस्या की संक्षिप्त पहचान",
             form_div_label: "श्रेणी", form_div_ph: "विभाग चुनें...",
             cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवाएं", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा",
             form_pri_label: "प्राथमिकता", pri_std: "मानक रखरखाव", pri_high: "अत्यधिक तात्कालिकता", pri_crit: "गंभीर खतरा",
             form_desc_label: "विवरण", form_desc_btn: "संरचना पाठ", form_desc_ph: "समस्या के बारे में विवरण प्रदान करें...",
+            lbl_reporter: "आपका नाम (वैकल्पिक)", lbl_phone: "संपर्क नंबर (वैकल्पिक)",
             priv_title: "गुमनाम सबमिशन", priv_sub: "सार्वजनिक रिकॉर्ड से अपनी पहचान छिपाएं।",
             submit_btn: "रिपोर्ट जमा करें", submit_proc: "सबमिट हो रहा है...",
-            map_title: "स्थान", ev_title: "दृश्य साक्ष्य", ev_sub: "छवि चुनें", ev_sub2: "JPEG, PNG समर्थित", ev_ready: "अपलोड के लिए तैयार",
+            map_title: "स्थान", ev_title: "दृश्य साक्ष्य", ev_sub: "छवि चुनें", ev_sub2: "JPEG, PNG, MP4 समर्थित", ev_ready: "अपलोड के लिए तैयार",
             err_title: "शीर्षक में कम से कम 5 अक्षर होने चाहिए", err_cat: "कृपया एक श्रेणी चुनें", err_desc: "कृपया अधिक विस्तृत विवरण प्रदान करें (न्यूनतम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़ने से पहले मानचित्र पर सटीक स्थान की पहचान करें।", alert_fail: "सबमिशन विफल। आपकी रिपोर्ट ड्राफ्ट के रूप में सहेज ली गई है।",
-            succ_title: "रिपोर्ट सबमिट की गई", succ_sub: "समस्या दर्ज कर ली गई है। प्राथमिकता के अनुसार टीमों को भेजा जाएगा।"
+            succ_title: "रिपोर्ट सबमिट की गई", succ_sub: "समस्या दर्ज कर ली गई है। प्राथमिकता के अनुसार टीमों को भेजा जाएगा।",
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट दर्ज करें", sm_map: "लाइव पारदर्शिता मानचित्र", sm_admin: "एडमिन कंसोल"
         },
         hinglish: {
-            lang: "Hinglish", help: "Help Center", back: "Dashboard par wapas jayein", log_out: "Log out", careers: "Careers",
+            lang: "Hinglish", help: "Help Center", back: "Dashboard par wapas jayein", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Sabhi Civic modules ka direct navigation.",
             title: "Issue Report Karein", sub: "Infrastructure maintenance ki jankari admin tak pahunchane ke liye form bharein.",
             form_cat: "Categorization", form_title_label: "Report Title", form_title_ph: "Issue ki short pehchan",
             form_div_label: "Category", form_div_ph: "Division Select Karein...",
             cat_road: "Road Maintenance", cat_san: "Sanitation Services", cat_water: "Water Supply", cat_elec: "Electrical Grid", cat_safe: "Public Safety",
             form_pri_label: "Priority", pri_std: "Standard Maintenance", pri_high: "High Urgency", pri_crit: "Critical Hazard",
             form_desc_label: "Details", form_desc_btn: "Structure Text", form_desc_ph: "Issue ke details dein...",
+            lbl_reporter: "Aapka Naam (Optional)", lbl_phone: "Contact Number (Optional)",
             priv_title: "Anonymous Submission", priv_sub: "Public record se apni identity chhipayein.",
             submit_btn: "Report Submit Karein", submit_proc: "Submit ho raha hai...",
-            map_title: "Location", ev_title: "Visual Evidence", ev_sub: "Image Select Karein", ev_sub2: "JPEG, PNG supported", ev_ready: "Upload ke liye ready",
+            map_title: "Location", ev_title: "Visual Evidence", ev_sub: "Image Select Karein", ev_sub2: "JPEG, PNG, MP4 supported", ev_ready: "Upload ke liye ready",
             err_title: "Title me kam se kam 5 characters hone chahiye", err_cat: "Please ek category select karein", err_desc: "Please detailed description dein (minimum 20 characters)",
             alert_map: "Aage badhne se pehle map par exact location identify karein.", alert_fail: "Submission fail ho gaya. Aapki report draft me save ho gayi hai.",
-            succ_title: "Report Submitted", succ_sub: "Issue register ho gaya hai. Priority ke hisaab se teams bhej di jayengi."
+            succ_title: "Report Submitted", succ_sub: "Issue register ho gaya hai. Priority ke hisaab se teams bhej di jayengi.",
+            sm_home: "Public Portal", sm_report: "Report Darj Karein", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
         },
         mr: {
-            lang: "मराठी", help: "मदत केंद्र", back: "डॅशबोर्डवर परत जा", log_out: "लॉग आउट", careers: "करिअर",
+            lang: "मराठी", help: "मदत केंद्र", back: "डॅशबोर्डवर परत जा", careers: "करिअर", products: "उत्पादने", sitemap: "साइटमॅप", sitemap_desc: "सर्व सिविक मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
             title: "समस्येची नोंद करा", sub: "पायाभूत सुविधांच्या देखभालीबाबत प्रशासकांना सूचित करण्यासाठी खालील फॉर्म भरा.",
             form_cat: "वर्गीकरण", form_title_label: "अहवालाचे शीर्षक", form_title_ph: "समस्येची संक्षिप्त ओळख",
             form_div_label: "श्रेणी", form_div_ph: "विभाग निवडा...",
             cat_road: "रस्ते देखभाल", cat_san: "स्वच्छता सेवा", cat_water: "पाणी पुरवठा", cat_elec: "विद्युत ग्रिड", cat_safe: "सार्वजनिक सुरक्षा",
             form_pri_label: "प्राधान्य", pri_std: "मानक देखभाल", pri_high: "उच्च तातडी", pri_crit: "गंभीर धोका",
             form_desc_label: "तपशील", form_desc_btn: "स्ट्रक्चर मजकूर", form_desc_ph: "समस्येबाबत तपशील द्या...",
+            lbl_reporter: "तुमचे नाव (पर्यायी)", lbl_phone: "संपर्क क्रमांक (पर्यायी)",
             priv_title: "निनावी सबमिशन", priv_sub: "सार्वजनिक रेकॉर्डमधून तुमची ओळख लपवा.",
             submit_btn: "अहवाल सबमिट करा", submit_proc: "सबमिट करत आहे...",
-            map_title: "स्थान", ev_title: "दृश्य पुरावा", ev_sub: "प्रतिमा निवडा", ev_sub2: "JPEG, PNG समर्थित", ev_ready: "अपलोडसाठी तयार",
+            map_title: "स्थान", ev_title: "दृश्य पुरावा", ev_sub: "प्रतिमा निवडा", ev_sub2: "JPEG, PNG, MP4 समर्थित", ev_ready: "अपलोडसाठी तयार",
             err_title: "शीर्षकामध्ये किमान ५ अक्षरे असणे आवश्यक आहे", err_cat: "कृपया श्रेणी निवडा", err_desc: "कृपया अधिक तपशीलवार वर्णन द्या (किमान २० अक्षरे)",
             alert_map: "कृपया पुढे जाण्यापूर्वी नकाशावर अचूक स्थान ओळखा.", alert_fail: "सबमिशन अयशस्वी. तुमचा अहवाल ड्राफ्ट म्हणून जतन केला गेला आहे.",
-            succ_title: "अहवाल सबमिट केला", succ_sub: "समस्येची नोंद झाली आहे. प्राधान्यानुसार टीम्स पाठवल्या जातील."
+            succ_title: "अहवाल सबमिट केला", succ_sub: "समस्येची नोंद झाली आहे. प्राधान्यानुसार टीम्स पाठवल्या जातील.",
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "अहवाल दाखल करा", sm_map: "थेट पारदर्शकता नकाशा", sm_admin: "प्रशासन कन्सोल"
         },
         gu: {
-            lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ડેશબોર્ડ પર પાછા ફરો", log_out: "લૉગ આઉટ", careers: "કારકિર્દી",
+            lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ડેશબોર્ડ પર પાછા ફરો", careers: "કારકિર્દી", products: "ઉત્પાદનો", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સિવિક મોડ્યુલો માટે સીધું નેવિગેશન.",
             title: "સમસ્યાની જાણ કરો", sub: "ઇન્ફ્રાસ્ટ્રક્ચર જાળવણી વિશે સંચાલકોને સૂચિત કરવા માટે નીચેનું ફોર્મ ભરો.",
             form_cat: "વર્ગીકરણ", form_title_label: "રિપોર્ટ શીર્ષક", form_title_ph: "સમસ્યાની ટૂંકી ઓળખ",
             form_div_label: "શ્રેણી", form_div_ph: "વિભાગ પસંદ કરો...",
             cat_road: "રોડ જાળવણી", cat_san: "સ્વચ્છતા સેવાઓ", cat_water: "પાણી પુરવઠો", cat_elec: "ઇલેક્ટ્રિકલ ગ્રીડ", cat_safe: "જાહેર સુરક્ષા",
             form_pri_label: "પ્રાધાન્ય", pri_std: "પ્રમાણભૂત જાળવણી", pri_high: "ઉચ્ચ તાકીદ", pri_crit: "ગંભીર સંકટ",
             form_desc_label: "વિગતો", form_desc_btn: "સ્ટ્રક્ચર ટેક્સ્ટ", form_desc_ph: "સમસ્યા વિશે વિગતો પ્રદાન કરો...",
+            lbl_reporter: "તમારું નામ (વૈકલ્પિક)", lbl_phone: "સંપર્ક નંબર (વૈકલ્પિક)",
             priv_title: "અનામી સબમિશન", priv_sub: "જાહેર રેકોર્ડમાંથી તમારી ઓળખ છુપાવો.",
             submit_btn: "રિપોર્ટ સબમિટ કરો", submit_proc: "સબમિટ થઈ રહ્યું છે...",
-            map_title: "સ્થાન", ev_title: "વિઝ્યુઅલ પુરાવા", ev_sub: "છબી પસંદ કરો", ev_sub2: "JPEG, PNG સમર્થિત", ev_ready: "અપલોડ માટે તૈયાર છે",
+            map_title: "સ્થાન", ev_title: "વિઝ્યુઅલ પુરાવા", ev_sub: "છબી પસંદ કરો", ev_sub2: "JPEG, PNG, MP4 સમર્થિત", ev_ready: "અપલોડ માટે તૈયાર છે",
             err_title: "શીર્ષકમાં ઓછામાં ઓછા 5 અક્ષરો હોવા જોઈએ", err_cat: "કૃપા કરીને શ્રેણી પસંદ કરો", err_desc: "કૃપા કરીને વધુ વિગતવાર વર્ણન આપો (ન્યૂનતમ 20 અક્ષરો)",
             alert_map: "આગળ વધતા પહેલા કૃપા કરીને નકશા પર ચોક્કસ સ્થાન ઓળખો.", alert_fail: "સબમિશન નિષ્ફળ. તમારો રિપોર્ટ ડ્રાફ્ટ તરીકે સાચવવામાં આવ્યો છે.",
-            succ_title: "રિપોર્ટ સબમિટ કર્યો", succ_sub: "સમસ્યા નોંધવામાં આવી છે. અગ્રતા અનુસાર ટીમો મોકલવામાં આવશે."
+            succ_title: "રિપોર્ટ સબમિટ કર્યો", succ_sub: "સમસ્યા નોંધવામાં આવી છે. અગ્રતા અનુસાર ટીમો મોકલવામાં આવશે.",
+            sm_home: "જાહેર પોર્ટલ", sm_report: "રિપોર્ટ ફાઇલ કરો", sm_map: "જીવંત પારદર્શિતા નકશો", sm_admin: "એડમિન કન્સોલ"
         },
         te: {
-            lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "డ్యాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి", log_out: "లాగౌట్", careers: "కెరీర్స్",
+            lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "డ్యాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సివిక్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
             title: "సమస్యను నివేదించండి", sub: "మౌలిక సదుపాయాల నిర్వహణ గురించి నిర్వాహకులకు తెలియజేయడానికి దిగువ ఫారమ్‌ను పూరించండి.",
             form_cat: "వర్గీకరణ", form_title_label: "నివేదిక శీర్షిక", form_title_ph: "సమస్య యొక్క సంక్షిప్త గుర్తింపు",
             form_div_label: "వర్గం", form_div_ph: "విభాగాన్ని ఎంచుకోండి...",
             cat_road: "రహదారి నిర్వహణ", cat_san: "పారిశుద్ధ్య సేవలు", cat_water: "నీటి సరఫరా", cat_elec: "ఎలక్ట్రికల్ గ్రిడ్", cat_safe: "ప్రజా భద్రత",
             form_pri_label: "ప్రాధాన్యత", pri_std: "ప్రామాణిక నిర్వహణ", pri_high: "అధిక ఆవశ్యకత", pri_crit: "క్లిష్టమైన ప్రమాదం",
             form_desc_label: "వివరాలు", form_desc_btn: "నిర్మాణ వచనం", form_desc_ph: "సమస్య గురించి వివరాలను అందించండి...",
+            lbl_reporter: "మీ పేరు (ఐచ్ఛికం)", lbl_phone: "సంప్రదింపు సంఖ్య (ఐచ్ఛికం)",
             priv_title: "అనామక సమర్పణ", priv_sub: "పబ్లిక్ రికార్డ్ నుండి మీ గుర్తింపును దాచండి.",
             submit_btn: "నివేదికను సమర్పించండి", submit_proc: "సమర్పిస్తోంది...",
-            map_title: "స్థానం", ev_title: "దృశ్య ఆధారం", ev_sub: "చిత్రాన్ని ఎంచుకోండి", ev_sub2: "JPEG, PNG మద్దతు ఉంది", ev_ready: "అప్‌లోడ్ కోసం సిద్ధంగా ఉంది",
+            map_title: "స్థానం", ev_title: "దృశ్య ఆధారం", ev_sub: "చిత్రాన్ని ఎంచుకోండి", ev_sub2: "JPEG, PNG, MP4 మద్దతు ఉంది", ev_ready: "అప్‌లోడ్ కోసం సిద్ధంగా ఉంది",
             err_title: "శీర్షికలో కనీసం 5 అక్షరాలు ఉండాలి", err_cat: "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి", err_desc: "దయచేసి మరింత వివరణాత్మక వివరణను అందించండి (కనీసం 20 అక్షరాలు)",
             alert_map: "కొనసాగడానికి ముందు దయచేసి మ్యాప్‌లో ఖచ్చితమైన స్థానాన్ని గుర్తించండి.", alert_fail: "సమర్పణ విఫలమైంది. మీ నివేదిక డ్రాఫ్ట్‌గా సేవ్ చేయబడింది.",
-            succ_title: "నివేదిక సమర్పించబడింది", succ_sub: "సమస్య నమోదు చేయబడింది. ప్రాధాన్యత ప్రకారం బృందాలు పంపబడతాయి."
+            succ_title: "నివేదిక సమర్పించబడింది", succ_sub: "సమస్య నమోదు చేయబడింది. ప్రాధాన్యత ప్రకారం బృందాలు పంపబడతాయి.",
+            sm_home: "పబ్లిక్ పోర్టల్", sm_report: "నివేదిక దాఖలు చేయండి", sm_map: "లైవ్ పారదర్శకత మ్యాప్", sm_admin: "అడ్మిన్ కన్సోల్"
         },
         ta: {
-            lang: "தமிழ்", help: "உதவி மையம்", back: "டாஷ்போர்டுக்குத் திரும்பு", log_out: "வெளியேறு", careers: "தொழில்கள்",
+            lang: "தமிழ்", help: "உதவி மையம்", back: "டாஷ்போர்டுக்குத் திரும்பு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சிவிக் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
             title: "பிரச்சனையைப் புகாரளிக்கவும்", sub: "உள்கட்டமைப்பு பராமரிப்பு குறித்து நிர்வாகிகளுக்கு தெரிவிக்க கீழே உள்ள படிவத்தை பூர்த்தி செய்யவும்.",
             form_cat: "வகைப்பாடு", form_title_label: "அறிக்கை தலைப்பு", form_title_ph: "பிரச்சனையின் சுருக்கமான அடையாளம்",
             form_div_label: "வகை", form_div_ph: "பிரிவைத் தேர்ந்தெடுக்கவும்...",
             cat_road: "சாலை பராமரிப்பு", cat_san: "சுகாதார சேவைகள்", cat_water: "நீர் வழங்கல்", cat_elec: "மின்சார கட்டம்", cat_safe: "பொது பாதுகாப்பு",
             form_pri_label: "முன்னுரிமை", pri_std: "நிலையான பராமரிப்பு", pri_high: "அதிக அவசரம்", pri_crit: "முக்கியமான ஆபத்து",
             form_desc_label: "விவரங்கள்", form_desc_btn: "கட்டமைப்பு உரை", form_desc_ph: "பிரச்சனை பற்றிய விவரங்களை வழங்கவும்...",
+            lbl_reporter: "உங்கள் பெயர் (விருப்பம்)", lbl_phone: "தொடர்பு எண் (விருப்பம்)",
             priv_title: "அநாமதேய சமர்ப்பிப்பு", priv_sub: "பொது பதிவிலிருந்து உங்கள் அடையாளத்தை மறைக்கவும்.",
             submit_btn: "அறிக்கையை சமர்ப்பிக்கவும்", submit_proc: "சமர்ப்பிக்கிறது...",
-            map_title: "இடம்", ev_title: "காட்சி சான்று", ev_sub: "படத்தைத் தேர்ந்தெடுக்கவும்", ev_sub2: "JPEG, PNG ஆதரிக்கப்படுகிறது", ev_ready: "பதிவேற்றத்திற்கு தயார்",
+            map_title: "இடம்", ev_title: "காட்சி சான்று", ev_sub: "படத்தைத் தேர்ந்தெடுக்கவும்", ev_sub2: "JPEG, PNG, MP4 ஆதரிக்கப்படுகிறது", ev_ready: "பதிவேற்றத்திற்கு தயார்",
             err_title: "தலைப்பில் குறைந்தது 5 எழுத்துக்கள் இருக்க வேண்டும்", err_cat: "தயவுசெய்து ஒரு வகையை தேர்ந்தெடுக்கவும்", err_desc: "மேலும் விரிவான விளக்கத்தை வழங்கவும் (குறைந்தது 20 எழுத்துக்கள்)",
             alert_map: "தொடர்வதற்கு முன் வரைபடத்தில் சரியான இடத்தை அடையாளம் காணவும்.", alert_fail: "சமர்ப்பிப்பு தோல்வியடைந்தது. உங்கள் அறிக்கை வரைவாக சேமிக்கப்பட்டுள்ளது.",
-            succ_title: "அறிக்கை சமர்ப்பிக்கப்பட்டது", succ_sub: "பிரச்சனை பதிவு செய்யப்பட்டுள்ளது. முன்னுரிமைப்படி குழுக்கள் அனுப்பப்படும்."
+            succ_title: "அறிக்கை சமர்ப்பிக்கப்பட்டது", succ_sub: "பிரச்சனை பதிவு செய்யப்பட்டுள்ளது. முன்னுரிமைப்படி குழுக்கள் அனுப்பப்படும்.",
+            sm_home: "பொது போர்டல்", sm_report: "அறிக்கையை தாக்கல் செய்", sm_map: "நேரடி வெளிப்படைத்தன்மை வரைபடம்", sm_admin: "நிர்வாக கன்சோல்"
         },
         pa: {
-            lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ ਜਾਓ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ",
+            lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ ਜਾਓ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਿਵਿਕ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
             title: "ਸਮੱਸਿਆ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", sub: "ਬੁਨਿਆਦੀ ਢਾਂਚੇ ਦੇ ਰੱਖ-ਰਖਾਅ ਬਾਰੇ ਪ੍ਰਸ਼ਾਸਕਾਂ ਨੂੰ ਸੂਚਿਤ ਕਰਨ ਲਈ ਹੇਠਾਂ ਦਿੱਤਾ ਫਾਰਮ ਭਰੋ।",
             form_cat: "ਵਰਗੀਕਰਨ", form_title_label: "ਰਿਪੋਰਟ ਦਾ ਸਿਰਲੇਖ", form_title_ph: "ਸਮੱਸਿਆ ਦੀ ਸੰਖੇਪ ਪਛਾਣ",
             form_div_label: "ਸ਼੍ਰੇਣੀ", form_div_ph: "ਵਿਭਾਗ ਚੁਣੋ...",
             cat_road: "ਸੜਕ ਦੀ ਸਾਂਭ-ਸੰਭਾਲ", cat_san: "ਸੈਨੀਟੇਸ਼ਨ ਸੇਵਾਵਾਂ", cat_water: "ਪਾਣੀ ਦੀ ਸਪਲਾਈ", cat_elec: "ਇਲੈਕਟ੍ਰੀਕਲ ਗਰਿੱਡ", cat_safe: "ਜਨਤਕ ਸੁਰੱਖਿਆ",
             form_pri_label: "ਤਰਜੀਹ", pri_std: "ਮਿਆਰੀ ਰੱਖ-ਰਖਾਅ", pri_high: "ਉੱਚ ਜ਼ਰੂਰੀ", pri_crit: "ਗੰਭੀਰ ਖਤਰਾ",
             form_desc_label: "ਵੇਰਵੇ", form_desc_btn: "ਬਣਤਰ ਟੈਕਸਟ", form_desc_ph: "ਸਮੱਸਿਆ ਬਾਰੇ ਵੇਰਵੇ ਪ੍ਰਦਾਨ ਕਰੋ...",
+            lbl_reporter: "ਤੁਹਾਡਾ ਨਾਮ (ਵਿਕਲਪਿਕ)", lbl_phone: "ਸੰਪਰਕ ਨੰਬਰ (ਵਿਕਲਪਿਕ)",
             priv_title: "ਗੁਮਨਾਮ ਸਬਮਿਸ਼ਨ", priv_sub: "ਜਨਤਕ ਰਿਕਾਰਡ ਤੋਂ ਆਪਣੀ ਪਛਾਣ ਲੁਕਾਓ।",
             submit_btn: "ਰਿਪੋਰਟ ਜਮ੍ਹਾਂ ਕਰੋ", submit_proc: "ਜਮ੍ਹਾਂ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
-            map_title: "ਸਥਾਨ", ev_title: "ਵਿਜ਼ੂਅਲ ਸਬੂਤ", ev_sub: "ਚਿੱਤਰ ਚੁਣੋ", ev_sub2: "JPEG, PNG ਸਮਰਥਿਤ ਹਨ", ev_ready: "ਅੱਪਲੋਡ ਲਈ ਤਿਆਰ",
+            map_title: "ਸਥਾਨ", ev_title: "ਵਿਜ਼ੂਅਲ ਸਬੂਤ", ev_sub: "ਚਿੱਤਰ ਚੁਣੋ", ev_sub2: "JPEG, PNG, MP4 ਸਮਰਥਿਤ ਹਨ", ev_ready: "ਅੱਪਲੋਡ ਲਈ ਤਿਆਰ",
             err_title: "ਸਿਰਲੇਖ ਵਿੱਚ ਘੱਟੋ-ਘੱਟ 5 ਅੱਖਰ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ", err_cat: "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਸ਼੍ਰੇਣੀ ਚੁਣੋ", err_desc: "ਕਿਰਪਾ ਕਰਕੇ ਵਧੇਰੇ ਵਿਸਤ੍ਰਿਤ ਵਰਣਨ ਪ੍ਰਦਾਨ ਕਰੋ (ਘੱਟੋ-ਘੱਟ 20 ਅੱਖਰ)",
             alert_map: "ਕਿਰਪਾ ਕਰਕੇ ਅੱਗੇ ਵਧਣ ਤੋਂ ਪਹਿਲਾਂ ਨਕਸ਼ੇ 'ਤੇ ਸਹੀ ਸਥਾਨ ਦੀ ਪਛਾਣ ਕਰੋ।", alert_fail: "ਸਬਮਿਸ਼ਨ ਅਸਫਲ ਰਿਹਾ। ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਡਰਾਫਟ ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕੀਤੀ ਗਈ ਹੈ।",
-            succ_title: "ਰਿਪੋਰਟ ਜਮ੍ਹਾਂ ਕੀਤੀ ਗਈ", succ_sub: "ਸਮੱਸਿਆ ਦਰਜ ਕਰ ਲਈ ਗਈ ਹੈ। ਤਰਜੀਹ ਅਨੁਸਾਰ ਟੀਮਾਂ ਭੇਜੀਆਂ ਜਾਣਗੀਆਂ।"
+            succ_title: "ਰਿਪੋਰਟ ਜਮ੍ਹਾਂ ਕੀਤੀ ਗਈ", succ_sub: "ਸਮੱਸਿਆ ਦਰਜ ਕਰ ਲਈ ਗਈ ਹੈ। ਤਰਜੀਹ ਅਨੁਸਾਰ ਟੀਮਾਂ ਭੇਜੀਆਂ ਜਾਣਗੀਆਂ।",
+            sm_home: "ਜਨਤਕ ਪੋਰਟਲ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_map: "ਲਾਈਵ ਪਾਰਦਰਸ਼ਤਾ ਨਕਸ਼ਾ", sm_admin: "ਐਡਮਿਨ ਕੰਸੋਲ"
         },
         bho: {
-            lang: "भोजपुरी", help: "मदद केंद्र", back: "डैशबोर्ड पर वापस जाईं", log_out: "लॉग आउट", careers: "करियर",
+            lang: "भोजपुरी", help: "मदद केंद्र", back: "डैशबोर्ड पर वापस जाईं", careers: "करियर", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सब सिविक मॉड्यूल पर सीधा नेविगेशन।",
             title: "समस्या के रिपोर्ट करीं", sub: "प्रशासक लोग के बुनियादी ढांचा के रखरखाव के सूचना देवे खातिर नीचे दिहल फॉर्म भरीं।",
             form_cat: "वर्गीकरण", form_title_label: "रिपोर्ट के शीर्षक", form_title_ph: "समस्या के संक्षिप्त पहचान",
             form_div_label: "श्रेणी", form_div_ph: "विभाग चुनीं...",
             cat_road: "सड़क रखरखाव", cat_san: "स्वच्छता सेवा", cat_water: "जल आपूर्ति", cat_elec: "इलेक्ट्रिकल ग्रिड", cat_safe: "सार्वजनिक सुरक्षा",
             form_pri_label: "प्राथमिकता", pri_std: "मानक रखरखाव", pri_high: "अधिक तात्कालिकता", pri_crit: "गंभीर खतरा",
             form_desc_label: "विवरण", form_desc_btn: "संरचना पाठ", form_desc_ph: "समस्या के बारे में विवरण दीं...",
+            lbl_reporter: "रउरा नाम (वैकल्पिक)", lbl_phone: "संपर्क नंबर (वैकल्पिक)",
             priv_title: "गुमनाम सबमिशन", priv_sub: "सार्वजनिक रिकॉर्ड से आपन पहचान छिपाईं।",
             submit_btn: "रिपोर्ट जमा करीं", submit_proc: "जमा हो रहल बा...",
-            map_title: "स्थान", ev_title: "दृश्य साक्ष्य", ev_sub: "छवि चुनीं", ev_sub2: "JPEG, PNG समर्थित", ev_ready: "अपलोड खातिर तइयार",
+            map_title: "स्थान", ev_title: "दृश्य साक्ष्य", ev_sub: "छवि चुनीं", ev_sub2: "JPEG, PNG, MP4 समर्थित", ev_ready: "अपलोड खातिर तइयार",
             err_title: "शीर्षक में कम से कम 5 अक्षर होखे के चाहीं", err_cat: "कृपया एगो श्रेणी चुनीं", err_desc: "कृपया अउरी विस्तृत विवरण दीं (कम से कम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़े से पहिले नक्शा पर सटीक स्थान के पहचान करीं।", alert_fail: "सबमिशन विफल हो गइल। राउर रिपोर्ट ड्राफ्ट के रूप में सहेज लिहल गइल बा।",
-            succ_title: "रिपोर्ट जमा भइल", succ_sub: "समस्या दर्ज क लिहल गइल बा। प्राथमिकता के अनुसार टीम भेजल जाई।"
+            succ_title: "रिपोर्ट जमा भइल", succ_sub: "समस्या दर्ज क लिहल गइल बा। प्राथमिकता के अनुसार टीम भेजल जाई।",
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट सबमिट करीं", sm_map: "लाइव पारदर्शिता नक्शा", sm_admin: "एडमिन कंसोल"
         },
         ar: {
-            lang: "العربية", help: "مركز المساعدة", back: "العودة إلى لوحة القيادة", log_out: "تسجيل الخروج", careers: "الوظائف",
+            lang: "العربية", help: "مركز المساعدة", back: "العودة إلى لوحة القيادة", careers: "الوظائف", products: "المنتجات", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات المدنية.",
             title: "الإبلاغ عن مشكلة", sub: "أكمل النموذج أدناه لإخطار المسؤولين بصيانة البنية التحتية المطلوبة.",
             form_cat: "التصنيف", form_title_label: "عنوان التقرير", form_title_ph: "تحديد موجز للمشكلة",
             form_div_label: "الفئة", form_div_ph: "اختر القسم...", 
             cat_road: "صيانة الطرق", cat_san: "خدمات الصرف الصحي", cat_water: "إمدادات المياه", cat_elec: "الشبكة الكهربائية", cat_safe: "السلامة العامة",
             form_pri_label: "الأولوية", pri_std: "صيانة قياسية", pri_high: "إلحاح شديد", pri_crit: "خطر حرج",
             form_desc_label: "التفاصيل", form_desc_btn: "نص الهيكل", form_desc_ph: "قدم تفاصيل حول المشكلة...",
+            lbl_reporter: "اسمك (اختياري)", lbl_phone: "رقم الاتصال (اختياري)",
             priv_title: "تقديم مجهول", priv_sub: "إخفاء هويتك من السجل العام.",
             submit_btn: "إرسال التقرير", submit_proc: "جاري الإرسال...",
-            map_title: "الموقع", ev_title: "الأدلة البصرية", ev_sub: "تحديد صورة", ev_sub2: "تنسيقات JPEG و PNG مدعومة", ev_ready: "جاهز للتحميل",
+            map_title: "الموقع", ev_title: "الأدلة البصرية", ev_sub: "تحديد صورة أو فيديو", ev_sub2: "تنسيقات JPEG و PNG و MP4 مدعومة", ev_ready: "جاهز للتحميل",
             err_title: "يجب أن يحتوي العنوان على 5 أحرف على الأقل", err_cat: "يرجى تحديد فئة", err_desc: "يرجى تقديم وصف أكثر تفصيلاً (20 حرفًا على الأقل)",
             alert_map: "يرجى تحديد الموقع الدقيق على الخريطة قبل المتابعة.", alert_fail: "فشل الإرسال. تم حفظ تقريرك كمسودة.",
-            succ_title: "تم إرسال التقرير", succ_sub: "تم تسجيل المشكلة. سيتم إرسال الفرق حسب الأولوية."
+            succ_title: "تم إرسال التقرير", succ_sub: "تم تسجيل المشكلة. سيتم إرسال الفرق حسب الأولوية.",
+            sm_home: "البوابة العامة", sm_report: "تقديم تقرير", sm_map: "خريطة الشفافية المباشرة", sm_admin: "وحدة تحكم الإدارة"
         },
         es: {
-            lang: "Español", help: "Centro de ayuda", back: "Volver al Tablero", log_out: "Cerrar sesión", careers: "Carreras",
+            lang: "Español", help: "Centro de ayuda", back: "Volver al Tablero", careers: "Carreras", products: "Productos", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos Cívicos.",
             title: "Reportar Problema", sub: "Complete el formulario para notificar a los administradores sobre el mantenimiento requerido.",
             form_cat: "Categorización", form_title_label: "Título del Reporte", form_title_ph: "Breve identificación del problema",
             form_div_label: "Categoría", form_div_ph: "Seleccione División...", 
             cat_road: "Mantenimiento de Carreteras", cat_san: "Servicios de Saneamiento", cat_water: "Suministro de Agua", cat_elec: "Red Eléctrica", cat_safe: "Seguridad Pública",
             form_pri_label: "Prioridad", pri_std: "Mantenimiento Estándar", pri_high: "Alta Urgencia", pri_crit: "Peligro Crítico",
             form_desc_label: "Detalles", form_desc_btn: "Estructurar Texto", form_desc_ph: "Proporcione detalles sobre el problema...",
+            lbl_reporter: "Su Nombre (Opcional)", lbl_phone: "Número de Contacto (Opcional)",
             priv_title: "Envío Anónimo", priv_sub: "Oculte su identidad del registro público.",
             submit_btn: "Enviar Reporte", submit_proc: "Enviando...",
-            map_title: "Ubicación", ev_title: "Evidencia Visual", ev_sub: "Seleccionar Imagen", ev_sub2: "JPEG, PNG soportados", ev_ready: "Listo para cargar",
+            map_title: "Ubicación", ev_title: "Evidencia Visual", ev_sub: "Seleccionar Archivo", ev_sub2: "JPEG, PNG, MP4 soportados", ev_ready: "Listo para cargar",
             err_title: "El título debe contener al menos 5 caracteres", err_cat: "Por favor seleccione una categoría", err_desc: "Por favor proporcione una descripción más detallada (mínimo 20 caracteres)",
             alert_map: "Por favor identifique la ubicación exacta en el mapa antes de proceder.", alert_fail: "Fallo en el envío. Su reporte ha sido guardado como borrador.",
-            succ_title: "Reporte Enviado", succ_sub: "El problema ha sido registrado. Los equipos serán despachados según la prioridad."
+            succ_title: "Reporte Enviado", succ_sub: "El problema ha sido registrado. Los equipos serán despachados según la prioridad.",
+            sm_home: "Portal Público", sm_report: "Presentar un Reporte", sm_map: "Mapa de Transparencia", sm_admin: "Consola de Administración"
         },
         fr: {
-            lang: "Français", help: "Centre d'aide", back: "Retour au Tableau de bord", log_out: "Se déconnecter", careers: "Carrières",
+            lang: "Français", help: "Centre d'aide", back: "Retour au Tableau de bord", careers: "Carrières", products: "Produits", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Civiques.",
             title: "Signaler un Problème", sub: "Remplissez le formulaire ci-dessous pour informer les administrateurs de l'entretien requis.",
             form_cat: "Catégorisation", form_title_label: "Titre du Rapport", form_title_ph: "Brève identification du problème",
             form_div_label: "Catégorie", form_div_ph: "Sélectionnez la Division...", 
             cat_road: "Entretien Routier", cat_san: "Services d'Assainissement", cat_water: "Approvisionnement en Eau", cat_elec: "Réseau Électrique", cat_safe: "Sécurité Publique",
             form_pri_label: "Priorité", pri_std: "Entretien Standard", pri_high: "Haute Urgence", pri_crit: "Danger Critique",
             form_desc_label: "Détails", form_desc_btn: "Structurer le Texte", form_desc_ph: "Fournissez des détails sur le problème...",
+            lbl_reporter: "Votre Nom (Optionnel)", lbl_phone: "Numéro de contact (Optionnel)",
             priv_title: "Soumission Anonyme", priv_sub: "Cachez votre identité du registre public.",
             submit_btn: "Soumettre le Rapport", submit_proc: "Soumission...",
-            map_title: "Emplacement", ev_title: "Preuve Visuelle", ev_sub: "Sélectionner une Image", ev_sub2: "JPEG, PNG pris en charge", ev_ready: "Prêt pour le téléchargement",
+            map_title: "Emplacement", ev_title: "Preuve Visuelle", ev_sub: "Sélectionner un Fichier", ev_sub2: "JPEG, PNG, MP4 pris en charge", ev_ready: "Prêt pour le téléchargement",
             err_title: "Le titre doit contenir au moins 5 caractères", err_cat: "Veuillez sélectionner une catégorie", err_desc: "Veuillez fournir une description plus détaillée (minimum 20 caractères)",
             alert_map: "Veuillez identifier l'emplacement exact sur la carte avant de continuer.", alert_fail: "Échec de la soumission. Votre rapport a été enregistré comme brouillon.",
-            succ_title: "Rapport Soumis", succ_sub: "Le problème a été enregistré. Des équipes seront dépêchées selon la priorité."
+            succ_title: "Rapport Soumis", succ_sub: "Le problème a été enregistré. Des équipes seront dépêchées selon la priorité.",
+            sm_home: "Portail Public", sm_report: "Soumettre un Rapport", sm_map: "Carte de Transparence", sm_admin: "Console d'Administration"
         },
         de: {
-            lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Dashboard", log_out: "Abmelden", careers: "Karriere",
+            lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Dashboard", careers: "Karriere", products: "Produkte", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Civic-Modulen.",
             title: "Problem Melden", sub: "Füllen Sie das Formular aus, um Administratoren über die erforderliche Wartung zu informieren.",
             form_cat: "Kategorisierung", form_title_label: "Berichtstitel", form_title_ph: "Kurze Identifikation des Problems",
             form_div_label: "Kategorie", form_div_ph: "Abteilung Auswählen...", 
             cat_road: "Straßeninstandhaltung", cat_san: "Sanitärdienste", cat_water: "Wasserversorgung", cat_elec: "Stromnetz", cat_safe: "Öffentliche Sicherheit",
             form_pri_label: "Priorität", pri_std: "Standardwartung", pri_high: "Hohe Dringlichkeit", pri_crit: "Kritische Gefahr",
             form_desc_label: "Details", form_desc_btn: "Text Strukturieren", form_desc_ph: "Geben Sie Details zum Problem an...",
+            lbl_reporter: "Ihr Name (Optional)", lbl_phone: "Kontaktnummer (Optional)",
             priv_title: "Anonyme Einreichung", priv_sub: "Verbergen Sie Ihre Identität in der öffentlichen Akte.",
             submit_btn: "Bericht Einreichen", submit_proc: "Einreichen...",
-            map_title: "Standort", ev_title: "Visueller Beweis", ev_sub: "Bild Auswählen", ev_sub2: "JPEG, PNG unterstützt", ev_ready: "Bereit zum Hochladen",
+            map_title: "Standort", ev_title: "Visueller Beweis", ev_sub: "Datei Auswählen", ev_sub2: "JPEG, PNG, MP4 unterstützt", ev_ready: "Bereit zum Hochladen",
             err_title: "Titel muss mindestens 5 Zeichen enthalten", err_cat: "Bitte wählen Sie eine Kategorie aus", err_desc: "Bitte geben Sie eine detailliertere Beschreibung an (mindestens 20 Zeichen)",
             alert_map: "Bitte identifizieren Sie den genauen Standort auf der Karte, bevor Sie fortfahren.", alert_fail: "Einreichung fehlgeschlagen. Ihr Bericht wurde als Entwurf gespeichert.",
-            succ_title: "Bericht Eingereicht", succ_sub: "Das Problem wurde registriert. Teams werden nach Priorität entsandt."
+            succ_title: "Bericht Eingereicht", succ_sub: "Das Problem wurde registriert. Teams werden nach Priorität entsandt.",
+            sm_home: "Öffentliches Portal", sm_report: "Meldung Einreichen", sm_map: "Live-Transparenzkarte", sm_admin: "Admin-Konsole"
         }
     };
 
@@ -331,6 +363,8 @@ export default function ReportIssue() {
         category: z.string().min(1, currentT.err_cat),
         priority: z.enum(['Standard', 'High', 'Critical']),
         description: z.string().min(20, currentT.err_desc),
+        reporterName: z.string().optional(),
+        reporterPhone: z.string().optional(),
         isAnonymous: z.boolean().default(false)
     });
 
@@ -341,6 +375,8 @@ export default function ReportIssue() {
             category: '',
             priority: 'Standard',
             description: '',
+            reporterName: '',
+            reporterPhone: '',
             isAnonymous: false
         }
     });
@@ -390,21 +426,27 @@ export default function ReportIssue() {
         try {
             let evidenceUrl = null;
             if (evidenceFile) {
-                evidenceUrl = await uploadCivicEvidence(evidenceFile);
+                // Using the newly implemented PocketBase public upload pipeline
+                evidenceUrl = await uploadCivicMedia(evidenceFile, null, data.category);
             }
-            const activeUser = auth.currentUser;
+            
             const finalPayload = {
                 title: data.title,
                 category: data.category,
                 priority: data.priority,
                 description: data.description,
                 isAnonymous: data.isAnonymous,
+                reporterName: data.isAnonymous ? 'Anonymous' : data.reporterName,
+                reporterPhone: data.isAnonymous ? '' : data.reporterPhone,
                 location: { latitude: selectedLocation[0], longitude: selectedLocation[1] },
+                address: resolvedAddress || "Location captured via GPS",
                 geohash: generateGeohash(selectedLocation[0], selectedLocation[1]),
                 evidenceUrl: evidenceUrl,
-                userId: data.isAnonymous ? 'ANONYMOUS_CITIZEN' : (activeUser ? activeUser.uid : 'UNREGISTERED_CITIZEN'),
+                userId: 'PUBLIC_CITIZEN',
                 ward: 'Zone A',
+                status: 'Reported'
             };
+            
             await submitCivicComplaint(finalPayload);
             setSubmissionSuccess(true);
             setTimeout(() => { navigate('/civic'); }, 3000);
@@ -477,23 +519,6 @@ export default function ReportIssue() {
                 </div>
                 
                 <div className="flex items-center gap-3 sm:gap-6 text-[0.9rem] font-bold">
-                    {/* Desktop Text Logout */}
-                    <button 
-                        onClick={handleSignOut} 
-                        className={`transition-colors outline-none hidden sm:block ${theme === 'light' ? 'text-[#555555] hover:text-black' : 'text-[#888888] hover:text-white'}`}
-                    >
-                        {currentT.log_out}
-                    </button>
-                    
-                    {/* Mobile Icon Logout */}
-                    <button 
-                        onClick={handleSignOut} 
-                        className={`p-2 rounded-full transition-colors outline-none block sm:hidden ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
-                        aria-label="Log Out"
-                    >
-                        <LogOut size={18} />
-                    </button>
-
                     <button 
                         onClick={toggleTheme}
                         className={`p-2 rounded-full transition-colors outline-none ${theme === 'light' ? 'bg-[#e0e0e0] text-black hover:bg-[#cccccc]' : 'bg-[#222222] text-white hover:bg-[#333333]'}`}
@@ -513,6 +538,90 @@ export default function ReportIssue() {
                     </button>
                 </div>
             </header>
+
+            {/* SITEMAP MODAL */}
+            <AnimatePresence>
+                {showSitemap && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className={`fixed inset-0 z-[9999] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'}`}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className={`w-full max-w-[600px] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border ${
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#222222]'
+                            }`}
+                        >
+                            <button onClick={() => setShowSitemap(false)} className={`absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors outline-none ${theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
+                                <X size={18} />
+                            </button>
+                            <h2 className={`text-[1.8rem] font-black tracking-tight mb-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>{currentT.sitemap}</h2>
+                            <p className={`font-medium mb-6 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>{currentT.sitemap_desc}</p>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[
+                                    { path: '/civic', name: currentT.sm_home },
+                                    { path: '/civic/report', name: currentT.sm_report },
+                                    { path: '/civic/map', name: currentT.sm_map },
+                                    { path: '/civic/admin', name: currentT.sm_admin }
+                                ].map(link => (
+                                    <Link 
+                                        key={link.path} 
+                                        to={link.path}
+                                        onClick={() => setShowSitemap(false)}
+                                        className={`p-4 border rounded-xl font-bold transition-colors flex items-center justify-between group outline-none ${
+                                            theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black hover:border-black' : 'bg-[#111111] border-[#333333] text-white hover:border-white'
+                                        }`}
+                                    >
+                                        {link.name}
+                                        <ArrowLeft size={16} className="rotate-180 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                ))}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PRODUCTS ECOSYSTEM MODAL */}
+            <AnimatePresence>
+                {showProductsPrompt && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className={`fixed inset-0 z-[9999] backdrop-blur-md flex items-center justify-center p-6 ${theme === 'light' ? 'bg-white/90' : 'bg-black/90'}`}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+                            className={`w-full max-w-[500px] rounded-3xl p-8 flex flex-col shadow-2xl relative border ${
+                                theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#0a0a0a] border-[#222222]'
+                            }`}
+                        >
+                            <button onClick={() => setShowProductsPrompt(false)} className={`absolute top-4 right-4 w-8 h-8 flex items-center justify-center transition-colors outline-none ${theme === 'light' ? 'text-[#888888] hover:text-black' : 'text-[#888888] hover:text-white'}`}>
+                                <X size={18} />
+                            </button>
+
+                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Also from us</h2>
+                            <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>Discover our connected platforms.</p>
+
+                            <Link to="/sahay/" className={`group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border ${
+                                theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:border-black' : 'bg-[#111111] border-[#333333] hover:border-white'
+                            }`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <img src={theme === 'light' ? '/logo-4.png' : '/logo-4.png'} alt="Movyra" className="h-6 w-auto" onError={(e) => e.target.style.display = 'none'} />
+                                    <span className={`font-black text-[1.2rem] tracking-tighter ml-[-5px] ${theme === 'light' ? 'text-black' : 'text-white'}`}>
+                                        ovyra <span className={`font-medium text-[1rem] ml-1 ${theme === 'light' ? 'text-[#555555]' : 'text-[#888888]'}`}>Sahay</span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <p className={`text-[0.85rem] leading-relaxed transition-colors ${theme === 'light' ? 'text-[#555555] group-hover:text-black' : 'text-[#888888] group-hover:text-white'}`}>
+                                        Humanitarian rescue network. Report emergencies and dispatch help.
+                                    </p>
+                                </div>
+                            </Link>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* LANGUAGE SELECTOR MODAL */}
             <AnimatePresence>
@@ -586,6 +695,40 @@ export default function ReportIssue() {
                     <div className="lg:col-span-2">
                         <form onSubmit={handleSubmit(processSubmission)} className="flex flex-col gap-6">
                             
+                            {/* Contact Details (Optional for Public Users) */}
+                            <div className={`rounded-2xl p-6 md:p-8 border ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
+                                <h3 className="text-[1.2rem] font-black mb-6 flex items-center gap-2">
+                                    <User size={20} /> Reporter Details
+                                </h3>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_reporter}</label>
+                                        <Controller
+                                            name="reporterName"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <input {...field} placeholder="Anonymous" className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
+                                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                }`} />
+                                            )}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_phone}</label>
+                                        <Controller
+                                            name="reporterPhone"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <input {...field} type="tel" placeholder="+91..." className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
+                                                    theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#333333] text-white focus:border-white'
+                                                }`} />
+                                            )}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Basic Details */}
                             <div className={`rounded-2xl p-6 md:p-8 border ${theme === 'light' ? 'bg-white border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                                 <h3 className="text-[1.2rem] font-black mb-6 flex items-center gap-2">
@@ -713,6 +856,11 @@ export default function ReportIssue() {
                                 <MapPin size={18} /> {currentT.map_title}
                             </h3>
                             <LocationPicker onLocationSelect={(coords) => setSelectedLocation([coords.latitude, coords.longitude])} />
+                            {resolvedAddress && (
+                                <p className={`mt-3 text-[0.8rem] font-medium leading-relaxed ${theme === 'light' ? 'text-[#555555]' : 'text-[#aaaaaa]'}`}>
+                                    {resolvedAddress}
+                                </p>
+                            )}
                         </div>
 
                         {/* Evidence Upload */}
@@ -730,7 +878,7 @@ export default function ReportIssue() {
                                     type="file" 
                                     ref={fileInputRef} 
                                     onChange={handleFileSelection} 
-                                    accept="image/*" 
+                                    accept="image/*,video/*" 
                                     className="hidden" 
                                 />
                                 {evidenceFile ? (
@@ -780,14 +928,12 @@ export default function ReportIssue() {
                 
                 <div className={`flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
                     <div className="flex items-center gap-6">
-                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <button onClick={() => setShowProductsPrompt(true)} className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.products}</button>
                         <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
-                        <div className={`flex items-center gap-2 transition-colors cursor-default ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                            {localCity}, IN
-                        </div>
+                        <span onClick={() => setShowSitemap(true)} className={`cursor-pointer transition-colors underline outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.sitemap}</span>
+                        <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
+                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
                     </div>
-                    
                     <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
                     
                     {/* Image Attribution Link (Theme Aware) */}
