@@ -340,24 +340,24 @@ export default function App() {
                 <Route path='/servant' element={<AnimatedRoute><ServantPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
 
-                {/* MOVYRA CIVIC MODULE */}
+                {/* MOVYRA CIVIC MODULE - PUBLIC ROUTES */}
                 <Route path='/civic' element={<AnimatedRoute><CivicHome /></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
+                <Route path='/civic/notices' element={<AnimatedRoute><PublicNotices /></AnimatedRoute>} />
+                <Route path='/civic/feedback' element={<AnimatedRoute><CitizenFeedback /></AnimatedRoute>} />
+                <Route path='/civic/emergency' element={<AnimatedRoute><EmergencyContacts /></AnimatedRoute>} />
+                
                 <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
                 <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
                 
+                {/* MOVYRA CIVIC MODULE - SECURE ROUTES */}
                 <Route path='/civic/dashboard' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicLanding /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><ReportIssue /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><IssueTracker /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/my-reports' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><MyReports /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 
-                {/* NEW CIVIC PORTALS */}
-                <Route path='/civic/my-reports' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><MyReports /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/notices' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><PublicNotices /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-
                 {/* MOVYRA SAHAY MODULE */}
                 <Route path='/sahay' element={<AnimatedRoute><SahayHome /></AnimatedRoute>} />
                 <Route path='/sahay/report' element={<AnimatedRoute><SahayReport /></AnimatedRoute>} />
@@ -450,23 +450,23 @@ export default function App() {
                 <Route path='/alumni' element={<AnimatedRoute><AlumniPage /></AnimatedRoute>} />
                 <Route path='/download' element={<AnimatedRoute><DownloadPage /></AnimatedRoute>} />
 
-                {/* MOVYRA CIVIC MODULE */}
+                {/* MOVYRA CIVIC MODULE - PUBLIC ROUTES */}
                 <Route path='/civic' element={<AnimatedRoute><CivicHome /></AnimatedRoute>} />
+                <Route path='/civic/report' element={<AnimatedRoute><ReportIssue /></AnimatedRoute>} />
+                <Route path='/civic/heatmap' element={<AnimatedRoute><CivicHeatmap /></AnimatedRoute>} />
+                <Route path='/civic/transparency' element={<AnimatedRoute><TransparencyDashboard /></AnimatedRoute>} />
+                <Route path='/civic/notices' element={<AnimatedRoute><PublicNotices /></AnimatedRoute>} />
+                <Route path='/civic/feedback' element={<AnimatedRoute><CitizenFeedback /></AnimatedRoute>} />
+                <Route path='/civic/emergency' element={<AnimatedRoute><EmergencyContacts /></AnimatedRoute>} />
+                
                 <Route path='/civic/onboarding' element={<AnimatedRoute><CivicOnboarding /></AnimatedRoute>} />
                 <Route path='/civic/auth' element={<AnimatedRoute><CivicAuth /></AnimatedRoute>} />
                 
+                {/* MOVYRA CIVIC MODULE - SECURE ROUTES */}
                 <Route path='/civic/dashboard' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicLanding /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/report' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><ReportIssue /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
                 <Route path='/civic/tracker' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><IssueTracker /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/heatmap' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CivicHeatmap /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/transparency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><TransparencyDashboard /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                
-                {/* NEW CIVIC PORTALS */}
                 <Route path='/civic/my-reports' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><MyReports /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/notices' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><PublicNotices /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/feedback' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><CitizenFeedback /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
-                <Route path='/civic/emergency' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><EmergencyContacts /></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
+                <Route path='/civic/admin' element={<AnimatedRoute><SecureCivicGateway><SessionMonitor><SecureAdminGate><WardAdmin /></SecureAdminGate></SessionMonitor></SecureCivicGateway></AnimatedRoute>} />
 
                 {/* MOVYRA SAHAY MODULE */}
                 <Route path='/sahay' element={<AnimatedRoute><SahayHome /></AnimatedRoute>} />
