@@ -151,7 +151,7 @@ export default function CivicHome() {
     // 13-Language Comprehensive Dictionary (Simplified Terminology)
     const t = {
         en: {
-            lang: "English", sign_in: "Sign In", sign_up: "Sign Up", log_out: "Log out", careers: "Careers", dev: "Developers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all Civic modules.",
+            lang: "English", sign_in: "Sign In", sign_up: "Sign Up", log_out: "Log out", careers: "Careers", dev: "Developers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all civic pages.",
             badge: "Smart City Operations",
             hero_title: "Manage City Services Fast & Securely.",
             hero_desc: "A simple, secure platform to report issues, track work progress, and manage daily municipal tasks in real time.",

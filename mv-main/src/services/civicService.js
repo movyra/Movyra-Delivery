@@ -53,7 +53,7 @@ export const findNearbyDuplicate = async (geohashPrefix, category) => {
         const duplicateQuery = query(
             complaintsRef,
             where('category', '==', category),
-            where('status', 'in', ['Submitted', 'Assigned', 'In Progress']),
+            where('status', 'in', ['Submitted', 'Reported', 'Assigned', 'In Progress']),
             where('geohash', '>=', geohashPrefix),
             where('geohash', '<=', geohashPrefix + '\uf8ff'),
             limit(5)
@@ -69,6 +69,8 @@ export const findNearbyDuplicate = async (geohashPrefix, category) => {
 
 /**
  * Ingest a newly verified civic complaint into the master database.
+ * Strictly isolates writes to the civic_complaints collection to prevent
+ * unauthorized administrative access errors.
  * 
  * @param {Object} complaintData - The validated payload containing issue details and location.
  * @returns {Promise<string>} - The unique tracking identifier for the new record.
@@ -77,13 +79,17 @@ export const submitCivicComplaint = async (complaintData) => {
     try {
         const complaintsRef = collection(db, 'civic_complaints');
         
-        const documentReference = await addDoc(complaintsRef, {
+        // Enforce safe payload parameters and ensure a valid public identifier
+        const safePayload = {
             ...complaintData,
+            userId: complaintData.userId || 'PUBLIC_CITIZEN',
             status: 'Submitted',
             supportCount: 1,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
-        });
+        };
+        
+        const documentReference = await addDoc(complaintsRef, safePayload);
         
         return documentReference.id;
     } catch (error) {
