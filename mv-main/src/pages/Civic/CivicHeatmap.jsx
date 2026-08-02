@@ -88,7 +88,7 @@ export default function CivicHeatmap() {
     // 2. 13-LANGUAGE DICTIONARY (Heatmap Context)
     const t = {
         en: {
-            lang: "English", help: "Help Center", back: "Return to Home", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all civic pages.",
+            lang: "English", help: "Help Center", back: "Back", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all civic pages.",
             title: "Live Heatmap", sub: "View reported issues on a live geographic map to see problem hotspots in your city.",
             active_plots: "Active Issues", filters: "Filter by Category", filter_sub: "Select a category to view specific issues.",
             legend: "Map Legend", iso_inc: "Single Issue", high_den: "Multiple Issues", rendering: "Loading map data...", status: "Status",
