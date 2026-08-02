@@ -132,3 +132,36 @@ export const uploadOrganizationVerification = async (applicationId, orgName, idD
         throw error;
     }
 };
+
+/**
+ * Uploads media evidence (photos and videos) anonymously for Movyra Civic public reports.
+ * @param {File} file - The raw photo or video file.
+ * @param {string} [complaintId] - Optional associated civic complaint document ID.
+ * @param {string} [category] - Optional category tag.
+ * @returns {Promise<string>} Static URL pointing to the uploaded media asset.
+ */
+export const uploadCivicMedia = async (file, complaintId, category) => {
+    try {
+        const formData = new FormData();
+        formData.append('media', file);
+        if (complaintId) formData.append('complaint_id', complaintId);
+        if (category) formData.append('category', category);
+
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/civic_media/records`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            const exactMessage = errorData.message || 'Civic media upload communication failed.';
+            throw new Error(`PocketBase Rejected: ${exactMessage}`);
+        }
+
+        const record = await response.json();
+        return `${POCKETBASE_URL}/api/files/${record.collectionId}/${record.id}/${record.media}`;
+    } catch (error) {
+        console.error('PocketBase Civic Media Upload Error:', error);
+        throw error;
+    }
+};
