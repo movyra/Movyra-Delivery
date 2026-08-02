@@ -271,7 +271,11 @@ service cloud.firestore {
     // MOVYRA CIVIC MODULE (PUBLIC TRANSPARENCY & SMART WARD OPERATIONS)
     // ========================================================================
     match /civic_complaints/{complaintId} {
-      allow create: if true; // Unauthenticated creation permitted for public reporting
+      // Unauthenticated creation permitted, BUT explicitly blocks "test" keywords unless it's the admin
+      allow create: if isAdmin() || (
+        !request.resource.data.get('title', '').matches('(?i).*test.*') &&
+        !request.resource.data.get('description', '').matches('(?i).*test.*')
+      );
       allow read: if true;   // Public viewing permitted for the map and transparency features
       allow update: if true; // Explicitly allow public update operations for upvotes/appends
       allow delete: if isAdmin(); // Administration strictly protected
