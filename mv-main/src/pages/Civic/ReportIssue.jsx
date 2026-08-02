@@ -134,7 +134,7 @@ export default function ReportIssue() {
     // 2. 13-LANGUAGE DICTIONARY (Reporting Context)
     const t = {
         en: {
-            lang: "English", help: "Help Center", back: "Return to Dashboard", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all civic pages.",
+            lang: "English", help: "Help Center", back: "Back", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Direct navigation to all civic pages.",
             title: "Report Issue", sub: "Complete the form below to notify administrators of required infrastructure maintenance.",
             form_cat: "Categorization", form_title_label: "Report Title", form_title_ph: "Brief identification of the issue",
             form_div_label: "Category", form_div_ph: "Select Division...", 

@@ -85,7 +85,7 @@ export default function IssueTracker() {
     // 2. 13-LANGUAGE DICTIONARY (Tracker Context)
     const t = {
         en: {
-            lang: "English", help: "Help Center", back: "Return to Dashboard", log_out: "Log out", careers: "Careers",
+            lang: "English", help: "Help Center", back: "Back", log_out: "Log out", careers: "Careers",
             title: "Track Issue", sub: "Monitor the status of your reported issue.",
             search_ph: "Enter Tracking ID...", btn_retrieve: "Track Issue", btn_query: "Searching...",
             err_not_found: "No record found matching this ID.", err_net: "Network failed. Please try again.",

@@ -100,7 +100,7 @@ export default function EmergencyContacts() {
     // 5. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
     const t = {
         en: {
-            lang: "English", back: "Return to Dashboard", log_out: "Log out", careers: "Careers", products: "Products",
+            lang: "English", back: "Back", log_out: "Log out", careers: "Careers", products: "Products",
             title: "Emergency Directory", sub: "Direct lines to local authorities and rapid response units.",
             search_ph: "Search service or department...", filter_all: "All Zones",
             btn_call: "Call Now", status_active: "Active", loading: "Loading directory...", empty: "No contacts found.", empty_sub: "Try adjusting your search criteria.",

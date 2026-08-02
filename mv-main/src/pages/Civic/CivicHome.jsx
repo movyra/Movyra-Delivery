@@ -84,7 +84,7 @@ export default function CivicHome() {
     const toggleTheme = useCivicStore((state) => state.toggleTheme);
     const terminateSession = useCivicStore((state) => state.terminateSession);
 
-    const [user, setUser] = useState(null);
+    const [activeUser, setActiveUser] = useState(null);
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
@@ -104,7 +104,7 @@ export default function CivicHome() {
     // Track authentication state
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+            setActiveUser(currentUser);
         });
         return () => unsubscribe();
     }, []);
@@ -116,10 +116,10 @@ export default function CivicHome() {
         if (supported.includes(sysLang)) setLang(sysLang);
     }, []);
 
-    // Reverse Geocoding Effect
+    // Reverse Geocoding Effect (Fallback if autocomplete does not provide)
     useEffect(() => {
         const fetchAddress = async () => {
-            if (selectedLocation) {
+            if (selectedLocation && !resolvedAddress) {
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedLocation[0]}&lon=${selectedLocation[1]}`);
                     const data = await response.json();
@@ -132,7 +132,7 @@ export default function CivicHome() {
             }
         };
         fetchAddress();
-    }, [selectedLocation]);
+    }, [selectedLocation, resolvedAddress]);
 
     const handleSignOut = async () => {
         try {
@@ -181,7 +181,7 @@ export default function CivicHome() {
             err_title: "Title must contain at least 5 characters", err_cat: "Please select a category", err_desc: "Please provide a more detailed description (min 20 characters)",
             alert_map: "Please identify the exact location on the map before proceeding.", alert_fail: "Submission failed. Please try again.",
             succ_title: "Report Submitted", succ_sub: "The issue has been registered. Teams will be dispatched according to priority.",
-            sm_home: "Public Portal", sm_report: "File a Report", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
+            sm_home: "Public Portal", sm_report: "File a Report", sm_map: "Live Transparency Map", sm_admin: "Admin Console", err_test: "Test data is restricted to administrators."
         },
         hi: {
             lang: "हिन्दी", sign_in: "साइन इन", sign_up: "साइन अप", log_out: "लॉग आउट", careers: "करियर", dev: "डेवलपर्स", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सभी सिविक मॉड्यूल पर सीधा नेविगेशन।",
@@ -214,7 +214,7 @@ export default function CivicHome() {
             err_title: "शीर्षक में कम से कम 5 अक्षर होने चाहिए", err_cat: "कृपया एक श्रेणी चुनें", err_desc: "कृपया अधिक विस्तृत विवरण प्रदान करें (न्यूनतम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़ने से पहले मानचित्र पर सटीक स्थान की पहचान करें।", alert_fail: "सबमिशन विफल। कृपया पुनः प्रयास करें।",
             succ_title: "रिपोर्ट सबमिट की गई", succ_sub: "समस्या दर्ज कर ली गई है। प्राथमिकता के अनुसार टीमों को भेजा जाएगा।",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट दर्ज करें", sm_map: "लाइव पारदर्शिता मानचित्र", sm_admin: "एडमिन कंसोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट दर्ज करें", sm_map: "लाइव पारदर्शिता मानचित्र", sm_admin: "एडमिन कंसोल", err_test: "परीक्षण डेटा प्रशासकों तक सीमित है।"
         },
         hinglish: {
             lang: "Hinglish", sign_in: "Sign In", sign_up: "Sign Up", log_out: "Log out", careers: "Careers", dev: "Developers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Sabhi Civic modules ka direct navigation.",
@@ -247,7 +247,7 @@ export default function CivicHome() {
             err_title: "Title me kam se kam 5 characters hone chahiye", err_cat: "Please ek category select karein", err_desc: "Please detailed description dein (minimum 20 characters)",
             alert_map: "Aage badhne se pehle map par exact location identify karein.", alert_fail: "Submission fail ho gaya. Please try again.",
             succ_title: "Report Submitted", succ_sub: "Issue register ho gaya hai. Priority ke hisaab se teams bhej di jayengi.",
-            sm_home: "Public Portal", sm_report: "Report Darj Karein", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
+            sm_home: "Public Portal", sm_report: "Report Darj Karein", sm_map: "Live Transparency Map", sm_admin: "Admin Console", err_test: "Test data sirf administrators ke liye allowed hai."
         },
         mr: {
             lang: "मराठी", sign_in: "साइन इन करा", sign_up: "साइन अप करा", log_out: "लॉग आउट", careers: "करिअर", dev: "डेव्हलपर्स", products: "उत्पादने", sitemap: "साइटमॅप", sitemap_desc: "सर्व सिविक मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
@@ -280,7 +280,7 @@ export default function CivicHome() {
             err_title: "शीर्षकामध्ये किमान ५ अक्षरे असणे आवश्यक आहे", err_cat: "कृपया श्रेणी निवडा", err_desc: "कृपया अधिक तपशीलवार वर्णन द्या (किमान २० अक्षरे)",
             alert_map: "कृपया पुढे जाण्यापूर्वी नकाशावर अचूक स्थान ओळखा.", alert_fail: "सबमिशन अयशस्वी. कृपया पुन्हा प्रयत्न करा.",
             succ_title: "अहवाल सबमिट केला", succ_sub: "समस्येची नोंद झाली आहे. प्राधान्यानुसार टीम्स पाठवल्या जातील.",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "अहवाल दाखल करा", sm_map: "थेट पारदर्शकता नकाशा", sm_admin: "प्रशासन कन्सोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "अहवाल दाखल करा", sm_map: "थेट पारदर्शकता नकाशा", sm_admin: "प्रशासन कन्सोल", err_test: "चाचणी डेटा प्रशासकांसाठी मर्यादित आहे."
         },
         gu: {
             lang: "ગુજરાતી", sign_in: "સાઇન ઇન", sign_up: "સાઇન અપ", log_out: "લૉગ આઉટ", careers: "કારકિર્દી", dev: "ડેવલપર્સ", products: "ઉત્પાદનો", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સિવિક મોડ્યુલો માટે સીધું નેવિગેશન.",
@@ -313,7 +313,7 @@ export default function CivicHome() {
             err_title: "શીર્ષકમાં ઓછામાં ઓછા 5 અક્ષરો હોવા જોઈએ", err_cat: "કૃપા કરીને શ્રેણી પસંદ કરો", err_desc: "કૃપા કરીને વધુ વિગતવાર વર્ણન આપો (ન્યૂનતમ 20 અક્ષરો)",
             alert_map: "આગળ વધતા પહેલા કૃપા કરીને નકશા પર ચોક્કસ સ્થાન ઓળખો.", alert_fail: "સબમિશન નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.",
             succ_title: "રિપોર્ટ સબમિટ કર્યો", succ_sub: "સમસ્યા નોંધવામાં આવી છે. અગ્રતા અનુસાર ટીમો મોકલવામાં આવશે.",
-            sm_home: "જાહેર પોર્ટલ", sm_report: "રિપોર્ટ ફાઇલ કરો", sm_map: "જીવંત પારદર્શિતા નકશો", sm_admin: "એડમિન કન્સોલ"
+            sm_home: "જાહેર પોર્ટલ", sm_report: "રિપોર્ટ ફાઇલ કરો", sm_map: "જીવંત પારદર્શિતા નકશો", sm_admin: "એડમિન કન્સોલ", err_test: "પરીક્ષણ ડેટા સંચાલકો સુધી મર્યાદિત છે."
         },
         te: {
             lang: "తెలుగు", sign_in: "సైన్ ఇన్", sign_up: "సైన్ అప్", log_out: "లాగౌట్", careers: "కెరీర్స్", dev: "డెవలపర్లు", products: "ఉత్పత్తులు", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సివిక్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
@@ -346,7 +346,7 @@ export default function CivicHome() {
             err_title: "శీర్షికలో కనీసం 5 అక్షరాలు ఉండాలి", err_cat: "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి", err_desc: "దయచేసి మరింత వివరణాత్మక వివరణను అందించండి (కనీసం 20 అక్షరాలు)",
             alert_map: "కొనసాగడానికి ముందు దయచేసి మ్యాప్‌లో ఖచ్చితమైన స్థానాన్ని గుర్తించండి.", alert_fail: "సమర్పణ విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.",
             succ_title: "నివేదిక సమర్పించబడింది", succ_sub: "సమస్య నమోదు చేయబడింది. ప్రాధాన్యత ప్రకారం బృందాలు పంపబడతాయి.",
-            sm_home: "పబ్లిక్ పోర్టల్", sm_report: "నివేదిక దాఖలు చేయండి", sm_map: "లైవ్ పారదర్శకత మ్యాప్", sm_admin: "అడ్మిన్ కన్సోల్"
+            sm_home: "పబ్లిక్ పోర్టల్", sm_report: "నివేదిక దాఖలు చేయండి", sm_map: "లైవ్ పారదర్శకత మ్యాప్", sm_admin: "అడ్మిన్ కన్సోల్", err_test: "పరీక్ష డేటా నిర్వాహకులకు పరిమితం చేయబడింది."
         },
         ta: {
             lang: "தமிழ்", sign_in: "உள்நுழை", sign_up: "பதிவு செய்", log_out: "வெளியேறு", careers: "தொழில்கள்", dev: "டெவலப்பர்கள்", products: "தயாரிப்புகள்", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சிவிக் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
@@ -379,7 +379,7 @@ export default function CivicHome() {
             err_title: "தலைப்பில் குறைந்தது 5 எழுத்துக்கள் இருக்க வேண்டும்", err_cat: "தயவுசெய்து ஒரு வகையை தேர்ந்தெடுக்கவும்", err_desc: "மேலும் விரிவான விளக்கத்தை வழங்கவும் (குறைந்தது 20 எழுத்துக்கள்)",
             alert_map: "தொடர்வதற்கு முன் வரைபடத்தில் சரியான இடத்தை அடையாளம் காணவும்.", alert_fail: "சமர்ப்பிப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
             succ_title: "அறிக்கை சமர்ப்பிக்கப்பட்டது", succ_sub: "பிரச்சனை பதிவு செய்யப்பட்டுள்ளது. முன்னுரிமைப்படி குழுக்கள் அனுப்பப்படும்.",
-            sm_home: "பொது போர்டல்", sm_report: "அறிக்கையை தாக்கல் செய்", sm_map: "நேரடி வெளிப்படைத்தன்மை வரைபடம்", sm_admin: "நிர்வாக கன்சோல்"
+            sm_home: "பொது போர்டல்", sm_report: "அறிக்கையை தாக்கல் செய்", sm_map: "நேரடி வெளிப்படைத்தன்மை வரைபடம்", sm_admin: "நிர்வாக கன்சோல்", err_test: "சோதனைத் தரவு நிர்வாகிகளுக்கு மட்டுமே."
         },
         pa: {
             lang: "ਪੰਜਾਬੀ", sign_in: "ਸਾਈਨ ਇਨ", sign_up: "ਸਾਈਨ ਅੱਪ", log_out: "ਲੌਗ ਆਉਟ", careers: "ਕਰੀਅਰ", dev: "ਡਿਵੈਲਪਰ", products: "ਉਤਪਾਦ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਿਵਿਕ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
@@ -412,7 +412,7 @@ export default function CivicHome() {
             err_title: "ਸਿਰਲੇਖ ਵਿੱਚ ਘੱਟੋ-ਘੱਟ 5 ਅੱਖਰ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ", err_cat: "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਸ਼੍ਰੇਣੀ ਚੁਣੋ", err_desc: "ਕਿਰਪਾ ਕਰਕੇ ਵਧੇਰੇ ਵਿਸਤ੍ਰਿਤ ਵਰਣਨ ਪ੍ਰਦਾਨ ਕਰੋ (ਘੱਟੋ-ਘੱਟ 20 ਅੱਖਰ)",
             alert_map: "ਕਿਰਪਾ ਕਰਕੇ ਅੱਗੇ ਵਧਣ ਤੋਂ ਪਹਿਲਾਂ ਨਕਸ਼ੇ 'ਤੇ ਸਹੀ ਸਥਾਨ ਦੀ ਪਛਾਣ ਕਰੋ।", alert_fail: "ਸਬਮਿਸ਼ਨ ਅਸਫਲ ਰਿਹਾ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
             succ_title: "ਰਿਪੋਰਟ ਜਮ੍ਹਾਂ ਕੀਤੀ ਗਈ", succ_sub: "ਸਮੱਸਿਆ ਦਰਜ ਕਰ ਲਈ ਗਈ ਹੈ। ਤਰਜੀਹ ਅਨੁਸਾਰ ਟੀਮਾਂ ਭੇਜੀਆਂ ਜਾਣਗੀਆਂ।",
-            sm_home: "ਜਨਤਕ ਪੋਰਟਲ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_map: "ਲਾਈਵ ਪਾਰਦਰਸ਼ਤਾ ਨਕਸ਼ਾ", sm_admin: "ਐਡਮਿਨ ਕੰਸੋਲ"
+            sm_home: "ਜਨਤਕ ਪੋਰਟਲ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_map: "ਲਾਈਵ ਪਾਰਦਰਸ਼ਤਾ ਨਕਸ਼ਾ", sm_admin: "ਐਡਮਿਨ ਕੰਸੋਲ", err_test: "ਟੈਸਟ ਡੇਟਾ ਪ੍ਰਸ਼ਾਸਕਾਂ ਤੱਕ ਸੀਮਿਤ ਹੈ।"
         },
         bho: {
             lang: "भोजपुरी", sign_in: "साइन इन", sign_up: "साइन अप", log_out: "लॉग आउट", careers: "करियर", dev: "डेवलपर्स", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सब सिविक मॉड्यूल पर सीधा नेविगेशन।",
@@ -445,7 +445,7 @@ export default function CivicHome() {
             err_title: "शीर्षक में कम से कम 5 अक्षर होखे के चाहीं", err_cat: "कृपया एगो श्रेणी चुनीं", err_desc: "कृपया अउरी विस्तृत विवरण दीं (कम से कम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़े से पहिले नक्शा पर सटीक स्थान के पहचान करीं।", alert_fail: "सबमिशन विफल हो गइल। कृपया फेर से प्रयास करीं।",
             succ_title: "रिपोर्ट जमा भइल", succ_sub: "समस्या दर्ज क लिहल गइल बा। प्राथमिकता के अनुसार टीम भेजल जाई।",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट सबमिट करीं", sm_map: "लाइव पारदर्शिता नक्शा", sm_admin: "एडमिन कंसोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट सबमिट करीं", sm_map: "लाइव पारदर्शिता नक्शा", sm_admin: "एडमिन कंसोल", err_test: "परीक्षण डेटा खाली प्रशासक लोग खातिर बा।"
         },
         ar: {
             lang: "العربية", sign_in: "تسجيل الدخول", sign_up: "التسجيل", log_out: "تسجيل الخروج", careers: "الوظائف", dev: "المطورون", products: "المنتجات", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات المدنية.",
@@ -478,7 +478,7 @@ export default function CivicHome() {
             err_title: "يجب أن يحتوي العنوان على 5 أحرف على الأقل", err_cat: "يرجى تحديد فئة", err_desc: "يرجى تقديم وصف أكثر تفصيلاً (20 حرفًا على الأقل)",
             alert_map: "يرجى تحديد الموقع الدقيق على الخريطة قبل المتابعة.", alert_fail: "فشل الإرسال. يرجى المحاولة مرة أخرى.",
             succ_title: "تم إرسال التقرير", succ_sub: "تم تسجيل المشكلة. سيتم إرسال الفرق حسب الأولوية.",
-            sm_home: "البوابة العامة", sm_report: "تقديم تقرير", sm_map: "خريطة الشفافية المباشرة", sm_admin: "وحدة تحكم الإدارة"
+            sm_home: "البوابة العامة", sm_report: "تقديم تقرير", sm_map: "خريطة الشفافية المباشرة", sm_admin: "وحدة تحكم الإدارة", err_test: "بيانات الاختبار مقتصرة على المسؤولين."
         },
         es: {
             lang: "Español", sign_in: "Ingresar", sign_up: "Regístrate", log_out: "Cerrar sesión", careers: "Carreras", dev: "Desarrolladores", products: "Productos", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos Cívicos.",
@@ -511,7 +511,7 @@ export default function CivicHome() {
             err_title: "El título debe contener al menos 5 caracteres", err_cat: "Por favor seleccione una categoría", err_desc: "Por favor proporcione una descripción más detallada (mínimo 20 caracteres)",
             alert_map: "Por favor identifique la ubicación exacta en el mapa antes de proceder.", alert_fail: "Fallo en el envío. Por favor, inténtelo de nuevo.",
             succ_title: "Reporte Enviado", succ_sub: "El problema ha sido registrado. Los equipos serán despachados según la prioridad.",
-            sm_home: "Portal Público", sm_report: "Presentar un Reporte", sm_map: "Mapa de Transparencia", sm_admin: "Consola de Administración"
+            sm_home: "Portal Público", sm_report: "Presentar un Reporte", sm_map: "Mapa de Transparencia", sm_admin: "Consola de Administración", err_test: "Los datos de prueba están restringidos a los administradores."
         },
         fr: {
             lang: "Français", sign_in: "Se connecter", sign_up: "S'inscrire", log_out: "Se déconnecter", careers: "Carrières", dev: "Développeurs", products: "Produits", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Civiques.",
@@ -544,7 +544,7 @@ export default function CivicHome() {
             err_title: "Le titre doit contenir au moins 5 caractères", err_cat: "Veuillez sélectionner une catégorie", err_desc: "Veuillez fournir une description plus détaillée (minimum 20 caractères)",
             alert_map: "Veuillez identifier l'emplacement exact sur la carte avant de continuer.", alert_fail: "Échec de la soumission. Veuillez réessayer.",
             succ_title: "Rapport Soumis", succ_sub: "Le problème a été enregistré. Des équipes seront dépêchées selon la priorité.",
-            sm_home: "Portail Public", sm_report: "Soumettre un Rapport", sm_map: "Carte de Transparence", sm_admin: "Console d'Administration"
+            sm_home: "Portail Public", sm_report: "Soumettre un Rapport", sm_map: "Carte de Transparence", sm_admin: "Console d'Administration", err_test: "Les données de test sont réservées aux administrateurs."
         },
         de: {
             lang: "Deutsch", sign_in: "Anmelden", sign_up: "Registrieren", log_out: "Abmelden", careers: "Karriere", dev: "Entwickler", products: "Produkte", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Civic-Modulen.",
@@ -577,7 +577,7 @@ export default function CivicHome() {
             err_title: "Titel muss mindestens 5 Zeichen enthalten", err_cat: "Bitte wählen Sie eine Kategorie aus", err_desc: "Bitte geben Sie eine detailliertere Beschreibung an (mindestens 20 Zeichen)",
             alert_map: "Bitte identifizieren Sie den genauen Standort auf der Karte, bevor Sie fortfahren.", alert_fail: "Einreichung fehlgeschlagen. Bitte versuchen Sie es erneut.",
             succ_title: "Bericht Eingereicht", succ_sub: "Das Problem wurde registriert. Teams werden nach Priorität entsandt.",
-            sm_home: "Öffentliches Portal", sm_report: "Meldung Einreichen", sm_map: "Live-Transparenzkarte", sm_admin: "Admin-Konsole"
+            sm_home: "Öffentliches Portal", sm_report: "Meldung Einreichen", sm_map: "Live-Transparenzkarte", sm_admin: "Admin-Konsole", err_test: "Testdaten sind Administratoren vorbehalten."
         }
     };
 
@@ -600,12 +600,20 @@ export default function CivicHome() {
         visible: { opacity: 1, transition: { staggerChildren: 0.15 } }
     };
 
-    // Quick Report Form Setup
+    // Quick Report Form Setup with Strict "Test" Keyword Blocking
     const dynamicSchema = z.object({
-        title: z.string().min(5, currentT.err_title).max(100),
+        title: z.string().min(5, currentT.err_title).max(100).refine((val) => {
+            const isTest = val.toLowerCase().includes('test');
+            const isAdmin = activeUser?.email === 'testcodecfg@gmail.com';
+            return !(isTest && !isAdmin);
+        }, { message: currentT.err_test }),
         category: z.string().min(1, currentT.err_cat),
         priority: z.enum(['Standard', 'High', 'Critical']),
-        description: z.string().min(20, currentT.err_desc),
+        description: z.string().min(20, currentT.err_desc).refine((val) => {
+            const isTest = val.toLowerCase().includes('test');
+            const isAdmin = activeUser?.email === 'testcodecfg@gmail.com';
+            return !(isTest && !isAdmin);
+        }, { message: currentT.err_test }),
         reporterName: z.string().optional(),
         reporterPhone: z.string().optional(),
         isAnonymous: z.boolean().default(false)
@@ -657,7 +665,7 @@ export default function CivicHome() {
                 address: resolvedAddress || "Location captured via GPS",
                 geohash: generateGeohash(selectedLocation[0], selectedLocation[1]),
                 evidenceUrl: evidenceUrl,
-                userId: 'PUBLIC_CITIZEN',
+                userId: activeUser ? activeUser.uid : 'PUBLIC_CITIZEN',
                 ward: 'Zone A',
                 status: 'Reported'
             };
@@ -826,7 +834,7 @@ export default function CivicHome() {
                         {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
                     </button>
                     
-                    {user ? (
+                    {activeUser ? (
                         <>
                             <button 
                                 onClick={handleSignOut} 
@@ -898,7 +906,7 @@ export default function CivicHome() {
                                 {currentT.qr_title} <ArrowRight size={18} />
                             </button>
                             <button 
-                                onClick={() => navigate(user ? '/civic/dashboard' : '/civic/auth')} 
+                                onClick={() => navigate(activeUser ? '/civic/dashboard' : '/civic/auth')} 
                                 className={`w-full sm:w-auto px-8 py-4 rounded-xl font-bold text-[1rem] flex items-center justify-center gap-2 transition-colors outline-none border ${
                                     theme === 'light' ? 'bg-transparent text-black border-[#cccccc] hover:border-black' : 'bg-transparent text-white border-[#333333] hover:border-white'
                                 }`}
@@ -942,6 +950,36 @@ export default function CivicHome() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             <div className="lg:col-span-2">
                                 <form onSubmit={handleSubmit(processSubmission)} className={`rounded-3xl p-6 md:p-10 border ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
+                                    
+                                    {/* Contact Details (Optional) */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+                                        <div>
+                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_reporter}</label>
+                                            <Controller
+                                                name="reporterName"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <input {...field} placeholder="Anonymous" className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
+                                                        theme === 'light' ? 'bg-white border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#444444] text-white focus:border-white'
+                                                    }`} />
+                                                )}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_phone}</label>
+                                            <Controller
+                                                name="reporterPhone"
+                                                control={control}
+                                                render={({ field }) => (
+                                                    <input {...field} type="tel" placeholder="+91..." className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
+                                                        theme === 'light' ? 'bg-white border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#444444] text-white focus:border-white'
+                                                    }`} />
+                                                )}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Basic Details */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
                                         <div>
                                             <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.form_title_label}</label>
@@ -997,31 +1035,28 @@ export default function CivicHome() {
                                         {errors.description && <span className="text-red-500 text-[0.8rem] mt-1 block">{errors.description.message}</span>}
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+                                    {/* Privacy */}
+                                    <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_reporter}</label>
-                                            <Controller
-                                                name="reporterName"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <input {...field} placeholder="Anonymous" className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
-                                                        theme === 'light' ? 'bg-white border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#444444] text-white focus:border-white'
-                                                    }`} />
-                                                )}
-                                            />
+                                            <h3 className="text-[1.1rem] font-black flex items-center gap-2 mb-1">
+                                                <EyeOff size={18} /> {currentT.priv_title}
+                                            </h3>
+                                            <p className={`text-[0.85rem] ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.priv_sub}</p>
                                         </div>
-                                        <div>
-                                            <label className={`block text-[0.85rem] font-bold mb-2 uppercase tracking-wider ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>{currentT.lbl_phone}</label>
-                                            <Controller
-                                                name="reporterPhone"
-                                                control={control}
-                                                render={({ field }) => (
-                                                    <input {...field} type="tel" placeholder="+91..." className={`w-full px-4 py-3 rounded-xl outline-none transition-colors text-[0.95rem] border ${
-                                                        theme === 'light' ? 'bg-white border-[#cccccc] text-black focus:border-black' : 'bg-[#000000] border-[#444444] text-white focus:border-white'
-                                                    }`} />
-                                                )}
-                                            />
-                                        </div>
+                                        <Controller
+                                            name="isAnonymous"
+                                            control={control}
+                                            render={({ field }) => (
+                                                <label className="relative inline-flex items-center cursor-pointer">
+                                                    <input type="checkbox" className="sr-only peer" checked={field.value} onChange={field.onChange} />
+                                                    <div className={`w-11 h-6 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                                                        theme === 'light' 
+                                                            ? 'bg-[#e0e0e0] peer-checked:after:border-black after:bg-white after:border-gray-300 peer-checked:bg-black' 
+                                                            : 'bg-[#333333] peer-checked:after:border-white after:bg-white after:border-gray-300 peer-checked:bg-[#ffffff]'
+                                                    }`}></div>
+                                                </label>
+                                            )}
+                                        />
                                     </div>
 
                                     <button 
@@ -1041,7 +1076,7 @@ export default function CivicHome() {
                             </div>
 
                             <div className="lg:col-span-1 flex flex-col gap-6">
-                                {/* Interactive Location Picker */}
+                                {/* Interactive Location Picker with Autocomplete */}
                                 <div className={`border rounded-3xl p-6 ${theme === 'light' ? 'bg-[#f9f9f9] border-[#e0e0e0]' : 'bg-[#111111] border-[#333333]'}`}>
                                     <h3 className="text-[1.1rem] font-black mb-4 flex items-center gap-2">
                                         <MapPin size={18} /> {currentT.map_title}
@@ -1294,20 +1329,20 @@ export default function CivicHome() {
                 
                 {/* Social Icons & Utilities */}
                 <div className="flex flex-wrap items-center gap-6">
-                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
+                    <button onClick={() => setShowLangPrompt(true)} className={`flex items-center gap-2 text-[0.8rem] font-bold px-3 py-1.5 rounded-full transition-colors border outline-none ${theme === 'light' ? 'border-[#cccccc] hover:border-black text-[#555555]' : 'border-[#333333] hover:border-white text-[#888888]'}`}>
                         <Globe size={14} /> {currentT.lang}
                     </button>
                     <div className={`flex items-center gap-6 ${theme === 'light' ? 'text-[#666666]' : 'text-[#555555]'}`}>
-                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <a href="https://www.linkedin.com/company/getmovyra/" target="_blank" rel="noopener noreferrer" className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                         </a>
-                        <a href="#youtube" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <a href="#youtube" className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                             <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
                         </a>
-                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <a href="https://www.instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                         </a>
-                        <a href="#x" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
+                        <a href="#x" className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
                         </a>
                     </div>
@@ -1319,24 +1354,20 @@ export default function CivicHome() {
                         <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
                         <span onClick={() => setShowSitemap(true)} className={`cursor-pointer transition-colors underline outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.sitemap}</span>
                         <span className={`w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
-                        <Link to="/careers" className={`transition-colors ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
+                        <Link to="/careers" className={`transition-colors outline-none ${theme === 'light' ? 'hover:text-black' : 'hover:text-white'}`}>{currentT.careers}</Link>
                     </div>
                     <span className={`hidden md:block w-1 h-1 rounded-full ${theme === 'light' ? 'bg-[#cccccc]' : 'bg-[#333333]'}`}></span>
-                    
-                    {/* Image Attribution Link (Theme Aware) */}
                     <div className="flex items-center gap-2 text-[0.75rem] uppercase tracking-wider">
                         Built by 
-                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity">
+                        <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
                             <img 
                                 src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
                                 alt="AnyAstro" 
                                 className="h-4 w-auto object-contain" 
-                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
+                                onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#111111]">AnyAstro</span>'); }} 
                             />
                         </a>
                     </div>
-                    
-                    {/* Back to Top */}
                     <button onClick={scrollToTop} className={`p-2 rounded-full transition-colors border outline-none ${theme === 'light' ? 'bg-[#f5f5f5] border-[#cccccc] hover:bg-[#e0e0e0]' : 'bg-[#111111] border-[#333333] hover:bg-[#222222]'}`}>
                         <ArrowUp size={16} />
                     </button>
