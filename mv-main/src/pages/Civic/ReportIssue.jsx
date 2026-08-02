@@ -21,7 +21,9 @@ import {
     User,
     Phone
 } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
 
+import { auth } from '../../firebaseConfig';
 import { 
     submitCivicComplaint, 
     findNearbyDuplicate,
@@ -93,6 +95,7 @@ export default function ReportIssue() {
     const [duplicateFound, setDuplicateFound] = useState(null);
     const [submissionSuccess, setSubmissionSuccess] = useState(false);
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+    const [activeUser, setActiveUser] = useState(null);
     const fileInputRef = useRef(null);
 
     const scrollToTop = () => {
@@ -103,12 +106,17 @@ export default function ReportIssue() {
         const sysLang = navigator.language.slice(0, 2);
         const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
         if (supported.includes(sysLang)) setLang(sysLang);
+
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setActiveUser(user);
+        });
+        return () => unsubscribe();
     }, []);
 
-    // Reverse Geocoding Effect
+    // Reverse Geocoding Effect (Fallback if not provided by autocomplete)
     useEffect(() => {
         const fetchAddress = async () => {
-            if (selectedLocation) {
+            if (selectedLocation && !resolvedAddress) {
                 try {
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${selectedLocation[0]}&lon=${selectedLocation[1]}`);
                     const data = await response.json();
@@ -121,7 +129,7 @@ export default function ReportIssue() {
             }
         };
         fetchAddress();
-    }, [selectedLocation]);
+    }, [selectedLocation, resolvedAddress]);
 
     // 2. 13-LANGUAGE DICTIONARY (Reporting Context)
     const t = {
@@ -140,7 +148,7 @@ export default function ReportIssue() {
             err_title: "Title must contain at least 5 characters", err_cat: "Please select a category", err_desc: "Please provide a more detailed description (min 20 characters)",
             alert_map: "Please identify the exact location on the map before proceeding.", alert_fail: "Submission failed. Your report has been saved as a draft.",
             succ_title: "Report Submitted", succ_sub: "The issue has been registered. Teams will be dispatched according to priority.",
-            sm_home: "Public Portal", sm_report: "File a Report", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
+            sm_home: "Public Portal", sm_report: "File a Report", sm_map: "Live Transparency Map", sm_admin: "Admin Console", err_test: "Test data is restricted to administrators."
         },
         hi: {
             lang: "हिन्दी", help: "सहायता केंद्र", back: "डैशबोर्ड पर लौटें", careers: "करियर", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सभी सिविक मॉड्यूल पर सीधा नेविगेशन।",
@@ -157,7 +165,7 @@ export default function ReportIssue() {
             err_title: "शीर्षक में कम से कम 5 अक्षर होने चाहिए", err_cat: "कृपया एक श्रेणी चुनें", err_desc: "कृपया अधिक विस्तृत विवरण प्रदान करें (न्यूनतम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़ने से पहले मानचित्र पर सटीक स्थान की पहचान करें।", alert_fail: "सबमिशन विफल। आपकी रिपोर्ट ड्राफ्ट के रूप में सहेज ली गई है।",
             succ_title: "रिपोर्ट सबमिट की गई", succ_sub: "समस्या दर्ज कर ली गई है। प्राथमिकता के अनुसार टीमों को भेजा जाएगा।",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट दर्ज करें", sm_map: "लाइव पारदर्शिता मानचित्र", sm_admin: "एडमिन कंसोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट दर्ज करें", sm_map: "लाइव पारदर्शिता मानचित्र", sm_admin: "एडमिन कंसोल", err_test: "परीक्षण डेटा प्रशासकों तक सीमित है।"
         },
         hinglish: {
             lang: "Hinglish", help: "Help Center", back: "Dashboard par wapas jayein", careers: "Careers", products: "Products", sitemap: "Sitemap", sitemap_desc: "Sabhi Civic modules ka direct navigation.",
@@ -174,7 +182,7 @@ export default function ReportIssue() {
             err_title: "Title me kam se kam 5 characters hone chahiye", err_cat: "Please ek category select karein", err_desc: "Please detailed description dein (minimum 20 characters)",
             alert_map: "Aage badhne se pehle map par exact location identify karein.", alert_fail: "Submission fail ho gaya. Aapki report draft me save ho gayi hai.",
             succ_title: "Report Submitted", succ_sub: "Issue register ho gaya hai. Priority ke hisaab se teams bhej di jayengi.",
-            sm_home: "Public Portal", sm_report: "Report Darj Karein", sm_map: "Live Transparency Map", sm_admin: "Admin Console"
+            sm_home: "Public Portal", sm_report: "Report Darj Karein", sm_map: "Live Transparency Map", sm_admin: "Admin Console", err_test: "Test data sirf administrators ke liye allowed hai."
         },
         mr: {
             lang: "मराठी", help: "मदत केंद्र", back: "डॅशबोर्डवर परत जा", careers: "करिअर", products: "उत्पादने", sitemap: "साइटमॅप", sitemap_desc: "सर्व सिविक मॉड्यूल्ससाठी थेट नेव्हिगेशन.",
@@ -191,7 +199,7 @@ export default function ReportIssue() {
             err_title: "शीर्षकामध्ये किमान ५ अक्षरे असणे आवश्यक आहे", err_cat: "कृपया श्रेणी निवडा", err_desc: "कृपया अधिक तपशीलवार वर्णन द्या (किमान २० अक्षरे)",
             alert_map: "कृपया पुढे जाण्यापूर्वी नकाशावर अचूक स्थान ओळखा.", alert_fail: "सबमिशन अयशस्वी. तुमचा अहवाल ड्राफ्ट म्हणून जतन केला गेला आहे.",
             succ_title: "अहवाल सबमिट केला", succ_sub: "समस्येची नोंद झाली आहे. प्राधान्यानुसार टीम्स पाठवल्या जातील.",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "अहवाल दाखल करा", sm_map: "थेट पारदर्शकता नकाशा", sm_admin: "प्रशासन कन्सोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "अहवाल दाखल करा", sm_map: "थेट पारदर्शकता नकाशा", sm_admin: "प्रशासन कन्सोल", err_test: "चाचणी डेटा प्रशासकांसाठी मर्यादित आहे."
         },
         gu: {
             lang: "ગુજરાતી", help: "મદદ કેન્દ્ર", back: "ડેશબોર્ડ પર પાછા ફરો", careers: "કારકિર્દી", products: "ઉત્પાદનો", sitemap: "સાઇટમેપ", sitemap_desc: "તમામ સિવિક મોડ્યુલો માટે સીધું નેવિગેશન.",
@@ -208,7 +216,7 @@ export default function ReportIssue() {
             err_title: "શીર્ષકમાં ઓછામાં ઓછા 5 અક્ષરો હોવા જોઈએ", err_cat: "કૃપા કરીને શ્રેણી પસંદ કરો", err_desc: "કૃપા કરીને વધુ વિગતવાર વર્ણન આપો (ન્યૂનતમ 20 અક્ષરો)",
             alert_map: "આગળ વધતા પહેલા કૃપા કરીને નકશા પર ચોક્કસ સ્થાન ઓળખો.", alert_fail: "સબમિશન નિષ્ફળ. તમારો રિપોર્ટ ડ્રાફ્ટ તરીકે સાચવવામાં આવ્યો છે.",
             succ_title: "રિપોર્ટ સબમિટ કર્યો", succ_sub: "સમસ્યા નોંધવામાં આવી છે. અગ્રતા અનુસાર ટીમો મોકલવામાં આવશે.",
-            sm_home: "જાહેર પોર્ટલ", sm_report: "રિપોર્ટ ફાઇલ કરો", sm_map: "જીવંત પારદર્શિતા નકશો", sm_admin: "એડમિન કન્સોલ"
+            sm_home: "જાહેર પોર્ટલ", sm_report: "રિપોર્ટ ફાઇલ કરો", sm_map: "જીવંત પારદર્શિતા નકશો", sm_admin: "એડમિન કન્સોલ", err_test: "પરીક્ષણ ડેટા સંચાલકો સુધી મર્યાદિત છે."
         },
         te: {
             lang: "తెలుగు", help: "సహాయ కేంద్రం", back: "డ్యాష్‌బోర్డ్‌కు తిరిగి వెళ్లండి", careers: "కెరీర్స్", products: "ఉత్పత్తులు", sitemap: "సైట్‌మ్యాప్", sitemap_desc: "అన్ని సివిక్ మాడ్యూల్స్‌కు ప్రత్యక్ష నావిగేషన్.",
@@ -225,7 +233,7 @@ export default function ReportIssue() {
             err_title: "శీర్షికలో కనీసం 5 అక్షరాలు ఉండాలి", err_cat: "దయచేసి ఒక వర్గాన్ని ఎంచుకోండి", err_desc: "దయచేసి మరింత వివరణాత్మక వివరణను అందించండి (కనీసం 20 అక్షరాలు)",
             alert_map: "కొనసాగడానికి ముందు దయచేసి మ్యాప్‌లో ఖచ్చితమైన స్థానాన్ని గుర్తించండి.", alert_fail: "సమర్పణ విఫలమైంది. మీ నివేదిక డ్రాఫ్ట్‌గా సేవ్ చేయబడింది.",
             succ_title: "నివేదిక సమర్పించబడింది", succ_sub: "సమస్య నమోదు చేయబడింది. ప్రాధాన్యత ప్రకారం బృందాలు పంపబడతాయి.",
-            sm_home: "పబ్లిక్ పోర్టల్", sm_report: "నివేదిక దాఖలు చేయండి", sm_map: "లైవ్ పారదర్శకత మ్యాప్", sm_admin: "అడ్మిన్ కన్సోల్"
+            sm_home: "పబ్లిక్ పోర్టల్", sm_report: "నివేదిక దాఖలు చేయండి", sm_map: "లైవ్ పారదర్శకత మ్యాప్", sm_admin: "అడ్మిన్ కన్సోల్", err_test: "పరీక్ష డేటా నిర్వాహకులకు పరిమితం చేయబడింది."
         },
         ta: {
             lang: "தமிழ்", help: "உதவி மையம்", back: "டாஷ்போர்டுக்குத் திரும்பு", careers: "தொழில்கள்", products: "தயாரிப்புகள்", sitemap: "தளத்தின் வரைபடம்", sitemap_desc: "அனைத்து சிவிக் தொகுதிகளுக்கும் நேரடி வழிசெலுத்தல்.",
@@ -242,7 +250,7 @@ export default function ReportIssue() {
             err_title: "தலைப்பில் குறைந்தது 5 எழுத்துக்கள் இருக்க வேண்டும்", err_cat: "தயவுசெய்து ஒரு வகையை தேர்ந்தெடுக்கவும்", err_desc: "மேலும் விரிவான விளக்கத்தை வழங்கவும் (குறைந்தது 20 எழுத்துக்கள்)",
             alert_map: "தொடர்வதற்கு முன் வரைபடத்தில் சரியான இடத்தை அடையாளம் காணவும்.", alert_fail: "சமர்ப்பிப்பு தோல்வியடைந்தது. உங்கள் அறிக்கை வரைவாக சேமிக்கப்பட்டுள்ளது.",
             succ_title: "அறிக்கை சமர்ப்பிக்கப்பட்டது", succ_sub: "பிரச்சனை பதிவு செய்யப்பட்டுள்ளது. முன்னுரிமைப்படி குழுக்கள் அனுப்பப்படும்.",
-            sm_home: "பொது போர்டல்", sm_report: "அறிக்கையை தாக்கல் செய்", sm_map: "நேரடி வெளிப்படைத்தன்மை வரைபடம்", sm_admin: "நிர்வாக கன்சோல்"
+            sm_home: "பொது போர்டல்", sm_report: "அறிக்கையை தாக்கல் செய்", sm_map: "நேரடி வெளிப்படைத்தன்மை வரைபடம்", sm_admin: "நிர்வாக கன்சோல்", err_test: "சோதனைத் தரவு நிர்வாகிகளுக்கு மட்டுமே."
         },
         pa: {
             lang: "ਪੰਜਾਬੀ", help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", back: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ ਜਾਓ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", sitemap: "ਸਾਈਟਮੈਪ", sitemap_desc: "ਸਾਰੇ ਸਿਵਿਕ ਮੋਡਿਊਲਾਂ ਲਈ ਸਿੱਧੀ ਨੈਵੀਗੇਸ਼ਨ।",
@@ -259,7 +267,7 @@ export default function ReportIssue() {
             err_title: "ਸਿਰਲੇਖ ਵਿੱਚ ਘੱਟੋ-ਘੱਟ 5 ਅੱਖਰ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ", err_cat: "ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਸ਼੍ਰੇਣੀ ਚੁਣੋ", err_desc: "ਕਿਰਪਾ ਕਰਕੇ ਵਧੇਰੇ ਵਿਸਤ੍ਰਿਤ ਵਰਣਨ ਪ੍ਰਦਾਨ ਕਰੋ (ਘੱਟੋ-ਘੱਟ 20 ਅੱਖਰ)",
             alert_map: "ਕਿਰਪਾ ਕਰਕੇ ਅੱਗੇ ਵਧਣ ਤੋਂ ਪਹਿਲਾਂ ਨਕਸ਼ੇ 'ਤੇ ਸਹੀ ਸਥਾਨ ਦੀ ਪਛਾਣ ਕਰੋ।", alert_fail: "ਸਬਮਿਸ਼ਨ ਅਸਫਲ ਰਿਹਾ। ਤੁਹਾਡੀ ਰਿਪੋਰਟ ਡਰਾਫਟ ਵਜੋਂ ਸੁਰੱਖਿਅਤ ਕੀਤੀ ਗਈ ਹੈ।",
             succ_title: "ਰਿਪੋਰਟ ਜਮ੍ਹਾਂ ਕੀਤੀ ਗਈ", succ_sub: "ਸਮੱਸਿਆ ਦਰਜ ਕਰ ਲਈ ਗਈ ਹੈ। ਤਰਜੀਹ ਅਨੁਸਾਰ ਟੀਮਾਂ ਭੇਜੀਆਂ ਜਾਣਗੀਆਂ।",
-            sm_home: "ਜਨਤਕ ਪੋਰਟਲ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_map: "ਲਾਈਵ ਪਾਰਦਰਸ਼ਤਾ ਨਕਸ਼ਾ", sm_admin: "ਐਡਮਿਨ ਕੰਸੋਲ"
+            sm_home: "ਜਨਤਕ ਪੋਰਟਲ", sm_report: "ਰਿਪੋਰਟ ਦਰਜ ਕਰੋ", sm_map: "ਲਾਈਵ ਪਾਰਦਰਸ਼ਤਾ ਨਕਸ਼ਾ", sm_admin: "ਐਡਮਿਨ ਕੰਸੋਲ", err_test: "ਟੈਸਟ ਡੇਟਾ ਪ੍ਰਸ਼ਾਸਕਾਂ ਤੱਕ ਸੀਮਿਤ ਹੈ।"
         },
         bho: {
             lang: "भोजपुरी", help: "मदद केंद्र", back: "डैशबोर्ड पर वापस जाईं", careers: "करियर", products: "उत्पाद", sitemap: "साइटमैप", sitemap_desc: "सब सिविक मॉड्यूल पर सीधा नेविगेशन।",
@@ -276,7 +284,7 @@ export default function ReportIssue() {
             err_title: "शीर्षक में कम से कम 5 अक्षर होखे के चाहीं", err_cat: "कृपया एगो श्रेणी चुनीं", err_desc: "कृपया अउरी विस्तृत विवरण दीं (कम से कम 20 अक्षर)",
             alert_map: "कृपया आगे बढ़े से पहिले नक्शा पर सटीक स्थान के पहचान करीं।", alert_fail: "सबमिशन विफल हो गइल। राउर रिपोर्ट ड्राफ्ट के रूप में सहेज लिहल गइल बा।",
             succ_title: "रिपोर्ट जमा भइल", succ_sub: "समस्या दर्ज क लिहल गइल बा। प्राथमिकता के अनुसार टीम भेजल जाई।",
-            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट सबमिट करीं", sm_map: "लाइव पारदर्शिता नक्शा", sm_admin: "एडमिन कंसोल"
+            sm_home: "सार्वजनिक पोर्टल", sm_report: "रिपोर्ट सबमिट करीं", sm_map: "लाइव पारदर्शिता नक्शा", sm_admin: "एडमिन कंसोल", err_test: "परीक्षण डेटा खाली प्रशासक लोग खातिर बा।"
         },
         ar: {
             lang: "العربية", help: "مركز المساعدة", back: "العودة إلى لوحة القيادة", careers: "الوظائف", products: "المنتجات", sitemap: "خريطة الموقع", sitemap_desc: "التنقل المباشر لجميع وحدات المدنية.",
@@ -293,7 +301,7 @@ export default function ReportIssue() {
             err_title: "يجب أن يحتوي العنوان على 5 أحرف على الأقل", err_cat: "يرجى تحديد فئة", err_desc: "يرجى تقديم وصف أكثر تفصيلاً (20 حرفًا على الأقل)",
             alert_map: "يرجى تحديد الموقع الدقيق على الخريطة قبل المتابعة.", alert_fail: "فشل الإرسال. تم حفظ تقريرك كمسودة.",
             succ_title: "تم إرسال التقرير", succ_sub: "تم تسجيل المشكلة. سيتم إرسال الفرق حسب الأولوية.",
-            sm_home: "البوابة العامة", sm_report: "تقديم تقرير", sm_map: "خريطة الشفافية المباشرة", sm_admin: "وحدة تحكم الإدارة"
+            sm_home: "البوابة العامة", sm_report: "تقديم تقرير", sm_map: "خريطة الشفافية المباشرة", sm_admin: "وحدة تحكم الإدارة", err_test: "بيانات الاختبار مقتصرة على المسؤولين."
         },
         es: {
             lang: "Español", help: "Centro de ayuda", back: "Volver al Tablero", careers: "Carreras", products: "Productos", sitemap: "Mapa del sitio", sitemap_desc: "Navegación directa a todos los módulos Cívicos.",
@@ -310,7 +318,7 @@ export default function ReportIssue() {
             err_title: "El título debe contener al menos 5 caracteres", err_cat: "Por favor seleccione una categoría", err_desc: "Por favor proporcione una descripción más detallada (mínimo 20 caracteres)",
             alert_map: "Por favor identifique la ubicación exacta en el mapa antes de proceder.", alert_fail: "Fallo en el envío. Su reporte ha sido guardado como borrador.",
             succ_title: "Reporte Enviado", succ_sub: "El problema ha sido registrado. Los equipos serán despachados según la prioridad.",
-            sm_home: "Portal Público", sm_report: "Presentar un Reporte", sm_map: "Mapa de Transparencia", sm_admin: "Consola de Administración"
+            sm_home: "Portal Público", sm_report: "Presentar un Reporte", sm_map: "Mapa de Transparencia", sm_admin: "Consola de Administración", err_test: "Los datos de prueba están restringidos a los administradores."
         },
         fr: {
             lang: "Français", help: "Centre d'aide", back: "Retour au Tableau de bord", careers: "Carrières", products: "Produits", sitemap: "Plan du site", sitemap_desc: "Navigation directe vers tous les modules Civiques.",
@@ -327,7 +335,7 @@ export default function ReportIssue() {
             err_title: "Le titre doit contenir au moins 5 caractères", err_cat: "Veuillez sélectionner une catégorie", err_desc: "Veuillez fournir une description plus détaillée (minimum 20 caractères)",
             alert_map: "Veuillez identifier l'emplacement exact sur la carte avant de continuer.", alert_fail: "Échec de la soumission. Votre rapport a été enregistré comme brouillon.",
             succ_title: "Rapport Soumis", succ_sub: "Le problème a été enregistré. Des équipes seront dépêchées selon la priorité.",
-            sm_home: "Portail Public", sm_report: "Soumettre un Rapport", sm_map: "Carte de Transparence", sm_admin: "Console d'Administration"
+            sm_home: "Portail Public", sm_report: "Soumettre un Rapport", sm_map: "Carte de Transparence", sm_admin: "Console d'Administration", err_test: "Les données de test sont réservées aux administrateurs."
         },
         de: {
             lang: "Deutsch", help: "Hilfezentrum", back: "Zurück zum Dashboard", careers: "Karriere", products: "Produkte", sitemap: "Seitenverzeichnis", sitemap_desc: "Direkte Navigation zu allen Civic-Modulen.",
@@ -344,7 +352,7 @@ export default function ReportIssue() {
             err_title: "Titel muss mindestens 5 Zeichen enthalten", err_cat: "Bitte wählen Sie eine Kategorie aus", err_desc: "Bitte geben Sie eine detailliertere Beschreibung an (mindestens 20 Zeichen)",
             alert_map: "Bitte identifizieren Sie den genauen Standort auf der Karte, bevor Sie fortfahren.", alert_fail: "Einreichung fehlgeschlagen. Ihr Bericht wurde als Entwurf gespeichert.",
             succ_title: "Bericht Eingereicht", succ_sub: "Das Problem wurde registriert. Teams werden nach Priorität entsandt.",
-            sm_home: "Öffentliches Portal", sm_report: "Meldung Einreichen", sm_map: "Live-Transparenzkarte", sm_admin: "Admin-Konsole"
+            sm_home: "Öffentliches Portal", sm_report: "Meldung Einreichen", sm_map: "Live-Transparenzkarte", sm_admin: "Admin-Konsole", err_test: "Testdaten sind Administratoren vorbehalten."
         }
     };
 
@@ -357,12 +365,20 @@ export default function ReportIssue() {
         { code: 'de', label: 'Deutsch' }
     ];
 
-    // Schema mapped dynamically to translation dictionary
+    // Schema mapped dynamically to translation dictionary with Strict "Test" Keyword Blocking
     const dynamicSchema = z.object({
-        title: z.string().min(5, currentT.err_title).max(100),
+        title: z.string().min(5, currentT.err_title).max(100).refine((val) => {
+            const isTest = val.toLowerCase().includes('test');
+            const isAdmin = activeUser?.email === 'testcodecfg@gmail.com';
+            return !(isTest && !isAdmin);
+        }, { message: currentT.err_test }),
         category: z.string().min(1, currentT.err_cat),
         priority: z.enum(['Standard', 'High', 'Critical']),
-        description: z.string().min(20, currentT.err_desc),
+        description: z.string().min(20, currentT.err_desc).refine((val) => {
+            const isTest = val.toLowerCase().includes('test');
+            const isAdmin = activeUser?.email === 'testcodecfg@gmail.com';
+            return !(isTest && !isAdmin);
+        }, { message: currentT.err_test }),
         reporterName: z.string().optional(),
         reporterPhone: z.string().optional(),
         isAnonymous: z.boolean().default(false)
@@ -426,7 +442,6 @@ export default function ReportIssue() {
         try {
             let evidenceUrl = null;
             if (evidenceFile) {
-                // Using the newly implemented PocketBase public upload pipeline
                 evidenceUrl = await uploadCivicMedia(evidenceFile, null, data.category);
             }
             
@@ -442,7 +457,7 @@ export default function ReportIssue() {
                 address: resolvedAddress || "Location captured via GPS",
                 geohash: generateGeohash(selectedLocation[0], selectedLocation[1]),
                 evidenceUrl: evidenceUrl,
-                userId: 'PUBLIC_CITIZEN',
+                userId: activeUser ? activeUser.uid : 'PUBLIC_CITIZEN',
                 ward: 'Zone A',
                 status: 'Reported'
             };
