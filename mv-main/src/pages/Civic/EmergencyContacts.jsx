@@ -349,7 +349,7 @@ export default function EmergencyContacts() {
                                 <X size={18} />
                             </button>
 
-                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Movyra Products</h2>
+                            <h2 className={`text-[1.5rem] font-black tracking-tight mb-2 text-center mt-2 ${theme === 'light' ? 'text-black' : 'text-white'}`}>Also from us</h2>
                             <p className={`text-[0.9rem] text-center mb-8 ${theme === 'light' ? 'text-[#666666]' : 'text-[#888888]'}`}>Discover our connected platforms.</p>
 
                             <Link to="/civic" className={`group flex flex-col items-center gap-4 p-6 rounded-2xl transition-colors text-center w-full outline-none border ${
@@ -528,7 +528,7 @@ export default function EmergencyContacts() {
                         Built by 
                         <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="opacity-80 hover:opacity-100 transition-opacity outline-none">
                             <img 
-                                src={theme === 'light' ? '/aat2.png' : '/aatns-dark.png'} 
+                                src={theme === 'light' ? '/aat2.png' : '/aat.png'} 
                                 alt="AnyAstro" 
                                 className="h-4 w-auto object-contain" 
                                 onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} 
