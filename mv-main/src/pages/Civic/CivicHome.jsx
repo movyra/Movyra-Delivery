@@ -739,7 +739,7 @@ export default function CivicHome() {
                                 {[
                                     { path: '/civic', name: currentT.sm_home },
                                     { path: '/civic/report', name: currentT.sm_report },
-                                    { path: '/civic/map', name: currentT.sm_map },
+                                    { path: '/civic/heatmap', name: currentT.sm_map },
                                     { path: '/civic/admin', name: currentT.sm_admin }
                                 ].map(link => (
                                     <Link 
