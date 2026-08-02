@@ -273,7 +273,8 @@ service cloud.firestore {
     match /civic_complaints/{complaintId} {
       allow create: if true; // Unauthenticated creation permitted for public reporting
       allow read: if true;   // Public viewing permitted for the map and transparency features
-      allow update, delete: if isAdmin(); // Administration strictly protected
+      allow update: if true; // Explicitly allow public update operations for upvotes/appends
+      allow delete: if isAdmin(); // Administration strictly protected
     }
 
     match /civic_feedback/{feedbackId} {
