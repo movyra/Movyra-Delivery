@@ -126,7 +126,7 @@ export default function PublicNotices() {
     // 4. 13-LANGUAGE DICTIONARY (Simple Business Context)
     const t = {
         en: {
-            lang: "English", back: "Return to Dashboard", log_out: "Log out", careers: "Careers",
+            lang: "English", back: "Back", log_out: "Log out", careers: "Careers",
             title: "City Announcements", sub: "View official notices, alerts, and updates from your local administration.",
             search_ph: "Search announcements...", filter_all: "All Departments", 
             empty: "No announcements found.", empty_sub: "There are currently no active notices matching your criteria.",

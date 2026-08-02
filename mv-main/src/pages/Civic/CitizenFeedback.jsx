@@ -159,7 +159,7 @@ export default function CitizenFeedback() {
     // 3. 13-LANGUAGE DICTIONARY (Simple Consumer Context)
     const t = {
         en: {
-            lang: "English", back: "Return to Dashboard", log_out: "Log out", careers: "Careers", products: "Products",
+            lang: "English", back: "Back", log_out: "Log out", careers: "Careers", products: "Products",
             title: "Service Review", sub: "Rate the repair work and help us improve city services.",
             score_title: "City Score", score_sub: "Based on citizen reviews", reviews: "total reviews",
             form_issue: "Select Fixed Issue", form_issue_ph: "Choose an issue...", 

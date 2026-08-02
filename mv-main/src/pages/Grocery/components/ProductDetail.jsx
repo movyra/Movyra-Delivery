@@ -149,7 +149,7 @@ export default function ProductDetail({ productId, onBack, onNavigateToCart }) {
         <div>
           <p className="text-[#666666] font-bold text-[0.9rem] mb-4">The selected inventory identifier could not be verified.</p>
           <button onClick={onBack} className="px-6 py-2 bg-[#111111] border border-[#222222] text-white rounded-full font-bold text-[0.8rem]">
-            Return to Dashboard
+            Back
           </button>
         </div>
       </div>
