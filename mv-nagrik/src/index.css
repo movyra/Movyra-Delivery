@@ -1,3 +1,28 @@
+/*
+ * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
+ * Context: Global styling file for the application.
+ * 
+ * English: Global styling file for the application.
+ * Hindi: एप्लिकेशन के लिए ग्लोबल स्टाइलिंग फ़ाइल।
+ * Hinglish: Application ke liye global styling file.
+ * Marathi: अनुप्रयोगासाठी ग्लोबल स्टायलिंग फाइल.
+ * Gujarati: એપ્લિકેશન માટે ગ્લોબલ સ્ટાઇલિંગ ફાઇલ.
+ * Telugu: అప్లికేషన్ కోసం గ్లోబల్ స్టైలింగ్ ఫైల్.
+ * Tamil: பயன்பாட்டிற்கான குளோபல் ஸ்டைலிங் கோப்பு.
+ * Kannada: ಅಪ್ಲಿಕೇಶನ್‌ಗಾಗಿ ಗ್ಲೋಬಲ್ ಸ್ಟೈಲಿಂಗ್ ಫೈಲ್.
+ * Malayalam: ആപ്ലിക്കേഷനായുള്ള ഗ്ലോബൽ സ്റ്റൈലിംഗ് ഫയൽ.
+ * Bengali: অ্যাপ্লিকেশনের জন্য গ্লোবাল স্টাইলিং ফাইল।
+ * Punjabi: ਐਪਲੀਕੇਸ਼ਨ ਲਈ ਗਲੋਬਲ ਸਟਾਈਲਿੰਗ ਫਾਈਲ।
+ * Odia: ଆପ୍ଲିକେସନ୍ ପାଇଁ ଗ୍ଲୋବାଲ୍ ଷ୍ଟାଇଲିଂ ଫାଇଲ୍।
+ * Assamese: এপ্লিকেচনৰ বাবে গ্লোবেল ষ্টাইলিং ফাইল।
+ * Urdu: درخواست کے لیے گلوبل اسٹائلنگ فائل۔
+ * Bhojpuri: एप्लीकेशन खातिर ग्लोबल स्टाइलिंग फाइल।
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;
