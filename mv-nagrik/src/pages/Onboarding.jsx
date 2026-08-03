@@ -96,7 +96,7 @@ export default function Onboarding() {
                 <div className="flex items-center gap-2">
                     <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain" />
                     <span className="font-black text-[1.1rem] text-[#111111] tracking-tight">
-                        <span className="text-[#00897B]">N</span>agrikSetu
+                        <span className="text-[#00897B]"></span>
                     </span>
                 </div>
                 {currentSlide < slides.length - 1 && (
