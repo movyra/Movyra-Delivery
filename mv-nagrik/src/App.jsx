@@ -1,122 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { Suspense } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Lazy loading route components for optimal performance and code splitting
+const Onboarding = React.lazy(() => import('./pages/Onboarding'));
+const Home = React.lazy(() => import('./pages/Home'));
+const Alerts = React.lazy(() => import('./pages/Alerts'));
+const Feed = React.lazy(() => import('./pages/Feed'));
+const More = React.lazy(() => import('./pages/More'));
+const Report = React.lazy(() => import('./pages/Report'));
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+// Minimalist loader utilizing the NagrikSetu Civic Teal brand identity
+const PageLoader = () => (
+    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[#E0F2F1] border-t-[#00897B] rounded-full animate-spin"></div>
+    </div>
+);
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+export default function App() {
+    return (
+        <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+                <AnimatePresence mode="wait">
+                    <Routes>
+                        {/* Core NagrikSetu Public Routes */}
+                        {/* Note: The 13+ Indian language state provider and Bottom Navigation 
+                            will be injected inside the individual page components or a dedicated Layout wrapper 
+                            to ensure strict modularity. */}
+                        
+                        <Route path="/" element={<Navigate to="/onboarding" replace />} />
+                        <Route path="/onboarding" element={<Onboarding />} />
+                        <Route path="/home" element={<Home />} />
+                        <Route path="/alerts" element={<Alerts />} />
+                        <Route path="/feed" element={<Feed />} />
+                        <Route path="/more" element={<More />} />
+                        
+                        {/* Issue Reporting Engine */}
+                        <Route path="/report" element={<Report />} />
+                        
+                        {/* Fallback Interception for Invalid URLs */}
+                        <Route path="*" element={<Navigate to="/home" replace />} />
+                    </Routes>
+                </AnimatePresence>
+            </Suspense>
+        </BrowserRouter>
+    );
 }
-
-export default App
