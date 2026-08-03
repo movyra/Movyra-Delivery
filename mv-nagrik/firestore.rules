@@ -1,20 +1,20 @@
 /*
  * 15-Language System Documentation: Firestore Security Rules for NagrikSetu
- * English: Security rules configured for SOS guest access and Super Admin controls.
- * Hindi: एसओएस अतिथि पहुंच और सुपर एडमिन नियंत्रणों के लिए कॉन्फ़िगर किए गए सुरक्षा नियम।
- * Hinglish: SOS guest access aur Super Admin controls ke liye security rules configure kiye gaye.
- * Marathi: एसओएस अतिथी प्रवेश आणि सुपर अॅडमिन नियंत्रणांसाठी सुरक्षा नियम कॉन्फिगर केले आहेत.
- * Gujarati: એસઓએસ અતિથિ ઍક્સેસ અને સુપર એડમિન નિયંત્રણો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
- * Telugu: ఎస్ఓఎస్ అతిథి యాక్సెస్ మరియు సూపర్ అడ్మిన్ నియంత్రణల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
- * Tamil: எஸ்ஓஎஸ் விருந்தினர் அணுகல் மற்றும் சூப்பர் நிர்வாகி கட்டுப்பாடுகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
- * Kannada: ಎಸ್‌ಒಎಸ್ ಅತಿಥಿ ಪ್ರವೇಶ ಮತ್ತು ಸೂಪರ್ ಅಡ್ಮಿನ್ ನಿಯಂತ್ರಣಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
- * Malayalam: എസ്ഒഎസ് അതിഥി പ്രവേശനത്തിനും സൂപ്പർ അഡ്മിൻ നിയന്ത്രണങ്ങൾക്കുമായി സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
- * Bengali: এসওএস অতিথি অ্যাক্সেস এবং সুপার অ্যাডমিন নিয়ন্ত্রণের জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
- * Punjabi: ਐਸਓਐਸ ਮਹਿਮਾਨ ਪਹੁੰਚ ਅਤੇ ਸੁਪਰ ਐਡਮਿਨ ਨਿਯੰਤਰਣਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ ਹਨ।
- * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
- * Assamese: এছঅএছ অতিথি প্ৰৱেশ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
- * Urdu: ایس او ایس مہمان کی رسائی اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
- * Bhojpuri: एसओएस अतिथि पहुँच आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
+ * English: Security rules configured for SOS guest access, guest reporting validation, and Super Admin controls.
+ * Hindi: एसओएस अतिथि पहुंच, अतिथि रिपोर्टिंग सत्यापन और सुपर एडमिन नियंत्रणों के लिए कॉन्फ़िगर किए गए सुरक्षा नियम।
+ * Hinglish: SOS guest access, guest reporting validation, aur Super Admin controls ke liye security rules configure kiye gaye.
+ * Marathi: एसओएस अतिथी प्रवेश, अतिथी अहवाल पडताळणी आणि सुपर अॅडमिन नियंत्रणांसाठी सुरक्षा नियम कॉन्फिगर केले आहेत.
+ * Gujarati: એસઓએસ અતિથિ ઍક્સેસ, અતિથિ રિપોર્ટિંગ માન્યતા અને સુપર એડમિન નિયંત્રણો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
+ * Telugu: ఎస్ఓఎస్ అతిథి యాక్సెస్, అతిథి రిపోర్టింగ్ ధృవీకరణ మరియు సూపర్ అడ్మిన్ నియంత్రణల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
+ * Tamil: எஸ்ஓஎஸ் விருந்தினர் அணுகல், விருந்தினர் அறிக்கையிடல் சரிபார்ப்பு மற்றும் சூப்பர் நிர்வாகி கட்டுப்பாடுகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
+ * Kannada: ಎಸ್‌ಒಎಸ್ ಅತಿಥಿ ಪ್ರವೇಶ, ಅತಿಥಿ ವರದಿ ಪರಿಶೀಲನೆ ಮತ್ತು ಸೂಪರ್ ಅಡ್ಮಿನ್ ನಿಯಂತ್ರಣಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
+ * Malayalam: എസ്ഒഎസ് അതിഥി പ്രവേശനത്തിനും അതിഥി റിപ്പോർട്ടിംഗ് പരിശോധനയ്ക്കും സൂപ്പർ അഡ്മിൻ നിയന്ത്രണങ്ങൾക്കുമായി സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
+ * Bengali: এসওএস অতিথি অ্যাক্সেস, অতিথি রিপোর্টিং বৈধকরণ এবং সুপার অ্যাডমিন নিয়ন্ত্রণের জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
+ * Punjabi: ਐਸਓਐਸ ਮਹਿਮਾਨ ਪਹੁੰਚ, ਮਹਿਮਾਨ ਰਿਪੋਰਟਿੰਗ ਪ੍ਰਮਾਣਿਕਤਾ ਅਤੇ ਸੁਪਰ ਐਡਮਿਨ ਨਿਯੰਤਰਣਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ ਹਨ।
+ * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ, ଅତିଥି ରିପୋର୍ଟିଂ ଯାଞ୍ଚ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
+ * Assamese: এছঅএছ অতিথি প্ৰৱেশ, অতিথি প্ৰতিবেদন বৈধকৰণ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
+ * Urdu: ایس او ایس مہمان کی رسائی، مہمان رپورٹنگ کی توثیق اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
+ * Bhojpuri: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
  * 
  * Strict Color System Adherence (For Frontend Implementation Reference):
  * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
@@ -438,7 +438,8 @@ service cloud.firestore {
     
     // Core Reporting Feed
     match /nagrik_reports/{reportId} {
-      allow create: if isAuthenticated();
+      // Allow authenticated users. Allow unauthenticated guests strictly if they provide personal details.
+      allow create: if isAuthenticated() || (request.resource.data.keys().hasAll(['guestName', 'guestContact']));
       allow read: if true;
       // Strictly revoke report deletion and update capabilities from standard users.
       // Only the designated testcodecfg@gmail.com account is granted override permissions.
