@@ -1,4 +1,21 @@
 {
+  "_system_metadata": {
+    "en": "Firestore indexes for NagrikSetu including Leaderboard and Announcements. Colors: Primary #00897B, Black #111111, White #FFFFFF, Accent #FFB300.",
+    "hi": "नागरिकसेतु के लिए फायरबेस इंडेक्स, जिसमें लीडरबोर्ड और घोषणाएं शामिल हैं।",
+    "hinglish": "NagrikSetu ke liye Firestore indexes jisme Leaderboard aur Announcements shamil hain.",
+    "mr": "नागरिकसेतूसाठी फायरबेस इंडेक्स, लीडरबोर्ड आणि घोषणांसह.",
+    "gu": "નાગરિકસેતુ માટે ફાયરબેઝ ઇન્ડેક્સ, જેમાં લીડરબોર્ડ અને જાહેરાતો સામેલ છે.",
+    "te": "లీడర్‌బోర్డ్ మరియు ప్రకటనలతో సహా నాగ్రిక్ సేతు కోసం ఫైర్‌బేస్ సూచికలు.",
+    "ta": "லீடர்போர்டு மற்றும் அறிவிப்புகள் உட்பட நாகரிக்சேதுக்கான ஃபயர்பேஸ் குறியீடுகள்.",
+    "kn": "ಲೀಡರ್‌ಬೋರ್ಡ್ ಮತ್ತು ಪ್ರಕಟಣೆಗಳನ್ನು ಒಳಗೊಂಡಂತೆ ನಾಗರಿಕ್ ಸೇತುಗಾಗಿ ಫೈರ್‌ಬೇಸ್ ಸೂಚಿಕೆಗಳು.",
+    "ml": "ലീഡർബോർഡും അറിയിപ്പുകളും ഉൾപ്പെടെ നാഗരിക് സേതുവിനായുള്ള ഫയർബേസ് സൂചികകൾ.",
+    "bn": "লিডারবোর্ড এবং ঘোষণা সহ নাগরিকসেতুর জন্য ফায়ারবেস সূচক।",
+    "pa": "ਲੀਡਰਬੋਰਡ ਅਤੇ ਘੋਸ਼ਣਾਵਾਂ ਸਮੇਤ ਨਾਗਰਿਕਸੇਤੂ ਲਈ ਫਾਇਰਬੇਸ ਸੂਚਕਾਂਕ।",
+    "or": "ଲିଡରବୋର୍ଡ ଏବଂ ଘୋଷଣା ସହିତ ନାଗରିକସେତୁ ପାଇଁ ଫାୟାରବେସ୍ ସୂଚକାଙ୍କ।",
+    "as": "লিডাৰবোৰ্ড আৰু ঘোষণাসমূহ অন্তৰ্ভুক্ত কৰি নাগৰিকসেতুৰ বাবে ফায়াৰবেচ সূচক।",
+    "ur": "لیڈر بورڈ اور اعلانات سمیت ناگرک سیتو کے لیے فائر بیس اشاریے۔",
+    "bho": "लीडरबोर्ड आ घोषणा सहित नागरिकसेतु खातिर फायरबेस इंडेक्स।"
+  },
   "indexes": [
     {
       "collectionGroup": "bids",
@@ -718,6 +735,60 @@
         },
         {
           "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nagrik_leaderboard",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "location",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "points",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nagrik_announcements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nagrik_sos",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
