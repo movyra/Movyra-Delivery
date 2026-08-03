@@ -128,8 +128,8 @@ export default function useNearbyAlerts() {
         if ("Notification" in window && Notification.permission === "granted") {
             new Notification(content.title, {
                 body: content.body,
-                icon: "/logo.png",
-                badge: "/logo.png"
+                icon: "/logo-1.png",
+                badge: "/logo-1.png"
             });
         }
     };

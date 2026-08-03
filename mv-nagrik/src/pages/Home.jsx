@@ -134,7 +134,7 @@ export default function Home() {
                 if (permission === "granted") {
                     new Notification("Admin Test", {
                         body: "Push notification system is operational.",
-                        icon: "/logo.png"
+                        icon: "/logo-1.png"
                     });
                 }
             });
