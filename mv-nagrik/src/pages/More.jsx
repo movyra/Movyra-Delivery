@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, Flame, Activity, Newspaper, TrendingUp, Share2, MessageSquare, ExternalLink } from 'lucide-react';
+import { HeartPulse, PhoneCall, Sparkles, CloudSun, Stars, Coins, CircleDollarSign, ShoppingBasket, AlertCircle, Zap, Globe, Radio } from 'lucide-react';
 
 export default function More() {
     const [lang, setLang] = useState('en');
@@ -19,44 +19,28 @@ export default function More() {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, []);
 
-    // 15 Comprehensive Indian Language Translations
+    // 15 Comprehensive Indian Language Translations matching image requirements
     const t = {
-        en: { title: "More Utilities", desc: "Essential services and community tools", em: "Emergency & Safety", police: "Police", fire: "Fire Brigade", amb: "Ambulance", media: "Media", news: "Local News", prices: "Today's Prices", fuel: "Fuel Rates", comm: "Community", share: "Share Platform", feedback: "Submit Feedback" },
-        hi: { title: "अधिक उपयोगिताएँ", desc: "आवश्यक सेवाएं और सामुदायिक उपकरण", em: "आपातकाल और सुरक्षा", police: "पुलिस", fire: "दमकल", amb: "एम्बुलेंस", media: "मीडिया", news: "स्थानीय समाचार", prices: "आज के दाम", fuel: "ईंधन दरें", comm: "समुदाय", share: "प्लेटफॉर्म साझा करें", feedback: "प्रतिक्रिया दें" },
-        hinglish: { title: "More Utilities", desc: "Zaroori services aur community tools", em: "Emergency & Safety", police: "Police", fire: "Fire Brigade", amb: "Ambulance", media: "Media", news: "Local News", prices: "Aaj ke Prices", fuel: "Fuel Rates", comm: "Community", share: "Share Karein", feedback: "Feedback Dein" },
-        mr: { title: "अधिक उपयुक्तता", desc: "अत्यावश्यक सेवा आणि समुदाय साधने", em: "आणीबाणी आणि सुरक्षा", police: "पोलीस", fire: "अग्निशमन दल", amb: "रुग्णवाहिका", media: "माध्यमे", news: "स्थानिक बातम्या", prices: "आजचे दर", fuel: "इंधनाचे दर", comm: "समुदाय", share: "प्लॅटफॉर्म शेअर करा", feedback: "अभिप्राय द्या" },
-        gu: { title: "વધુ ઉપયોગિતાઓ", desc: "આવશ્યક સેવાઓ અને સમુદાય સાધનો", em: "કટોકટી અને સુરક્ષા", police: "પોલીસ", fire: "ફાયર બ્રિગેડ", amb: "એમ્બ્યુલન્સ", media: "મીડિયા", news: "સ્થાનિક સમાચાર", prices: "આજના ભાવો", fuel: "ઇંધણના દરો", comm: "સમુદાય", share: "પ્લેટફોર્મ શેર કરો", feedback: "પ્રતિસાદ સબમિટ કરો" },
-        te: { title: "మరిన్ని ఉపయోగాలు", desc: "ముఖ్యమైన సేవలు మరియు కమ్యూనిటీ సాధనాలు", em: "అత్యవసర మరియు భద్రత", police: "పోలీసు", fire: "అగ్నిమాపక దళం", amb: "అంబులెన్స్", media: "మీడియా", news: "స్థానిక వార్తలు", prices: "నేటి ధరలు", fuel: "ఇంధన ధరలు", comm: "కమ్యూనిటీ", share: "ప్లాట్‌ఫారమ్‌ను భాగస్వామ్యం చేయండి", feedback: "అభిప్రాయాన్ని సమర్పించండి" },
-        ta: { title: "மேலும் பயன்பாடுகள்", desc: "அத்தியாவசிய சேவைகள் மற்றும் சமூக கருவிகள்", em: "அவசரம் மற்றும் பாதுகாப்பு", police: "காவல்துறை", fire: "தீயணைப்பு படை", amb: "ஆம்புலன்ஸ்", media: "ஊடகம்", news: "உள்ளூர் செய்திகள்", prices: "இன்றைய விலைகள்", fuel: "எரிபொருள் விலைகள்", comm: "சமூகம்", share: "தளத்தை பகிரவும்", feedback: "கருத்து சமர்ப்பிக்கவும்" },
-        kn: { title: "ಹೆಚ್ಚಿನ ಉಪಯುಕ್ತತೆಗಳು", desc: "ಅಗತ್ಯ ಸೇವೆಗಳು ಮತ್ತು ಸಮುದಾಯ ಪರಿಕರಗಳು", em: "ತುರ್ತು ಮತ್ತು ಸುರಕ್ಷತೆ", police: "ಪೊಲೀಸ್", fire: "ಅಗ್ನಿಶಾಮಕ ದಳ", amb: "ಆಂಬ್ಯುಲೆನ್ಸ್", media: "ಮಾಧ್ಯಮ", news: "ಸ್ಥಳೀಯ ಸುದ್ದಿ", prices: "ಇಂದಿನ ಬೆಲೆಗಳು", fuel: "ಇಂಧನ ದರಗಳು", comm: "ಸಮುದಾಯ", share: "ಪ್ಲಾಟ್‌ಫಾರ್ಮ್ ಹಂಚಿಕೊಳ್ಳಿ", feedback: "ಪ್ರತಿಕ್ರಿಯೆ ಸಲ್ಲಿಸಿ" },
-        ml: { title: "കൂടുതൽ സേവനങ്ങൾ", desc: "അവശ്യ സേവനങ്ങളും കമ്മ്യൂണിറ്റി ടൂളുകളും", em: "അടിയന്തരം & സുരക്ഷ", police: "പോലീസ്", fire: "ഫയർ ഫോഴ്സ്", amb: "ആംബുലൻസ്", media: "മാധ്യമങ്ങൾ", news: "പ്രാദേശിക വാർത്തകൾ", prices: "ഇന്നത്തെ വിലകൾ", fuel: "ഇന്ധന നിരക്കുകൾ", comm: "കമ്മ്യൂണിറ്റി", share: "പ്ലാറ്റ്ഫോം പങ്കിടുക", feedback: "അഭിപ്രായം സമർപ്പിക്കുക" },
-        bn: { title: "আরও উপযোগিতা", desc: "প্রয়োজনীয় পরিষেবা এবং কমিউনিটি টুলস", em: "জরুরি এবং নিরাপত্তা", police: "পুলিশ", fire: "দমকল", amb: "অ্যাম্বুলেন্স", media: "মিডিয়া", news: "স্থানীয় খবর", prices: "আজকের দাম", fuel: "জ্বালানির দাম", comm: "কমিউনিটি", share: "প্ল্যাটফর্ম শেয়ার করুন", feedback: "মতামত জমা দিন" },
-        pa: { title: "ਹੋਰ ਸਹੂਲਤਾਂ", desc: "ਜ਼ਰੂਰੀ ਸੇਵਾਵਾਂ ਅਤੇ ਭਾਈਚਾਰਕ ਟੂਲ", em: "ਐਮਰਜੈਂਸੀ ਅਤੇ ਸੁਰੱਖਿਆ", police: "ਪੁਲਿਸ", fire: "ਫਾਇਰ ਬ੍ਰਿਗੇਡ", amb: "ਐਂਬੂਲੈਂਸ", media: "ਮੀਡੀਆ", news: "ਸਥਾਨਕ ਖ਼ਬਰਾਂ", prices: "ਅੱਜ ਦੀਆਂ ਕੀਮਤਾਂ", fuel: "ਈਂਧਨ ਦੀਆਂ ਕੀਮਤਾਂ", comm: "ਭਾਈਚਾਰਾ", share: "ਪਲੇਟਫਾਰਮ ਸਾਂਝਾ ਕਰੋ", feedback: "ਫੀਡਬੈਕ ਜਮ੍ਹਾਂ ਕਰੋ" },
-        or: { title: "ଅଧିକ ଉପଯୋଗିତା", desc: "ଜରୁରୀ ସେବା ଏବଂ ସମ୍ପ୍ରଦାୟ ଉପକରଣ", em: "ଜରୁରୀକାଳୀନ ଏବଂ ସୁରକ୍ଷା", police: "ପୋଲିସ୍", fire: "ଅଗ୍ନିଶମ ବାହିନୀ", amb: "ଆମ୍ବୁଲାନ୍ସ", media: "ମିଡିଆ", news: "ସ୍ଥାନୀୟ ଖବର", prices: "ଆଜିର ଦର", fuel: "ଇନ୍ଧନ ଦର", comm: "ସମ୍ପ୍ରଦାୟ", share: "ପ୍ଲାଟଫର୍ମ ସେୟାର୍ କରନ୍ତୁ", feedback: "ମତାମତ ଦିଅନ୍ତୁ" },
-        as: { title: "অধিক উপযোগিতা", desc: "প্ৰয়োজনীয় সেৱা আৰু সম্প্ৰদায় সঁজুলি", em: "জৰুৰীকালীন আৰু নিৰাপত্তা", police: "আৰক্ষী", fire: "অগ্নি নিৰ্বাপক বাহিনী", amb: "এম্বুলেন্স", media: "মিডিয়া", news: "স্থানীয় খবৰ", prices: "আজিৰ মূল্য", fuel: "ইন্ধনৰ মূল্য", comm: "সম্প্ৰদায়", share: "প্লেটফৰ্ম শ্বেয়াৰ কৰক", feedback: "মতামত দিয়ক" },
-        ur: { title: "مزید سہولیات", desc: "ضروری خدمات اور کمیونٹی ٹولز", em: "ہنگامی اور حفاظت", police: "پولیس", fire: "فائر بریگیڈ", amb: "ایمبولینس", media: "میڈیا", news: "مقامی خبریں", prices: "آج کی قیمتیں", fuel: "ایندھن کے نرخ", comm: "کمیونٹی", share: "پلیٹ فارم شیئر کریں", feedback: "رائے جمع کرائیں" },
-        bho: { title: "अउरी सुविधा", desc: "जरूरी सेवा आ सामुदायिक उपकरण", em: "आपातकाल आ सुरक्षा", police: "पुलिस", fire: "दमकल", amb: "एम्बुलेंस", media: "मीडिया", news: "स्थानीय खबर", prices: "आज के दाम", fuel: "ईंधन के दर", comm: "समुदाय", share: "प्लेटफॉर्म साझा करीं", feedback: "प्रतिक्रिया दीं" }
+        en: { m_more: "More", m_than: " Than Just", m_rep: "Reporting.", m_desc: "Access utilities, safety tools, community services, and daily updates.", c_em: "Emergency & Safety", i_first: "First Aid Guide", i_contact: "Emergency Contacts", c_med: "Media", i_horo: "Horoscope", i_fore: "Daily Forecast", i_zod: "Zodiac Traits", c_price: "Today's Prices", i_exch: "Exchange Rate", i_gold: "Gold & Silver", i_veg: "Vegetable Price", c_comm: "Community & Collaboration", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        hi: { m_more: "सिर्फ", m_than: " रिपोर्टिंग", m_rep: "से अधिक।", m_desc: "उपयोगिताओं, सुरक्षा उपकरणों, सामुदायिक सेवाओं और दैनिक अपडेट तक पहुंचें।", c_em: "आपातकाल और सुरक्षा", i_first: "प्राथमिक चिकित्सा", i_contact: "आपातकालीन संपर्क", c_med: "मीडिया", i_horo: "राशिफल", i_fore: "दैनिक पूर्वानुमान", i_zod: "राशि चक्र के लक्षण", c_price: "आज के दाम", i_exch: "विनिमय दर", i_gold: "सोना और चांदी", i_veg: "सब्जी की कीमत", c_comm: "समुदाय और सहयोग", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        hinglish: { m_more: "More", m_than: " Than Just", m_rep: "Reporting.", m_desc: "Utilities, safety tools, community services, aur daily updates access karein.", c_em: "Emergency & Safety", i_first: "First Aid Guide", i_contact: "Emergency Contacts", c_med: "Media", i_horo: "Horoscope", i_fore: "Daily Forecast", i_zod: "Zodiac Traits", c_price: "Aaj ke Prices", i_exch: "Exchange Rate", i_gold: "Gold & Silver", i_veg: "Vegetable Price", c_comm: "Community & Collaboration", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        mr: { m_more: "केवळ", m_than: " रिपोर्टिंग", m_rep: "पेक्षा अधिक.", m_desc: "उपयुक्तता, सुरक्षा साधने, समुदाय सेवा आणि दैनिक अपडेट्समध्ये प्रवेश करा.", c_em: "आणीबाणी आणि सुरक्षा", i_first: "प्रथमोपचार मार्गदर्शक", i_contact: "आणीबाणी संपर्क", c_med: "माध्यमे", i_horo: "भविष्य", i_fore: "दैनिक अंदाज", i_zod: "राशीची वैशिष्ट्ये", c_price: "आजचे दर", i_exch: "विनिमय दर", i_gold: "सोने आणि चांदी", i_veg: "भाजीपाल्याचे दर", c_comm: "समुदाय आणि सहकार्य", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        gu: { m_more: "ફક્ત", m_than: " રિપોર્ટિંગ", m_rep: "કરતા વધુ.", m_desc: "ઉપયોગિતાઓ, સુરક્ષા સાધનો, સમુદાય સેવાઓ અને દૈનિક અપડેટ્સ ઍક્સેસ કરો.", c_em: "કટોકટી અને સુરક્ષા", i_first: "પ્રથમ સહાય માર્ગદર્શિકા", i_contact: "કટોકટી સંપર્કો", c_med: "મીડિયા", i_horo: "જન્માક્ષર", i_fore: "દૈનિક આગાહી", i_zod: "રાશિચક્રના લક્ષણો", c_price: "આજના ભાવો", i_exch: "વિનિમય દર", i_gold: "સોનું અને ચાંદી", i_veg: "શાકભાજીના ભાવ", c_comm: "સમુદાય અને સહયોગ", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        te: { m_more: "కేవలం", m_than: " రిపోర్టింగ్", m_rep: "కంటే ఎక్కువ.", m_desc: "ఉపయోగాలు, భద్రతా సాధనాలు, కమ్యూనిటీ సేవలు మరియు రోజువారీ నవీకరణలను యాక్సెస్ చేయండి.", c_em: "అత్యవసర మరియు భద్రత", i_first: "ప్రథమ చికిత్స మార్గదర్శి", i_contact: "అత్యవసర పరిచయాలు", c_med: "మీడియా", i_horo: "జాతకం", i_fore: "రోజువారీ సూచన", i_zod: "రాశిచక్ర లక్షణాలు", c_price: "నేటి ధరలు", i_exch: "మారకం రేటు", i_gold: "బంగారం మరియు వెండి", i_veg: "కూరగాయల ధర", c_comm: "కమ్యూనిటీ మరియు సహకారం", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        ta: { m_more: "வெறும்", m_than: " அறிக்கையை", m_rep: "தாண்டி.", m_desc: "பயன்பாடுகள், பாதுகாப்பு கருவிகள், சமூக சேவைகள் மற்றும் தினசரி புதுப்பிப்புகளை அணுகவும்.", c_em: "அவசரம் மற்றும் பாதுகாப்பு", i_first: "முதலுதவி வழிகாட்டி", i_contact: "அவசர தொடர்புகள்", c_med: "ஊடகம்", i_horo: "ஜாதகம்", i_fore: "தினசரி முன்னறிவிப்பு", i_zod: "ராசி பண்புகள்", c_price: "இன்றைய விலைகள்", i_exch: "மாற்று வீதம்", i_gold: "தங்கம் மற்றும் வெள்ளி", i_veg: "காய்கறி விலை", c_comm: "சமூகம் மற்றும் ஒத்துழைப்பு", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        kn: { m_more: "ಕೇವಲ", m_than: " ವರದಿ ಮಾಡುವುದಕ್ಕಿಂತ", m_rep: "ಹೆಚ್ಚು.", m_desc: "ಉಪಯುಕ್ತತೆಗಳು, ಸುರಕ್ಷತಾ ಪರಿಕರಗಳು, ಸಮುದಾಯ ಸೇವೆಗಳು ಮತ್ತು ದೈನಂದಿನ ನವೀಕರಣಗಳನ್ನು ಪ್ರವೇಶಿಸಿ.", c_em: "ತುರ್ತು ಮತ್ತು ಸುರಕ್ಷತೆ", i_first: "ಪ್ರಥಮ ಚಿಕಿತ್ಸಾ ಮಾರ್ಗದರ್ಶಿ", i_contact: "ತುರ್ತು ಸಂಪರ್ಕಗಳು", c_med: "ಮಾಧ್ಯಮ", i_horo: "ಜಾತಕ", i_fore: "ದೈನಂದಿನ ಮುನ್ಸೂಚನೆ", i_zod: "ರಾಶಿಚಕ್ರದ ಲಕ್ಷಣಗಳು", c_price: "ಇಂದಿನ ಬೆಲೆಗಳು", i_exch: "ವಿನಿಮಯ ದರ", i_gold: "ಚಿನ್ನ ಮತ್ತು ಬೆಳ್ಳಿ", i_veg: "ತರಕಾರಿ ಬೆಲೆ", c_comm: "ಸಮುದಾಯ ಮತ್ತು ಸಹಯೋಗ", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        ml: { m_more: "വെറും", m_than: " റിപ്പോർട്ടിംഗിനേക്കാൾ", m_rep: "കൂടുതൽ.", m_desc: "യൂട്ടിലിറ്റികൾ, സുരക്ഷാ ടൂളുകൾ, കമ്മ്യൂണിറ്റി സേവനങ്ങൾ, ദൈനംദിന അപ്‌ഡേറ്റുകൾ എന്നിവ ആക്സസ് ചെയ്യുക.", c_em: "അടിയന്തരം & സുരക്ഷ", i_first: "പ്രഥമശുശ്രൂഷാ ഗൈഡ്", i_contact: "അടിയന്തര കോൺടാക്റ്റുകൾ", c_med: "മാധ്യമങ്ങൾ", i_horo: "ജാതകം", i_fore: "ദൈനംദിന പ്രവചനം", i_zod: "രാശിചിഹ്ന സവിശേഷതകൾ", c_price: "ഇന്നത്തെ വിലകൾ", i_exch: "വിനിമയ നിരക്ക്", i_gold: "സ്വർണ്ണവും വെള്ളിയും", i_veg: "പച്ചക്കറി വില", c_comm: "കമ്മ്യൂണിറ്റിയും സഹകരണവും", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        bn: { m_more: "শুধু", m_than: " রিপোর্টিং", m_rep: "এর চেয়েও বেশি।", m_desc: "উপযোগিতা, নিরাপত্তা সরঞ্জাম, সম্প্রদায় পরিষেবা এবং দৈনিক আপডেট অ্যাক্সেস করুন।", c_em: "জরুরি এবং নিরাপত্তা", i_first: "প্রাথমিক চিকিৎসা নির্দেশিকা", i_contact: "জরুরি যোগাযোগ", c_med: "মিডিয়া", i_horo: "রাশিফল", i_fore: "দৈনিক পূর্বাভাস", i_zod: "রাশিচক্রের বৈশিষ্ট্য", c_price: "আজকের দাম", i_exch: "বিনিময় হার", i_gold: "সোনা ও রূপা", i_veg: "সবজির দাম", c_comm: "সম্প্রদায় এবং সহযোগিতা", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        pa: { m_more: "ਸਿਰਫ਼", m_than: " ਰਿਪੋਰਟਿੰਗ", m_rep: "ਤੋਂ ਵੱਧ।", m_desc: "ਸਹੂਲਤਾਂ, ਸੁਰੱਖਿਆ ਸਾਧਨਾਂ, ਭਾਈਚਾਰਕ ਸੇਵਾਵਾਂ, ਅਤੇ ਰੋਜ਼ਾਨਾ ਅੱਪਡੇਟ ਤੱਕ ਪਹੁੰਚ ਕਰੋ।", c_em: "ਐਮਰਜੈਂਸੀ ਅਤੇ ਸੁਰੱਖਿਆ", i_first: "ਮੁੱਢਲੀ ਸਹਾਇਤਾ ਗਾਈਡ", i_contact: "ਐਮਰਜੈਂਸੀ ਸੰਪਰਕ", c_med: "ਮੀડિયા", i_horo: "ਕੁੰਡਲੀ", i_fore: "ਰੋਜ਼ਾਨਾ ਪੂਰਵ ਅਨੁਮਾਨ", i_zod: "ਰਾਸ਼ੀ ਦੇ ਗੁਣ", c_price: "ਅੱਜ ਦੀਆਂ ਕੀਮਤਾਂ", i_exch: "ਵਟਾਂਦਰਾ ਦਰ", i_gold: "ਸੋਨਾ ਅਤੇ ਚਾਂਦੀ", i_veg: "ਸਬਜ਼ੀਆਂ ਦੀ ਕੀਮਤ", c_comm: "ਭਾਈਚਾਰਾ ਅਤੇ ਸਹਿਯੋਗ", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        or: { m_more: "କେବଳ", m_than: " ରିପୋର୍ଟିଂ", m_rep: "ଠାରୁ ଅଧିକ।", m_desc: "ଉପଯୋଗିତା, ସୁରକ୍ଷା ଉପକରଣ, ସମ୍ପ୍ରଦାୟ ସେବା ଏବଂ ଦୈନିକ ଅପଡେଟ୍ ଆକ୍ସେସ୍ କରନ୍ତୁ।", c_em: "ଜରୁରୀକାଳୀନ ଏବଂ ସୁରକ୍ଷା", i_first: "ପ୍ରାଥମିକ ଚିକିତ୍ସା ଗାଇଡ୍", i_contact: "ଜରୁରୀକାଳୀନ ଯୋଗାଯୋଗ", c_med: "ମିଡିଆ", i_horo: "ରାଶିଫଳ", i_fore: "ଦୈନିକ ପୂର୍ବାନୁମାନ", i_zod: "ରାଶିର ବୈଶିଷ୍ଟ୍ୟ", c_price: "ଆଜିର ଦର", i_exch: "ବିନିମୟ ହାର", i_gold: "ସୁନା ଏବଂ ରୂପା", i_veg: "ପନିପରିବା ଦର", c_comm: "ସମ୍ପ୍ରଦାୟ ଏବଂ ସହଯୋଗ", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        as: { m_more: "কেৱল", m_than: " প্ৰতিবেদন", m_rep: "তকৈ অধিক।", m_desc: "উপযোগিতা, নিৰাপত্তা সঁজুলি, সম্প্ৰদায় সেৱা, আৰু দৈনিক আপডেটসমূহ ব্যৱহাৰ কৰক।", c_em: "জৰুৰীকালীন আৰু নিৰাপত্তা", i_first: "প্ৰাথমিক চিকিৎসা নিৰ্দেশিকা", i_contact: "জৰুৰীকালীন যোগাযোগ", c_med: "মিডিয়া", i_horo: "ৰাশিফল", i_fore: "দৈনিক পূৰ্বানুমান", i_zod: "ৰাশিচক্ৰৰ বৈশিষ্ট্য", c_price: "আজিৰ মূল্য", i_exch: "বিনিময় হাৰ", i_gold: "সোণ আৰু ৰূপ", i_veg: "পাচলিৰ মূল্য", c_comm: "সম্প্ৰদায় আৰু সহযোগিতা", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        ur: { m_more: "صرف", m_than: " رپورٹنگ", m_rep: "سے زیادہ۔", m_desc: "سہولیات، حفاظتی ٹولز، کمیونٹی خدمات، اور روزانہ کی اپ ڈیٹس تک رسائی حاصل کریں۔", c_em: "ہنگامی اور حفاظت", i_first: "ابتدائی طبی امداد", i_contact: "ہنگامی رابطے", c_med: "میڈیا", i_horo: "زائچہ", i_fore: "روزانہ کی پیشن گوئی", i_zod: "رقم کی خصوصیات", c_price: "آج کی قیمتیں", i_exch: "شرح تبادلہ", i_gold: "سونا اور چاندی", i_veg: "سبزیوں کی قیمت", c_comm: "کمیونٹی اور تعاون", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" },
+        bho: { m_more: "खाली", m_than: " रिपोर्टिंग", m_rep: "से ढेर।", m_desc: "सुविधा, सुरक्षा उपकरण, सामुदायिक सेवा, आ रोज के अपडेट प्राप्त करीं।", c_em: "आपातकाल आ सुरक्षा", i_first: "प्राथमिक चिकित्सा गाइड", i_contact: "आपातकालीन संपर्क", c_med: "मीडिया", i_horo: "राशिफल", i_fore: "रोज के पूर्वानुमान", i_zod: "राशि चक्र के लक्षण", c_price: "आज के दाम", i_exch: "विनिमय दर", i_gold: "सोना आ चानी", i_veg: "सब्जी के दाम", c_comm: "समुदाय आ सहयोग", i_civi: "Civialert", i_nea: "NEA", i_alpas: "Alpas", i_ntc: "NTC" }
     };
 
     const currentT = t[lang] || t['en'];
 
-    // Real Action Logic
-    const handleShare = async () => {
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'NagrikSetu',
-                    text: 'Join the community platform for better civic management.',
-                    url: window.location.origin,
-                });
-            } catch (error) {
-                console.error("Share failed", error);
-            }
-        } else {
-            alert("Sharing is not supported on this device.");
-        }
-    };
-
+    // Real Action Logic - Functional Links to standard resources
     const openLink = (url) => {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
@@ -75,89 +59,80 @@ export default function More() {
         show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
 
+    // Reusable utility button strictly bound to the requested colors (#FFFFFF background, #00897B icon, #111111 text)
+    const UtilityButton = ({ icon: Icon, label, url }) => (
+        <button 
+            onClick={() => openLink(url)} 
+            className="flex flex-col items-center justify-start gap-3 outline-none bg-[#FFFFFF] group"
+        >
+            <div className="w-16 h-16 bg-[#FFFFFF] rounded-2xl flex items-center justify-center border border-[#111111]/10 text-[#00897B] group-active:scale-95 transition-transform">
+                <Icon size={26} strokeWidth={1.5} />
+            </div>
+            <span className="text-[0.65rem] font-black text-[#111111] text-center leading-tight max-w-[65px] tracking-wide">
+                {label}
+            </span>
+        </button>
+    );
+
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans text-[#111111] pb-32">
-            {/* Header */}
-            <div className="bg-white pt-12 pb-6 px-6 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] sticky top-0 z-40 border-b border-[#E0E0E0]">
-                <div className="max-w-[500px] mx-auto">
-                    <h1 className="text-[1.8rem] font-black tracking-tight">{currentT.title}</h1>
-                    <p className="text-[0.95rem] font-medium text-[#555555] mt-1">{currentT.desc}</p>
-                </div>
+        <div className="min-h-screen bg-[#FFFFFF] font-sans text-[#111111] pb-32">
+            
+            {/* Header Exactly Matching the Typography and Strict Colors */}
+            <div className="pt-16 pb-8 px-6 max-w-[500px] mx-auto bg-[#FFFFFF]">
+                <h1 className="text-[2.2rem] font-black leading-[1.1] tracking-tight text-[#111111]">
+                    <span className="text-[#00897B]">{currentT.m_more}</span>
+                    {currentT.m_than}
+                    <br />
+                    {currentT.m_rep}
+                </h1>
+                <p className="text-[1.05rem] font-medium text-[#111111]/70 mt-3 leading-relaxed pr-8">
+                    {currentT.m_desc}
+                </p>
             </div>
 
             <motion.div 
-                className="max-w-[500px] mx-auto px-4 pt-6 flex flex-col gap-8"
+                className="max-w-[500px] mx-auto px-6 flex flex-col gap-8 bg-[#FFFFFF]"
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
             >
                 {/* Emergency & Safety Section */}
                 <motion.div variants={itemVariants}>
-                    <h2 className="text-[1.1rem] font-black mb-4 px-2">{currentT.em}</h2>
-                    <div className="grid grid-cols-3 gap-3">
-                        <a href="tel:100" className="bg-[#FFEBEE] border border-[#EF9A9A] rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform outline-none cursor-pointer">
-                            <ShieldAlert size={24} className="text-[#D32F2F]" />
-                            <span className="text-[0.8rem] font-bold text-[#D32F2F] text-center">{currentT.police}</span>
-                        </a>
-                        <a href="tel:101" className="bg-[#FFEBEE] border border-[#EF9A9A] rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform outline-none cursor-pointer">
-                            <Flame size={24} className="text-[#D32F2F]" />
-                            <span className="text-[0.8rem] font-bold text-[#D32F2F] text-center">{currentT.fire}</span>
-                        </a>
-                        <a href="tel:108" className="bg-[#FFEBEE] border border-[#EF9A9A] rounded-[20px] p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform outline-none cursor-pointer">
-                            <Activity size={24} className="text-[#D32F2F]" />
-                            <span className="text-[0.8rem] font-bold text-[#D32F2F] text-center">{currentT.amb}</span>
-                        </a>
+                    <h2 className="text-[0.95rem] font-black text-[#111111] mb-5 tracking-tight">{currentT.c_em}</h2>
+                    <div className="grid grid-cols-4 gap-2">
+                        <UtilityButton icon={HeartPulse} label={currentT.i_first} url="https://indianredcross.org/ircs/firstaid" />
+                        <UtilityButton icon={PhoneCall} label={currentT.i_contact} url="tel:112" />
                     </div>
                 </motion.div>
 
-                {/* Media & News Section */}
+                {/* Media Section */}
                 <motion.div variants={itemVariants}>
-                    <h2 className="text-[1.1rem] font-black mb-4 px-2">{currentT.media}</h2>
-                    <div className="bg-white border border-[#E0E0E0] rounded-[24px] overflow-hidden shadow-sm">
-                        <button onClick={() => openLink('https://news.google.com/')} className="w-full flex items-center justify-between p-5 border-b border-[#E0E0E0] active:bg-[#FAFAFA] transition-colors outline-none">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#E3F2FD] flex items-center justify-center">
-                                    <Newspaper size={18} className="text-[#1565C0]" />
-                                </div>
-                                <span className="font-bold text-[0.95rem]">{currentT.news}</span>
-                            </div>
-                            <ExternalLink size={16} className="text-[#888888]" />
-                        </button>
+                    <h2 className="text-[0.95rem] font-black text-[#111111] mb-5 tracking-tight">{currentT.c_med}</h2>
+                    <div className="grid grid-cols-4 gap-2">
+                        <UtilityButton icon={Sparkles} label={currentT.i_horo} url="https://www.astrology.com/horoscope/daily.html" />
+                        <UtilityButton icon={CloudSun} label={currentT.i_fore} url="https://weather.com/" />
+                        <UtilityButton icon={Stars} label={currentT.i_zod} url="https://www.astrology.com/zodiac-signs" />
                     </div>
                 </motion.div>
 
                 {/* Today's Prices Section */}
                 <motion.div variants={itemVariants}>
-                    <h2 className="text-[1.1rem] font-black mb-4 px-2">{currentT.prices}</h2>
-                    <div className="bg-white border border-[#E0E0E0] rounded-[24px] overflow-hidden shadow-sm">
-                        <button onClick={() => openLink('https://www.mypetrolprice.com/')} className="w-full flex items-center justify-between p-5 border-b border-[#E0E0E0] active:bg-[#FAFAFA] transition-colors outline-none">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full bg-[#FFF8E1] flex items-center justify-center">
-                                    <TrendingUp size={18} className="text-[#F57F17]" />
-                                </div>
-                                <span className="font-bold text-[0.95rem]">{currentT.fuel}</span>
-                            </div>
-                            <ExternalLink size={16} className="text-[#888888]" />
-                        </button>
+                    <h2 className="text-[0.95rem] font-black text-[#111111] mb-5 tracking-tight">{currentT.c_price}</h2>
+                    <div className="grid grid-cols-4 gap-2">
+                        <UtilityButton icon={Coins} label={currentT.i_exch} url="https://www.xe.com/currencyconverter/" />
+                        <UtilityButton icon={CircleDollarSign} label={currentT.i_gold} url="https://www.goodreturns.in/gold-rates/" />
+                        <UtilityButton icon={ShoppingBasket} label={currentT.i_veg} url="https://vegetablemarketprice.com/" />
                     </div>
                 </motion.div>
 
-                {/* Community Section */}
+                {/* Community & Collaboration Section */}
                 <motion.div variants={itemVariants}>
-                    <h2 className="text-[1.1rem] font-black mb-4 px-2">{currentT.comm}</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button onClick={handleShare} className="bg-white border border-[#E0E0E0] rounded-[20px] p-5 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform outline-none shadow-sm">
-                            <div className="w-12 h-12 rounded-full bg-[#E0F2F1] flex items-center justify-center">
-                                <Share2 size={20} className="text-[#00897B]" />
-                            </div>
-                            <span className="font-bold text-[0.9rem]">{currentT.share}</span>
-                        </button>
-                        <button onClick={() => openLink('mailto:support@movyra.com')} className="bg-white border border-[#E0E0E0] rounded-[20px] p-5 flex flex-col items-center justify-center gap-3 active:scale-95 transition-transform outline-none shadow-sm">
-                            <div className="w-12 h-12 rounded-full bg-[#E0F2F1] flex items-center justify-center">
-                                <MessageSquare size={20} className="text-[#00897B]" />
-                            </div>
-                            <span className="font-bold text-[0.9rem]">{currentT.feedback}</span>
-                        </button>
+                    <h2 className="text-[0.95rem] font-black text-[#111111] mb-5 tracking-tight">{currentT.c_comm}</h2>
+                    <div className="grid grid-cols-4 gap-2">
+                        <UtilityButton icon={AlertCircle} label={currentT.i_civi} url="https://ndma.gov.in/" />
+                        <UtilityButton icon={Zap} label={currentT.i_nea} url="https://powermin.gov.in/" />
+                        <UtilityButton icon={Globe} label={currentT.i_alpas} url="https://www.india.gov.in/" />
+                        <UtilityButton icon={Radio} label={currentT.i_ntc} url="https://www.bsnl.co.in/" />
                     </div>
                 </motion.div>
 
