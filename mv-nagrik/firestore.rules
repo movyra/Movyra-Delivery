@@ -260,8 +260,10 @@ service cloud.firestore {
     // ========================================================================
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
+    
+    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
     }
 
     match /orders/{orderId} {
@@ -446,10 +448,26 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin();
     }
 
-    // Community Video Updates
+    // Community Video Updates (Instagram Reels/Stories)
     match /nagrik_reels/{reelId} {
-      allow read: if true;
-      allow write: if isAdmin() || isSuperAdmin();
+      allow read: if true; // Public can view the community feed
+      allow create: if isAuthenticated(); // Only authenticated users can post to the community feed
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin(); // Strict SuperAdmin moderation
+    }
+
+    // NEW: Community Engagement (Likes)
+    match /nagrik_likes/{likeId} {
+      allow read: if true; // Public can see like counts
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid; // Only logged in users can like
+      allow update: if false; // Likes are only created or deleted
+      allow delete: if isOwner(resource.data.userId) || isSuperAdmin(); // SuperAdmin can purge artificial likes
+    }
+
+    // NEW: Direct Messaging Gateway
+    match /nagrik_messages/{messageId} {
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid; // Only authenticated senders
+      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) || isSuperAdmin(); // Strict private reading + Admin Audit
+      allow update, delete: if isOwner(resource.data.senderId) || isSuperAdmin(); // Sender can unsend, Admin can purge
     }
 
     // Live SOS & Panic Broadcast Engine
