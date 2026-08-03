@@ -1,6 +1,8 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { auth } from './firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 // Global Navigation Components
 import TopNav from './components/Header/TopNav';
@@ -16,6 +18,7 @@ const Report = React.lazy(() => import('./pages/Report'));
 const Profile = React.lazy(() => import('./pages/Profile'));
 const SOS = React.lazy(() => import('./pages/SOS'));
 const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
@@ -24,12 +27,36 @@ const PageLoader = () => (
     </div>
 );
 
+// Strict Admin Route Guard (Frontend Security Layer)
+const AdminRoute = ({ children }) => {
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            setUser(currentUser);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    if (loading) return <PageLoader />;
+
+    // Strictly verify Super Admin credentials
+    if (user && user.email === 'testcodecfg@gmail.com') {
+        return children;
+    }
+
+    // Redirect unauthorized users immediately
+    return <Navigate to="/home" replace />;
+};
+
 // Layout Wrapper to conditionally handle Navigation visibility based on current route
 const AppLayout = () => {
     const location = useLocation();
     
-    // Conditionally hide navigation components for immersive screens (Onboarding and Live SOS)
-    const isExcludedRoute = ['/onboarding', '/sos'].includes(location.pathname);
+    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, and Admin)
+    const isExcludedRoute = ['/onboarding', '/sos', '/admin'].includes(location.pathname);
 
     return (
         <div className="relative min-h-screen bg-[#FFFFFF]">
@@ -60,6 +87,16 @@ const AppLayout = () => {
 
                             {/* Civic Gamification */}
                             <Route path="/leaderboard" element={<Leaderboard />} />
+
+                            {/* Exclusive Super Admin Moderation Route */}
+                            <Route 
+                                path="/admin" 
+                                element={
+                                    <AdminRoute>
+                                        <AdminDashboard />
+                                    </AdminRoute>
+                                } 
+                            />
                             
                             {/* Fallback Interception for Invalid URLs */}
                             <Route path="*" element={<Navigate to="/home" replace />} />
