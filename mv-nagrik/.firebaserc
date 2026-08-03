@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "movyra-customer-prod"
+  },
+  "targets": {
+    "movyra-customer-prod": {
+      "hosting": {
+        "ng-main": [
+          "movyra-customer-prod"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}
