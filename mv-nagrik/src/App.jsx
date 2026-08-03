@@ -14,18 +14,22 @@ const Feed = React.lazy(() => import('./pages/Feed'));
 const More = React.lazy(() => import('./pages/More'));
 const Report = React.lazy(() => import('./pages/Report'));
 const Profile = React.lazy(() => import('./pages/Profile'));
+const SOS = React.lazy(() => import('./pages/SOS'));
+const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
 
-// Minimalist loader utilizing the NagrikSetu Civic Teal brand identity
+// Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
     <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-[#E0F2F1] border-t-[#00897B] rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-[#111111]/10 border-t-[#00897B] rounded-full animate-spin"></div>
     </div>
 );
 
 // Layout Wrapper to conditionally handle Navigation visibility based on current route
 const AppLayout = () => {
     const location = useLocation();
-    const isExcludedRoute = location.pathname === '/onboarding';
+    
+    // Conditionally hide navigation components for immersive screens (Onboarding and Live SOS)
+    const isExcludedRoute = ['/onboarding', '/sos'].includes(location.pathname);
 
     return (
         <div className="relative min-h-screen bg-[#FFFFFF]">
@@ -50,6 +54,12 @@ const AppLayout = () => {
                             
                             {/* Issue Reporting Engine */}
                             <Route path="/report" element={<Report />} />
+
+                            {/* Live Panic Broadcast Engine */}
+                            <Route path="/sos" element={<SOS />} />
+
+                            {/* Civic Gamification */}
+                            <Route path="/leaderboard" element={<Leaderboard />} />
                             
                             {/* Fallback Interception for Invalid URLs */}
                             <Route path="*" element={<Navigate to="/home" replace />} />
