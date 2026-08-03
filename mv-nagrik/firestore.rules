@@ -1,3 +1,25 @@
+/*
+ * 15-Language System Documentation: Firestore Security Rules for NagrikSetu
+ * English: Security rules configured for SOS, Leaderboard, and Announcements.
+ * Hindi: एसओएस, लीडरबोर्ड और घोषणाओं के लिए सुरक्षा नियम कॉन्फ़िगर किए गए।
+ * Hinglish: SOS, Leaderboard, aur Announcements ke liye security rules configure kiye gaye.
+ * Marathi: एसओएस, लीडरबोर्ड आणि घोषणांसाठी सुरक्षा नियम कॉन्फिगर केले.
+ * Gujarati: એસઓએસ, લીડરબોર્ડ અને જાહેરાતો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
+ * Telugu: ఎస్ఓఎస్, లీడర్‌బోర్డ్ మరియు ప్రకటనల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
+ * Tamil: எஸ்ஓஎஸ், லீடர்போர்டு மற்றும் அறிவிப்புகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
+ * Kannada: ಎಸ್‌ಒಎಸ್, ಲೀಡರ್‌ಬೋರ್ಡ್ ಮತ್ತು ಪ್ರಕಟಣೆಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
+ * Malayalam: എസ്ഒഎസ്, ലീഡർബോർഡ്, അറിയിപ്പുകൾ എന്നിവയ്ക്കായുള്ള സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
+ * Bengali: এসওএস, লিডারবোর্ড এবং ঘোষণার জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
+ * Punjabi: ਐਸਓਐਸ, ਲੀਡਰਬੋਰਡ ਅਤੇ ਘੋਸ਼ਣਾਵਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ।
+ * Odia: ଏସଓଏସ, ଲିଡରବୋର୍ଡ ଏବଂ ଘୋଷଣା ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
+ * Assamese: এছঅএছ, লিডাৰবোৰ্ড আৰু ঘোষণাসমূহৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
+ * Urdu: ایس او ایس، لیڈر بورڈ اور اعلانات کے لیے حفاظتی قوانین مرتب کیے گئے۔
+ * Bhojpuri: एसओएस, लीडरबोर्ड आ घोषणा खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल।
+ * 
+ * Strict Color System Adherence (For Frontend Implementation Reference):
+ * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
+ */
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -403,6 +425,42 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       // Only system administrators can view the email delivery logs
       allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // NAGRIKSETU MODULE (NEW CORE FEATURES)
+    // ========================================================================
+    
+    // Core Reporting Feed
+    match /nagrik_reports/{reportId} {
+      allow create: if isAuthenticated();
+      allow read: if true;
+      allow update, delete: if isOwner(resource.data.reporterId) || isAdmin();
+    }
+
+    // Community Video Updates
+    match /nagrik_reels/{reelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Live SOS & Panic Broadcast Engine
+    match /nagrik_sos/{sosId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Civic Leaderboard & Gamification (Karma Points)
+    match /nagrik_leaderboard/{userId} {
+      allow read: if true;
+      allow write: if isAdmin(); // Points are updated securely via backend cloud functions
+    }
+
+    // Official Local Announcements Feed
+    match /nagrik_announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
   }
