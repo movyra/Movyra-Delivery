@@ -2,7 +2,7 @@
  * POSTCSS CONFIGURATION: STABILITY & COMPILATION ENGINE
  * 
  * Technical Features:
- * 1. MODULE RESOLUTION: Implements the legacy, stable plugin array format to fix module loading crashes.
+ * 1. MODULE RESOLUTION: Implements standard CommonJS syntax to fix loading crashes in cloud IDEs.
  * 2. VENDOR PREFIXING: Automates browser compatibility via Autoprefixer.
  * 3. BUILD OPTIMIZATION: Strips unused CSS and processes modern nesting.
  * 4. HMR SYNC: Ensures Hot Module Replacement is stable in cloud environments.
@@ -29,9 +29,9 @@
  * ----------------------------------------------------------------------------
  */
 
-export default {
-  plugins: [
-    "tailwindcss",
-    "autoprefixer"
-  ]
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
 };
