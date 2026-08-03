@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, ChevronRight, X, Calendar, Clock, AlertTriangle, CheckCircle, Activity } from 'lucide-react';
+import { MapPin, ChevronRight, X, Calendar, Clock, AlertTriangle, CheckCircle, Activity, Flame, Droplet, Zap, Lightbulb, Car, Trash2 } from 'lucide-react';
 import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
 import { db, auth } from '../firebaseConfig';
 
@@ -91,65 +91,79 @@ export default function Alerts() {
         return Math.floor(seconds) + " seconds " + currentT.time_ago;
     };
 
-    // Utility: Status Styling Configuration
+    // Utility: Strict 4-Color Status Styling Configuration
     const getStatusConfig = (status) => {
         switch (status) {
             case 'Resolved':
-                return { label: currentT.status_clear, bg: 'bg-[#E8F5E9]', text: 'text-[#2E7D32]', border: 'border-[#A5D6A7]', message: currentT.msg_resolved };
+                return { label: currentT.status_clear, bg: 'bg-[#00897B]/10', text: 'text-[#00897B]', message: currentT.msg_resolved };
             case 'Working':
             case 'Assigned':
-                return { label: currentT.status_move, bg: 'bg-[#FFF8E1]', text: 'text-[#F57F17]', border: 'border-[#FFE082]', message: currentT.msg_working };
+                return { label: currentT.status_move, bg: 'bg-[#FFB300]/10', text: 'text-[#FFB300]', message: currentT.msg_working };
             default:
-                return { label: currentT.status_active, bg: 'bg-[#FFEBEE]', text: 'text-[#D32F2F]', border: 'border-[#EF9A9A]', message: currentT.msg_submitted };
+                return { label: currentT.status_active, bg: 'bg-[#111111]/10', text: 'text-[#111111]', message: currentT.msg_submitted };
         }
     };
 
-    // Utility: Category Icon Configuration
+    // Utility: Category Icon Configuration matching the exact reference UI
     const getCategoryIcon = (category) => {
-        if (category.toLowerCase().includes('traffic') || category.toLowerCase().includes('accident')) return <AlertTriangle size={18} className="text-[#D32F2F]" />;
-        if (category.toLowerCase().includes('emergency')) return <Activity size={18} className="text-[#D32F2F]" />;
-        if (category.toLowerCase().includes('resolved')) return <CheckCircle size={18} className="text-[#2E7D32]" />;
-        return <AlertTriangle size={18} className="text-[#D32F2F]" />;
+        const cat = category.toLowerCase();
+        if (cat.includes('emergency_ambulance')) return <Activity size={20} className="text-[#00897B]" />;
+        if (cat.includes('emergency_fire')) return <Flame size={20} className="text-[#00897B]" />;
+        if (cat.includes('garbage')) return <Trash2 size={20} className="text-[#00897B]" />;
+        if (cat.includes('water')) return <Droplet size={20} className="text-[#00897B]" />;
+        if (cat.includes('light')) return <Lightbulb size={20} className="text-[#00897B]" />;
+        if (cat.includes('cable')) return <Zap size={20} className="text-[#00897B]" />;
+        if (cat.includes('park')) return <TreePine size={20} className="text-[#00897B]" />;
+        if (cat.includes('traffic') || cat.includes('accident')) return <Car size={20} className="text-[#00897B]" />;
+        
+        return <AlertTriangle size={20} className="text-[#00897B]" />;
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans pb-32">
+        <div className="min-h-screen bg-[#FFFFFF] font-sans pb-32 relative">
             
             {/* Header */}
-            <div className="bg-white pt-12 pb-4 px-6 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] sticky top-0 z-40 border-b border-[#E0E0E0]">
+            <div className="bg-[#FFFFFF] pt-12 pb-4 px-6 shadow-sm sticky top-0 z-40 border-b border-[#111111]/10">
                 <div className="max-w-[500px] mx-auto flex items-center justify-between">
                     <h1 className="text-[1.8rem] font-black text-[#111111] tracking-tight">{currentT.title}</h1>
-                    <div className="w-10 h-10 rounded-full bg-[#FAFAFA] border border-[#E0E0E0] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-[#111111]/5 border border-[#111111]/10 flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
                         <MapPin size={18} className="text-[#111111]" />
                     </div>
                 </div>
                 
-                {/* Tab Switcher */}
-                <div className="max-w-[500px] mx-auto mt-6 bg-[#FAFAFA] rounded-full p-1 border border-[#E0E0E0] flex">
+                {/* Tab Switcher - Strict 4-Color Palette */}
+                <div className="max-w-[500px] mx-auto mt-6 bg-[#111111]/5 rounded-full p-1 border border-[#111111]/10 flex relative overflow-hidden">
                     <button 
                         onClick={() => setActiveTab('all')}
-                        className={`flex-1 py-2.5 rounded-full text-[0.85rem] font-bold transition-all outline-none ${activeTab === 'all' ? 'bg-[#00897B] text-white shadow-md' : 'text-[#555555] hover:text-[#111111]'}`}
+                        className={`flex-1 py-2.5 rounded-full text-[0.85rem] font-bold transition-all outline-none z-10 ${activeTab === 'all' ? 'text-[#FFFFFF]' : 'text-[#111111]/60 hover:text-[#111111]'}`}
                     >
                         {currentT.tab_all}
                     </button>
                     <button 
                         onClick={() => setActiveTab('my')}
-                        className={`flex-1 py-2.5 rounded-full text-[0.85rem] font-bold transition-all outline-none ${activeTab === 'my' ? 'bg-[#D32F2F] text-white shadow-md' : 'text-[#555555] hover:text-[#111111]'}`}
+                        className={`flex-1 py-2.5 rounded-full text-[0.85rem] font-bold transition-all outline-none z-10 ${activeTab === 'my' ? 'text-[#FFFFFF]' : 'text-[#111111]/60 hover:text-[#111111]'}`}
                     >
                         {currentT.tab_my}
                     </button>
+
+                    {/* Animated Tab Indicator */}
+                    <motion.div 
+                        className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#111111] rounded-full z-0 shadow-sm"
+                        animate={{ left: activeTab === 'all' ? '4px' : 'calc(50% + 2px)' }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
                 </div>
             </div>
 
             {/* Feed List */}
             <div className="max-w-[500px] mx-auto px-4 pt-6 flex flex-col gap-4 relative z-10">
                 {isLoading ? (
-                    <div className="text-center py-10 text-[#888888] font-bold text-[0.9rem] flex flex-col items-center justify-center">
+                    <div className="text-center py-10 text-[#111111]/50 font-bold text-[0.9rem] flex flex-col items-center justify-center">
                         <div className="w-6 h-6 border-2 border-t-transparent border-[#00897B] rounded-full animate-spin mb-3"></div>
                         {currentT.loading}
                     </div>
                 ) : alerts.length === 0 ? (
-                    <div className="text-center py-10 text-[#888888] font-bold text-[0.9rem]">
+                    <div className="text-center py-10 text-[#111111]/50 font-bold text-[0.9rem]">
                         {currentT.no_data}
                     </div>
                 ) : (
@@ -164,25 +178,25 @@ export default function Alerts() {
                                 animate={{ opacity: 1, y: 0 }}
                                 key={alert.id}
                                 onClick={() => setSelectedAlert(alert)}
-                                className="bg-white rounded-[24px] p-5 shadow-[0_4px_15px_-5px_rgba(0,0,0,0.05)] border border-[#E0E0E0] cursor-pointer hover:shadow-md transition-shadow outline-none flex items-center justify-between"
+                                className="bg-[#FFFFFF] rounded-[24px] p-5 shadow-sm border border-[#111111]/10 cursor-pointer hover:shadow-md transition-shadow outline-none flex items-center justify-between group"
                             >
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-[#FAFAFA] border border-[#E0E0E0] flex items-center justify-center shrink-0">
+                                    <div className="w-12 h-12 rounded-xl bg-[#00897B]/10 border border-[#00897B]/20 flex items-center justify-center shrink-0">
                                         {getCategoryIcon(alert.category)}
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[0.95rem] font-black text-[#111111] tracking-tight">{displayCategory}</span>
-                                        <div className="flex items-center gap-1.5 text-[#888888] mt-0.5">
+                                        <div className="flex items-center gap-1.5 text-[#111111]/60 mt-0.5">
                                             <Clock size={12} />
                                             <span className="text-[0.75rem] font-bold">{timeAgo}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <span className={`text-[0.75rem] font-bold px-3 py-1.5 rounded-full ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} border`}>
+                                    <span className={`text-[0.7rem] font-black uppercase tracking-wider px-3 py-1.5 rounded-lg ${statusConfig.bg} ${statusConfig.text}`}>
                                         {statusConfig.label}
                                     </span>
-                                    <ChevronRight size={16} className="text-[#cccccc]" />
+                                    <ChevronRight size={16} className="text-[#111111]/30 group-hover:text-[#111111] transition-colors" />
                                 </div>
                             </motion.div>
                         );
@@ -195,29 +209,29 @@ export default function Alerts() {
                 {selectedAlert && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-6"
+                        className="fixed inset-0 z-[99999] bg-[#111111]/60 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-6"
                     >
                         <motion.div 
                             initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                            className="bg-white w-full max-w-[500px] h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[32px] sm:rounded-[32px] overflow-hidden flex flex-col relative"
+                            className="bg-[#FFFFFF] w-full max-w-[500px] h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[32px] sm:rounded-[32px] overflow-hidden flex flex-col relative"
                         >
-                            <div className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur-md rounded-full p-2 cursor-pointer shadow-sm border border-[#E0E0E0]" onClick={() => setSelectedAlert(null)}>
+                            <div className="absolute top-4 right-4 z-10 bg-[#FFFFFF]/80 backdrop-blur-md rounded-full p-2 cursor-pointer shadow-sm border border-[#111111]/10" onClick={() => setSelectedAlert(null)}>
                                 <X size={20} className="text-[#111111]" />
                             </div>
 
-                            {/* Evidence Image */}
-                            <div className="w-full h-[220px] bg-[#FAFAFA] relative">
+                            {/* Evidence Image Block */}
+                            <div className="w-full h-[220px] bg-[#111111]/5 relative border-b border-[#111111]/10">
                                 {selectedAlert.evidenceUrl ? (
                                     <img src={selectedAlert.evidenceUrl} alt="Evidence" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[#888888] font-bold text-[0.8rem] flex-col gap-2">
-                                        <AlertTriangle size={32} className="text-[#cccccc]" />
+                                    <div className="w-full h-full flex items-center justify-center text-[#111111]/40 font-bold text-[0.8rem] flex-col gap-2">
+                                        <AlertTriangle size={32} className="text-[#111111]/30" />
                                         No Image Provided
                                     </div>
                                 )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                <h2 className="absolute bottom-4 left-6 text-white font-black text-[1.5rem] tracking-tight">
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#111111]/80 to-transparent"></div>
+                                <h2 className="absolute bottom-4 left-6 text-[#FFFFFF] font-black text-[1.5rem] tracking-tight">
                                     {selectedAlert.category.replace('emergency_', '').replace(/_/g, ' ').toUpperCase()}
                                 </h2>
                             </div>
@@ -227,15 +241,15 @@ export default function Alerts() {
                                 
                                 {/* Location */}
                                 <div className="mb-8">
-                                    <h3 className="text-[0.8rem] font-bold text-[#888888] uppercase tracking-wider mb-2">{currentT.loc_title}</h3>
-                                    <div className="flex items-start gap-3 bg-[#FAFAFA] border border-[#E0E0E0] p-4 rounded-2xl">
-                                        <MapPin size={18} className="text-[#D32F2F] shrink-0 mt-0.5" />
+                                    <h3 className="text-[0.8rem] font-bold text-[#111111]/50 uppercase tracking-wider mb-2">{currentT.loc_title}</h3>
+                                    <div className="flex items-start gap-3 bg-[#111111]/5 border border-[#111111]/10 p-4 rounded-2xl">
+                                        <MapPin size={18} className="text-[#00897B] shrink-0 mt-0.5" />
                                         <p className="text-[0.95rem] font-bold text-[#111111] leading-tight">
                                             {selectedAlert.address}
                                         </p>
                                     </div>
                                     <div className="mt-4">
-                                        <p className="text-[0.9rem] font-medium text-[#555555] leading-relaxed">
+                                        <p className="text-[0.9rem] font-medium text-[#111111]/80 leading-relaxed">
                                             {selectedAlert.description}
                                         </p>
                                     </div>
@@ -243,22 +257,22 @@ export default function Alerts() {
 
                                 {/* Status Timeline */}
                                 <div>
-                                    <h3 className="text-[0.8rem] font-bold text-[#888888] uppercase tracking-wider mb-4">{currentT.hist_title}</h3>
-                                    <div className="relative pl-4 border-l-2 border-[#E0E0E0] flex flex-col gap-6 ml-2">
+                                    <h3 className="text-[0.8rem] font-bold text-[#111111]/50 uppercase tracking-wider mb-4">{currentT.hist_title}</h3>
+                                    <div className="relative pl-4 border-l-2 border-[#111111]/10 flex flex-col gap-6 ml-2">
                                         
                                         {/* Current Live Status Node */}
                                         <div className="relative">
-                                            <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-white border-[4px] border-[#00897B]"></div>
-                                            <div className="bg-white border border-[#E0E0E0] rounded-2xl p-4 shadow-sm">
+                                            <div className="absolute -left-[23px] top-1 w-4 h-4 rounded-full bg-[#FFFFFF] border-[4px] border-[#00897B]"></div>
+                                            <div className="bg-[#FFFFFF] border border-[#111111]/10 rounded-2xl p-4 shadow-sm">
                                                 <div className="flex items-center gap-2 mb-2">
                                                     <span className={`text-[0.7rem] font-bold px-2 py-1 rounded-md ${getStatusConfig(selectedAlert.status).bg} ${getStatusConfig(selectedAlert.status).text}`}>
                                                         {getStatusConfig(selectedAlert.status).label}
                                                     </span>
-                                                    <span className="text-[0.75rem] font-bold text-[#888888] flex items-center gap-1">
+                                                    <span className="text-[0.75rem] font-bold text-[#111111]/50 flex items-center gap-1">
                                                         <Calendar size={12} /> {selectedAlert.createdAt?.toDate().toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <p className="text-[0.85rem] font-medium text-[#555555] leading-relaxed">
+                                                <p className="text-[0.85rem] font-medium text-[#111111]/70 leading-relaxed">
                                                     {getStatusConfig(selectedAlert.status).message}
                                                 </p>
                                             </div>
@@ -266,15 +280,15 @@ export default function Alerts() {
 
                                         {/* Initial Submission Node */}
                                         <div className="relative">
-                                            <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[#cccccc]"></div>
+                                            <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-[#111111]/20"></div>
                                             <div className="pl-2">
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <span className="text-[0.75rem] font-bold text-[#111111]">Report Created</span>
-                                                    <span className="text-[0.75rem] font-bold text-[#888888]">
+                                                    <span className="text-[0.75rem] font-bold text-[#111111]/50">
                                                         {selectedAlert.createdAt?.toDate().toLocaleDateString()}
                                                     </span>
                                                 </div>
-                                                <p className="text-[0.8rem] font-medium text-[#888888]">
+                                                <p className="text-[0.8rem] font-medium text-[#111111]/50">
                                                     System registered the incident successfully.
                                                 </p>
                                             </div>
