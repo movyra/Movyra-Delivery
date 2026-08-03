@@ -1,0 +1,41 @@
+{
+  "name": "NagrikSetu",
+  "short_name": "NagrikSetu",
+  "description": "Civic reporting and local community updates platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FFFFFF",
+  "theme_color": "#00897B",
+  "icons": [
+    {
+      "src": "/logo-1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "_system_translations_reference": {
+    "en": "NagrikSetu",
+    "hi": "नागरिकसेतु",
+    "hinglish": "NagrikSetu",
+    "mr": "नागरिकसेतू",
+    "gu": "નાગરિકસેતુ",
+    "te": "నాగ్రిక్ సేతు",
+    "ta": "நாகரிக்சேது",
+    "kn": "ನಾಗರಿಕ್ ಸೇತು",
+    "ml": "നാഗരിക് സേതു",
+    "bn": "নাগরিকসেতু",
+    "pa": "ਨਾਗਰਿਕਸੇਤੂ",
+    "or": "ନାଗରିକସେତୁ",
+    "as": "নাগৰিকসেতু",
+    "ur": "ناگرک سیتو",
+    "bho": "नागरिकसेतु"
+  }
+}
