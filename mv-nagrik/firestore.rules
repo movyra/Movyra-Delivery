@@ -1,20 +1,20 @@
 /*
  * 15-Language System Documentation: Firestore Security Rules for NagrikSetu
- * English: Security rules configured for SOS, Leaderboard, and Announcements.
- * Hindi: एसओएस, लीडरबोर्ड और घोषणाओं के लिए सुरक्षा नियम कॉन्फ़िगर किए गए।
- * Hinglish: SOS, Leaderboard, aur Announcements ke liye security rules configure kiye gaye.
- * Marathi: एसओएस, लीडरबोर्ड आणि घोषणांसाठी सुरक्षा नियम कॉन्फिगर केले.
- * Gujarati: એસઓએસ, લીડરબોર્ડ અને જાહેરાતો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
- * Telugu: ఎస్ఓఎస్, లీడర్‌బోర్డ్ మరియు ప్రకటనల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
- * Tamil: எஸ்ஓஎஸ், லீடர்போர்டு மற்றும் அறிவிப்புகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
- * Kannada: ಎಸ್‌ಒಎಸ್, ಲೀಡರ್‌ಬೋರ್ಡ್ ಮತ್ತು ಪ್ರಕಟಣೆಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
- * Malayalam: എസ്ഒഎസ്, ലീഡർബോർഡ്, അറിയിപ്പുകൾ എന്നിവയ്ക്കായുള്ള സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
- * Bengali: এসওএস, লিডারবোর্ড এবং ঘোষণার জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
- * Punjabi: ਐਸਓਐਸ, ਲੀਡਰਬੋਰਡ ਅਤੇ ਘੋਸ਼ਣਾਵਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ।
- * Odia: ଏସଓଏସ, ଲିଡରବୋର୍ଡ ଏବଂ ଘୋଷଣା ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
- * Assamese: এছঅএছ, লিডাৰবোৰ্ড আৰু ঘোষণাসমূহৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
- * Urdu: ایس او ایس، لیڈر بورڈ اور اعلانات کے لیے حفاظتی قوانین مرتب کیے گئے۔
- * Bhojpuri: एसओएस, लीडरबोर्ड आ घोषणा खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल।
+ * English: Security rules configured for SOS guest access and Super Admin controls.
+ * Hindi: एसओएस अतिथि पहुंच और सुपर एडमिन नियंत्रणों के लिए कॉन्फ़िगर किए गए सुरक्षा नियम।
+ * Hinglish: SOS guest access aur Super Admin controls ke liye security rules configure kiye gaye.
+ * Marathi: एसओएस अतिथी प्रवेश आणि सुपर अॅडमिन नियंत्रणांसाठी सुरक्षा नियम कॉन्फिगर केले आहेत.
+ * Gujarati: એસઓએસ અતિથિ ઍક્સેસ અને સુપર એડમિન નિયંત્રણો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
+ * Telugu: ఎస్ఓఎస్ అతిథి యాక్సెస్ మరియు సూపర్ అడ్మిన్ నియంత్రణల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
+ * Tamil: எஸ்ஓஎஸ் விருந்தினர் அணுகல் மற்றும் சூப்பர் நிர்வாகி கட்டுப்பாடுகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
+ * Kannada: ಎಸ್‌ಒಎಸ್ ಅತಿಥಿ ಪ್ರವೇಶ ಮತ್ತು ಸೂಪರ್ ಅಡ್ಮಿನ್ ನಿಯಂತ್ರಣಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
+ * Malayalam: എസ്ഒഎസ് അതിഥി പ്രവേശനത്തിനും സൂപ്പർ അഡ്മിൻ നിയന്ത്രണങ്ങൾക്കുമായി സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
+ * Bengali: এসওএস অতিথি অ্যাক্সেস এবং সুপার অ্যাডমিন নিয়ন্ত্রণের জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
+ * Punjabi: ਐਸਓਐਸ ਮਹਿਮਾਨ ਪਹੁੰਚ ਅਤੇ ਸੁਪਰ ਐਡਮਿਨ ਨਿਯੰਤਰਣਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ ਹਨ।
+ * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
+ * Assamese: এছঅএছ অতিথি প্ৰৱেশ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
+ * Urdu: ایس او ایس مہمان کی رسائی اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
+ * Bhojpuri: एसओएस अतिथि पहुँच आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
  * 
  * Strict Color System Adherence (For Frontend Implementation Reference):
  * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
@@ -36,6 +36,11 @@ service cloud.firestore {
         '8zAyPwFZZBfU7MD1NkBDDWbIzXt1', 
         'REr2KNUjOmWOsUxuvq3YtmlkJsB3'
       ];
+    }
+
+    // Super Admin Verification (Strict Override)
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'testcodecfg@gmail.com';
     }
 
     // Standard User Verification
@@ -435,32 +440,36 @@ service cloud.firestore {
     match /nagrik_reports/{reportId} {
       allow create: if isAuthenticated();
       allow read: if true;
-      allow update, delete: if isOwner(resource.data.reporterId) || isAdmin();
+      // Strictly revoke report deletion and update capabilities from standard users.
+      // Only the designated testcodecfg@gmail.com account is granted override permissions.
+      allow update, delete: if isSuperAdmin();
     }
 
     // Community Video Updates
     match /nagrik_reels/{reelId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isSuperAdmin();
     }
 
     // Live SOS & Panic Broadcast Engine
     match /nagrik_sos/{sosId} {
-      allow create: if isAuthenticated();
-      allow read: if isAuthenticated();
-      allow update, delete: if isAdmin();
+      // Allow public creation to prevent permission denial crashes when a guest user triggers an emergency panic broadcast.
+      allow create: if true;
+      // Allow public read to enable 5km proximity radar alerts for all users.
+      allow read: if true;
+      allow update, delete: if isSuperAdmin() || isAdmin();
     }
 
     // Civic Leaderboard & Gamification (Karma Points)
     match /nagrik_leaderboard/{userId} {
       allow read: if true;
-      allow write: if isAdmin(); // Points are updated securely via backend cloud functions
+      allow write: if isAdmin() || isSuperAdmin(); // Points are updated securely via backend cloud functions
     }
 
     // Official Local Announcements Feed
     match /nagrik_announcements/{announcementId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isSuperAdmin();
     }
 
   }
