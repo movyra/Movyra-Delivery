@@ -3,6 +3,66 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// 15-Language Translation Dictionary for Background Update Status
+const t = {
+    en: "Updating application to the latest version...",
+    hi: "एप्लिकेशन को नवीनतम संस्करण में अपडेट किया जा रहा है...",
+    hinglish: "Application latest version par update ho raha hai...",
+    mr: "अॅप्लिकेशन नवीनतम आवृत्तीवर अपडेट होत आहे...",
+    gu: "એપ્લિકેશનને નવીનતમ સંસ્કરણ પર અપડેટ કરવામાં આવી રહી છે...",
+    te: "అప్లికేషన్ తాజా వెర్షన్‌కు నవీకరించబడుతోంది...",
+    ta: "பயன்பாடு சமீபத்திய பதிப்பிற்கு புதுப்பிக்கப்படுகிறது...",
+    kn: "ಅಪ್ಲಿಕೇಶನ್ ಇತ್ತೀಚಿನ ಆವೃತ್ತಿಗೆ ನವೀಕರಿಸಲಾಗುತ್ತಿದೆ...",
+    ml: "അപ്ലിക്കേഷൻ ഏറ്റവും പുതിയ പതിപ്പിലേക്ക് അപ്‌ഡേറ്റുചെയ്യുന്നു...",
+    bn: "অ্যাপ্লিকেশন সর্বশেষ সংস্করণে আপডেট করা হচ্ছে...",
+    pa: "ਐਪਲੀਕੇਸ਼ਨ ਨੂੰ ਨਵੀਨਤਮ ਸੰਸਕਰਣ ਵਿੱਚ ਅੱਪਡੇਟ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ...",
+    or: "ଆପ୍ଲିକେସନ୍ ସର୍ବଶେଷ ସଂସ୍କରଣକୁ ଅପଡେଟ୍ ହେଉଛି...",
+    as: "এপ্লিকেচন শেহতীয়া সংস্কৰণলৈ আপডেট কৰা হৈছে...",
+    ur: "ایپلیکیشن کو تازہ ترین ورژن میں اپ ڈیٹ کیا جا رہا ہے۔۔۔",
+    bho: "एप्लिकेशन नवीनतम संस्करण में अपडेट हो रहल बा..."
+};
+
+// Aggressive Service Worker Polling Mechanism
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').then((registration) => {
+            
+            // Strictly check for byte-changes every 2 seconds
+            setInterval(() => {
+                registration.update().catch((error) => {
+                    console.error('Update check failed:', error);
+                });
+            }, 2000);
+
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // Forcefully bypass the waiting phase to activate the new version immediately
+                            newWorker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                }
+            });
+        }).catch((error) => {
+            console.error('Service Worker registration rejected:', error);
+        });
+
+        // Trigger an immediate window reload the exact moment the new service worker takes control
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!refreshing) {
+                refreshing = true;
+                const savedLang = localStorage.getItem('nagrik_lang') || navigator.language.slice(0, 2);
+                const updateMessage = t[savedLang] || t['en'];
+                console.log(`[System Notice]: ${updateMessage}`);
+                window.location.reload();
+            }
+        });
+    });
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
