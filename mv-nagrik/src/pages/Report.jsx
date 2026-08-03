@@ -130,7 +130,7 @@ export default function Report() {
         }
     };
 
-    // Form Submission Logic
+    // Form Submission Logic Refactored for PocketBase
     const handleSubmit = async () => {
         if (!description.trim() && !photoFile) {
             alert("Please provide a description or a photo.");
@@ -141,24 +141,27 @@ export default function Report() {
         try {
             let uploadedPhotoUrl = null;
             
-            // Strictly implemented real PocketBase generic file upload logic
+            // Strictly mapped to the external PocketBase nagrik_evidence collection
             if (photoFile) {
                 const formData = new FormData();
-                formData.append('file', photoFile);
+                formData.append('evidence_image', photoFile);
                 
                 try {
-                    // Replace with absolute PB endpoint in production. Using robust generic fallback structure.
-                    const pbResponse = await fetch('https://movyra-mv-main-db-gradio.hf.space/api/files/upload', {
+                    const pbResponse = await fetch('https://movyra-mv-main-db-gradio.hf.space/api/collections/nagrik_evidence/records', {
                         method: 'POST',
                         body: formData
                     });
+                    
                     if (pbResponse.ok) {
                         const pbData = await pbResponse.json();
-                        uploadedPhotoUrl = pbData.url;
+                        // PocketBase URL construction format: /api/files/{collectionId}/{recordId}/{filename}
+                        uploadedPhotoUrl = `https://movyra-mv-main-db-gradio.hf.space/api/files/${pbData.collectionId}/${pbData.id}/${pbData.evidence_image}`;
+                    } else {
+                        console.error("PocketBase API returned an error status.");
                     }
                 } catch (pbError) {
-                    console.warn("PocketBase upload failed, proceeding without image url or utilizing base64 strictly for demonstration:", pbError);
-                    uploadedPhotoUrl = photoPreview; // Fallback for strict functionality completion
+                    console.warn("PocketBase upload failed, proceeding with local Base64 fallback strictly for continuity:", pbError);
+                    uploadedPhotoUrl = photoPreview;
                 }
             }
 
@@ -192,9 +195,9 @@ export default function Report() {
     };
 
     return (
-        <div className="min-h-screen bg-[#FAFAFA] font-sans text-[#111111] relative">
-            {/* Header Section strictly matching the Red accent design */}
-            <div className="bg-[#D32F2F] text-white px-6 pt-12 pb-24 rounded-b-[40px]">
+        <div className="min-h-screen bg-[#FFFFFF] font-sans text-[#111111] relative">
+            {/* Header Section utilizing strict primary color */}
+            <div className="bg-[#00897B] text-[#FFFFFF] px-6 pt-12 pb-24 rounded-b-[40px]">
                 <div className="max-w-[500px] mx-auto">
                     <button onClick={() => navigate(-1)} className="flex items-center gap-1 font-bold text-[0.9rem] mb-6 outline-none">
                         <ChevronLeft size={20} /> {category.replace('emergency_', '').toUpperCase()}
@@ -210,26 +213,26 @@ export default function Report() {
 
             {/* Form Container */}
             <div className="max-w-[500px] mx-auto px-4 -mt-16 relative z-10 pb-32">
-                <div className="bg-white rounded-[32px] shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] p-6 border border-[#E0E0E0]">
+                <div className="bg-[#FFFFFF] rounded-[32px] shadow-[0_10px_30px_-10px_rgba(17,17,17,0.1)] p-6 border border-[#111111]/10">
                     
                     {/* Location Block */}
                     <div className="flex items-start justify-between mb-4">
                         <div className="flex gap-2">
-                            <MapPin size={20} className="text-[#D32F2F] shrink-0 mt-0.5" />
+                            <MapPin size={20} className="text-[#00897B] shrink-0 mt-0.5" />
                             <p className="text-[0.9rem] font-bold text-[#111111] leading-tight pr-4">
                                 {isLocating ? currentT.loc_fetching : address}
                             </p>
                         </div>
                         <button 
                             onClick={() => setShowAddressModal(true)}
-                            className="flex items-center gap-1 text-[#D32F2F] text-[0.75rem] font-black uppercase tracking-wider shrink-0 outline-none"
+                            className="flex items-center gap-1 text-[#00897B] text-[0.75rem] font-black uppercase tracking-wider shrink-0 outline-none"
                         >
                             <Edit2 size={12} /> {currentT.edit}
                         </button>
                     </div>
 
                     {/* Leaflet Map Preview */}
-                    <div className="w-full h-[120px] bg-[#E0E0E0] rounded-[20px] mb-6 overflow-hidden border border-[#E0E0E0] relative z-0">
+                    <div className="w-full h-[120px] bg-[#111111]/5 rounded-[20px] mb-6 overflow-hidden border border-[#111111]/10 relative z-0">
                         <MapContainer center={coords} zoom={15} style={{ height: '100%', width: '100%' }} zoomControl={false} dragging={false}>
                             <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
                             <Marker position={coords} />
@@ -237,10 +240,10 @@ export default function Report() {
                         </MapContainer>
                     </div>
 
-                    {/* Warning Box */}
-                    <div className="bg-[#FAFAFA] border border-[#E0E0E0] rounded-2xl p-4 flex gap-3 mb-6">
-                        <AlertCircle size={20} className="text-[#111111] shrink-0" />
-                        <p className="text-[0.8rem] font-medium text-[#555555] leading-relaxed">
+                    {/* Warning Box mapped to Accent color */}
+                    <div className="bg-[#FFB300]/10 border border-[#FFB300] rounded-2xl p-4 flex gap-3 mb-6">
+                        <AlertCircle size={20} className="text-[#FFB300] shrink-0" />
+                        <p className="text-[0.8rem] font-medium text-[#111111]/80 leading-relaxed">
                             {currentT.warning}
                         </p>
                     </div>
@@ -249,13 +252,13 @@ export default function Report() {
                     <div className="mb-6">
                         <div className="flex justify-between items-end mb-2">
                             <label className="text-[0.9rem] font-black text-[#111111]">{currentT.desc}</label>
-                            <span className="text-[0.75rem] font-bold text-[#888888]">{description.length}/200</span>
+                            <span className="text-[0.75rem] font-bold text-[#111111]/50">{description.length}/200</span>
                         </div>
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value.slice(0, 200))}
                             placeholder={currentT.placeholder}
-                            className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-2xl p-4 text-[0.9rem] font-medium text-[#111111] focus:border-[#00897B] focus:ring-1 focus:ring-[#00897B] outline-none transition-all resize-none h-[100px]"
+                            className="w-full bg-[#FFFFFF] border border-[#111111]/10 rounded-2xl p-4 text-[0.9rem] font-medium text-[#111111] focus:border-[#00897B] focus:ring-1 focus:ring-[#00897B] outline-none transition-all resize-none h-[100px]"
                         ></textarea>
                     </div>
 
@@ -264,12 +267,12 @@ export default function Report() {
                         <div 
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             className={`w-6 h-6 rounded-md flex items-center justify-center cursor-pointer border transition-colors ${
-                                isAnonymous ? 'bg-[#00897B] border-[#00897B]' : 'bg-[#FAFAFA] border-[#cccccc]'
+                                isAnonymous ? 'bg-[#00897B] border-[#00897B]' : 'bg-[#FFFFFF] border-[#111111]/20'
                             }`}
                         >
-                            {isAnonymous && <CheckCircle size={16} className="text-white" />}
+                            {isAnonymous && <CheckCircle size={16} className="text-[#FFFFFF]" />}
                         </div>
-                        <span className="text-[0.9rem] font-bold text-[#555555] cursor-pointer" onClick={() => setIsAnonymous(!isAnonymous)}>
+                        <span className="text-[0.9rem] font-bold text-[#111111]/80 cursor-pointer" onClick={() => setIsAnonymous(!isAnonymous)}>
                             {currentT.anon}
                         </span>
                     </div>
@@ -285,7 +288,7 @@ export default function Report() {
                         />
                         <button 
                             onClick={() => fileInputRef.current.click()}
-                            className="w-[60px] h-[60px] shrink-0 rounded-[20px] border-2 border-[#E0E0E0] flex items-center justify-center text-[#D32F2F] hover:bg-[#FAFAFA] transition-colors outline-none relative overflow-hidden"
+                            className="w-[60px] h-[60px] shrink-0 rounded-[20px] border-2 border-[#111111]/10 flex items-center justify-center text-[#00897B] hover:bg-[#111111]/5 transition-colors outline-none relative overflow-hidden"
                         >
                             {photoPreview ? (
                                 <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
@@ -297,10 +300,10 @@ export default function Report() {
                         <button 
                             onClick={handleSubmit}
                             disabled={isSubmitting || (!description.trim() && !photoFile)}
-                            className="flex-1 h-[60px] bg-[#111111] text-white rounded-[20px] font-bold text-[1rem] transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center outline-none"
+                            className="flex-1 h-[60px] bg-[#111111] text-[#FFFFFF] rounded-[20px] font-bold text-[1rem] transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center outline-none"
                         >
                             {isSubmitting ? (
-                                <div className="w-6 h-6 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
+                                <div className="w-6 h-6 border-2 border-t-transparent border-[#FFFFFF] rounded-full animate-spin"></div>
                             ) : (
                                 currentT.submit
                             )}
@@ -315,25 +318,25 @@ export default function Report() {
                 {showAddressModal && (
                     <motion.div 
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6"
+                        className="fixed inset-0 z-[99999] bg-[#111111]/60 backdrop-blur-sm flex items-center justify-center p-6"
                     >
                         <motion.div 
                             initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
-                            className="bg-white w-full max-w-[400px] rounded-[32px] p-6 shadow-2xl relative"
+                            className="bg-[#FFFFFF] w-full max-w-[400px] rounded-[32px] p-6 shadow-2xl relative"
                         >
-                            <button onClick={() => setShowAddressModal(false)} className="absolute top-4 right-4 text-[#888888] hover:text-[#111111] outline-none">
+                            <button onClick={() => setShowAddressModal(false)} className="absolute top-4 right-4 text-[#111111]/50 hover:text-[#111111] outline-none">
                                 <X size={20} />
                             </button>
                             <h3 className="text-[1.2rem] font-black text-[#111111] mb-4">{currentT.manual_title}</h3>
                             <textarea
                                 value={manualAddress}
                                 onChange={(e) => setManualAddress(e.target.value)}
-                                className="w-full bg-[#FAFAFA] border border-[#E0E0E0] rounded-2xl p-4 text-[0.9rem] font-medium text-[#111111] focus:border-[#00897B] outline-none resize-none h-[80px] mb-4"
+                                className="w-full bg-[#FFFFFF] border border-[#111111]/10 rounded-2xl p-4 text-[0.9rem] font-medium text-[#111111] focus:border-[#00897B] outline-none resize-none h-[80px] mb-4"
                                 placeholder={address}
                             ></textarea>
                             <div className="flex gap-3">
-                                <button onClick={() => setShowAddressModal(false)} className="flex-1 py-3 font-bold text-[#555555] bg-[#FAFAFA] rounded-xl outline-none">{currentT.cancel}</button>
-                                <button onClick={handleManualAddressSave} className="flex-1 py-3 font-bold text-white bg-[#00897B] rounded-xl outline-none">{currentT.save}</button>
+                                <button onClick={() => setShowAddressModal(false)} className="flex-1 py-3 font-bold text-[#111111]/70 bg-[#111111]/5 rounded-xl outline-none">{currentT.cancel}</button>
+                                <button onClick={handleManualAddressSave} className="flex-1 py-3 font-bold text-[#FFFFFF] bg-[#00897B] rounded-xl outline-none">{currentT.save}</button>
                             </div>
                         </motion.div>
                     </motion.div>
