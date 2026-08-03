@@ -100,7 +100,7 @@
     },
     {
       "target": "ng-main",
-      "public": "mv-nagrik/dist",
+      "public": "dist",
       "ignore": [
         "firebase.json",
         "**/.*",
