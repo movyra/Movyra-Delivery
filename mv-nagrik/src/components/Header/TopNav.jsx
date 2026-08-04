@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogIn, Mail, Lock, X } from 'lucide-react';
 import { 
-    onAuthStateChanged, signInWithRedirect, GoogleAuthProvider, 
+    onAuthStateChanged, signInWithPopup, GoogleAuthProvider, 
     signInWithEmailAndPassword, createUserWithEmailAndPassword 
 } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
@@ -99,7 +99,8 @@ export default function TopNav() {
         setIsAuthenticating(true);
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithRedirect(auth, provider);
+            await signInWithPopup(auth, provider);
+            navigate('/home');
         } catch (error) {
             console.error("Google Auth failed:", error);
             setAuthError("Sign-in failed. Please try again.");
@@ -123,6 +124,7 @@ export default function TopNav() {
             } else {
                 await signInWithEmailAndPassword(auth, email, password);
             }
+            navigate('/home');
         } catch (error) {
             console.error("Manual Auth failed:", error);
             setAuthError("Invalid credentials or account exists.");
