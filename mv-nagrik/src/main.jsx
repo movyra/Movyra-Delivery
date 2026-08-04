@@ -22,43 +22,22 @@ const t = {
     bho: "एप्लिकेशन नवीनतम संस्करण में अपडेट हो रहल बा..."
 };
 
-// Aggressive Service Worker Polling Mechanism
+// Faulty Service Worker polling removed.
+// Replaced with a strict cleanup function to unregister corrupt workers blocking Firebase Auth.
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').then((registration) => {
-            
-            // Strictly check for byte-changes every 2 seconds
-            setInterval(() => {
-                registration.update().catch((error) => {
-                    console.error('Update check failed:', error);
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+            for (let registration of registrations) {
+                registration.unregister().then((isUnregistered) => {
+                    if (isUnregistered) {
+                        const savedLang = localStorage.getItem('nagrik_lang') || navigator.language.slice(0, 2);
+                        const updateMessage = t[savedLang] || t['en'];
+                        console.log(`[System Notice]: ${updateMessage}`);
+                    }
                 });
-            }, 2000);
-
-            registration.addEventListener('updatefound', () => {
-                const newWorker = registration.installing;
-                if (newWorker) {
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // Forcefully bypass the waiting phase to activate the new version immediately
-                            newWorker.postMessage({ type: 'SKIP_WAITING' });
-                        }
-                    });
-                }
-            });
-        }).catch((error) => {
-            console.error('Service Worker registration rejected:', error);
-        });
-
-        // Trigger an immediate window reload the exact moment the new service worker takes control
-        let refreshing = false;
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            if (!refreshing) {
-                refreshing = true;
-                const savedLang = localStorage.getItem('nagrik_lang') || navigator.language.slice(0, 2);
-                const updateMessage = t[savedLang] || t['en'];
-                console.log(`[System Notice]: ${updateMessage}`);
-                window.location.reload();
             }
+        }).catch((error) => {
+            console.error('Service Worker cleanup failed:', error);
         });
     });
 }
