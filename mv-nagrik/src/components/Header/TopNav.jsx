@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogIn, Mail, Lock, X } from 'lucide-react';
 import { 
-    onAuthStateChanged, signInWithPopup, GoogleAuthProvider, 
+    onAuthStateChanged, signInWithRedirect, GoogleAuthProvider, 
     signInWithEmailAndPassword, createUserWithEmailAndPassword 
 } from 'firebase/auth';
 import { auth } from '../../firebaseConfig';
@@ -72,7 +72,7 @@ export default function TopNav() {
         mr: { profile: "प्रोफाइल", login: "साइन इन करा", logo_alt: "नागरिकसेतू लोगो", signup: "खाते तयार करा", email: "ईमेल पत्ता", pass: "पासवर्ड", no_acc: "खाते हवे आहे?", has_acc: "आधीच खाते आहे का?" },
         gu: { profile: "પ્રોફાઇલ", login: "સાઇન ઇન", logo_alt: "નાગરિકસેતુ લોગો", signup: "એકાઉન્ટ બનાવો", email: "ઇમેઇલ સરનામું", pass: "પાસવર્ડ", no_acc: "એકાઉન્ટની જરૂર છે?", has_acc: "શું તમારી પાસે પહેલેથી એકાઉન્ટ છે?" },
         te: { profile: "ప్రొఫైల్", login: "సైన్ ఇన్", logo_alt: "నాగ్రిక్ సేతు లోగో", signup: "ఖాతా సృష్టించండి", email: "ఇమెయిల్ చిరునామా", pass: "పాస్వర్డ్", no_acc: "ఖాతా కావాలా?", has_acc: "ఇప్పటికే ఖాతా ఉందా?" },
-        ta: { profile: "சுயவிவரம்", login: "உள்நுழைக", logo_alt: "நாகரிக்சேது லோகோ", signup: "கணக்கை உருவாக்கு", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", no_acc: "கணக்கு வேண்டுமா?", has_acc: "ஏற்கனவே கணக்கு உள்ளதா?" },
+        ta: { profile: "சுயவிவரம்", login: "உள்நுழைக", logo_alt: "நாகரிக்சேது லோகோ", signup: "கணக்கை உருவாக்கு", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", no_acc: "கணக்கு வேண்டுமா?", has_acc: "ஏற்கனவே கணக்கு உள்ளதா?" },
         kn: { profile: "ಪ್ರೊಫೈಲ್", login: "ಸೈನ್ ಇನ್", logo_alt: "ನಾಗರಿಕ್ ಸೇತು ಲೋಗೋ", signup: "ಖಾತೆ ರಚಿಸಿ", email: "ಇಮೇಲ್ ವಿಳಾಸ", pass: "ಪಾಸ್‌ವರ್ಡ್", no_acc: "ಖಾತೆ ಬೇಕೇ?", has_acc: "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?" },
         ml: { profile: "പ്രൊഫൈൽ", login: "സൈൻ ഇൻ", logo_alt: "നാഗരിക് സേതു ലോഗോ", signup: "അക്കൗണ്ട് സൃഷ്ടിക്കുക", email: "ഇമെയിൽ വിലാസം", pass: "പാസ്‌വേഡ്", no_acc: "അക്കൗണ്ട് വേണോ?", has_acc: "ഇതിനകം ഒരു അക്കൗണ്ട് ഉണ്ടോ?" },
         bn: { profile: "প্রোফাইল", login: "সাইন ইন", logo_alt: "নাগরিকসেতু লোগো", signup: "অ্যাকাউন্ট তৈরি করুন", email: "ইমেইল ঠিকানা", pass: "পাসওয়ার্ড", no_acc: "একটি অ্যাকাউন্ট প্রয়োজন?", has_acc: "ইতিমধ্যে একটি অ্যাকাউন্ট আছে?" },
@@ -99,11 +99,10 @@ export default function TopNav() {
         setIsAuthenticating(true);
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
+            await signInWithRedirect(auth, provider);
         } catch (error) {
             console.error("Google Auth failed:", error);
             setAuthError("Sign-in failed. Please try again.");
-        } finally {
             setIsAuthenticating(false);
         }
     };
