@@ -1,5 +1,5 @@
 import React, { Suspense, useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { auth } from './firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -54,6 +54,18 @@ const AdminRoute = ({ children }) => {
 // Layout Wrapper to conditionally handle Navigation visibility based on current route
 const AppLayout = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    
+    // Global Authentication State Listener
+    // Automatically intercepts the route and pushes authenticated users to /home
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            if (currentUser && (location.pathname === '/onboarding' || location.pathname === '/')) {
+                navigate('/home', { replace: true });
+            }
+        });
+        return () => unsubscribe();
+    }, [location.pathname, navigate]);
     
     // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, and Admin)
     const isExcludedRoute = ['/onboarding', '/sos', '/admin'].includes(location.pathname);

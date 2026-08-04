@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    signInWithPopup, GoogleAuthProvider, 
-    signInWithEmailAndPassword, createUserWithEmailAndPassword 
+    signInWithRedirect, getRedirectResult, GoogleAuthProvider, 
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    onAuthStateChanged
 } from 'firebase/auth';
 import { auth } from '../firebaseConfig';
 import { Users, Camera, Activity, PlaySquare, ShieldCheck, Mail, Lock, ChevronLeft } from 'lucide-react';
@@ -23,7 +24,7 @@ export default function Onboarding() {
     const [lang, setLang] = useState('en');
     
     // Auth State
-    const [isAuthenticating, setIsAuthenticating] = useState(false);
+    const [isAuthenticating, setIsAuthenticating] = useState(true); // Default to true while checking redirect
     const [authMode, setAuthMode] = useState('slides'); // 'slides' | 'login' | 'signup'
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -31,6 +32,37 @@ export default function Onboarding() {
 
     // Carousel State
     const [currentSlide, setCurrentSlide] = useState(0);
+
+    // Handle Google Redirect Result and Existing Auth State on Mount
+    useEffect(() => {
+        // 1. Immediately check if a user is already authenticated from a previous session
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                navigate('/home');
+            }
+        });
+
+        // 2. Check for fresh login data returning from Google Redirect
+        const checkRedirectResult = async () => {
+            try {
+                const result = await getRedirectResult(auth);
+                if (result && result.user) {
+                    navigate('/home');
+                }
+            } catch (error) {
+                console.error("Redirect auth error:", error);
+                setAuthError("Google sign in failed. Try again.");
+                setAuthMode('login');
+            } finally {
+                setIsAuthenticating(false);
+            }
+        };
+        
+        checkRedirectResult();
+
+        // Cleanup listener on unmount
+        return () => unsubscribe();
+    }, [navigate]);
 
     useEffect(() => {
         const savedLang = localStorage.getItem('nagrik_lang') || navigator.language.slice(0, 2);
@@ -52,12 +84,10 @@ export default function Onboarding() {
         setIsAuthenticating(true);
         const provider = new GoogleAuthProvider();
         try {
-            await signInWithPopup(auth, provider);
-            navigate('/home');
+            await signInWithRedirect(auth, provider);
         } catch (error) {
             console.error("Google Auth failed:", error);
             setAuthError("Google sign in failed. Try again.");
-        } finally {
             setIsAuthenticating(false);
         }
     };
@@ -97,7 +127,7 @@ export default function Onboarding() {
         mr: { skip: "वगळा", btn_guest: "अतिथी म्हणून सुरू ठेवा", lang_select: "भाषा", s1_t: "नागरी चळवळ", s1_d: "उत्तम समुदायासाठी तुमचा आवाज.", s2_t: "समस्या नोंदवा", s2_d: "फोटो काढा, ठिकाण टॅग करा आणि त्वरित सबमिट करा.", s3_t: "थेट मागोवा", s3_d: "तुमच्या अहवालांवर रिअल-टाइम अपडेट्स मिळवा.", s4_t: "स्थानिक अपडेट्स", s4_d: "सामुदायिक व्हिडिओ पहा आणि माहिती मिळवा.", s5_t: "सुरक्षित प्रवेश", s5_d: "तुमचा डेटा सुरक्षित आहे. सुरू करण्यासाठी साइन इन करा.", login: "साइन इन करा", signup: "खाते तयार करा", email: "ईमेल पत्ता", pass: "पासवर्ड", no_acc: "खाते हवे आहे?", has_acc: "आधीच खाते आहे का?" },
         gu: { skip: "છોડો", btn_guest: "અતિથિ તરીકે ચાલુ રાખો", lang_select: "ભાષા", s1_t: "નાગરિક ચળવળ", s1_d: "વધુ સારા સમુદાય માટે તમારો અવાજ.", s2_t: "સમસ્યાઓ નોંધો", s2_d: "ફોટો લો, સ્થાન ટેગ કરો અને તરત જ સબમિટ કરો.", s3_t: "લાઇવ ટ્રેક કરો", s3_d: "તમારા રિપોર્ટ્સ પર રીઅલ-ટાઇમ અપડેટ્સ મેળવો.", s4_t: "સ્થાનિક અપડેટ્સ", s4_d: "સમુદાયના વિડિઓઝ જુઓ અને માહિતગાર રહો.", s5_t: "સુરક્ષિત ઍક્સેસ", s5_d: "તમારો ડેટા સુરક્ષિત છે. શરૂ કરવા માટે સાઇન ઇન કરો.", login: "સાઇન ઇન", signup: "એકાઉન્ટ બનાવો", email: "ઇમેઇલ સરનામું", pass: "પાસવર્ડ", no_acc: "એકાઉન્ટની જરૂર છે?", has_acc: "શું તમારી પાસે પહેલેથી એકાઉન્ટ છે?" },
         te: { skip: "దాటవేయి", btn_guest: "అతిథిగా కొనసాగించండి", lang_select: "భాష", s1_t: "పౌర ఉద్యమం", s1_d: "మెరుగైన సమాజం కోసం మీ స్వరం.", s2_t: "సమస్యలను నివేదించండి", s2_d: "ఫోటో తీయండి, స్థానాన్ని ట్యాగ్ చేయండి మరియు సమర్పించండి.", s3_t: "లైవ్ ట్రాక్", s3_d: "మీ నివేదికలపై నిజ-సమయ నవీకరణలను పొందండి.", s4_t: "స్థానిక నవీకరణలు", s4_d: "కమ్యూనిటీ వీడియోలను చూడండి మరియు సమాచారం పొందండి.", s5_t: "సురక్షిత యాక్సెస్", s5_d: "మీ డేటా రక్షించబడింది. ప్రారంభించడానికి సైన్ ఇన్ చేయండి.", login: "సైన్ ఇన్", signup: "ఖాతా సృష్టించండి", email: "ఇమెయిల్ చిరునామా", pass: "పాస్వర్డ్", no_acc: "ఖాతా కావాలా?", has_acc: "ఇప్పటికే ఖాతా ఉందా?" },
-        ta: { skip: "தவிர்", btn_guest: "விருந்தினராக தொடரவும்", lang_select: "மொழி", s1_t: "குடிமக்கள் இயக்கம்", s1_d: "சிறந்த சமூகத்திற்கான உங்கள் குரல்.", s2_t: "சிக்கல்களை புகாரளிக்கவும்", s2_d: "புகைப்படம் எடுக்கவும், இடத்தை குறியிடவும், சமர்ப்பிக்கவும்.", s3_t: "நேரடி கண்காணிப்பு", s3_d: "உங்கள் அறிக்கைகள் குறித்த நிகழ்நேர புதுப்பிப்புகளைப் பெறவும்.", s4_t: "உள்ளூர் புதுப்பிப்புகள்", s4_d: "சமூக வீடியோக்களைப் பார்த்து தகவல்களை அறியவும்.", s5_t: "பாதுகாப்பான அணுகல்", s5_d: "உங்கள் தரவு பாதுகாக்கப்படுகிறது. தொடங்க உள்நுழையவும்.", login: "உள்நுழைய", signup: "கணக்கை உருவாக்கு", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", no_acc: "கணக்கு வேண்டுமா?", has_acc: "ஏற்கனவே கணக்கு உள்ளதா?" },
+        ta: { skip: "தவிர்", btn_guest: "விருந்தினராக தொடரவும்", lang_select: "மொழி", s1_t: "குடிமக்கள் இயக்கம்", s1_d: "சிறந்த சமூகத்திற்கான உங்கள் குரல்.", s2_t: "சிக்கல்களை புகாரளிக்கவும்", s2_d: "புகைப்படம் எடுக்கவும், இடத்தை குறியிடவும், சமர்ப்பிக்கவும்.", s3_t: "நேரடி கண்காணிப்பு", s3_d: "உங்கள் அறிக்கைகள் குறித்த நிகழ்நேர புதுப்பிப்புகளைப் பெறவும்.", s4_t: "உள்ளூர் புதுப்பிப்புகள்", s4_d: "சமூக வீடியோக்களைப் பார்த்து தகவல்களை அறியவும்.", s5_t: "பாதுகாப்பான அணுகல்", s5_d: "உங்கள் தரவு பாதுகாக்கப்படுகிறது. தொடங்க உள்நுழையவும்.", login: "உள்நுழைய", signup: "கணக்கை உருவாக்கு", email: "மின்னஞ்சல் முகவரி", pass: "கடவுச்சொல்", no_acc: "கணக்கு வேண்டுமா?", has_acc: "ஏற்கனவே கணக்கு உள்ளதா?" },
         kn: { skip: "ಬಿಟ್ಟುಬಿಡಿ", btn_guest: "ಅತಿಥಿಯಾಗಿ ಮುಂದುವರಿಯಿರಿ", lang_select: "ಭಾಷೆ", s1_t: "ನಾಗರಿಕ ಚಳುವಳಿ", s1_d: "ಉತ್ತಮ ಸಮಾಜಕ್ಕಾಗಿ ನಿಮ್ಮ ಧ್ವನಿ.", s2_t: "ಸಮಸ್ಯೆಗಳನ್ನು ವರದಿ ಮಾಡಿ", s2_d: "ಫೋಟೋ ತೆಗೆಯಿರಿ, ಸ್ಥಳವನ್ನು ಟ್ಯಾಗ್ ಮಾಡಿ ಮತ್ತು ಸಲ್ಲಿಸಿ.", s3_t: "ಲೈವ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ", s3_d: "ನಿಮ್ಮ ವರದಿಗಳ ಮೇಲೆ ನೈಜ-ಸಮಯದ ನವೀಕರಣಗಳನ್ನು ಪಡೆಯಿರಿ.", s4_t: "ಸ್ಥಳೀಯ ನವೀಕರಣಗಳು", s4_d: "ಸಮುದಾಯದ ವೀಡಿಯೊಗಳನ್ನು ವೀಕ್ಷಿಸಿ ಮತ್ತು ಮಾಹಿತಿ ಪಡೆಯಿರಿ.", s5_t: "ಸುರಕ್ಷಿತ ಪ್ರವೇಶ", s5_d: "ನಿಮ್ಮ ಡೇಟಾ ಸುರಕ್ಷಿತವಾಗಿದೆ. ಪ್ರಾರಂಭಿಸಲು ಸೈನ್ ಇನ್ ಮಾಡಿ.", login: "ಸೈನ್ ಇನ್", signup: "ಖಾತೆ ರಚಿಸಿ", email: "ಇಮೇಲ್ ವಿಳಾಸ", pass: "ಪಾಸ್‌ವರ್ಡ್", no_acc: "ಖಾತೆ ಬೇಕೇ?", has_acc: "ಈಗಾಗಲೇ ಖಾತೆ ಇದೆಯೇ?" },
         ml: { skip: "ഒഴിവാക്കുക", btn_guest: "അതിഥിയായി തുടരുക", lang_select: "ഭാഷ", s1_t: "പൗര പ്രസ്ഥാനം", s1_d: "മികച്ച സമൂഹത്തിനായി നിങ്ങളുടെ ശബ്ദം.", s2_t: "പ്രശ്നങ്ങൾ റിപ്പോർട്ട് ചെയ്യുക", s2_d: "ഒരു ഫോട്ടോ എടുക്കുക, സ്ഥലം ടാഗ് ചെയ്യുക, സമർപ്പിക്കുക.", s3_t: "ലൈവ് ട്രാക്ക് ചെയ്യുക", s3_d: "നിങ്ങളുടെ റിപ്പോർട്ടുകളിൽ തത്സമയ അപ്‌ഡേറ്റുകൾ നേടുക.", s4_t: "പ്രാദേശിക അപ്ഡേറ്റുകൾ", s4_d: "കമ്മ്യൂണിറ്റി വീഡിയോകൾ കാണുക, വിവരങ്ങൾ അറിയുക.", s5_t: "സുരക്ഷിത പ്രവേശനം", s5_d: "നിങ്ങളുടെ ഡാറ്റ സുരക്ഷിതമാണ്. ആരംഭിക്കാൻ സൈൻ ഇൻ ചെയ്യുക.", login: "സൈൻ ഇൻ", signup: "അക്കൗണ്ട് സൃഷ്ടിക്കുക", email: "ഇമെയിൽ വിലാസം", pass: "പാസ്‌വേഡ്", no_acc: "അക്കൗണ്ട് വേണോ?", has_acc: "ഇതിനകം ഒരു അക്കൗണ്ട് ഉണ്ടോ?" },
         bn: { skip: "এড়িয়ে যান", btn_guest: "অতিথি হিসাবে চালিয়ে যান", lang_select: "ভাষা", s1_t: "নাগরিক আন্দোলন", s1_d: "উন্নত সম্প্রদায়ের জন্য আপনার কণ্ঠস্বর।", s2_t: "সমস্যা রিপোর্ট করুন", s2_d: "ছবি তুলুন, অবস্থান ট্যাগ করুন এবং জমা দিন।", s3_t: "লাইভ ট্র্যাক করুন", s3_d: "আপনার রিপোর্টের রিয়েল-টাইম আপডেট পান।", s4_t: "স্থানীয় আপডেট", s4_d: "কমিউনিটি ভিডিও দেখুন এবং আপডেটেড থাকুন।", s5_t: "নিরাপদ অ্যাক্সেস", s5_d: "আপনার ডেটা সুরক্ষিত। শুরু করতে সাইন ইন করুন।", login: "সাইন ইন", signup: "অ্যাকাউন্ট তৈরি করুন", email: "ইমেইল ঠিকানা", pass: "পাসওয়ার্ড", no_acc: "একটি অ্যাকাউন্ট প্রয়োজন?", has_acc: "ইতিমধ্যে একটি অ্যাকাউন্ট আছে?" },
@@ -306,9 +336,13 @@ export default function Onboarding() {
                             disabled={isAuthenticating}
                             className="w-full bg-[#FFFFFF] border border-[#111111]/10 text-[#111111] font-bold text-[1rem] py-4 rounded-[16px] transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center outline-none shadow-sm hover:bg-[#111111]/5"
                         >
-                            <span className="flex items-center">
-                                Continue with&nbsp;<GoogleIcon /> oogle
-                            </span>
+                            {isAuthenticating ? (
+                                <div className="w-5 h-5 border-2 border-t-transparent border-[#111111] rounded-full animate-spin"></div>
+                            ) : (
+                                <span className="flex items-center">
+                                    Continue with&nbsp;<GoogleIcon /> oogle
+                                </span>
+                            )}
                         </button>
 
                         <div className="mt-10 text-center">
