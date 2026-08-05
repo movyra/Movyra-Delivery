@@ -1,22 +1,22 @@
 /**
  * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
- * Context: Tailwind configuration file with Civic Teal color system.
+ * Context: Tailwind configuration file with SevaSetu color system.
  * 
- * English: Tailwind configuration file with Civic Teal color system.
- * Hindi: सिविक टील रंग प्रणाली के साथ टेलविंड कॉन्फ़िगरेशन फ़ाइल।
- * Hinglish: Civic Teal color system ke sath Tailwind configuration file.
- * Marathi: सिविक टील रंग प्रणालीसह टेलविंड कॉन्फिगरेशन फाइल.
- * Gujarati: સિવિક ટીલ રંગ સિસ્ટમ સાથે ટેલવિન્ડ ગોઠવણી ફાઇલ.
- * Telugu: సివిక్ టీల్ రంగు సిస్టమ్‌తో టెయిల్‌విండ్ కాన్ఫిగరేషన్ ఫైల్.
- * Tamil: சிவிக் டீல் வண்ண அமைப்புடன் டெயில்விண்ட் கட்டமைப்பு கோப்பு.
- * Kannada: ಸಿವಿಕ್ ಟೀಲ್ ಬಣ್ಣದ ವ್ಯವಸ್ಥೆಯೊಂದಿಗೆ ಟೈಲ್‌ವಿಂಡ್ ಕಾನ್ಫಿಗರೇಶನ್ ಫೈಲ್.
- * Malayalam: സിവിക് ടീൽ വർണ്ണ സിസ്റ്റമുള്ള ടെയിൽവിൻഡ് കോൺഫിഗറേഷൻ ഫയൽ.
- * Bengali: সিভিক টিল রঙ সিস্টেম সহ টেলউইন্ড কনফিগারেশন ফাইল।
- * Punjabi: ਸਿਵਿਕ ਟੀਲ ਰੰਗ ਸਿਸਟਮ ਨਾਲ ਟੇਲਵਿੰਡ ਸੰਰਚਨਾ ਫਾਈਲ।
- * Odia: ସିଭିକ୍ ଟିଲ୍ ରଙ୍ଗ ସିଷ୍ଟମ୍ ସହିତ ଟେଲୱିଣ୍ଡ କନଫିଗରେସନ୍ ଫାଇଲ୍।
- * Assamese: চিভিক টিল ৰঙৰ চিষ্টেমৰ সৈতে টেইলউইণ্ড কনফিগাৰেচন ফাইল।
- * Urdu: سوک ٹیل رنگ سسٹم کے ساتھ ٹیل ونڈ کنفیگریشن فائل۔
- * Bhojpuri: सिविक टील रंग सिस्टम के साथ टेलविंड कॉन्फ़िगरेशन फाइल।
+ * English: Tailwind configuration file with SevaSetu color system.
+ * Hindi: सेवासेतु रंग प्रणाली के साथ टेलविंड कॉन्फ़िगरेशन फ़ाइल।
+ * Hinglish: SevaSetu color system ke sath Tailwind configuration file.
+ * Marathi: सेवासेतू रंग प्रणालीसह टेलविंड कॉन्फिगरेशन फाइल.
+ * Gujarati: સેવાસેતુ રંગ સિસ્ટમ સાથે ટેલવિન્ડ ગોઠવણી ફાઇલ.
+ * Telugu: సేవాసేతు రంగు సిస్టమ్‌తో టెయిల్‌విండ్ కాన్ఫిగరేషన్ ఫైల్.
+ * Tamil: சேவாசேது வண்ண அமைப்புடன் டெயில்விண்ட் கட்டமைப்பு கோப்பு.
+ * Kannada: ಸೇವಾಸೇತು ಬಣ್ಣದ ವ್ಯವಸ್ಥೆಯೊಂದಿಗೆ ಟೈಲ್‌ವಿಂಡ್ ಕಾನ್ಫಿಗರೇಶನ್ ಫೈಲ್.
+ * Malayalam: സേവാ സേതു വർണ്ണ സിസ്റ്റമുള്ള ടെയിൽവിൻഡ് കോൺഫിഗറേഷൻ ഫയൽ.
+ * Bengali: সেবাসেতু রঙ সিস্টেম সহ টেলউইন্ড কনফিগারেশন ফাইল।
+ * Punjabi: ਸੇਵਾਸੇਤੂ ਰੰਗ ਸਿਸਟਮ ਨਾਲ ਟੇਲਵਿੰਡ ਸੰਰਚਨਾ ਫਾਈਲ।
+ * Odia: ସେବାସେତୁ ରଙ୍ଗ ସିଷ୍ଟମ୍ ସହିତ ଟେଲୱିଣ୍ଡ କନଫିଗରେସନ୍ ଫାଇଲ୍।
+ * Assamese: সেৱাসেতু ৰঙৰ চিষ্টেমৰ সৈতে টেইলউইণ্ড কনফিগাৰেচন ফাইল।
+ * Urdu: سیوا سیتو رنگ سسٹم کے ساتھ ٹیل ونڈ کنفیگریشن فائل۔
+ * Bhojpuri: सेवासेतु रंग सिस्टम के साथ टेलविंड कॉन्फ़िगरेशन फाइल।
  */
 
 /** @type {import('tailwindcss').Config} */
@@ -34,35 +34,36 @@ export default {
 
   theme: {
     extend: {
-      // FEATURE 3: Strict NagrikSetu Brand Palette
-      // Replaces the Movyra blue with the citizen-focused Teal and designated status colors.
+      // FEATURE 3: Strict SevaSetu Brand Palette
+      // Replaces the legacy colors with the organization-focused Service Blue and designated status colors.
       colors: {
-        civic: {
-          teal: '#00897B',
-          light: '#E0F2F1',
+        sevasetu: {
+          primary: '#2563EB',
+          collaboration: '#60A5FA',
+          light: '#EFF6FF',
         },
         deep: {
           black: '#111111',
         },
-        action: {
-          yellow: '#FFB300',
+        pure: {
+          white: '#FFFFFF',
         },
         success: {
-          green: '#2E7D32',
-          light: '#E8F5E9',
+          green: '#16A34A',
+          light: '#ECFDF5',
         },
         emergency: {
-          red: '#D32F2F',
+          red: '#DC2626',
+          light: '#FEF2F2',
         },
-        info: {
-          blue: '#1565C0',
-          light: '#E3F2FD',
+        resource: {
+          amber: '#D97706',
         },
         border: {
-          grey: '#E0E0E0',
+          grey: '#E5E7EB',
         },
         disabled: {
-          grey: '#9E9E9E',
+          grey: '#9CA3AF',
         }
       },
 
@@ -109,13 +110,13 @@ export default {
         'spin-reverse-slow': 'spin-reverse-slow 20s linear infinite',
       },
 
-      // FEATURE 6: Signature NagrikSetu Border Radius
-      // Premium, heavily rounded corners specifically requested for the floating cards
+      // FEATURE 6: Signature SevaSetu Border Radius
+      // Premium, heavily rounded corners specifically requested for the floating cards and bottom navigation
       borderRadius: {
-        'nagrik-lg': '16px',
-        'nagrik-xl': '24px',
-        'nagrik-2xl': '32px',
-        'nagrik-pill': '9999px',
+        'sevasetu-lg': '16px',
+        'sevasetu-xl': '24px',
+        'sevasetu-2xl': '32px',
+        'sevasetu-pill': '9999px',
         'uber': '14px',
         'super': '32px',
         'mega': '48px',
@@ -132,7 +133,7 @@ export default {
       // FEATURE 8: Depth Integration
       boxShadow: {
         'upward': '0 -4px 6px -1px rgba(0, 0, 0, 0.05), 0 -2px 4px -1px rgba(0, 0, 0, 0.03)',
-        'nagrik-card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+        'sevasetu-card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
       }
     },
   },
