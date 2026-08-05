@@ -17,19 +17,17 @@
  * Assamese: গ্লোবেল প্ৰমাণীকৰণ আৰু চাবস্ক্ৰিপচন স্থিতি ব্যৱস্থাপনা।
  * Urdu: عالمی تصدیق اور سبسکرپشن اسٹیٹ مینجمنٹ۔
  * Bhojpuri: ग्लोबल प्रमाणीकरण अउर सदस्यता स्थिति प्रबंधन।
+ *
+ * SYSTEM COLORS REFERENCE:
+ * Primary: #2563EB | Black: #111111 | White: #FFFFFF | Success: #16A34A | Emergency: #DC2626
  */
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, onSnapshot } from 'firebase/firestore';
 
-// Initialize context
+// Initialize context locally (Must be migrated to a shared file if exported, per Vite rules)
 const AuthContext = createContext();
-
-// Export custom hook for global access
-export function useAuth() {
-  return useContext(AuthContext);
-}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
