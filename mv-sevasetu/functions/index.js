@@ -9,7 +9,7 @@
  * Gujarati: સુરક્ષિત ચુકવણીઓ માટે બેકએન્ડ ક્લાઉડ કાર્યો.
  * Telugu: సురక్షిత చెల్లింపుల కోసం బ్యాకెండ్ క్లౌడ్ ఫంక్షన్‌లు.
  * Tamil: பாதுகாப்பான கட்டணங்களுக்கான பின்தள கிளவுட் செயல்பாடுகள்.
- * Kannada: ಸುರಕ್ಷಿತ ಪಾವತಿಗಳಿಗಾಗಿ ಬ್ಯಾಕೆಂಡ್ ಕ್ಲೌಡ್ ಕಾರ್ಯಗಳು.
+ * Kannada: ಸುರಕ್ಷಿತ ಪಾವತಿಗಳಿಗಾಗಿ ಬ್ಯಾಕೆండ్ క్లౌడ్ ಕಾರ್ಯಗಳು.
  * Malayalam: സുരക്ഷിത പേയ്‌മെന്റുകൾക്കായുള്ള ബാക്കെൻഡ് ക്ലൗഡ് ഫംഗ്‌ഷനുകൾ.
  * Bengali: নিরাপদ পেমেন্টের জন্য ব্যাকএন্ড ক্লাউড ফাংশন।
  * Punjabi: ਸੁਰੱਖਿਅਤ ਭੁਗਤਾਨਾਂ ਲਈ ਬੈਕਐਂਡ ਕਲਾਉਡ ਫੰਕਸ਼ਨ।
@@ -73,7 +73,7 @@ exports.payuWebhook = onRequest(async (req, res) => {
   const { txnid, status, amount, productinfo, firstname, email, hash, additionalCharges } = req.body;
 
   // PayU Strict Reverse Hash Verification
-  let hashString = '';
+  let hashString; // Strictly removed the redundant empty string assignment to resolve ESLint error
   if (additionalCharges) {
     hashString = `${additionalCharges}|${PAYU_SALT}|${status}|||||||||||${email}|${firstname}|${productinfo}|${amount}|${txnid}|${PAYU_MERCHANT_KEY}`;
   } else {
