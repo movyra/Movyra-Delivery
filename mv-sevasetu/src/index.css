@@ -1,18 +1,45 @@
+/**
+ * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
+ * Context: Global stylesheet with Tailwind directives and SevaSetu color system.
+ * 
+ * English: Global stylesheet with Tailwind directives and SevaSetu color system.
+ * Hindi: टेलविंड निर्देशों और सेवासेतु रंग प्रणाली के साथ वैश्विक स्टाइलशीट।
+ * Hinglish: Tailwind directives aur SevaSetu color system ke sath global stylesheet.
+ * Marathi: टेलविंड निर्देश आणि सेवासेतू रंग प्रणालीसह जागतिक स्टाइलशीट.
+ * Gujarati: ટેલવિન્ડ નિર્દેશો અને સેવાસેતુ રંગ સિસ્ટમ સાથે વૈશ્વિક સ્ટાઇલશીટ.
+ * Telugu: టెయిల్‌విండ్ ఆదేశాలు మరియు సేవాసేతు రంగు సిస్టమ్‌తో గ్లోబల్ స్టైల్‌షీట్.
+ * Tamil: டெயில்விண்ட் வழிமுறைகள் மற்றும் சேவாசேது வண்ண அமைப்புடன் உலகளாவிய ஸ்டைல்ஷீட்.
+ * Kannada: ಟೈಲ್‌ವಿಂಡ್ ನಿರ್ದೇಶನಗಳು ಮತ್ತು ಸೇವಾಸೇತು ಬಣ್ಣದ ವ್ಯವಸ್ಥೆಯೊಂದಿಗೆ ಜಾಗತಿಕ ಸ್ಟೈಲ್‌ಶೀಟ್.
+ * Malayalam: ടെയിൽവിൻഡ് നിർദ്ദേശങ്ങളും സേവാ സേതു വർണ്ണ സിസ്റ്റവുമുള്ള ആഗോള സ്റ്റൈൽഷീറ്റ്.
+ * Bengali: টেলউইন্ড নির্দেশিকা এবং সেবাসেতু রঙ সিস্টেম সহ গ্লোবাল স্টাইলশিট।
+ * Punjabi: ਟੇਲਵਿੰਡ ਨਿਰਦੇਸ਼ਾਂ ਅਤੇ ਸੇਵਾਸੇਤੂ ਰੰਗ ਸਿਸਟਮ ਨਾਲ ਗਲੋਬਲ ਸਟਾਈਲਸ਼ੀਟ।
+ * Odia: ଟେଲୱିଣ୍ଡ ନିର୍ଦ୍ଦେଶ ଏବଂ ସେବାସେତୁ ରଙ୍ଗ ସିଷ୍ଟମ୍ ସହିତ ଗ୍ଲୋବାଲ୍ ଷ୍ଟାଇଲସିଟ୍।
+ * Assamese: টেইলউইণ্ড নিৰ্দেশনা আৰু সেৱাসেতু ৰঙৰ চিষ্টেমৰ সৈতে গ্লোবেল ষ্টাইলশ্বীট।
+ * Urdu: ٹیل ونڈ ہدایات اور سیوا سیتو رنگ سسٹم کے ساتھ عالمی اسٹائل شیٹ۔
+ * Bhojpuri: टेलविंड निर्देश अउर सेवासेतु रंग सिस्टम के साथ ग्लोबल स्टाइलशीट।
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  --text: #111111;
+  --text-h: #111111;
+  --bg: #F3F4F6;
+  --border: #E5E7EB;
+  --code-bg: #FFFFFF;
+  --accent: #2563EB;
+  --accent-bg: rgba(37, 99, 235, 0.1);
+  --accent-border: rgba(37, 99, 235, 0.5);
+  --social-bg: rgba(255, 255, 255, 0.5);
+  --success: #16A34A;
+  --emergency: #DC2626;
   --shadow:
     rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Inter', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
   font: 18px/145% var(--sans);
@@ -32,15 +59,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
+    --text: #FFFFFF;
+    --text-h: #FFFFFF;
+    --bg: #111111;
+    --border: #374151;
+    --code-bg: #1F2937;
+    --accent: #2563EB;
+    --accent-bg: rgba(37, 99, 235, 0.15);
+    --accent-border: rgba(37, 99, 235, 0.5);
+    --social-bg: rgba(31, 41, 55, 0.5);
+    --success: #16A34A;
+    --emergency: #DC2626;
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
   }
