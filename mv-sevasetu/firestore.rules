@@ -1,0 +1,495 @@
+/*
+ * 15-Language System Documentation: Firestore Security Rules for NagrikSetu
+ * English: Security rules configured for SOS guest access, guest reporting validation, and Super Admin controls.
+ * Hindi: एसओएस अतिथि पहुंच, अतिथि रिपोर्टिंग सत्यापन और सुपर एडमिन नियंत्रणों के लिए कॉन्फ़िगर किए गए सुरक्षा नियम।
+ * Hinglish: SOS guest access, guest reporting validation, aur Super Admin controls ke liye security rules configure kiye gaye.
+ * Marathi: एसओएस अतिथी प्रवेश, अतिथी अहवाल पडताळणी आणि सुपर अॅडमिन नियंत्रणांसाठी सुरक्षा नियम कॉन्फिगर केले आहेत.
+ * Gujarati: એસઓએસ અતિથિ ઍક્સેસ, અતિથિ રિપોર્ટિંગ માન્યતા અને સુપર એડમિન નિયંત્રણો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
+ * Telugu: ఎస్ఓఎస్ అతిథి యాక్సెస్, అతిథి రిపోర్టింగ్ ధృవీకరణ మరియు సూపర్ అడ్మిన్ నియంత్రణల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
+ * Tamil: எஸ்ஓஎஸ் விருந்தினர் அணுகல், விருந்தினர் அறிக்கையிடல் சரிபார்ப்பு மற்றும் சூப்பர் நிர்வாகி கட்டுப்பாடுகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
+ * Kannada: ಎಸ್‌ಒಎಸ್ ಅತಿಥಿ ಪ್ರವೇಶ, ಅತಿಥಿ ವರದಿ ಪರಿಶೀಲನೆ ಮತ್ತು ಸೂಪರ್ ಅಡ್ಮಿನ್ ನಿಯಂತ್ರಣಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
+ * Malayalam: എസ്ഒഎസ് അതിഥി പ്രവേശനത്തിനും അതിഥി റിപ്പോർട്ടിംഗ് പരിശോധനയ്ക്കും സൂപ്പർ അഡ്മിൻ നിയന്ത്രണങ്ങൾക്കുമായി സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
+ * Bengali: এসওএস অতিথি অ্যাক্সেস, অতিথি রিপোর্টিং বৈধকরণ এবং সুপার অ্যাডমিন নিয়ন্ত্রণের জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
+ * Punjabi: ਐਸਓਐਸ ਮਹਿਮਾਨ ਪਹੁੰਚ, ਮਹਿਮਾਨ ਰਿਪੋਰਟਿੰਗ ਪ੍ਰਮਾਣਿਕਤਾ ਅਤੇ ਸੁਪਰ ਐਡਮਿਨ ਨਿਯੰਤਰਣਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ ਹਨ।
+ * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ, ଅତିଥି ରିପୋର୍ଟିଂ ଯାଞ୍ଚ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
+ * Assamese: এছঅএছ অতিথি প্ৰৱেশ, অতিথি প্ৰতিবেদন বৈধকৰণ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
+ * Urdu: ایس او ایس مہمان کی رسائی، مہمان رپورٹنگ کی توثیق اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
+ * Bhojpuri: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
+ * 
+ * Strict Color System Adherence (For Frontend Implementation Reference):
+ * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
+ */
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================================================
+    // GLOBAL SECURITY DEFINITIONS & ACCESS CONTROL
+    // ========================================================================
+    
+    // Hardcoded Admin Verification
+    function isAdmin() {
+      return request.auth != null && request.auth.uid in [
+        'oGZkaJTtkISgYS3UyQKhhxANWFa2', 
+        '8zAyPwFZZBfU7MD1NkBDDWbIzXt1', 
+        'REr2KNUjOmWOsUxuvq3YtmlkJsB3'
+      ];
+    }
+
+    // Super Admin Verification (Strict Override)
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'testcodecfg@gmail.com';
+    }
+
+    // Standard User Verification
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ========================================================================
+    // GLOBAL DENY
+    // Strictly block all access by default to prevent data leaks.
+    // ========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ========================================================================
+    // IN-DEVELOPMENT WAITLIST REGISTRATIONS
+    // ========================================================================
+    match /pre_registrations/{document} {
+      allow create: if true; // Unauthenticated creation permitted for waitlist and vendor intake
+      allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
+    }
+
+    // ========================================================================
+    // CORPORATE RECRUITMENT PORTAL
+    // ========================================================================
+    match /career_applications/{document} {
+      // Require authentication to submit an application
+      allow create: if isAuthenticated();
+      // Strictly restrict reading/processing to internal administrators only
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA PITCH DECK LIVE SECTIONS (Existing)
+    // ========================================================================
+
+    // 1. Live Vendor Onboarding & Early Tester Signups
+    match /vendor_applications/{document} {
+      allow create: if request.resource.data.keys().hasAll(['businessName', 'contactPhone', 'timestamp', 'status']); // Unauthenticated creation permitted
+      allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
+    }
+
+    // 2. Live Investor QnA Board
+    match /investor_questions/{document} {
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['question', 'timestamp', 'votes']);
+      allow read, update: if true; 
+      allow delete: if isAdmin();
+    }
+
+    // 3. Real-Time Feedback Module
+    match /platform_feedback/{document} {
+      allow create: if isAuthenticated() && request.resource.data.keys().hasAll(['rating', 'comment', 'timestamp']);
+      allow read: if true; 
+      allow update, delete: if isAdmin();
+    }
+
+    // 4. Live Coverage Map Nodes (Operational Zones)
+    match /operational_nodes/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // 5. Real-Time Partner Stats (Live Telemetry)
+    match /live_telemetry/{document} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ========================================================================
+    // ONBOARDING / EARLY ACCESS (Existing)
+    // ========================================================================
+    match /early_access/{document} {
+      allow create: if isAuthenticated() && request.resource.data.name != null && request.resource.data.phone != null;
+      allow read: if true;
+      allow update, delete: if isAdmin(); 
+    }
+
+    // ========================================================================
+    // ENTERPRISE LOGISTICS & ASSET TRACKING MODULE (UPDATED)
+    // ========================================================================
+    match /delivery_orders/{orderId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Permit read if owner, admin, or querying a specific tracking payload
+      allow read: if isOwner(resource.data.userId) || isAdmin() || ('trackingId' in resource.data);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Advanced Routing & Bidding Models
+    match /delivery_multi_stop/{routeId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Permit read if owner, admin, or querying a specific tracking payload
+      allow read: if isOwner(resource.data.userId) || isAdmin() || ('trackingId' in resource.data);
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /recurring_schedules/{scheduleId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /driver_bids/{bidId} {
+      // Drivers can create/read bids on open orders. Customers can read bids assigned to their orders.
+      allow create: if isAuthenticated();
+      allow read, update: if isAuthenticated(); 
+      allow delete: if isAdmin();
+    }
+
+    match /insurance_claims/{claimId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /digital_wallets/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin(); // Only system processes can alter financial balances
+    }
+
+    match /saved_locations/{document} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // ========================================================================
+    // SENSITIVE SAFETY & LOCAL SERVICES MODULE (NEW)
+    // ========================================================================
+    match /emergency_pings/{pingId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdmin(); // Only accessible to security dispatchers
+    }
+
+    match /trusted_contacts/{contactId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    match /service_bookings/{bookingId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /rental_agreements/{rentalId} {
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // ISOLATED APP ENVIRONMENT (Existing Multi-Tenant Structure)
+    // ========================================================================
+    match /artifacts/{appId} {
+      match /users/{userId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+        match /{document=**} {
+          allow read, write: if isOwner(userId) || isAdmin();
+        }
+      }
+
+      match /public/data {
+        match /drivers/{driverId} {
+          allow read: if isAuthenticated();
+          allow write: if isAdmin();
+        }
+        match /system_logs/{logId} {
+          allow create: if isAuthenticated(); 
+          allow read, update, delete: if isAdmin();
+        }
+      }
+    }
+
+    // ========================================================================
+    // DEDICATED SHOPPER ACCOUNTS (VEGGIES & DAILY NEEDS STOREFRONTS)
+    // ========================================================================
+    match /shopper_accounts/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ========================================================================
+    // GROCERY MODULE ONBOARDING PROFILES 
+    // ========================================================================
+    match /grocery_profiles/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ========================================================================
+    // E-COMMERCE PUBLIC CATALOGS & USER STATE (UPDATED FOR VENDORS)
+    // ========================================================================
+    match /promotions/{promoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+    
+    match /stores/{storeId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(storeId) || isAdmin();
+    }
+    
+    match /products/{productId} {
+      allow read: if isAuthenticated();
+      allow create, update: if (isAuthenticated() && request.resource.data.storeId == request.auth.uid) || isAdmin();
+      allow delete: if (isAuthenticated() && resource.data.storeId == request.auth.uid) || isAdmin();
+    }
+
+    match /user_carts/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    // ========================================================================
+    // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
+    // ========================================================================
+    
+    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
+    }
+
+    match /orders/{orderId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.storeId == request.auth.uid || 
+        !('userId' in resource.data) ||
+        isAdmin()
+      );
+    }
+
+    match /saved_addresses/{addressId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /bids/{bidId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /shipments/{shipmentId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /disputes/{disputeId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA CIVIC MODULE (PUBLIC TRANSPARENCY & SMART WARD OPERATIONS)
+    // ========================================================================
+    match /civic_complaints/{complaintId} {
+      // Unauthenticated creation permitted, BUT explicitly blocks "test" keywords unless it's the admin
+      allow create: if isAdmin() || (
+        !request.resource.data.get('title', '').matches('(?i).*test.*') &&
+        !request.resource.data.get('description', '').matches('(?i).*test.*')
+      );
+      allow read: if true;   // Public viewing permitted for the map and transparency features
+      allow update: if true; // Explicitly allow public update operations for upvotes/appends
+      allow delete: if isAdmin(); // Administration strictly protected
+    }
+
+    match /civic_feedback/{feedbackId} {
+      allow create: if true; // Unauthenticated creation permitted for public feedback
+      allow read: if true;   // Public viewing permitted
+      allow update, delete: if isAdmin(); // Administration strictly protected
+    }
+
+    match /civic_notices/{noticeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /civic_analytics/{analyticsId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA CIVIC MODULE - NEW ADMINISTRATIVE CAPABILITIES
+    // ========================================================================
+    match /civic_personnel/{personnelId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /civic_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /civic_admin_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA SAHAY MODULE - HUMANITARIAN RESCUE OPERATIONS
+    // ========================================================================
+    
+    match /sahay_users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_profiles/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_admin_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /sahay_cases/{caseId} {
+      // Allow public read for live telemetry dashboards and unauthenticated viewing
+      allow read: if true;
+      // Allow public creation with strict schema validation preventing empty spam
+      allow create: if request.resource.data.keys().hasAll(['needyName', 'condition', 'mediaUrl', 'status']);
+      // Allow public updates to support unauthenticated task acceptances and confirmations
+      allow update: if true;
+      // Only system administrators can permanently delete records
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_case_updates/{updateId} {
+      // Allow public read for continuous timeline updates
+      allow read: if true;
+      // Allow public creation for volunteer timeline messages
+      allow create: if request.resource.data.keys().hasAll(['caseId', 'message', 'createdAt']);
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_organizations/{orgId} {
+      // Allow public read for live telemetry dashboards
+      allow read: if true;
+      // Allow public creation and updates for unauthenticated organization onboarding
+      allow create: if true;
+      allow update: if true;
+      // Only system administrators can delete organizations entirely
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_volunteers/{volunteerId} {
+      allow create, read: if isAuthenticated();
+      allow update: if isOwner(volunteerId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_confirmations/{confirmId} {
+      allow create, read: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /sahay_notifications/{notificationId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_emergency_contacts/{contactId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // New Sahay Admin Collections
+    match /sahay_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /sahay_broadcasts/{broadcastId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /sahay_settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ========================================================================
+    // SYSTEM MAIL TRIGGERS
+    // ========================================================================
+    match /mail/{mailId} {
+      // Authenticated users can generate system emails (e.g. support inquiries)
+      allow create: if isAuthenticated();
+      // Only system administrators can view the email delivery logs
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // NAGRIKSETU MODULE (NEW CORE FEATURES)
+    // ========================================================================
+    
+    // Core Reporting Feed
+    match /nagrik_reports/{reportId} {
+      // Allow authenticated users. Allow unauthenticated guests strictly if they provide personal details.
+      allow create: if isAuthenticated() || (request.resource.data.keys().hasAll(['guestName', 'guestContact']));
+      allow read: if true;
+      // Strictly revoke report deletion and update capabilities from standard users.
+      // Only the designated testcodecfg@gmail.com account is granted override permissions.
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Community Video Updates (Instagram Reels/Stories)
+    match /nagrik_reels/{reelId} {
+      allow read: if true; // Public can view the community feed
+      allow create: if isAuthenticated(); // Only authenticated users can post to the community feed
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin(); // Strict SuperAdmin moderation
+    }
+
+    // NEW: Community Engagement (Likes)
+    match /nagrik_likes/{likeId} {
+      allow read: if true; // Public can see like counts
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid; // Only logged in users can like
+      allow update: if false; // Likes are only created or deleted
+      allow delete: if isOwner(resource.data.userId) || isSuperAdmin(); // SuperAdmin can purge artificial likes
+    }
+
+    // NEW: Direct Messaging Gateway
+    match /nagrik_messages/{messageId} {
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid; // Only authenticated senders
+      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) || isSuperAdmin(); // Strict private reading + Admin Audit
+      allow update, delete: if isOwner(resource.data.senderId) || isSuperAdmin(); // Sender can unsend, Admin can purge
+    }
+
+    // Live SOS & Panic Broadcast Engine
+    match /nagrik_sos/{sosId} {
+      // Allow public creation to prevent permission denial crashes when a guest user triggers an emergency panic broadcast.
+      allow create: if true;
+      // Allow public read to enable 5km proximity radar alerts for all users.
+      allow read: if true;
+      allow update, delete: if isSuperAdmin() || isAdmin();
+    }
+
+    // Civic Leaderboard & Gamification (Karma Points)
+    match /nagrik_leaderboard/{userId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin(); // Points are updated securely via backend cloud functions
+    }
+
+    // Official Local Announcements Feed
+    match /nagrik_announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+  }
+}
