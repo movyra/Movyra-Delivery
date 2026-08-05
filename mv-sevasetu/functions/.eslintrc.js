@@ -25,7 +25,7 @@
 module.exports = {
   env: {
     es6: true,
-    node: true,
+    node: true, // Strictly resolves no-undef for module, require, process, exports
   },
   parserOptions: {
     "ecmaVersion": 2018,
