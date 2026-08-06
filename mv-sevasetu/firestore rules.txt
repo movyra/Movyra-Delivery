@@ -258,29 +258,170 @@ service cloud.firestore {
     }
 
     // ========================================================================
-    // SEVASETU STRICT RULES (NEW TRANSACTIONS, CASES, USERS METADATA)
+    // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
     
-    // STRICT METADATA LOCK: Prevents client-side tampering of subscription fields.
-    // Cloud Functions and Super Admin bypass this restriction automatically.
+    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
     match /users/{userId} {
-      allow read, create: if isOwner(userId) || isAdmin() || isSuperAdmin();
-      allow update: if isSuperAdmin() || isAdmin() || (isOwner(userId) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['planTier', 'paymentStatus', 'planExpiresAt'])));
-      allow delete: if isSuperAdmin() || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
     }
 
-    // NEW SEVASETU: TRANSACTIONS COLLECTION
-    // Strictly locks down raw payment data. Only backend Cloud Functions and Super Admin can write.
-    match /transactions/{transactionId} {
-      allow read: if isSuperAdmin() || (isAuthenticated() && resource.data.email == request.auth.token.email);
-      allow write: if isSuperAdmin();
+    match /orders/{orderId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.storeId == request.auth.uid || 
+        !('userId' in resource.data) ||
+        isAdmin()
+      );
     }
 
-    // NEW SEVASETU: CASES COLLECTION (RBAC for Organizations and Volunteers)
-    match /cases/{caseId} {
-      allow read: if true; // Public dashboards and volunteers need to read open requests
-      allow create, update: if isAuthenticated(); // Organizations and authorized personnel can create/update
-      allow delete: if isSuperAdmin() || isAdmin();
+    match /saved_addresses/{addressId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /bids/{bidId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /shipments/{shipmentId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    match /disputes/{disputeId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAuthenticated() || isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA CIVIC MODULE (PUBLIC TRANSPARENCY & SMART WARD OPERATIONS)
+    // ========================================================================
+    match /civic_complaints/{complaintId} {
+      // Unauthenticated creation permitted, BUT explicitly blocks "test" keywords unless it's the admin
+      allow create: if isAdmin() || (
+        !request.resource.data.get('title', '').matches('(?i).*test.*') &&
+        !request.resource.data.get('description', '').matches('(?i).*test.*')
+      );
+      allow read: if true;   // Public viewing permitted for the map and transparency features
+      allow update: if true; // Explicitly allow public update operations for upvotes/appends
+      allow delete: if isAdmin(); // Administration strictly protected
+    }
+
+    match /civic_feedback/{feedbackId} {
+      allow create: if true; // Unauthenticated creation permitted for public feedback
+      allow read: if true;   // Public viewing permitted
+      allow update, delete: if isAdmin(); // Administration strictly protected
+    }
+
+    match /civic_notices/{noticeId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /civic_analytics/{analyticsId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA CIVIC MODULE - NEW ADMINISTRATIVE CAPABILITIES
+    // ========================================================================
+    match /civic_personnel/{personnelId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /civic_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /civic_admin_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // MOVYRA SAHAY MODULE - HUMANITARIAN RESCUE OPERATIONS
+    // ========================================================================
+    
+    match /sahay_users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_profiles/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
+    }
+
+    match /sahay_admin_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /sahay_cases/{caseId} {
+      // Allow public read for live telemetry dashboards and unauthenticated viewing
+      allow read: if true;
+      // Allow public creation with strict schema validation preventing empty spam
+      allow create: if request.resource.data.keys().hasAll(['needyName', 'condition', 'mediaUrl', 'status']);
+      // Allow public updates to support unauthenticated task acceptances and confirmations
+      allow update: if true;
+      // Only system administrators can permanently delete records
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_case_updates/{updateId} {
+      // Allow public read for continuous timeline updates
+      allow read: if true;
+      // Allow public creation for volunteer timeline messages
+      allow create: if request.resource.data.keys().hasAll(['caseId', 'message', 'createdAt']);
+      allow update: if isAuthenticated();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_organizations/{orgId} {
+      // Allow public read for live telemetry dashboards
+      allow read: if true;
+      // Allow public creation and updates for unauthenticated organization onboarding
+      allow create: if true;
+      allow update: if true;
+      // Only system administrators can delete organizations entirely
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_volunteers/{volunteerId} {
+      allow create, read: if isAuthenticated();
+      allow update: if isOwner(volunteerId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_confirmations/{confirmId} {
+      allow create, read: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /sahay_notifications/{notificationId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /sahay_emergency_contacts/{contactId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // New Sahay Admin Collections
+    match /sahay_audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+    
+    match /sahay_broadcasts/{broadcastId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /sahay_settings/{settingId} {
+      allow read, write: if isAdmin();
     }
 
     // ========================================================================
