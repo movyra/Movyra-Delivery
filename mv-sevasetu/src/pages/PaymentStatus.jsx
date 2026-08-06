@@ -12,14 +12,14 @@
  * Kannada: ಪಾವತಿ ಸ್ಥಿತಿ ನಿರ್ವಾಹಕ.
  * Malayalam: പേയ്‌മെന്റ് സ്റ്റാറ്റസ് ഹാൻഡ്‌ലർ.
  * Bengali: পেমেন্ট স্ট্যাটাস হ্যান্ডলার।
- * Punjabi: ਭੁਗਤਾਨ ਸਥਿਤੀ ਹੈਂਡਲਰ।
+ * Punjabi: ਭੁਗਤਾਨ സਥਿਤੀ ਹੈਂਡਲਰ।
  * Odia: ପେମେଣ୍ଟ ସ୍ଥିତି ହ୍ୟାଣ୍ଡଲର୍।
  * Assamese: পেমেণ্ট স্থিতি হেণ্ডলাৰ।
  * Urdu: ادائیگی کی حیثیت ہینڈلر۔
  * Bhojpuri: भुगतान स्थिति हैंडलर।
  */
 
-import React, { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AppContext } from '../main';
 
@@ -47,37 +47,28 @@ export default function PaymentStatus() {
   const navigate = useNavigate();
   const currentLang = STATUS_TRANSLATIONS[language] || STATUS_TRANSLATIONS.en;
 
-  const [status, setStatus] = useState('processing');
+  // Strictly extract parameters during component initialization to prevent synchronous cascading renders in useEffect
+  const queryParams = new URLSearchParams(location.search);
+  const initialPaymentStatus = queryParams.get('status');
+  const validStatus = (initialPaymentStatus === 'success' || initialPaymentStatus === 'failure') ? initialPaymentStatus : 'failure';
+
+  const [status] = useState(validStatus);
   const [countdown, setCountdown] = useState(5);
 
   useEffect(() => {
-    // Strictly parse URL parameters returned by PayU
-    const queryParams = new URLSearchParams(location.search);
-    const paymentStatus = queryParams.get('status');
-    
-    if (paymentStatus === 'success' || paymentStatus === 'failure') {
-      setStatus(paymentStatus);
-    } else {
-      setStatus('failure'); // Strict fallback for invalid URLs
-    }
-  }, [location]);
+    // Auto-redirect mechanism strictly bound to the derived status
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate(status === 'success' ? '/org' : '/select-plan');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-  useEffect(() => {
-    // Auto-redirect mechanism
-    if (status !== 'processing') {
-      const timer = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            navigate(status === 'success' ? '/org' : '/select-plan');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
+    return () => clearInterval(timer);
   }, [status, navigate]);
 
   const handleManualAction = () => {
