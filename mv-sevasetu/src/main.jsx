@@ -25,7 +25,7 @@ import './index.css'
 import App from './App.jsx'
 
 // STRICT COLOR SET ENFORCEMENT
-export const SystemColors = {
+const SystemColors = {
   Primary: '#2563EB',
   Black: '#111111',
   White: '#FFFFFF',
@@ -34,7 +34,7 @@ export const SystemColors = {
 };
 
 // 15-LANGUAGE TRANSLATION DICTIONARY (SYSTEM STATES)
-export const SystemTranslations = {
+const SystemTranslations = {
   en: { loading: "System Loading", ready: "System Ready", error: "System Error", offline: "Network Offline" },
   hi: { loading: "सिस्टम लोड हो रहा है", ready: "सिस्टम तैयार है", error: "सिस्टम त्रुटि", offline: "नेटवर्क ऑफ़लाइन" },
   hinglish: { loading: "System load ho raha hai", ready: "System taiyar hai", error: "System error", offline: "Network offline" },
