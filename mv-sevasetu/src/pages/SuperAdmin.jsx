@@ -19,7 +19,7 @@
  * Bhojpuri: सुपर एडमिन पोर्टल।
  */
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, limit } from 'firebase/firestore';
 import { AppContext } from '../main';
@@ -53,14 +53,12 @@ export default function SuperAdmin() {
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [processingId, setProcessingId] = useState(null);
 
-  // Strict Security Gate
-  if (authLoading) return null;
-  if (!user || !isSuperAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
   // Real-time Auditing: Fetch raw transaction logs
+  // STRICTLY MOVED ABOVE EARLY RETURNS TO COMPLY WITH REACT RULES OF HOOKS
   useEffect(() => {
+    // Internal guard to prevent unauthorized execution
+    if (!user || !isSuperAdmin) return;
+
     const logsQuery = query(
       collection(db, 'transactions'),
       orderBy('createdAt', 'desc'),
@@ -80,7 +78,13 @@ export default function SuperAdmin() {
     });
 
     return () => unsubscribe();
-  }, [db]);
+  }, [db, user, isSuperAdmin]);
+
+  // Strict Security Gate
+  if (authLoading) return null;
+  if (!user || !isSuperAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleClearPaymentState = async (transactionId, orgId) => {
     setProcessingId(transactionId);
