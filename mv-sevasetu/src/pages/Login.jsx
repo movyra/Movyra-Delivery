@@ -19,7 +19,7 @@
  * Bhojpuri: सुरक्षित प्रमाणीकरण पोर्टल।
  */
 
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { AppContext } from '../main';
@@ -72,7 +72,7 @@ export default function Login() {
         await signInWithEmailAndPassword(auth, email, password);
       }
       handleAuthSuccess();
-    } catch (error) {
+    } catch {
       setErrorMsg(currentLang.error);
     } finally {
       setIsLoading(false);
@@ -87,7 +87,7 @@ export default function Login() {
     try {
       await signInWithPopup(auth, provider);
       handleAuthSuccess();
-    } catch (error) {
+    } catch {
       setErrorMsg(currentLang.error);
     } finally {
       setIsLoading(false);
