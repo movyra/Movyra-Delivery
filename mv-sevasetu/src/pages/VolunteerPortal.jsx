@@ -19,7 +19,7 @@
  * Bhojpuri: स्वयंसेवक पोर्टल।
  */
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
 import { AppContext } from '../main';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +41,14 @@ const VOLUNTEER_TRANSLATIONS = {
   ur: { title: "رضاکار پورٹل", impact: "آپ کا اثر", tasksCompleted: "مکمل کردہ کام", hours: "تعاون کے گھنٹے", activeTasks: "مقامی فعال کام", accept: "کام قبول کریں", loading: "کام لائے جا رہے ہیں...", empty: "قریب میں کوئی فعال کام نہیں ہے۔", location: "مقام", description: "تفصیل", success: "کام قبول کر لیا گیا" },
   bho: { title: "स्वयंसेवक पोर्टल", impact: "राउर प्रभाव", tasksCompleted: "पूरा भइल काम", hours: "योगदान के घंटा", activeTasks: "स्थानीय सक्रिय काम", accept: "काम स्वीकार करीं", loading: "काम ले आवत बा...", empty: "आसपास कौनो सक्रिय काम नइखे।", location: "स्थान", description: "विवरण", success: "काम स्वीकार कइल गइल" }
 };
+
+// Strictly moved outside the main render function to prevent cascading state resets
+const StatCard = ({ title, value, colorHex, colors }) => (
+  <div style={{ backgroundColor: colors.White, borderRadius: '24px', padding: '24px', flex: 1, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderBottom: `4px solid ${colorHex}` }}>
+    <h3 style={{ color: colors.Black, opacity: 0.7, fontSize: '14px', fontWeight: '700', margin: '0 0 8px 0' }}>{title}</h3>
+    <div style={{ color: colors.Black, fontSize: '32px', fontWeight: '900' }}>{value}</div>
+  </div>
+);
 
 export default function VolunteerPortal() {
   const { language, colors } = useContext(AppContext);
@@ -111,13 +119,6 @@ export default function VolunteerPortal() {
     }
   };
 
-  const StatCard = ({ title, value, colorHex }) => (
-    <div style={{ backgroundColor: colors.White, borderRadius: '24px', padding: '24px', flex: 1, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', borderBottom: `4px solid ${colorHex}` }}>
-      <h3 style={{ color: colors.Black, opacity: 0.7, fontSize: '14px', fontWeight: '700', margin: '0 0 8px 0' }}>{title}</h3>
-      <div style={{ color: colors.Black, fontSize: '32px', fontWeight: '900' }}>{value}</div>
-    </div>
-  );
-
   return (
     <div style={{ padding: '32px 24px', backgroundColor: '#F3F4F6', minHeight: '100vh', animation: 'fade-up 0.5s ease-out forwards' }}>
       
@@ -134,8 +135,8 @@ export default function VolunteerPortal() {
           {currentLang.impact}
         </h2>
         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-          <StatCard title={currentLang.tasksCompleted} value={userStats.tasksCompleted} colorHex={colors.Success} />
-          <StatCard title={currentLang.hours} value={userStats.hoursContributed} colorHex={colors.Primary} />
+          <StatCard title={currentLang.tasksCompleted} value={userStats.tasksCompleted} colorHex={colors.Success} colors={colors} />
+          <StatCard title={currentLang.hours} value={userStats.hoursContributed} colorHex={colors.Primary} colors={colors} />
         </div>
       </section>
 
