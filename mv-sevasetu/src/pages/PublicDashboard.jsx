@@ -19,7 +19,7 @@
  * Bhojpuri: सार्वजनिक डैशबोर्ड।
  */
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/auth';
 // Correction for strict Firebase SDK import
@@ -43,6 +43,29 @@ const PUBLIC_TRANSLATIONS = {
   ur: { title: "عوامی ڈیش بورڈ", orgs: "تصدیق شدہ تنظیمیں", cases: "کھلی سروس کی درخواستیں", joinOrg: "تنظیم رجسٹر کریں", login: "سسٹم لاگ ان", loading: "ڈیٹا لوڈ ہو رہا ہے...", noOrgs: "کوئی تصدیق شدہ تنظیم دستیاب نہیں ہے۔", noCases: "کوئی کھلی درخواست دستیاب نہیں ہے۔" },
   bho: { title: "सार्वजनिक डैशबोर्ड", orgs: "सत्यापित संगठन", cases: "खुला सेवा अनुरोध", joinOrg: "संगठन पंजीकृत करीं", login: "सिस्टम लॉगिन", loading: "डेटा लोड हो रहल बा...", noOrgs: "कौनो सत्यापित संगठन उपलब्ध नइखे।", noCases: "कौनो खुला अनुरोध उपलब्ध नइखे।" }
 };
+
+// Strictly moved outside to prevent cascading state resets during render
+const Header = ({ colors, currentLang, navigate }) => (
+  <div style={{ backgroundColor: colors.White, padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+    <h1 style={{ color: colors.Black, fontSize: '24px', fontWeight: '900', margin: 0 }}>
+      {currentLang.title}
+    </h1>
+    <div style={{ display: 'flex', gap: '16px' }}>
+      <button 
+        onClick={() => navigate('/select-plan')}
+        style={{ backgroundColor: colors.Primary, color: colors.White, padding: '12px 24px', borderRadius: '9999px', fontWeight: '700', border: 'none', cursor: 'pointer' }}
+      >
+        {currentLang.joinOrg}
+      </button>
+      <button 
+        onClick={() => navigate('/login')}
+        style={{ backgroundColor: colors.Black, color: colors.White, padding: '12px 24px', borderRadius: '9999px', fontWeight: '700', border: 'none', cursor: 'pointer' }}
+      >
+        {currentLang.login}
+      </button>
+    </div>
+  </div>
+);
 
 export default function PublicDashboard() {
   const { language, colors } = useContext(AppContext);
@@ -101,31 +124,9 @@ export default function PublicDashboard() {
     return () => unsubscribeCases();
   }, [db]);
 
-  const Header = () => (
-    <div style={{ backgroundColor: colors.White, padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-      <h1 style={{ color: colors.Black, fontSize: '24px', fontWeight: '900', margin: 0 }}>
-        {currentLang.title}
-      </h1>
-      <div style={{ display: 'flex', gap: '16px' }}>
-        <button 
-          onClick={() => navigate('/select-plan')}
-          style={{ backgroundColor: colors.Primary, color: colors.White, padding: '12px 24px', borderRadius: '9999px', fontWeight: '700', border: 'none', cursor: 'pointer' }}
-        >
-          {currentLang.joinOrg}
-        </button>
-        <button 
-          onClick={() => navigate('/login')}
-          style={{ backgroundColor: colors.Black, color: colors.White, padding: '12px 24px', borderRadius: '9999px', fontWeight: '700', border: 'none', cursor: 'pointer' }}
-        >
-          {currentLang.login}
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F3F4F6', display: 'flex', flexDirection: 'column' }}>
-      <Header />
+      <Header colors={colors} currentLang={currentLang} navigate={navigate} />
 
       <div style={{ padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', gap: '48px' }}>
         
