@@ -19,6 +19,9 @@
  * Bhojpuri: ग्लोबल अनुवाद अउर सख्त रंग संदर्भ के साथ रिएक्ट एंट्री पॉइंट।
  */
 
+// STRICT FIREBASE INITIALIZATION - MUST BE FIRST
+import './firebase.js';
+
 import { StrictMode, createContext, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
