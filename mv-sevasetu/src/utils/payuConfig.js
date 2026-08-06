@@ -17,6 +17,9 @@
  * Assamese: পেমেণ্ট গেটৱে কনফিগাৰেচন।
  * Urdu: ادائیگی گیٹ وے کنفیگریشن۔
  * Bhojpuri: भुगतान गेटवे कॉन्फ़िगरेशन।
+ *
+ * SYSTEM COLORS REFERENCE:
+ * Primary: #2563EB | Black: #111111 | White: #FFFFFF | Success: #16A34A | Emergency: #DC2626
  */
 
 // Strict PayU Merchant Credentials (mapped from environment variables)
@@ -25,10 +28,12 @@ export const PAYU_CREDENTIALS = {
   SALT: import.meta.env.VITE_PAYU_SALT || 'LIVE_SALT_KEY'
 };
 
-// Strict Callback Routing URLs (pointing to the production Firebase Hosting environment)
+// Strict Callback Routing URLs (pointing to the production Vercel Serverless API environment)
+// Both success and failure route to the webhook for secure server-side verification and database updates.
+// NOTE: Replace "mv-sevasetu.vercel.app" with your exact assigned Vercel domain if it differs.
 export const PAYU_CALLBACKS = {
-  SUCCESS_URL: 'https://msevasetu.web.app/payment-status?status=success',
-  FAILURE_URL: 'https://msevasetu.web.app/payment-status?status=failure'
+  SUCCESS_URL: 'https://msevasetuapi.vercel.app/api/payment-webhook',
+  FAILURE_URL: 'https://msevasetuapi.vercel.app/api/payment-webhook'
 };
 
 /**
