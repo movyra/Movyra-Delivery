@@ -19,7 +19,7 @@
  * Bhojpuri: संगठन डैशबोर्ड।
  */
 
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { getFirestore, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { AppContext } from '../main';
 import { useAuth } from '../context/AuthContext';
@@ -41,6 +41,19 @@ const ORG_TRANSLATIONS = {
   ur: { greeting: "تنظیم کا ڈیش بورڈ", sub: "اپنے فعال کاموں کا نظم کریں", categories: "سروس کے زمرے", activeOps: "فعال کام", loading: "لائیو کام لائے جا رہے ہیں...", empty: "فی الحال کوئی فعال کام نہیں ہے۔", create: "نیا کام", medical: "طبی امداد", medicalDesc: "صحت کی مدد", fire: "آگ سے بچاؤ", fireDesc: "آگ کا ردعمل", rescue: "ریسکیو مشن", rescueDesc: "ہنگامی انخلاء", food: "خوراک کی فراہمی", foodDesc: "راشن کی تقسیم" },
   bho: { greeting: "संगठन डैशबोर्ड", sub: "अपन सक्रिय संचालन प्रबंधित करीं", categories: "सेवा श्रेणियाँ", activeOps: "सक्रिय संचालन", loading: "लाइव संचालन ले आवत बा...", empty: "वर्तमान में कौनो सक्रिय संचालन नइखे।", create: "नया संचालन", medical: "चिकित्सा सहायता", medicalDesc: "स्वास्थ्य सहायता", fire: "अग्नि सुरक्षा", fireDesc: "आग प्रतिक्रिया", rescue: "बचाव मिशन", rescueDesc: "आपातकालीन निकासी", food: "भोजन आपूर्ति", foodDesc: "राशन वितरण" }
 };
+
+// Strictly moved outside the main render function to prevent cascading state resets
+const CategoryCard = ({ title, desc, icon, colorHex, colors }) => (
+  <div style={{ backgroundColor: colors.White, borderRadius: '24px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}>
+    <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: `${colorHex}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ color: colorHex, display: 'flex' }}>{icon}</span>
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <span style={{ color: colors.Black, fontSize: '16px', fontWeight: '800', margin: 0 }}>{title}</span>
+      <span style={{ color: colors.Black, opacity: 0.6, fontSize: '13px', fontWeight: '500', margin: 0 }}>{desc}</span>
+    </div>
+  </div>
+);
 
 export default function OrgDashboard() {
   const { language, colors } = useContext(AppContext);
@@ -76,18 +89,6 @@ export default function OrgDashboard() {
     return () => unsubscribe();
   }, [user, db]);
 
-  const CategoryCard = ({ title, desc, icon, colorHex }) => (
-    <div style={{ backgroundColor: colors.White, borderRadius: '24px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', cursor: 'pointer' }}>
-      <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: `${colorHex}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ color: colorHex, display: 'flex' }}>{icon}</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ color: colors.Black, fontSize: '16px', fontWeight: '800', margin: 0 }}>{title}</span>
-        <span style={{ color: colors.Black, opacity: 0.6, fontSize: '13px', fontWeight: '500', margin: 0 }}>{desc}</span>
-      </div>
-    </div>
-  );
-
   return (
     <div style={{ padding: '32px 24px', animation: 'fade-up 0.5s ease-out forwards' }}>
       
@@ -111,24 +112,28 @@ export default function OrgDashboard() {
             title={currentLang.medical} 
             desc={currentLang.medicalDesc} 
             colorHex={colors.Primary} 
+            colors={colors}
             icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>} 
           />
           <CategoryCard 
             title={currentLang.fire} 
             desc={currentLang.fireDesc} 
             colorHex={colors.Emergency} 
+            colors={colors}
             icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c-2.2-2.2-4.5-4.5-4.5-7.5A6.5 6.5 0 0 1 19 8c0 3-2.3 5.3-4.5 7.5a2.5 2.5 0 0 0 2.5 2.5 4.5 4.5 0 0 1-8.5-3.5Z"></path></svg>} 
           />
           <CategoryCard 
             title={currentLang.rescue} 
             desc={currentLang.rescueDesc} 
             colorHex={colors.Success} 
+            colors={colors}
             icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>} 
           />
           <CategoryCard 
             title={currentLang.food} 
             desc={currentLang.foodDesc} 
             colorHex={colors.Primary} 
+            colors={colors}
             icon={<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>} 
           />
         </div>
