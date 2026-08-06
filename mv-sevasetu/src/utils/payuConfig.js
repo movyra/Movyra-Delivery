@@ -28,9 +28,7 @@ export const PAYU_CREDENTIALS = {
 // Strict Callback Routing URLs (pointing to the production Firebase Hosting environment)
 export const PAYU_CALLBACKS = {
   SUCCESS_URL: 'https://msevasetu.web.app/payment-status?status=success',
-  SUCCESS_URL: 'https://bookish-spoon-9677xxgpqw57f9v7v-5175.app.github.dev/payment-status?status=success',
-  FAILURE_URL: 'https://msevasetu.web.app/payment-status?status=failure',
-  FAILURE_URL: 'https://bookish-spoon-9677xxgpqw57f9v7v-5175.app.github.dev/payment-status?status=failure'
+  FAILURE_URL: 'https://msevasetu.web.app/payment-status?status=failure'
 };
 
 /**
