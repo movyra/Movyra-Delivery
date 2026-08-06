@@ -21,9 +21,11 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Correction for strict Firebase SDK import
-import { getFirestore as getDb, collection as getCol, query as makeQuery, where as addWhere, onSnapshot as listenSnapshot } from 'firebase/firestore';
+// Correction for strict Firebase SDK import without local initialization
+import { collection as getCol, query as makeQuery, where as addWhere, onSnapshot as listenSnapshot } from 'firebase/firestore';
 import { AppContext } from '../main';
+// Strictly import the centralized database instance
+import { db } from '../firebase';
 
 const PUBLIC_TRANSLATIONS = {
   en: { title: "Public Dashboard", orgs: "Verified Organizations", cases: "Open Service Requests", joinOrg: "Register Organization", login: "System Login", loading: "Loading Real-Time Data...", noOrgs: "No verified organizations available.", noCases: "No open requests available." },
@@ -69,7 +71,6 @@ const Header = ({ colors, currentLang, navigate }) => (
 export default function PublicDashboard() {
   const { language, colors } = useContext(AppContext);
   const navigate = useNavigate();
-  const db = getDb();
   const currentLang = PUBLIC_TRANSLATIONS[language] || PUBLIC_TRANSLATIONS.en;
 
   const [organizations, setOrganizations] = useState([]);
@@ -98,7 +99,7 @@ export default function PublicDashboard() {
     });
 
     return () => unsubscribeOrgs();
-  }, [db]);
+  }, []); // Strictly removed local db dependency
 
   // Real-time Database Listener: Open Public Service Requests
   useEffect(() => {
@@ -121,7 +122,7 @@ export default function PublicDashboard() {
     });
 
     return () => unsubscribeCases();
-  }, [db]);
+  }, []); // Strictly removed local db dependency
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#F3F4F6', display: 'flex', flexDirection: 'column' }}>
