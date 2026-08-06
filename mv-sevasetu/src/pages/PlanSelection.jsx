@@ -19,7 +19,7 @@
  * Bhojpuri: सदस्यता योजना चुनीं।
  */
 
-import React, { useState, useContext } from 'react';
+import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../main';
 import { PLAN_TIERS } from '../utils/planLimits';
