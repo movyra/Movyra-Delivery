@@ -21,7 +21,6 @@
 
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirestore, collection, query, where, onSnapshot } from 'firebase/auth';
 // Correction for strict Firebase SDK import
 import { getFirestore as getDb, collection as getCol, query as makeQuery, where as addWhere, onSnapshot as listenSnapshot } from 'firebase/firestore';
 import { AppContext } from '../main';
