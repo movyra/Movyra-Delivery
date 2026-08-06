@@ -19,7 +19,7 @@
  * Bhojpuri: फ्लोटिंग बॉटम नेविगेशन के साथ ग्लोबल लेआउट रैपर।
  */
 
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { AppContext } from '../main';
 
