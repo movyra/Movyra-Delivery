@@ -19,7 +19,7 @@
  * Bhojpuri: सुरक्षित चेकआउट प्रोसेसिंग।
  */
 
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef, useContext } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { AppContext } from '../main';
