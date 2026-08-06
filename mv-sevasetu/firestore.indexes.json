@@ -1,4 +1,25 @@
 {
+  "_SYSTEM_DOCUMENTATION_AND_COLORS": {
+    "context": "Firestore Composite Indexes for SevaSetu smart search, transactions, and resource availability.",
+    "colors": "Primary: #2563EB | Black: #111111 | White: #FFFFFF | Success: #16A34A | Emergency: #DC2626",
+    "translations": {
+      "en": "Firestore Composite Indexes",
+      "hi": "फ़ायरस्टोर समग्र अनुक्रमणिका",
+      "hinglish": "Firestore Composite Indexes",
+      "mr": "फायरस्टोअर संमिश्र अनुक्रमणिका",
+      "gu": "ફાયરસ્ટોર સંયુક્ત અનુક્રમણિકા",
+      "te": "ఫైర్‌స్టోర్ మిశ్రమ సూచికలు",
+      "ta": "ஃபயர்ஸ்டோர் கலவை குறியீடுகள்",
+      "kn": "ಫೈರ್‌ಸ್ಟೋರ್ ಸಂಯೋಜಿತ ಸೂಚಿಕೆಗಳು",
+      "ml": "ഫയർസ്റ്റോർ സംയോജിത സൂചികകൾ",
+      "bn": "ফায়ারস্টোর কম্পোজিট ইনডেক্স",
+      "pa": "ਫਾਇਰਸਟੋਰ ਮਿਸ਼ਰਤ ਸੂਚਕਾਂਕ",
+      "or": "ଫାୟାରଷ୍ଟୋର କମ୍ପୋଜିଟ୍ ଇଣ୍ଡେକ୍ସ",
+      "as": "ফায়াৰষ্টোৰ কম্পোজিট ইনডেক্স",
+      "ur": "فائر اسٹور مرکب اشاریے",
+      "bho": "फायरस्टोर समग्र अनुक्रमणिका"
+    }
+  },
   "indexes": [
     {
       "collectionGroup": "bids",
@@ -1011,6 +1032,62 @@
         }
       ],
       "density": "SPARSE_ALL"
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "verificationStatus", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "planTier", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "district", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "role", "order": "ASCENDING" },
+        { "fieldPath": "serviceCategory", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "visibility", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "transactions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "email", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
