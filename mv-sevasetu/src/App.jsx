@@ -32,6 +32,7 @@ const OrgDashboard = lazy(() => import('./pages/OrgDashboard'));
 const VolunteerPortal = lazy(() => import('./pages/VolunteerPortal'));
 const SuperAdmin = lazy(() => import('./pages/SuperAdmin'));
 const Login = lazy(() => import('./pages/Login'));
+const MarketingLanding = lazy(() => import('./pages/MarketingLanding'));
 
 // Strict Access Control Guard
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -75,6 +76,7 @@ function App() {
           <Route path="/select-plan" element={<PlanSelection />} />
           <Route path="/login" element={<Login />} />
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/landing" element={<MarketingLanding />} />
 
           {/* Secure Organization Routes */}
           <Route path="/org/*" element={
