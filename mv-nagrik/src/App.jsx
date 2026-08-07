@@ -1,3 +1,15 @@
+/**
+ * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
+ * Context: Minimal Official Marketing Landing Page for NagrikSetu.
+ * Brand: Movyra Civic (NagrikSetu)
+ *
+ * SYSTEM COLORS REFERENCE (STRICT):
+ * Primary Background: #00897B (Civic Teal)
+ * Dark Text: #111111 (Deep Black)
+ * Containers: #FFFFFF (Pure White)
+ * Highlight CTA: #FFB300 (Action Yellow)
+ */
+
 import React, { Suspense, useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
