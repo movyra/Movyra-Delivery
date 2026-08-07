@@ -19,169 +19,252 @@ const TRANSLATIONS = {
     en: {
         lang: "English", products: "Products", careers: "Careers", coming_soon: "Coming Soon",
         badge: "Smart Civic Platform",
-        main_title: "Empowering Citizens, Connecting Communities.",
-        main_sub: "A trusted and simple platform to report local issues, track public repairs, and manage your city.",
-        cta_btn: "Download Application",
-        val1_title: "Report Issues", val1_sub: "Easily report local civic problems directly to authorities.",
-        val2_title: "Track Progress", val2_sub: "See the status of current repairs in real time.",
-        val3_title: "Live Updates", val3_sub: "Stay informed about your local area with official notices.",
-        val4_title: "Secure Platform", val4_sub: "Your data and public service requests are stored safely.",
-        select_lang: "Select Language", built_by: "Built by"
+        main_title: "Your City. Connected.",
+        main_sub: "Report. Track. Resolve.",
+        cta_btn: "Download App",
+        val1_title: "Report", val1_sub: "Log civic issues.",
+        val2_title: "Track", val2_sub: "Real-time status.",
+        val3_title: "Alerts", val3_sub: "Official updates.",
+        val4_title: "Secure", val4_sub: "Gov-grade data.",
+        stat_title: "Transparency.", stat_desc: "Live city metrics.",
+        work_title: "Workflow", 
+        w1_t: "Log", w1_d: "Issue.", w2_t: "Assign", w2_d: "Team.", w3_t: "Fix", w3_d: "Done.",
+        mob_title: "Go Mobile.", mob_desc: "Civic app for citizens.",
+        imp_title: "Join Us.", imp_desc: "Build better cities.",
+        footer_text: "NagrikSetu", select_lang: "Select Language", built_by: "Built by"
     },
     hi: {
         lang: "हिन्दी", products: "उत्पाद", careers: "करियर", coming_soon: "जल्द आ रहा है",
         badge: "स्मार्ट नागरिक मंच",
-        main_title: "नागरिकों को सशक्त बनाना, समुदायों को जोड़ना।",
-        main_sub: "स्थानीय समस्याओं की रिपोर्ट करने और सार्वजनिक सुधारों को ट्रैक करने के लिए एक विश्वसनीय मंच।",
-        cta_btn: "एप्लिकेशन डाउनलोड करें",
-        val1_title: "समस्याएं दर्ज करें", val1_sub: "स्थानीय नागरिक समस्याओं की सीधे अधिकारियों को रिपोर्ट करें।",
-        val2_title: "प्रगति देखें", val2_sub: "वर्तमान सुधारों की स्थिति वास्तविक समय में देखें।",
-        val3_title: "लाइव अपडेट", val3_sub: "आधिकारिक सूचनाओं के साथ अपने क्षेत्र के बारे में सूचित रहें।",
-        val4_title: "सुरक्षित मंच", val4_sub: "आपका डेटा और अनुरोध सुरक्षित रूप से संग्रहीत किए जाते हैं।",
-        select_lang: "भाषा चुनें", built_by: "निर्मित"
+        main_title: "आपका शहर। जुड़ा हुआ।",
+        main_sub: "रिपोर्ट करें। ट्रैक करें। समाधान करें।",
+        cta_btn: "ऐप डाउनलोड करें",
+        val1_title: "रिपोर्ट", val1_sub: "समस्या दर्ज करें।",
+        val2_title: "ट्रैक", val2_sub: "लाइव स्थिति।",
+        val3_title: "अलर्ट", val3_sub: "आधिकारिक अपडेट।",
+        val4_title: "सुरक्षित", val4_sub: "सरकारी स्तर का डेटा।",
+        stat_title: "पारदर्शिता।", stat_desc: "लाइव शहर मेट्रिक्स।",
+        work_title: "कार्यप्रवाह", 
+        w1_t: "लॉग", w1_d: "समस्या।", w2_t: "सौंपें", w2_d: "टीम।", w3_t: "ठीक", w3_d: "पूर्ण।",
+        mob_title: "मोबाइल पर।", mob_desc: "नागरिकों के लिए ऐप।",
+        imp_title: "जुड़ें।", imp_desc: "बेहतर शहर बनाएं।",
+        footer_text: "नागरिकसेतु", select_lang: "भाषा चुनें", built_by: "निर्मित"
     },
     hinglish: {
         lang: "Hinglish", products: "Products", careers: "Careers", coming_soon: "Coming Soon",
         badge: "Smart Civic Platform",
-        main_title: "Citizens ko empower karna, communities ko jodna.",
-        main_sub: "Local issues report karne aur public repairs track karne ka trusted platform.",
-        cta_btn: "Application Download Karein",
-        val1_title: "Issues Report Karein", val1_sub: "Local civic problems ko directly authorities tak pahunchayein.",
-        val2_title: "Progress Track Karein", val2_sub: "Current repairs ka status real time mein dekhein.",
-        val3_title: "Live Updates", val3_sub: "Official notices ke sath apne area ke baare mein update rahein.",
-        val4_title: "Secure Platform", val4_sub: "Aapka data aur requests safely store hoti hain.",
-        select_lang: "Language Select Karein", built_by: "Built by"
+        main_title: "Aapka City. Connected.",
+        main_sub: "Report. Track. Resolve karein.",
+        cta_btn: "App Download Karein",
+        val1_title: "Report", val1_sub: "Issues log karein.",
+        val2_title: "Track", val2_sub: "Live status.",
+        val3_title: "Alerts", val3_sub: "Official updates.",
+        val4_title: "Secure", val4_sub: "Gov-grade data.",
+        stat_title: "Transparency.", stat_desc: "Live city metrics.",
+        work_title: "Workflow", 
+        w1_t: "Log", w1_d: "Issue.", w2_t: "Assign", w2_d: "Team.", w3_t: "Fix", w3_d: "Done.",
+        mob_title: "Go Mobile.", mob_desc: "Citizens ke liye app.",
+        imp_title: "Join Us.", imp_desc: "Behtar shehar banayein.",
+        footer_text: "NagrikSetu", select_lang: "Language Select Karein", built_by: "Built by"
     },
     mr: {
         lang: "मराठी", products: "उत्पादने", careers: "करिअर", coming_soon: "लवकरच येत आहे",
         badge: "स्मार्ट नागरी व्यासपीठ",
-        main_title: "नागरिकांना सक्षम करणे, समुदायांना जोडणे.",
-        main_sub: "स्थानिक समस्या नोंदवण्यासाठी आणि सार्वजनिक दुरुस्तीचा मागोवा घेण्यासाठी एक विश्वसनीय व्यासपीठ.",
-        cta_btn: "ॲप्लिकेशन डाउनलोड करा",
-        val1_title: "समस्या नोंदवा", val1_sub: "स्थानिक नागरी समस्यांची थेट अधिकाऱ्यांना सहजपणे तक्रार करा.",
-        val2_title: "प्रगती पहा", val2_sub: "सध्याच्या दुरुस्तीची स्थिती रिअल टाइममध्ये पहा.",
-        val3_title: "थेट अपडेट्स", val3_sub: "अधिकृत सूचनांसह तुमच्या स्थानिक क्षेत्राबद्दल माहिती मिळवा.",
-        val4_title: "सुरक्षित व्यासपीठ", val4_sub: "तुमचा डेटा आणि विनंत्या सुरक्षितपणे जतन केल्या जातात.",
-        select_lang: "भाषा निवडा", built_by: "निर्मित"
+        main_title: "तुमचे शहर. जोडलेले.",
+        main_sub: "तक्रार. ट्रॅक. निराकरण.",
+        cta_btn: "ॲप डाउनलोड करा",
+        val1_title: "तक्रार", val1_sub: "समस्या नोंदवा.",
+        val2_title: "ट्रॅक", val2_sub: "थेट स्थिती.",
+        val3_title: "अलर्ट", val3_sub: "अधिकृत अपडेट्स.",
+        val4_title: "सुरक्षित", val4_sub: "सरकारी डेटा.",
+        stat_title: "पारदर्शकता.", stat_desc: "थेट शहर मेट्रिक्स.",
+        work_title: "कार्यप्रवाह", 
+        w1_t: "नोंद", w1_d: "समस्या.", w2_t: "असाइन", w2_d: "टीम.", w3_t: "दुरुस्त", w3_d: "पूर्ण.",
+        mob_title: "मोबाईलवर.", mob_desc: "नागरिकांसाठी ॲप.",
+        imp_title: "सामील व्हा.", imp_desc: "उत्तम शहरे बनवा.",
+        footer_text: "नागरिकसेतू", select_lang: "भाषा निवडा", built_by: "निर्मित"
     },
     gu: {
-        lang: "ગુજરાતી", products: "ઉત્પાદનો", careers: "કારકિર્દી", coming_soon: "ટૂંક સમયમાં આવી રહ્યું છે",
+        lang: "ગુજરાતી", products: "ઉત્પાદનો", careers: "કારકિર્દી", coming_soon: "ટૂંક સમયમાં",
         badge: "સ્માર્ટ નાગરિક પ્લેટફોર્મ",
-        main_title: "નાગરિકોને સશક્તિકરણ, સમુદાયોને જોડવા.",
-        main_sub: "સ્થાનિક સમસ્યાઓ જણાવવા અને જાહેર સમારકામ જોવા માટે વિશ્વસનીય પ્લેટફોર્મ.",
-        cta_btn: "એપ્લિકેશન ડાઉનલોડ કરો",
-        val1_title: "સમસ્યાઓ નોંધાવો", val1_sub: "સ્થાનિક નાગરિક સમસ્યાઓની સીધી સત્તાવાળાઓને સરળતાથી જાણ કરો.",
-        val2_title: "પ્રગતિ જુઓ", val2_sub: "વર્તમાન સમારકામની સ્થિતિ વાસ્તવિક સમયમાં જુઓ.",
-        val3_title: "લાઇવ અપડેટ્સ", val3_sub: "સત્તાવાર સૂચનાઓ સાથે તમારા સ્થાનિક વિસ્તાર વિશે માહિતગાર રહો.",
-        val4_title: "સુરક્ષિત પ્લેટફોર્મ", val4_sub: "તમારો ડેટા અને વિનંતીઓ સુરક્ષિત રીતે સંગ્રહિત છે.",
-        select_lang: "ભાષા પસંદ કરો", built_by: "દ્વારા બનાવવામાં"
+        main_title: "તમારું શહેર. જોડાયેલ.",
+        main_sub: "રિપોર્ટ. ટ્રૅક. ઉકેલ.",
+        cta_btn: "એપ્લિકેશન ડાઉનલોડ",
+        val1_title: "રિપોર્ટ", val1_sub: "સમસ્યા નોંધો.",
+        val2_title: "ટ્રૅક", val2_sub: "લાઇવ સ્થિતિ.",
+        val3_title: "એલર્ટ", val3_sub: "સત્તાવાર અપડેટ્સ.",
+        val4_title: "સુરક્ષિત", val4_sub: "સરકારી ડેટા.",
+        stat_title: "પારદર્શિતા.", stat_desc: "લાઇવ મેટ્રિક્સ.",
+        work_title: "વર્કફ્લો", 
+        w1_t: "નોંધ", w1_d: "સમસ્યા.", w2_t: "સોંપો", w2_d: "ટીમ.", w3_t: "ઉકેલ", w3_d: "પૂર્ણ.",
+        mob_title: "મોબાઇલ પર.", mob_desc: "નાગરિકો માટે એપ્લિકેશન.",
+        imp_title: "જોડાવો.", imp_desc: "સારા શહેરો બનાવો.",
+        footer_text: "નાગરિકસેતુ", select_lang: "ભાષા પસંદ કરો", built_by: "દ્વારા"
     },
     te: {
-        lang: "తెలుగు", products: "ఉత్పత్తులు", careers: "కెరీర్స్", coming_soon: "త్వరలో వస్తుంది",
-        badge: "స్మార్ట్ సివిక్ ప్లాట్‌ఫారమ్",
-        main_title: "పౌరుల సాధికారత, సంఘాల అనుసంధానం.",
-        main_sub: "స్థానిక సమస్యలను నివేదించడానికి మరియు ప్రజా మరమ్మతులను ట్రాక్ చేయడానికి నమ్మకమైన వేదిక.",
-        cta_btn: "అప్లికేషన్ డౌన్‌లోడ్ చేయండి",
-        val1_title: "సమస్యలను నివేదించండి", val1_sub: "స్థానిక పౌర సమస్యలను నేరుగా అధికారులకు సులభంగా నివేదించండి.",
-        val2_title: "పురోగతిని చూడండి", val2_sub: "ప్రస్తుత మరమ్మతుల స్థితిని నిజ సమయంలో చూడండి.",
-        val3_title: "ప్రత్యక్ష నవీకరణలు", val3_sub: "అధికారిక నోటీసులతో మీ స్థానిక ప్రాంతం గురించి తెలుసుకోండి.",
-        val4_title: "సురక్షిత వేదిక", val4_sub: "మీ డేటా మరియు అభ్యర్థనలు సురక్షితంగా నిల్వ చేయబడతాయి.",
-        select_lang: "భాషను ఎంచుకోండి", built_by: "నిర్మించినవారు"
+        lang: "తెలుగు", products: "ఉత్పత్తులు", careers: "కెరీర్స్", coming_soon: "త్వరలో",
+        badge: "స్మార్ట్ ప్లాట్‌ఫారమ్",
+        main_title: "మీ నగరం. కనెక్ట్ చేయబడింది.",
+        main_sub: "నివేదిక. ట్రాక్. పరిష్కారం.",
+        cta_btn: "యాప్ డౌన్‌లోడ్",
+        val1_title: "నివేదిక", val1_sub: "సమస్యలను లాగ్ చేయండి.",
+        val2_title: "ట్రాక్", val2_sub: "లైవ్ స్థితి.",
+        val3_title: "అలర్ట్స్", val3_sub: "అధికారిక నవీకరణలు.",
+        val4_title: "సురక్షితం", val4_sub: "ప్రభుత్వ డేటా.",
+        stat_title: "పారదర్శకత.", stat_desc: "లైవ్ సిటీ మెట్రిక్స్.",
+        work_title: "వర్క్‌ఫ్లో", 
+        w1_t: "లాగ్", w1_d: "సమస్య.", w2_t: "కేటాయింపు", w2_d: "బృందం.", w3_t: "పరిష్కారం", w3_d: "పూర్తయింది.",
+        mob_title: "మొబైల్.", mob_desc: "పౌరుల యాప్.",
+        imp_title: "చేరండి.", imp_desc: "మెరుగైన నగరాలు.",
+        footer_text: "నాగ్రిక్‌సేతు", select_lang: "భాష ఎంచుకోండి", built_by: "నిర్మించినవారు"
     },
     ta: {
         lang: "தமிழ்", products: "தயாரிப்புகள்", careers: "தொழில்கள்", coming_soon: "விரைவில்",
-        badge: "ஸ்மார்ட் குடிமக்கள் தளம்",
-        main_title: "குடிமக்களுக்கு அதிகாரமளித்தல், சமூகங்களை இணைத்தல்.",
-        main_sub: "உள்ளூர் பிரச்சனைகளைப் புகாரளிக்க மற்றும் பொது பழுதுகளைக் கண்காணிக்க நம்பகமான தளம்.",
-        cta_btn: "பயன்பாட்டைப் பதிவிறக்கவும்",
-        val1_title: "பிரச்சனைகளைப் புகாரளிக்கவும்", val1_sub: "உள்ளூர் குடிமக்கள் பிரச்சினைகளை அதிகாரிகளிடம் எளிதாகப் புகாரளிக்கவும்.",
-        val2_title: "முன்னேற்றத்தைப் பார்க்கவும்", val2_sub: "தற்போதைய பழுதுகளின் நிலையை உண்மையான நேரத்தில் பார்க்கவும்.",
-        val3_title: "நேரடி புதுப்பிப்புகள்", val3_sub: "அதிகாரப்பூர்வ அறிவிப்புகளுடன் உங்கள் உள்ளூர் பகுதியைப் பற்றி தெரிந்து கொள்ளுங்கள்.",
-        val4_title: "பாதுகாப்பான தளம்", val4_sub: "உங்கள் தரவு மற்றும் கோரிக்கைகள் பாதுகாப்பாக சேமிக்கப்படுகின்றன.",
-        select_lang: "மொழியைத் தேர்ந்தெடுக்கவும்", built_by: "உருவாக்கியவர்"
+        badge: "ஸ்மார்ட் தளம்",
+        main_title: "உங்கள் நகரம். இணைக்கப்பட்டது.",
+        main_sub: "அறிக்கை. கண்காணிப்பு. தீர்வு.",
+        cta_btn: "செயலியை பதிவிறக்கு",
+        val1_title: "அறிக்கை", val1_sub: "சிக்கல்களைப் பதிவு செய்.",
+        val2_title: "கண்காணி", val2_sub: "நேரலை நிலை.",
+        val3_title: "எச்சரிக்கைகள்", val3_sub: "அதிகாரப்பூர்வ புதுப்பிப்புகள்.",
+        val4_title: "பாதுகாப்பு", val4_sub: "அரசு தரவு.",
+        stat_title: "வெளிப்படைத்தன்மை.", stat_desc: "நேரலை அளவீடுகள்.",
+        work_title: "பணிப்பாய்வு", 
+        w1_t: "பதிவு", w1_d: "சிக்கல்.", w2_t: "ஒதுக்கீடு", w2_d: "குழு.", w3_t: "தீர்வு", w3_d: "முடிந்தது.",
+        mob_title: "மொபைல்.", mob_desc: "குடிமக்களுக்கான செயலி.",
+        imp_title: "இணையுங்கள்.", imp_desc: "சிறந்த நகரங்கள்.",
+        footer_text: "நாகரிக் சேது", select_lang: "மொழியைத் தேர்ந்தெடு", built_by: "உருவாக்கியவர்"
     },
     pa: {
-        lang: "ਪੰਜਾਬੀ", products: "ਉਤਪਾਦ", careers: "ਕਰੀਅਰ", coming_soon: "ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ",
-        badge: "ਸਮਾਰਟ ਸਿਵਿਕ ਪਲੇਟਫਾਰਮ",
-        main_title: "ਨਾਗਰਿਕਾਂ ਦਾ ਸਸ਼ਕਤੀਕਰਨ, ਭਾਈਚਾਰਿਆਂ ਨੂੰ ਜੋੜਨਾ।",
-        main_sub: "ਸਥਾਨਕ ਸਮੱਸਿਆਵਾਂ ਦੀ ਰਿਪੋਰਟ ਕਰਨ ਅਤੇ ਜਨਤਕ ਮੁਰੰਮਤ ਨੂੰ ਟਰੈਕ ਕਰਨ ਲਈ ਇੱਕ ਭਰੋਸੇਯੋਗ ਪਲੇਟਫਾਰਮ।",
-        cta_btn: "ਐਪਲੀਕੇਸ਼ਨ ਡਾਊਨਲੋਡ ਕਰੋ",
-        val1_title: "ਮੁੱਦਿਆਂ ਦੀ ਰਿਪੋਰਟ ਕਰੋ", val1_sub: "ਸਥਾਨਕ ਨਾਗਰਿਕ ਸਮੱਸਿਆਵਾਂ ਦੀ ਸਿੱਧੇ ਅਧਿਕਾਰੀਆਂ ਨੂੰ ਆਸਾਨੀ ਨਾਲ ਰਿਪੋਰਟ ਕਰੋ।",
-        val2_title: "ਤਰੱਕੀ ਟਰੈਕ ਕਰੋ", val2_sub: "ਅਸਲ ਸਮੇਂ ਵਿੱਚ ਮੌਜੂਦਾ ਮੁਰੰਮਤ ਦੀ ਸਥਿਤੀ ਦੇਖੋ।",
-        val3_title: "ਲਾਈਵ ਅੱਪਡੇਟ", val3_sub: "ਅਧਿਕਾਰਤ ਨੋਟਿਸਾਂ ਦੇ ਨਾਲ ਆਪਣੇ ਸਥਾਨਕ ਖੇਤਰ ਬਾਰੇ ਸੂਚਿਤ ਰਹੋ।",
-        val4_title: "ਸੁਰੱਖਿਅਤ ਪਲੇਟਫਾਰਮ", val4_sub: "ਤੁਹਾਡਾ ਡਾਟਾ ਅਤੇ ਬੇਨਤੀਆਂ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਸਟੋਰ ਕੀਤੀਆਂ ਜਾਂਦੀਆਂ ਹਨ।",
-        select_lang: "ਭਾਸ਼ਾ ਚੁਣੋ", built_by: "ਦੁਆਰਾ ਬਣਾਇਆ ਗਿਆ"
+        lang: "ਪੰਜਾਬੀ", products: "ਉਤਪਾਦ", careers: "ਕਰੀਅਰ", coming_soon: "ਜਲਦੀ",
+        badge: "ਸਮਾਰਟ ਪਲੇਟਫਾਰਮ",
+        main_title: "ਤੁਹਾਡਾ ਸ਼ਹਿਰ. ਜੁੜਿਆ ਹੋਇਆ।",
+        main_sub: "ਰਿਪੋਰਟ. ਟਰੈਕ. ਹੱਲ।",
+        cta_btn: "ਐਪ ਡਾਊਨਲੋਡ ਕਰੋ",
+        val1_title: "ਰਿਪੋਰਟ", val1_sub: "ਸਮੱਸਿਆ ਦਰਜ ਕਰੋ।",
+        val2_title: "ਟਰੈਕ", val2_sub: "ਲਾਈਵ ਸਥਿਤੀ।",
+        val3_title: "ਅਲਰਟ", val3_sub: "ਅਧਿਕਾਰਤ ਅੱਪਡੇਟ।",
+        val4_title: "ਸੁਰੱਖਿਅਤ", val4_sub: "ਸਰਕਾਰੀ ਡਾਟਾ।",
+        stat_title: "ਪਾਰਦਰਸ਼ਤਾ।", stat_desc: "ਲਾਈਵ ਮੈਟ੍ਰਿਕਸ।",
+        work_title: "ਵਰਕਫਲੋ", 
+        w1_t: "ਲਾਗ", w1_d: "ਸਮੱਸਿਆ।", w2_t: "ਸੌਂਪੋ", w2_d: "ਟੀਮ।", w3_t: "ਹੱਲ", w3_d: "ਪੂਰਾ।",
+        mob_title: "ਮੋਬਾਈਲ 'ਤੇ।", mob_desc: "ਨਾਗਰਿਕਾਂ ਲਈ ਐਪ।",
+        imp_title: "ਸ਼ਾਮਲ ਹੋਵੋ।", imp_desc: "ਬਿਹਤਰ ਸ਼ਹਿਰ।",
+        footer_text: "ਨਾਗਰਿਕਸੇਤੂ", select_lang: "ਭਾਸ਼ਾ ਚੁਣੋ", built_by: "ਦੁਆਰਾ ਬਣਾਇਆ"
     },
     bho: {
-        lang: "भोजपुरी", products: "उत्पाद", careers: "करियर", coming_soon: "जल्द आवत बा",
-        badge: "स्मार्ट नागरिक मंच",
-        main_title: "नागरिक लोग के सशक्त कइल, समुदाय के जोड़ल।",
-        main_sub: "स्थानीय समस्या बतावे आ सार्वजनिक मरम्मत ट्रैक करे खातिर एगो भरोसेमंद मंच।",
-        cta_btn: "एप्लीकेशन डाउनलोड करीं",
-        val1_title: "समस्या दर्ज करीं", val1_sub: "स्थानीय नागरिक समस्या के सीधा अधिकारी लोग के आसानी से रिपोर्ट करीं।",
-        val2_title: "प्रगति ट्रैक करीं", val2_sub: "वर्तमान मरम्मत के स्थिति वास्तविक समय में देखीं।",
-        val3_title: "लाइव अपडेट", val3_sub: "आधिकारिक नोटिस के साथ आपन एरिया के बारे में अपडेट रहीं।",
-        val4_title: "सुरक्षित मंच", val4_sub: "राउर डेटा आ अनुरोध सुरक्षित रूप से संग्रहीत कइल जाला।",
-        select_lang: "भाषा चुनीं", built_by: "द्वारा बनावल"
+        lang: "भोजपुरी", products: "उत्पाद", careers: "करियर", coming_soon: "जल्द",
+        badge: "स्मार्ट मंच",
+        main_title: "राउर शहर। जुडल बा।",
+        main_sub: "रिपोर्ट। ट्रैक। समाधान।",
+        cta_btn: "ऐप डाउनलोड",
+        val1_title: "रिपोर्ट", val1_sub: "समस्या दर्ज करीं।",
+        val2_title: "ट्रैक", val2_sub: "लाइव स्थिति।",
+        val3_title: "अलर्ट", val3_sub: "आधिकारिक अपडेट।",
+        val4_title: "सुरक्षित", val4_sub: "सरकारी डेटा।",
+        stat_title: "पारदर्शिता।", stat_desc: "लाइव मेट्रिक्स।",
+        work_title: "काम", 
+        w1_t: "लॉग", w1_d: "समस्या।", w2_t: "सौंपीं", w2_d: "टीम।", w3_t: "ठीक", w3_d: "पूरा।",
+        mob_title: "मोबाइल पर।", mob_desc: "नागरिक ऐप।",
+        imp_title: "जुड़ीं।", imp_desc: "बेहतर शहर।",
+        footer_text: "नागरिकसेतु", select_lang: "भाषा चुनीं", built_by: "द्वारा बनावल"
     },
     ar: {
         lang: "العربية", products: "المنتجات", careers: "وظائف", coming_soon: "قريباً",
-        badge: "منصة المدنية الذكية",
-        main_title: "تمكين المواطنين، ربط المجتمعات.",
-        main_sub: "منصة موثوقة وبسيطة للإبلاغ عن المشكلات المحلية وتتبع الإصلاحات العامة.",
-        cta_btn: "تنزيل التطبيق",
-        val1_title: "الإبلاغ عن المشاكل", val1_sub: "قم بالإبلاغ بسهولة عن المشاكل المدنية المحلية للسلطات مباشرة.",
-        val2_title: "تتبع التقدم", val2_sub: "انظر حالة الإصلاحات الحالية في الوقت الحقيقي.",
-        val3_title: "تحديثات حية", val3_sub: "ابق على اطلاع بمنطقتك المحلية مع الإشعارات الرسمية.",
-        val4_title: "منصة آمنة", val4_sub: "يتم تخزين بياناتك وطلبات الخدمة العامة بأمان.",
-        select_lang: "اختر اللغة", built_by: "بنيت بواسطة"
+        badge: "منصة ذكية",
+        main_title: "مدينتك. متصلة.",
+        main_sub: "إبلاغ. تتبع. حل.",
+        cta_btn: "تحميل التطبيق",
+        val1_title: "إبلاغ", val1_sub: "تسجيل المشاكل.",
+        val2_title: "تتبع", val2_sub: "الحالة الحية.",
+        val3_title: "تنبيهات", val3_sub: "تحديثات رسمية.",
+        val4_title: "آمن", val4_sub: "بيانات حكومية.",
+        stat_title: "شفافية.", stat_desc: "مقاييس حية.",
+        work_title: "سير العمل", 
+        w1_t: "سجل", w1_d: "مشكلة.", w2_t: "تعيين", w2_d: "فريق.", w3_t: "حل", w3_d: "تم.",
+        mob_title: "تطبيق المحمول.", mob_desc: "تطبيق للمواطنين.",
+        imp_title: "انضم إلينا.", imp_desc: "مدن أفضل.",
+        footer_text: "ناغريك سيتو", select_lang: "اختر اللغة", built_by: "بواسطة"
     },
     es: {
-        lang: "Español", products: "Productos", careers: "Carreras", coming_soon: "Próximamente",
-        badge: "Plataforma Cívica Inteligente",
-        main_title: "Empoderando a los ciudadanos, conectando comunidades.",
-        main_sub: "Una plataforma confiable para reportar problemas locales y rastrear reparaciones.",
-        cta_btn: "Descargar Aplicación",
-        val1_title: "Reportar Problemas", val1_sub: "Reporte fácilmente problemas cívicos locales directamente a las autoridades.",
-        val2_title: "Rastrear Progreso", val2_sub: "Vea el estado de las reparaciones actuales en tiempo real.",
-        val3_title: "Actualizaciones en Vivo", val3_sub: "Manténgase informado sobre su área local con avisos oficiales.",
-        val4_title: "Plataforma Segura", val4_sub: "Sus datos y solicitudes se almacenan de forma segura.",
-        select_lang: "Seleccionar Idioma", built_by: "Construido por"
+        lang: "Español", products: "Productos", careers: "Carreras", coming_soon: "Pronto",
+        badge: "Plataforma Inteligente",
+        main_title: "Tu Ciudad. Conectada.",
+        main_sub: "Reporta. Rastrea. Resuelve.",
+        cta_btn: "Descargar App",
+        val1_title: "Reportar", val1_sub: "Registra problemas.",
+        val2_title: "Rastrear", val2_sub: "Estado en vivo.",
+        val3_title: "Alertas", val3_sub: "Actualizaciones.",
+        val4_title: "Seguro", val4_sub: "Datos oficiales.",
+        stat_title: "Transparencia.", stat_desc: "Métricas en vivo.",
+        work_title: "Proceso", 
+        w1_t: "Reg.", w1_d: "Problema.", w2_t: "Asignar", w2_d: "Equipo.", w3_t: "Arreglar", w3_d: "Hecho.",
+        mob_title: "Móvil.", mob_desc: "App ciudadana.",
+        imp_title: "Únete.", imp_desc: "Mejores ciudades.",
+        footer_text: "NagrikSetu", select_lang: "Idioma", built_by: "Por"
     },
     fr: {
-        lang: "Français", products: "Produits", careers: "Carrières", coming_soon: "Bientôt disponible",
-        badge: "Plateforme Civique Intelligente",
-        main_title: "Autonomiser les citoyens, connecter les communautés.",
-        main_sub: "Une plateforme simple pour signaler les problèmes locaux et suivre les réparations.",
-        cta_btn: "Télécharger l'Application",
-        val1_title: "Signaler des Problèmes", val1_sub: "Signalez facilement les problèmes locaux aux autorités.",
-        val2_title: "Suivre les Progrès", val2_sub: "Voir l'état des réparations actuelles en temps réel.",
-        val3_title: "Mises à jour en Direct", val3_sub: "Restez informé sur votre région avec des avis officiels.",
-        val4_title: "Plateforme Sécurisée", val4_sub: "Vos données et demandes sont stockées en toute sécurité.",
-        select_lang: "Choisir la Langue", built_by: "Construit par"
+        lang: "Français", products: "Produits", careers: "Carrières", coming_soon: "Bientôt",
+        badge: "Plateforme Intelligente",
+        main_title: "Votre Ville. Connectée.",
+        main_sub: "Signalez. Suivez. Résolvez.",
+        cta_btn: "Télécharger l'App",
+        val1_title: "Signaler", val1_sub: "Problèmes locaux.",
+        val2_title: "Suivre", val2_sub: "Statut en direct.",
+        val3_title: "Alertes", val3_sub: "Mises à jour.",
+        val4_title: "Sécurisé", val4_sub: "Données gouv.",
+        stat_title: "Transparence.", stat_desc: "Métriques en direct.",
+        work_title: "Processus", 
+        w1_t: "Enreg.", w1_d: "Problème.", w2_t: "Assigner", w2_d: "Équipe.", w3_t: "Fixer", w3_d: "Fait.",
+        mob_title: "Mobile.", mob_desc: "App citoyenne.",
+        imp_title: "Rejoignez.", imp_desc: "Meilleures villes.",
+        footer_text: "NagrikSetu", select_lang: "Langue", built_by: "Par"
     },
     de: {
         lang: "Deutsch", products: "Produkte", careers: "Karriere", coming_soon: "Demnächst",
-        badge: "Intelligente Bürgerplattform",
-        main_title: "Bürger stärken, Gemeinschaften verbinden.",
-        main_sub: "Eine vertrauenswürdige Plattform, um lokale Probleme zu melden und Reparaturen zu verfolgen.",
-        cta_btn: "Anwendung Herunterladen",
-        val1_title: "Probleme Melden", val1_sub: "Melden Sie lokale Bürgerprobleme ganz einfach direkt an die Behörden.",
-        val2_title: "Fortschritt Verfolgen", val2_sub: "Sehen Sie den Status aktueller Reparaturen in Echtzeit.",
-        val3_title: "Live-Updates", val3_sub: "Bleiben Sie mit offiziellen Mitteilungen über Ihre Umgebung informiert.",
-        val4_title: "Sichere Plattform", val4_sub: "Ihre Daten und Anfragen werden sicher gespeichert.",
-        select_lang: "Sprache Wählen", built_by: "Gebaut von"
+        badge: "Intelligente Plattform",
+        main_title: "Ihre Stadt. Verbunden.",
+        main_sub: "Melden. Verfolgen. Lösen.",
+        cta_btn: "App Herunterladen",
+        val1_title: "Melden", val1_sub: "Probleme erfassen.",
+        val2_title: "Verfolgen", val2_sub: "Live-Status.",
+        val3_title: "Warnungen", val3_sub: "Updates.",
+        val4_title: "Sicher", val4_sub: "Regierungsdaten.",
+        stat_title: "Transparenz.", stat_desc: "Live-Metriken.",
+        work_title: "Ablauf", 
+        w1_t: "Protokoll", w1_d: "Problem.", w2_t: "Zuweisen", w2_d: "Team.", w3_t: "Lösen", w3_d: "Fertig.",
+        mob_title: "Mobil.", mob_desc: "Bürger-App.",
+        imp_title: "Mach mit.", imp_desc: "Bessere Städte.",
+        footer_text: "NagrikSetu", select_lang: "Sprache", built_by: "Von"
     }
 };
 
 export default function MarketingLanding() {
     const navigate = useNavigate();
-    
-    // STATE MANAGEMENT
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
-    const [localCity, setLocalCity] = useState('India');
+
+    // STRICT COLOR VARIABLES (NagrikSetu Brand)
+    const theme = {
+        primary: "#00897B",    // Civic Teal
+        bg: "#00897B",         // Main Background
+        text: "#FFFFFF",       // White text for Teal background
+        cardBg: "#FFFFFF",     // White cards
+        cardText: "#111111",   // Black text in cards
+        accent: "#FFB300",     // Action Yellow
+        success: "#2E7D32"     // Success Green
+    };
+
+    const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+
+    const languageOptions = [
+        { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
+        { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
+        { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
+        { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+        { code: 'de', label: 'Deutsch' }
+    ];
 
     useEffect(() => {
         const sysLang = navigator.language.slice(0, 2);
@@ -196,22 +279,14 @@ export default function MarketingLanding() {
         navigate('/download');
     };
 
-    const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
-    const languageOptions = [
-        { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'hinglish', label: 'Hinglish' },
-        { code: 'mr', label: 'मराठी' }, { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' },
-        { code: 'ta', label: 'தமிழ்' }, { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' },
-        { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
-        { code: 'de', label: 'Deutsch' }
-    ];
-
-    const stagger1 = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.1 } } };
-    const stagger2 = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.2 } } };
-    const stagger3 = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.3 } } };
+    const fadeUp = {
+        hidden: { opacity: 0, y: 30 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } }
+    };
 
     return (
-        // STRICTLY APPLIED: absolute top-0 left-0 w-full z-50 AND background color #00897B
-        <div className="absolute top-0 left-0 w-full z-50 min-h-screen font-sans overflow-x-hidden flex flex-col relative" style={{ backgroundColor: '#00897B', color: '#FFFFFF' }}>
+        // ABSOLUTE BREAKOUT: fixed inset-0 w-screen h-screen ensures zero black borders on widescreen
+        <div className="fixed inset-0 w-screen h-screen z-[9999] overflow-y-auto overflow-x-hidden font-sans flex flex-col" style={{ backgroundColor: theme.bg, color: theme.text }}>
             
             <style>
                 {`
@@ -222,7 +297,7 @@ export default function MarketingLanding() {
             </style>
 
             {/* MINIMAL TOP HEADER */}
-            <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade relative z-50">
+            <header className="w-full flex items-center justify-between px-6 md:px-12 lg:px-16 py-8 animate-fade relative z-50">
                 <div className="flex items-center gap-1 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
                     <img 
                         src="/logo-2.png" 
@@ -238,13 +313,13 @@ export default function MarketingLanding() {
                 <div className="flex items-center gap-4 sm:gap-6 text-[0.9rem] font-bold">
                     <button 
                         onClick={() => setShowLangPrompt(true)}
-                        className="flex items-center gap-2 text-[#FFFFFF] hover:text-[#E0E0E0] transition-colors outline-none"
+                        className="flex items-center gap-2 text-[#FFFFFF] hover:opacity-70 transition-opacity outline-none"
                     >
                         <Globe size={16} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
                     <button 
                         onClick={() => setShowProductsPrompt(true)}
-                        className="hidden sm:block text-[#FFFFFF] hover:text-[#E0E0E0] transition-colors outline-none"
+                        className="hidden sm:block text-[#FFFFFF] hover:opacity-70 transition-opacity outline-none"
                     >
                         {currentT.products}
                     </button>
@@ -273,10 +348,11 @@ export default function MarketingLanding() {
                                 <Globe size={24} color="#111111" strokeWidth="1.5" />
                             </div>
 
-                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-[#111111] text-center">Select Language</h2>
-                            <p className="text-[#666666] text-[0.9rem] text-center mb-8">Choose your preferred viewing language.</p>
+                            <h2 className="text-[1.4rem] font-black tracking-tight mb-2 text-[#111111] text-center mt-4">
+                                {currentT.select_lang}
+                            </h2>
                             
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 mt-4">
                                 {languageOptions.map((option) => (
                                     <button 
                                         key={option.code}
@@ -293,7 +369,7 @@ export default function MarketingLanding() {
                 )}
             </AnimatePresence>
 
-            {/* STRICT PRODUCTS ECOSYSTEM MODAL (Re-aligned & High Visibility) */}
+            {/* STRICT PRODUCTS ECOSYSTEM MODAL */}
             <AnimatePresence>
                 {showProductsPrompt && (
                     <motion.div 
@@ -311,8 +387,7 @@ export default function MarketingLanding() {
                                 <X size={18} />
                             </button>
 
-                            <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-[#111111] text-center mt-2">Also from us</h2>
-                            <p className="text-[#666666] text-[0.9rem] text-center mb-8">Discover our connected platforms.</p>
+                            <h2 className="text-[1.5rem] font-black tracking-tight mb-8 text-[#111111] text-center mt-4">{currentT.products}</h2>
 
                             <div className="flex flex-col gap-4">
                                 {/* Sahay */}
@@ -324,7 +399,6 @@ export default function MarketingLanding() {
                                         </span>
                                     </div>
                                 </div>
-
                                 {/* Civic */}
                                 <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
                                     <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
@@ -334,8 +408,7 @@ export default function MarketingLanding() {
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* NagrikSetu (Active Highlight) */}
+                                {/* NagrikSetu - Highlighted */}
                                 <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-[#00897B] bg-[#E0F2F1] outline-none">
                                     <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                     <div className="flex flex-col">
@@ -344,11 +417,10 @@ export default function MarketingLanding() {
                                         </span>
                                     </div>
                                 </div>
-
-                                {/* SevaSetu (Coming Soon) */}
+                                {/* SevaSetu - Coming Soon */}
                                 <div className="flex items-center justify-between p-4 rounded-2xl border border-[#E0E0E0] bg-[#FFFFFF] opacity-70 outline-none">
                                     <div className="flex items-center gap-4">
-                                        <img src="/logo.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                        <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <div className="flex flex-col">
                                             <span className="font-black text-xl leading-none text-[#111111]">
                                                 ovyra <span className="font-medium text-[1rem] text-[#666666] ml-1">SevaSetu</span>
@@ -366,16 +438,16 @@ export default function MarketingLanding() {
             </AnimatePresence>
 
             {/* MAIN CONTAINER */}
-            <div className="w-full max-w-[1400px] mx-auto px-8 md:px-16 py-12 flex flex-col lg:flex-row gap-20 items-center justify-between relative z-10 flex-1">
+            <div className="w-full max-w-none mx-auto px-6 md:px-12 lg:px-16 py-12 flex flex-col lg:flex-row gap-16 items-center justify-between relative z-10 flex-1">
                 
                 {/* SECTION 1: MARKETING HERO & VALUE PROPOSITIONS */}
-                <motion.div initial="hidden" animate="visible" variants={stagger1} className="flex-1 w-full">
+                <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }} className="flex-1 w-full xl:pl-12">
                     <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full mb-8 border border-white/30 bg-white/10">
                         <ShieldCheck size={18} color="#FFFFFF" />
                         <span className="text-[0.85rem] font-bold tracking-widest uppercase text-[#FFFFFF]">{currentT.badge}</span>
                     </div>
 
-                    <h1 className="text-[3.5rem] md:text-[5rem] lg:text-[5.5rem] font-black leading-[1] tracking-tighter mb-6 text-[#FFFFFF] max-w-[800px]">
+                    <h1 className="text-[4rem] md:text-[5.5rem] lg:text-[6.5rem] font-black leading-[1] tracking-tighter mb-6 text-[#FFFFFF] max-w-[800px]">
                         {currentT.main_title}
                     </h1>
                     
@@ -391,7 +463,7 @@ export default function MarketingLanding() {
                     </div>
                     
                     {/* VALUE PROPOSITIONS GRID */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="grid grid-cols-2 gap-8 max-w-[800px]">
                         <div className="flex flex-col gap-2">
                             <div className="w-10 h-10 rounded-full border border-white/30 bg-white/10 flex items-center justify-center mb-2">
                                 <MapPin size={18} color="#FFFFFF" />
@@ -423,32 +495,50 @@ export default function MarketingLanding() {
                     </div>
                 </motion.div>
 
-                {/* GRAPHIC / ILLUSTRATION SECTION */}
-                <motion.div initial="hidden" animate="visible" variants={stagger2} className="hidden lg:flex justify-end w-full lg:w-[480px] shrink-0">
-                    <svg viewBox="0 0 400 400" className="w-full h-auto max-w-[500px]" fill="none">
-                        <circle cx="200" cy="200" r="180" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="8 8"/>
-                        <circle cx="200" cy="200" r="120" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
-                        <motion.circle cx="200" cy="200" r="60" fill="#FFFFFF" initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ repeat: Infinity, duration: 2, repeatType: "reverse" }} />
-                        <path d="M200 140 L200 50 M260 200 L350 200 M200 260 L200 350 M140 200 L50 200" stroke="#FFFFFF" strokeWidth="3"/>
-                        <circle cx="200" cy="50" r="8" fill="#FFB300" />
-                        <circle cx="350" cy="200" r="8" fill="#FFB300" />
-                        <circle cx="200" cy="350" r="8" fill="#FFB300" />
-                        <circle cx="50" cy="200" r="8" fill="#FFB300" />
+                {/* GRAPHIC / ILLUSTRATION SECTION - STRICTLY NEW ANIMATION */}
+                <motion.div initial="hidden" animate="visible" variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: 0.2 } } }} className="hidden lg:flex justify-center xl:justify-end w-full lg:w-[600px] shrink-0 xl:pr-12">
+                    <svg viewBox="0 0 400 400" className="w-full h-auto max-w-[600px]" fill="none">
+                        {/* Perspective Grid Background */}
+                        <path d="M50 300 L350 300 M100 250 L300 250 M150 200 L250 200" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+                        <path d="M200 150 L50 350 M200 150 L350 350 M200 150 L200 350" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+                        
+                        {/* Animated Central Glowing Shield */}
+                        <motion.path 
+                            d="M200 50 L300 90 V180 C300 260 200 340 200 340 C200 340 100 260 100 180 V90 L200 50 Z" 
+                            stroke="rgba(255,255,255,0.2)" strokeWidth="4" 
+                        />
+                        <motion.path 
+                            d="M200 50 L300 90 V180 C300 260 200 340 200 340 C200 340 100 260 100 180 V90 L200 50 Z" 
+                            stroke="#FFB300" strokeWidth="4" 
+                            strokeDasharray="1000" 
+                            initial={{ strokeDashoffset: 1000 }} 
+                            animate={{ strokeDashoffset: 0 }} 
+                            transition={{ duration: 3, repeat: Infinity, repeatType: 'reverse', ease: "easeInOut" }} 
+                        />
+                        
+                        <circle cx="200" cy="180" r="45" fill="#FFFFFF" shadow="0 0 20px rgba(255,255,255,0.5)" />
+                        <path d="M180 180 L195 195 L225 165" stroke="#00897B" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                        
+                        {/* Orbiting / Pulsing Activity Nodes */}
+                        <motion.circle cx="200" cy="80" r="6" fill="#FFB300" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2 }} />
+                        <motion.circle cx="130" cy="160" r="6" fill="#FFB300" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2, delay: 0.5 }} />
+                        <motion.circle cx="270" cy="160" r="6" fill="#FFB300" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2, delay: 1 }} />
+                        <motion.circle cx="200" cy="270" r="6" fill="#FFB300" animate={{ scale: [1, 1.5, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2, delay: 1.5 }} />
                     </svg>
                 </motion.div>
             </div>
 
-            {/* FOOTER ALIGNMENT */}
-            <footer className="w-full max-w-[1400px] mx-auto mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-8 md:px-16 py-8 border-t border-white/20 opacity-0 animate-fade stagger-3 relative z-10">
+            {/* MINIMAL FOOTER */}
+            <footer className="w-full mt-auto flex flex-col md:flex-row items-center justify-between gap-8 px-6 md:px-12 lg:px-16 py-8 border-t border-white/20 relative z-10 bg-[#007065]">
                 
                 <div className="flex flex-col md:flex-row items-center gap-6 text-[0.8rem] font-bold text-[#FFFFFF]">
                     <div className="flex items-center gap-6">
-                        <button onClick={() => setShowProductsPrompt(true)} className="hover:text-[#E0E0E0] transition-colors outline-none">{currentT.products}</button>
-                        <span className="w-1 h-1 bg-[#FFFFFF] opacity-50 rounded-full"></span>
-                        <Link to="/careers" className="hover:text-[#E0E0E0] transition-colors outline-none">{currentT.careers}</Link>
-                        <span className="w-1 h-1 bg-[#FFFFFF] opacity-50 rounded-full"></span>
+                        <button onClick={() => setShowProductsPrompt(true)} className="hover:opacity-70 transition-opacity outline-none">{currentT.products}</button>
+                        <span className="w-1.5 h-1.5 bg-[#FFFFFF] opacity-50 rounded-full"></span>
+                        <Link to="/careers" className="hover:opacity-70 transition-opacity outline-none">{currentT.careers}</Link>
+                        <span className="w-1.5 h-1.5 bg-[#FFFFFF] opacity-50 rounded-full"></span>
                         
-                        <div className="flex items-center gap-2 uppercase tracking-wider">
+                        <div className="flex items-center gap-2 uppercase tracking-wider opacity-90">
                             {currentT.built_by} 
                             <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="ml-1 hover:opacity-80 transition-opacity outline-none">
                                 <img src="/aat.png" alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline">AnyAstro</span>'); }} />
@@ -458,7 +548,7 @@ export default function MarketingLanding() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className="flex items-center cursor-pointer opacity-90" onClick={scrollToTop}>
+                    <div className="flex items-center opacity-90 cursor-pointer" onClick={scrollToTop}>
                         <img 
                             src="/logo-2.png" 
                             alt="M" 
@@ -466,11 +556,11 @@ export default function MarketingLanding() {
                             onError={(e) => { e.target.style.display = 'none' }} 
                         />
                         <span className="font-black text-xl -ml-[3px] text-[#FFFFFF]">
-                            &nbsp;ovyra <span className="font-medium text-[0.75rem] ml-1 tracking-wide">NagrikSetu</span>
+                            ovyra <span className="font-medium text-[0.75rem] ml-1 tracking-wide">NagrikSetu</span>
                         </span>
                     </div>
 
-                    <button onClick={scrollToTop} className="p-2 rounded-full border border-white/30 text-[#FFFFFF] hover:bg-white/10 transition-colors outline-none">
+                    <button onClick={scrollToTop} className="p-2.5 rounded-full border border-white/30 text-[#FFFFFF] hover:bg-white/10 transition-colors outline-none flex items-center justify-center">
                         <ArrowUp size={16} />
                     </button>
                 </div>
