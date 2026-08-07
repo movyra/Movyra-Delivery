@@ -466,20 +466,28 @@ export default function DownloadPage() {
                             <button onClick={() => setShowSitemapPrompt(false)} className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center text-[#888888] hover:bg-[#F5F5F5] hover:text-[#111111] rounded-full transition-colors outline-none"><X size={18} /></button>
                             
                             <h2 className="text-[1.8rem] font-black tracking-tight mb-2 text-[#111111] text-left">{currentT.sitemap}</h2>
-                            <p className="text-[#666666] text-[0.95rem] text-left mb-8">Direct navigation to all nagriksetu pages.</p>
+                            <p className="text-[#666666] text-[0.95rem] text-left mb-8">Go directly to app pages.</p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                                <Link to="/home" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none">
-                                    Public Portal
+                                <Link to="/home" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none flex flex-col">
+                                    <span>App Home</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Main screen</span>
                                 </Link>
-                                <Link to="/report" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none">
-                                    File a Report
+                                <Link to="/report" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none flex flex-col">
+                                    <span>File Complaint</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Report a problem</span>
                                 </Link>
-                                <Link to="/alerts" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none">
-                                    Live Transparency Map
+                                <Link to="/alerts" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none flex flex-col">
+                                    <span>Live Map</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">See city issues</span>
                                 </Link>
-                                <Link to="/admin" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none">
-                                    Admin Console
+                                <Link to="/admin" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#CCCCCC] hover:bg-[#F0F0F0] transition-colors text-left outline-none flex flex-col">
+                                    <span>Admin Login</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">For city staff</span>
+                                </Link>
+                                <Link to="/download" className="bg-[#E0F2F1] border border-[#00897B] p-4 rounded-xl font-bold text-[#00897B] text-[0.95rem] hover:bg-[#B2DFDB] transition-colors text-left outline-none flex flex-col sm:col-span-2">
+                                    <span>Get App</span>
+                                    <span className="text-[#007065] font-normal text-[0.75rem] mt-1">Download for your phone</span>
                                 </Link>
                             </div>
                         </motion.div>
