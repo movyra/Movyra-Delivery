@@ -19,6 +19,8 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const SOS = React.lazy(() => import('./pages/SOS'));
 const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+// New Official Download Page
+const DownloadPage = React.lazy(() => import('./pages/DownloadPage'));
 
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
@@ -60,6 +62,7 @@ const AppLayout = () => {
     // Automatically intercepts the route and pushes authenticated users to /home
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+            // Check limits user redirection on login to avoid blocking the public download page
             if (currentUser && (location.pathname === '/onboarding' || location.pathname === '/')) {
                 navigate('/home', { replace: true });
             }
@@ -67,8 +70,8 @@ const AppLayout = () => {
         return () => unsubscribe();
     }, [location.pathname, navigate]);
     
-    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, and Admin)
-    const isExcludedRoute = ['/onboarding', '/sos', '/admin'].includes(location.pathname);
+    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, Admin, and Download Page)
+    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download'].includes(location.pathname);
 
     return (
         <div className="relative min-h-screen bg-[#FFFFFF]">
@@ -99,6 +102,9 @@ const AppLayout = () => {
 
                             {/* Civic Gamification */}
                             <Route path="/leaderboard" element={<Leaderboard />} />
+
+                            {/* Official Download Landing Page */}
+                            <Route path="/download" element={<DownloadPage />} />
 
                             {/* Exclusive Super Admin Moderation Route */}
                             <Route 
