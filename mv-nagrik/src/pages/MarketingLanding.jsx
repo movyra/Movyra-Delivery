@@ -11,7 +11,7 @@
  * Highlight CTA: #FFB300 (Action Yellow)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 // Removed failing Linkedin/Instagram/Youtube imports that caused Vite crashes
@@ -178,6 +178,7 @@ const TRANSLATIONS = {
 
 export default function MarketingLanding() {
     const navigate = useNavigate();
+    const scrollRef = useRef(null);
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     const [showProductsPrompt, setShowProductsPrompt] = useState(false);
@@ -207,7 +208,9 @@ export default function MarketingLanding() {
     }, []);
 
     const scrollToTop = () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (scrollRef.current) {
+            scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
     const handleDownloadRedirect = () => {
@@ -220,8 +223,8 @@ export default function MarketingLanding() {
     };
 
     return (
-        // ABSOLUTE BREAKOUT: fixed inset-0 w-screen h-screen ensures zero black borders on widescreen
-        <div className="fixed inset-0 w-screen h-screen z-[9999] overflow-y-auto overflow-x-hidden font-sans flex flex-col" style={{ backgroundColor: theme.bg, color: theme.text }}>
+        // ABSOLUTE BREAKOUT: fixed inset-0 w-screen h-[100dvh] ensures zero black borders and respects mobile address bar
+        <div ref={scrollRef} className="fixed inset-0 w-screen h-[100dvh] z-[9999] overflow-y-auto overflow-x-hidden font-sans flex flex-col" style={{ backgroundColor: theme.bg, color: theme.text }}>
             
             <style>
                 {`
@@ -234,7 +237,7 @@ export default function MarketingLanding() {
 
             {/* MINIMAL TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-0.3 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                <div className="flex items-center gap-0.3 cursor-pointer" onClick={scrollToTop}>
                     <img 
                         src="/logo-2.png" 
                         alt="Movyra Logo" 
@@ -380,7 +383,7 @@ export default function MarketingLanding() {
             <AnimatePresence>
                 {showLangPrompt && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border border-[#E0E0E0]">
+                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto border border-[#E0E0E0] hide-scrollbar">
                             <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full transition-colors outline-none"><X size={18} /></button>
                             <div className="w-12 h-12 mx-auto rounded-full border border-[#E0E0E0] flex items-center justify-center mb-4"><Globe size={24} color="#111111" strokeWidth="1.5" /></div>
                             <h2 className="text-[1.4rem] font-black tracking-tight mb-6 text-[#111111] text-center mt-4">{currentT.select_lang}</h2>
@@ -463,7 +466,7 @@ export default function MarketingLanding() {
                 )}
             </AnimatePresence>
 
-            {/* SITEMAP MODAL (Match Image 4668b0) */}
+            {/* SITEMAP MODAL */}
             <AnimatePresence>
                 {showSitemapPrompt && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm flex items-center justify-center p-6">
@@ -492,11 +495,11 @@ export default function MarketingLanding() {
                 )}
             </AnimatePresence>
 
-            {/* TEAL & WHITE PREMIUM FOOTER STRICTLY */}
-            <footer className="w-full mt-auto bg-[#007065] flex flex-col md:flex-row items-center justify-between gap-8 px-6 md:px-12 lg:px-24 py-8 border-t border-white/10 relative z-10">
+            {/* TEAL & WHITE PREMIUM FOOTER STRICTLY (Responsive fix: flex-wrap, pb-12 for mobile) */}
+            <footer className="w-full mt-auto bg-[#007065] flex flex-col md:flex-row items-center justify-between gap-6 px-6 md:px-12 lg:px-24 py-8 pb-12 border-t border-white/10 relative z-10">
                 
                 {/* Left Side: Language & Socials */}
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap justify-center items-center gap-6">
                     <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 text-[#FFFFFF] font-bold text-[0.9rem] px-5 py-2.5 rounded-full border border-white/30 hover:bg-white/10 transition-colors outline-none">
                         <Globe size={16} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
@@ -504,37 +507,32 @@ export default function MarketingLanding() {
                     <div className="flex items-center gap-5 text-[#FFFFFF]">
                         {/* Inline SVGs used to guarantee rendering without library crash */}
                         <a href="https://www.linkedin.com/company/getmovyra/" className="hover:opacity-70 transition-opacity outline-none">
-                            {/* LinkedIn Inline SVG */}
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                         </a>
                         <a href="#" className="hover:opacity-70 transition-opacity outline-none">
-                            {/* YouTube Inline SVG */}
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"/></svg>
                         </a>
                         <a href="https://instagram.com/nagriksetu.app" className="hover:opacity-70 transition-opacity outline-none">
-                            {/* Instagram Inline SVG */}
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
                         </a>
                         <a href="#" className="hover:opacity-70 transition-opacity outline-none">
-                            {/* X (Twitter) Logo Inline SVG */}
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
                         </a>
                     </div>
                 </div>
 
                 {/* Right Side: Links & Built By */}
-                <div className="flex items-center gap-6 text-[0.85rem] font-bold text-[#FFFFFF]">
-                    <button onClick={() => setShowProductsPrompt(true)} className="hover:opacity-70 transition-opacity outline-none">{currentT.products}</button>
-                    <span className="w-1 h-1 bg-[#FFFFFF] opacity-50 rounded-full"></span>
-                    <button onClick={() => setShowSitemapPrompt(true)} className="hover:opacity-70 transition-opacity outline-none">{currentT.sitemap}</button>
-                    <span className="w-1 h-1 bg-[#FFFFFF] opacity-50 rounded-full"></span>
-                    <Link to="https://getmovyra.in/careers" className="hover:opacity-70 transition-opacity outline-none">{currentT.careers}</Link>
-                    <span className="w-1 h-1 bg-[#FFFFFF] opacity-50 rounded-full"></span>
+                <div className="flex flex-wrap justify-center items-center gap-4 text-[0.85rem] font-bold text-[#FFFFFF]">
+                    <button onClick={() => setShowProductsPrompt(true)} className="hover:opacity-70 transition-opacity outline-none uppercase">{currentT.products}</button>
+                    <span className="w-1.5 h-1.5 bg-[#FFFFFF] opacity-50 rounded-full"></span>
+                    <button onClick={() => setShowSitemapPrompt(true)} className="hover:opacity-70 transition-opacity outline-none uppercase">{currentT.sitemap}</button>
+                    <span className="w-1.5 h-1.5 bg-[#FFFFFF] opacity-50 rounded-full"></span>
+                    <Link to="https://getmovyra.in/careers" className="hover:opacity-70 transition-opacity outline-none uppercase">{currentT.careers}</Link>
+                    <span className="w-1.5 h-1.5 bg-[#FFFFFF] opacity-50 rounded-full"></span>
                     
-                    <div className="flex items-center gap-2 uppercase tracking-wider text-[#FFFFFF] opacity-90">
+                    <div className="flex items-center gap-0.5 uppercase tracking-wider opacity-90">
                         {currentT.built_by} 
                         <a href="https://rebrand.ly/aatns" target="_blank" rel="noopener noreferrer" className="ml-1 hover:opacity-80 transition-opacity outline-none">
-                            {/* Reverted logo back to normal display (no invert) because background is dark teal */}
                             <img src="/aat.png" alt="AnyAstro" className="h-4 w-auto object-contain" onError={(e) => { e.target.style.display = 'none'; e.target.insertAdjacentHTML('afterend', '<span class="underline text-[#FFFFFF]">AnyAstro</span>'); }} />
                         </a>
                     </div>
