@@ -26,7 +26,7 @@ const MarketingLanding = React.lazy(() => import('./pages/MarketingLanding'));
 
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
-    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center">
+    <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center w-full">
         <div className="w-10 h-10 border-4 border-[#111111]/10 border-t-[#00897B] rounded-full animate-spin"></div>
     </div>
 );
@@ -72,16 +72,19 @@ const AppLayout = () => {
         return () => unsubscribe();
     }, [location.pathname, navigate]);
     
-    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, Admin, Download Page, and Landing Page)
+    // Conditionally hide navigation components for immersive screens
     const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing'].includes(location.pathname);
+    
+    // Strictly remove relative container restraints for marketing routes to force edge-to-edge widescreen rendering
+    const isWidescreenRoute = ['/landing', '/download'].includes(location.pathname);
 
     return (
-        <div className="relative min-h-screen bg-[#FFFFFF]">
+        <div className={`${isWidescreenRoute ? "w-full min-h-screen bg-[#FFFFFF]" : "relative min-h-screen bg-[#FFFFFF]"}`}>
             {/* Conditionally render Top Navigation */}
             {!isExcludedRoute && <TopNav />}
 
-            {/* Main Content Area - Adds padding if TopNav is active to prevent overlap */}
-            <div className={!isExcludedRoute ? "pt-16 pb-24" : ""}>
+            {/* Main Content Area - Adds padding if TopNav is active to prevent overlap, removes limits for widescreen pages */}
+            <div className={!isExcludedRoute ? "pt-16 pb-24" : "w-full"}>
                 <Suspense fallback={<PageLoader />}>
                     <AnimatePresence mode="wait">
                         <Routes location={location} key={location.pathname}>
