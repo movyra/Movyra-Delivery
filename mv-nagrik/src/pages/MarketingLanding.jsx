@@ -232,7 +232,7 @@ export default function MarketingLanding() {
 
             {/* MINIMAL TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-0.3 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                <div className="flex items-center gap-1 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
                     <img 
                         src="/logo-2.png" 
                         alt="Movyra Logo" 
@@ -255,7 +255,7 @@ export default function MarketingLanding() {
             </header>
 
             {/* MAIN CONTENT AREA - Matches the custom screenshot layout perfectly */}
-            <main className="w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 pt-16 pb-16 flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10">
+            <main className="w-full max-w-[1600px] mx-auto px-6 md:px-12 lg:px-24 pt-16 pb-16 flex flex-col lg:flex-row items-center justify-between gap-12 relative z-10 flex-1">
                 
                 {/* Left Content - STRICTLY Left Aligned */}
                 <motion.div initial="hidden" animate="visible" variants={fadeUp} className="w-full lg:w-[55%] z-10 flex flex-col items-start justify-start text-left">
@@ -306,60 +306,70 @@ export default function MarketingLanding() {
                     </div>
                 </motion.div>
 
-                {/* Right Graphic - Custom Chart / Map Pin SVG Animation matching the screenshot */}
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="w-full lg:w-[45%] h-[500px] lg:h-[700px] relative z-0 flex items-center justify-center lg:justify-end">
-                    <svg viewBox="0 0 400 400" className="w-full h-full max-w-[600px] drop-shadow-2xl" fill="none">
+                {/* Right Graphic - Custom Smart City / Nature SVG Animation */}
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="w-full lg:w-[45%] h-[500px] lg:h-[750px] relative z-0 flex items-center justify-center lg:justify-end xl:pr-12">
+                    <svg viewBox="0 0 600 600" className="w-full h-full max-w-[750px] drop-shadow-2xl" fill="none">
                         
-                        {/* Crosshairs & Concentric Circles (Target/Radar Base) */}
-                        <circle cx="200" cy="250" r="140" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="4 4" />
-                        <circle cx="200" cy="250" r="90" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-                        <circle cx="200" cy="250" r="40" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-                        <path d="M 60 250 L 340 250" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
-                        <path d="M 200 110 L 200 390" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+                        {/* Sun / Halo */}
+                        <motion.circle 
+                            cx="300" cy="200" r="100" 
+                            fill="rgba(255,179,0,0.1)" 
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} 
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} 
+                        />
+                        <circle cx="300" cy="200" r="50" fill={theme.accent} />
+                        
+                        {/* Distant Hills */}
+                        <path d="M 0 450 Q 150 320 300 450 T 600 450 L 600 600 L 0 600 Z" fill="rgba(255,255,255,0.05)" />
 
-                        {/* Bar Chart (Translucent City/Data blocks) */}
-                        <rect x="90" y="160" width="30" height="90" fill="rgba(255,255,255,0.15)" />
-                        <rect x="130" y="100" width="30" height="150" fill="rgba(255,255,255,0.25)" />
-                        <rect x="170" y="180" width="30" height="70" fill="rgba(255,255,255,0.1)" />
-                        <rect x="210" y="80" width="30" height="170" fill="rgba(255,255,255,0.2)" />
-                        <rect x="250" y="140" width="30" height="110" fill="rgba(255,255,255,0.15)" />
+                        {/* Cityscape (Buildings) */}
+                        <path d="M 100 450 L 100 220 L 170 220 L 170 450 Z" fill="rgba(255,255,255,0.15)" />
+                        <path d="M 190 450 L 190 120 L 270 120 L 270 450 Z" fill="rgba(255,255,255,0.25)" />
+                        <path d="M 290 450 L 290 180 L 350 180 L 350 450 Z" fill="rgba(255,255,255,0.15)" />
+                        <path d="M 370 450 L 370 80 L 470 80 L 470 450 Z" fill="rgba(255,255,255,0.2)" />
 
-                        {/* Yellow Trend Line Graph */}
+                        {/* Lit Windows */}
+                        <rect x="210" y="150" width="20" height="20" fill={theme.accent} />
+                        <rect x="240" y="210" width="20" height="20" fill={theme.accent} />
+                        <rect x="390" y="120" width="20" height="20" fill={theme.accent} />
+                        <rect x="440" y="300" width="20" height="20" fill={theme.accent} />
+                        <rect x="120" y="260" width="20" height="20" fill={theme.accent} />
+                        
+                        {/* Nature / Trees */}
+                        <path d="M 140 450 L 140 380" stroke="rgba(255,255,255,0.5)" strokeWidth="6" strokeLinecap="round" />
+                        <circle cx="140" cy="350" r="30" fill="rgba(255,255,255,0.4)" />
+                        <path d="M 330 450 L 330 350" stroke="rgba(255,255,255,0.5)" strokeWidth="6" strokeLinecap="round" />
+                        <circle cx="330" cy="310" r="40" fill="rgba(255,255,255,0.4)" />
+                        <path d="M 500 450 L 500 370" stroke="rgba(255,255,255,0.5)" strokeWidth="6" strokeLinecap="round" />
+                        <circle cx="500" cy="330" r="35" fill="rgba(255,255,255,0.3)" />
+
+                        {/* Animated Flowing Water / River at base */}
                         <motion.path 
-                            d="M 105 160 L 145 100 L 185 180 L 225 80 L 265 140" 
-                            stroke={theme.accent} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 2, ease: "easeInOut", repeat: Infinity, repeatType: "reverse", repeatDelay: 2 }}
+                            d="M 0 480 C 150 450 300 510 600 480 L 600 600 L 0 600 Z" 
+                            fill="rgba(255,255,255,0.15)" 
+                            animate={{ d: ["M 0 480 C 150 450 300 510 600 480 L 600 600 L 0 600 Z", "M 0 480 C 150 510 300 450 600 480 L 600 600 L 0 600 Z", "M 0 480 C 150 450 300 510 600 480 L 600 600 L 0 600 Z"] }}
+                            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                        />
+                        <motion.path 
+                            d="M 0 520 C 200 490 400 550 600 520 L 600 600 L 0 600 Z" 
+                            fill="rgba(255,255,255,0.25)" 
+                            animate={{ d: ["M 0 520 C 200 490 400 550 600 520 L 600 600 L 0 600 Z", "M 0 520 C 200 550 400 490 600 520 L 600 600 L 0 600 Z", "M 0 520 C 200 490 400 550 600 520 L 600 600 L 0 600 Z"] }}
+                            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                         />
 
-                        {/* Yellow Nodes on the Trend Line */}
-                        <circle cx="105" cy="160" r="5" fill={theme.accent} />
-                        <circle cx="145" cy="100" r="5" fill={theme.accent} />
-                        <circle cx="185" cy="180" r="5" fill={theme.accent} />
-                        <circle cx="225" cy="80" r="5" fill={theme.accent} />
-                        <circle cx="265" cy="140" r="5" fill={theme.accent} />
-
-                        {/* Central White Circle */}
-                        <motion.circle 
-                            cx="200" cy="250" r="30" 
-                            fill="#FFFFFF" 
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ duration: 0.5, delay: 0.5 }}
+                        {/* Animated Flying Birds */}
+                        <motion.path 
+                            d="M 400 200 Q 410 190 420 200 Q 410 210 400 200" 
+                            stroke="#FFFFFF" strokeWidth="2" fill="none" 
+                            animate={{ x: [0, -100, 0], y: [0, -30, 0] }} 
+                            transition={{ duration: 12, repeat: Infinity, ease: "linear" }} 
                         />
-                        
-                        {/* Pulse effect behind Map Pin */}
-                        <motion.circle 
-                            cx="200" cy="250" r="30" 
-                            stroke="#FFFFFF" strokeWidth="2"
-                            animate={{ scale: [1, 1.5, 1], opacity: [0.8, 0, 0.8] }}
-                            transition={{ duration: 2, repeat: Infinity }}
+                        <motion.path 
+                            d="M 450 150 Q 460 140 470 150 Q 460 160 450 150" 
+                            stroke="#FFFFFF" strokeWidth="2" fill="none" 
+                            animate={{ x: [0, -150, 0], y: [0, -20, 0] }} 
+                            transition={{ duration: 15, repeat: Infinity, delay: 2, ease: "linear" }} 
                         />
-                        
-                        {/* Map Pin inside the white circle */}
-                        <path d="M 200 240 C 195 240 192 244 192 248 C 192 254 200 262 200 262 C 200 262 208 254 208 248 C 208 244 205 240 200 240 Z" fill={theme.primary} />
-                        <circle cx="200" cy="246" r="2" fill="#FFFFFF" />
                     </svg>
                 </motion.div>
             </main>
@@ -389,7 +399,7 @@ export default function MarketingLanding() {
                 {showProductsPrompt && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center p-6">
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[500px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative border border-[#E0E0E0]">
-                            <button onClick={() => setShowProductsPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#666666] hover:bg-[#F5F5F5] rounded-full transition-colors outline-none"><X size={18} /></button>
+                            <button onClick={() => setShowProductsPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#666666] hover:bg-gray-100 hover:text-[#111111] rounded-full transition-colors outline-none"><X size={18} /></button>
                             <h2 className="text-[1.5rem] font-black tracking-tight mb-8 text-[#111111] text-center mt-4">{currentT.products}</h2>
                             <div className="flex flex-col gap-4">
                                 <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
@@ -437,7 +447,7 @@ export default function MarketingLanding() {
                 </div>
 
                 <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-1 opacity-90 cursor-pointer" onClick={scrollToTop}>
+                    <div className="flex items-center opacity-90 cursor-pointer" onClick={scrollToTop}>
                         <img 
                             src="/logo-2.png" 
                             alt="M" 
