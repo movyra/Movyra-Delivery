@@ -20,8 +20,8 @@ import { X, ArrowRight, ArrowUp, Globe, DownloadCloud, ShieldCheck, HardDrive, H
 const TRANSLATIONS = {
     en: {
         lang: "English", products: "Products", sitemap: "Sitemap", careers: "Careers", coming_soon: "Coming Soon", built_by: "Built by",
-        title: "Official Application Download", subtitle: "Secure Civic Platform by Movyra", 
-        version: "Version", size: "Size", checksum: "Security Checksum", download: "Download Application", 
+        title: "Get App\nHere", subtitle: "Safe City App by Movyra", 
+        version: "Version", size: "Size", checksum: "Security Checksum", download: "Download App", 
         guideTitle: "Installation Guide", 
         step1: "Click the download button to save the file to your phone.", 
         step2: "Open your downloads folder and tap the downloaded file.", 
@@ -30,7 +30,7 @@ const TRANSLATIONS = {
     },
     hi: {
         lang: "हिन्दी", products: "उत्पाद", sitemap: "साइटमैप", careers: "करियर", coming_soon: "जल्द आ रहा है", built_by: "निर्मित",
-        title: "आधिकारिक एप्लिकेशन डाउनलोड", subtitle: "मोविरा द्वारा सुरक्षित नागरिक मंच", 
+        title: "ऐप डाउनलोड\nकरें", subtitle: "मोविरा का सुरक्षित शहर ऐप", 
         version: "संस्करण", size: "आकार", checksum: "सुरक्षा चेकसम", download: "एप्लिकेशन डाउनलोड करें", 
         guideTitle: "स्थापना गाइड", 
         step1: "फ़ाइल को अपने फोन में सहेजने के लिए डाउनलोड बटन पर क्लिक करें।", 
@@ -40,7 +40,7 @@ const TRANSLATIONS = {
     },
     hinglish: {
         lang: "Hinglish", products: "Products", sitemap: "Sitemap", careers: "Careers", coming_soon: "Coming Soon", built_by: "Built by",
-        title: "Official Application Download", subtitle: "Movyra dwara secure civic platform", 
+        title: "App Download\nKarein", subtitle: "Movyra ki safe city app", 
         version: "Version", size: "Size", checksum: "Security Checksum", download: "Application Download Karein", 
         guideTitle: "Installation Guide", 
         step1: "File ko apne phone mein save karne ke liye download button dabayein.", 
@@ -50,7 +50,7 @@ const TRANSLATIONS = {
     },
     mr: {
         lang: "मराठी", products: "उत्पादने", sitemap: "साइटमॅप", careers: "करिअर", coming_soon: "लवकरच येत आहे", built_by: "निर्मित",
-        title: "अधिकृत ॲप्लिकेशन डाउनलोड", subtitle: "मोविरा द्वारे सुरक्षित नागरी व्यासपीठ", 
+        title: "ॲप डाउनलोड\nकरा", subtitle: "मोविराचे सुरक्षित शहर ॲप", 
         version: "आवृत्ती", size: "आकार", checksum: "सुरक्षा चेकसम", download: "ॲप्लिकेशन डाउनलोड करा", 
         guideTitle: "स्थापना मार्गदर्शक", 
         step1: "फाइल तुमच्या फोनवर सेव्ह करण्यासाठी डाउनलोड बटणावर क्लिक करा.", 
@@ -60,9 +60,9 @@ const TRANSLATIONS = {
     },
     gu: {
         lang: "ગુજરાતી", products: "ઉત્પાદનો", sitemap: "સાઇટમેપ", careers: "કારકિર્દી", coming_soon: "ટૂંક સમયમાં", built_by: "દ્વારા",
-        title: "સત્તાવાર એપ્લિકેશન ડાઉનલોડ", subtitle: "મોવિરા દ્વારા સુરક્ષિત નાગરિક પ્લેટફોર્મ", 
+        title: "એપ ડાઉનલોડ\nકરો", subtitle: "મોવિરાની સુરક્ષિત શહેર એપ", 
         version: "આવૃત્તિ", size: "કદ", checksum: "સુરક્ષા ચેકસમ", download: "એપ્લિકેશન ડાઉનલોડ કરો", 
-        guideTitle: "स्थाપન માર્ગદર્શિકા", 
+        guideTitle: "સ્થાપન માર્ગદર્શિકા", 
         step1: "ફાઇલને તમારા ફોનમાં સાચવવા માટે ડાઉનલોડ બટન પર ક્લિક કરો.", 
         step2: "તમારું ડાઉનલોડ્સ ફોલ્ડર ખોલો અને ડાઉનલોડ કરેલી ફાઇલ પર ટેપ કરો.", 
         step3: "જો કોઈ સુરક્ષા ચેતવણી દેખાય, તો 'તો પણ ડાઉનલોડ કરો' પર ક્લિક કરો. આ સીધા ડાઉનલોડ માટે સામાન્ય છે.", 
@@ -70,7 +70,7 @@ const TRANSLATIONS = {
     },
     te: {
         lang: "తెలుగు", products: "ఉత్పత్తులు", sitemap: "సైట్‌మ్యాప్", careers: "కెరీర్స్", coming_soon: "త్వరలో", built_by: "నిర్మించినవారు",
-        title: "అధికారిక అప్లికేషన్ డౌన్‌లోడ్", subtitle: "మోవిరా ద్వారా సురక్షిత సివిక్ ప్లాట్‌ఫారమ్", 
+        title: "యాప్ డౌన్‌లోడ్\nచేయండి", subtitle: "మోవిరా వారి సురక్షిత సిటీ యాప్", 
         version: "వెర్షన్", size: "పరిమాణం", checksum: "భద్రతా చెక్‌సమ్", download: "అప్లికేషన్ డౌన్‌లోడ్ చేయండి", 
         guideTitle: "ఇన్‌స్టాలేషన్ గైడ్", 
         step1: "ఫైల్‌ను మీ ఫోన్‌లో సేవ్ చేయడానికి డౌన్‌లోడ్ బటన్‌ను క్లిక్ చేయండి.", 
@@ -80,7 +80,7 @@ const TRANSLATIONS = {
     },
     ta: {
         lang: "தமிழ்", products: "தயாரிப்புகள்", sitemap: "தளவரைபடம்", careers: "தொழில்கள்", coming_soon: "விரைவில்", built_by: "உருவாக்கியவர்",
-        title: "அதிகாரப்பூர்வ பயன்பாடு பதிவிறக்கம்", subtitle: "மோவிராவால் பாதுகாப்பான குடிமக்கள் தளம்", 
+        title: "ஆப்\nடவுன்லோட்", subtitle: "மோவிராவின் பாதுகாப்பான நகர ஆப்", 
         version: "பதிப்பு", size: "அளவு", checksum: "பாதுகாப்பு குறியீடு", download: "பயன்பாட்டைப் பதிவிறக்கவும்", 
         guideTitle: "நிறுவல் வழிகாட்டி", 
         step1: "உங்கள் தொலைபேசியில் கோப்பைச் சேமிக்க பதிவிறக்க பொத்தானைக் கிளிக் செய்யவும்.", 
@@ -90,7 +90,7 @@ const TRANSLATIONS = {
     },
     pa: {
         lang: "ਪੰਜਾਬੀ", products: "ਉਤਪਾਦ", sitemap: "ਸਾਈਟਮੈਪ", careers: "ਕਰੀਅਰ", coming_soon: "ਜਲਦੀ", built_by: "ਦੁਆਰਾ ਬਣਾਇਆ",
-        title: "ਅਧਿਕਾਰਤ ਐਪਲੀਕੇਸ਼ਨ ਡਾਊਨਲੋਡ", subtitle: "ਮੋਵਿਰਾ ਦੁਆਰਾ ਸੁਰੱਖਿਅਤ ਨਾਗਰਿਕ ਪਲੇਟਫਾਰਮ", 
+        title: "ਐਪ ਡਾਊਨਲੋਡ\nਕਰੋ", subtitle: "ਮੋਵਿਰਾ ਦੀ ਸੁਰੱਖਿਅਤ ਸ਼ਹਿਰ ਐਪ", 
         version: "ਸੰਸਕਰਣ", size: "ਆਕਾਰ", checksum: "ਸੁਰੱਖਿਆ ਚੈੱਕਸਮ", download: "ਐਪਲੀਕੇਸ਼ਨ ਡਾਊਨਲੋਡ ਕਰੋ", 
         guideTitle: "ਇੰਸਟਾਲੇਸ਼ਨ ਗਾਈਡ", 
         step1: "ਆਪਣੇ ਫ਼ੋਨ ਵਿੱਚ ਫ਼ਾਈਲ ਨੂੰ ਸੁਰੱਖਿਅਤ ਕਰਨ ਲਈ ਡਾਊਨਲੋਡ ਬਟਨ 'ਤੇ ਕਲਿੱਕ ਕਰੋ।", 
@@ -100,7 +100,7 @@ const TRANSLATIONS = {
     },
     bho: {
         lang: "भोजपुरी", products: "उत्पाद", sitemap: "साइटमैप", careers: "करियर", coming_soon: "जल्द", built_by: "द्वारा बनावल",
-        title: "आधिकारिक एप्लीकेशन डाउनलोड", subtitle: "मोविरा द्वारा सुरक्षित नागरिक मंच", 
+        title: "ऐप डाउनलोड\nकरीं", subtitle: "मोविरा के सुरक्षित शहर ऐप", 
         version: "संस्करण", size: "आकार", checksum: "सुरक्षा चेकसम", download: "एप्लीकेशन डाउनलोड करीं", 
         guideTitle: "स्थापना गाइड", 
         step1: "फ़ाइल के अपना फोन में सहेजे खातिर डाउनलोड बटन पर क्लिक करीं।", 
@@ -110,7 +110,7 @@ const TRANSLATIONS = {
     },
     ar: {
         lang: "العربية", products: "المنتجات", sitemap: "خريطة الموقع", careers: "وظائف", coming_soon: "قريباً", built_by: "بواسطة",
-        title: "تحميل التطبيق الرسمي", subtitle: "منصة مدنية آمنة بواسطة موفيرا", 
+        title: "تنزيل\nالتطبيق", subtitle: "تطبيق مدينة آمن من موفيرا", 
         version: "الإصدار", size: "الحجم", checksum: "المجموع الاختباري للأمان", download: "تحميل التطبيق", 
         guideTitle: "دليل التثبيت", 
         step1: "انقر فوق زر التنزيل لحفظ الملف على هاتفك.", 
@@ -120,7 +120,7 @@ const TRANSLATIONS = {
     },
     es: {
         lang: "Español", products: "Productos", sitemap: "Mapa del sitio", careers: "Carreras", coming_soon: "Pronto", built_by: "Por",
-        title: "Descarga de Aplicación Oficial", subtitle: "Plataforma cívica segura por Movyra", 
+        title: "Descargar\nApp", subtitle: "App de ciudad segura por Movyra", 
         version: "Versión", size: "Tamaño", checksum: "Suma de comprobación", download: "Descargar Aplicación", 
         guideTitle: "Guía de Instalación", 
         step1: "Haga clic en descargar para guardar el archivo.", 
@@ -130,7 +130,7 @@ const TRANSLATIONS = {
     },
     fr: {
         lang: "Français", products: "Produits", sitemap: "Plan du site", careers: "Carrières", coming_soon: "Bientôt", built_by: "Par",
-        title: "Téléchargement Officiel", subtitle: "Plateforme civique sécurisée par Movyra", 
+        title: "Télécharger\nl'App", subtitle: "App de ville sûre par Movyra", 
         version: "Version", size: "Taille", checksum: "Somme de contrôle", download: "Télécharger l'App", 
         guideTitle: "Guide d'Installation", 
         step1: "Cliquez sur télécharger pour enregistrer le fichier.", 
@@ -140,7 +140,7 @@ const TRANSLATIONS = {
     },
     de: {
         lang: "Deutsch", products: "Produkte", sitemap: "Sitemap", careers: "Karriere", coming_soon: "Demnächst", built_by: "Von",
-        title: "Offizieller App-Download", subtitle: "Sichere Bürgerplattform von Movyra", 
+        title: "App\nHerunterladen", subtitle: "Sichere Stadt-App von Movyra", 
         version: "Version", size: "Größe", checksum: "Sicherheitsprüfsumme", download: "App Herunterladen", 
         guideTitle: "Installationsanleitung", 
         step1: "Klicken Sie auf Herunterladen, um die Datei zu speichern.", 
