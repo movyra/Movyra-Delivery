@@ -232,7 +232,7 @@ export default function MarketingLanding() {
 
             {/* MINIMAL TOP HEADER */}
             <header className="w-full flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-1 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
+                <div className="flex items-center gap-0.5 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
                     <img 
                         src="/logo-2.png" 
                         alt="Movyra Logo" 
@@ -402,21 +402,21 @@ export default function MarketingLanding() {
                             <button onClick={() => setShowProductsPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#666666] hover:bg-gray-100 hover:text-[#111111] rounded-full transition-colors outline-none"><X size={18} /></button>
                             <h2 className="text-[1.5rem] font-black tracking-tight mb-8 text-[#111111] text-center mt-4">{currentT.products}</h2>
                             <div className="flex flex-col gap-4">
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
-                                    <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                <div className="flex items-center gap0.3 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
+                                    <img src="/logo-4.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                     <div className="flex flex-col"><span className="font-black text-xl leading-none text-[#111111]">ovyra <span className="font-medium text-[1rem] text-[#666666] ml-1">Sahay</span></span></div>
                                 </div>
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
-                                    <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                <div className="flex items-center gap-0.3 p-4 rounded-2xl border border-[#E0E0E0] bg-[#F9FAFB] hover:border-[#CCCCCC] transition-colors cursor-pointer outline-none">
+                                    <img src="/logo-3.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                     <div className="flex flex-col"><span className="font-black text-xl leading-none text-[#111111]">ovyra <span className="font-medium text-[1rem] text-[#666666] ml-1">Civic</span></span></div>
                                 </div>
-                                <div className="flex items-center gap-4 p-4 rounded-2xl border-2 border-[#00897B] bg-[#E0F2F1] outline-none">
-                                    <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                <div className="flex items-center gap-0.3 p-4 rounded-2xl border-2 border-[#00897B] bg-[#E0F2F1] outline-none">
+                                    <img src="/logo-6.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                     <div className="flex flex-col"><span className="font-black text-xl leading-none text-[#00897B]">ovyra <span className="font-bold text-[1rem] ml-1">NagrikSetu</span></span></div>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-2xl border border-[#E0E0E0] bg-[#FFFFFF] opacity-70 outline-none">
-                                    <div className="flex items-center gap-4">
-                                        <img src="/logo-2.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                    <div className="flex items-center gap-0.3">
+                                        <img src="/logo-7.png" alt="M" className="h-6 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <div className="flex flex-col"><span className="font-black text-xl leading-none text-[#111111]">ovyra <span className="font-medium text-[1rem] text-[#666666] ml-1">SevaSetu</span></span></div>
                                     </div>
                                     <span className="text-[0.75rem] font-bold px-3 py-1 bg-[#F5F5F5] text-[#111111] rounded-full uppercase tracking-wider">{currentT.coming_soon}</span>
@@ -455,7 +455,7 @@ export default function MarketingLanding() {
                             onError={(e) => { e.target.style.display = 'none' }} 
                         />
                         <span className="font-black text-xl -ml-[3px] text-[#FFFFFF]">
-                            ovyra <span className="font-medium text-[0.75rem] ml-1 tracking-wide">NagrikSetu</span>
+                            &nbsp;ovyra <span className="font-medium text-[0.75rem] ml-1 tracking-wide">NagrikSetu</span>
                         </span>
                     </div>
 
