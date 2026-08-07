@@ -21,6 +21,8 @@ const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 // New Official Download Page
 const DownloadPage = React.lazy(() => import('./pages/DownloadPage'));
+// New Marketing Showcase Page
+const MarketingLanding = React.lazy(() => import('./pages/MarketingLanding'));
 
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
@@ -70,8 +72,8 @@ const AppLayout = () => {
         return () => unsubscribe();
     }, [location.pathname, navigate]);
     
-    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, Admin, and Download Page)
-    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download'].includes(location.pathname);
+    // Conditionally hide navigation components for immersive screens (Onboarding, Live SOS, Admin, Download Page, and Landing Page)
+    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing'].includes(location.pathname);
 
     return (
         <div className="relative min-h-screen bg-[#FFFFFF]">
@@ -105,6 +107,9 @@ const AppLayout = () => {
 
                             {/* Official Download Landing Page */}
                             <Route path="/download" element={<DownloadPage />} />
+                            
+                            {/* Marketing Showcase Landing Page */}
+                            <Route path="/landing" element={<MarketingLanding />} />
 
                             {/* Exclusive Super Admin Moderation Route */}
                             <Route 
