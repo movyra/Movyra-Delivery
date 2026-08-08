@@ -19,6 +19,9 @@
         ],
         "main": [
           "movyra"
+        ],
+        "ng-sevasetu": [
+          "msevasetu"
         ]
       }
     }
