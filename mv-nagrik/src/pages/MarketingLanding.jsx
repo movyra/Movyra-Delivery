@@ -450,7 +450,7 @@ export default function MarketingLanding() {
                                 </Link>
 
                                 {/* Movyra SevaSetu */}
-                                <Link to="#" onClick={(e) => { e.preventDefault(); alert("Movyra SevaSetu is Coming Soon!"); }} className="group flex flex-col items-center justify-center gap-2 bg-[#FFFFFF] border border-[#E0E0E0] p-6 rounded-2xl opacity-70 hover:bg-[#F5F5F5] transition-all text-center w-full outline-none relative cursor-pointer">
+                                <Link to="https://rebrand.ly/msevasetu" onClick={(e) => { e.preventDefault(); alert("Movyra SevaSetu is Coming Soon!"); }} className="group flex flex-col items-center justify-center gap-2 bg-[#FFFFFF] border border-[#E0E0E0] p-6 rounded-2xl opacity-70 hover:bg-[#F5F5F5] transition-all text-center w-full outline-none relative cursor-pointer">
                                     <div className="flex items-center gap-0.3">
                                         <img src="/logo-7.png" alt="Movyra" className="h-7 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <span className="font-black text-[1.4rem] tracking-tighter text-[#111111]">
