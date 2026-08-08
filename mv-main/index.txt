@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png+xml" href="/logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>Movyra</title>
+    <meta name="title" content="Movyra" />
+    <meta name="description" content="Delivery, civic, and rescue solutions." />
+    
+    <link rel="canonical" href="https://getmovyra.in" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://getmovyra.in/" />
+    <meta property="og:title" content="Movyra" />
+    <meta property="og:description" content="Delivery, civic, and rescue solutions." />
+    <meta property="og:image" content="https://getmovyra.in/logo-2.png" />
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://getmovyra.in/" />
+    <meta property="twitter:title" content="Movyra" />
+    <meta property="twitter:description" content="Delivery, civic, and rescue solutions." />
+    <meta property="twitter:image" content="https://getmovyra.in/logo-2.png" />
+
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
