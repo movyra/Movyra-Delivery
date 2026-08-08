@@ -9,7 +9,7 @@
  * Gujarati: ટેલવિન્ડ અને ઓટોપ્રિફિક્સર સંકલન માટે પોસ્ટસીએસએસ ગોઠવણી.
  * Telugu: టెయిల్‌విండ్ మరియు ఆటోప్రిఫిక్సర్ కంపైలేషన్ కోసం పోస్ట్‌సీఎస్‌ఎస్ కాన్ఫిగరేషన్.
  * Tamil: டெயில்விண்ட் மற்றும் ஆட்டோபிரிபிக்ஸர் தொகுப்பிற்கான போஸ்ட்சிஎஸ்எஸ் கட்டமைப்பு.
- * Kannada: ಟೈಲ್‌ವಿಂಡ್ ಮತ್ತು ಆಟೋಪ್ರಿಫಿಕ್ಸರ್ ಸಂಕಲನಕ್ಕಾಗಿ ಪೋಸ್ಟ್‌ಸಿಎಸ್‌ಎಸ್ ಕಾನ್ಫಿಗರೇಶನ್.
+ * Kannada: ಟೈಲ್‌ವಿಂಡ್ ಮತ್ತು ಆಟೋಪ್ರಿಫಿಕ್ಸರ್ ಸಂಕಲನಕ್ಕಾಗಿ ಪೋಸ್ಟ್‌ಸಿಎಸ್‌ಎಸ್ ಕಾನ್ఫಿಗರೇಶನ್.
  * Malayalam: ടെയിൽവിൻഡ്, ഓട്ടോപ്രിഫിക്സർ കംപൈലേഷൻ എന്നിവയ്ക്കായുള്ള പോസ്റ്റ്‌സിഎസ്എസ് കോൺഫിഗറേഷൻ.
  * Bengali: টেলউইন্ড এবং অটোপ্রিফিক্সার সংকলনের জন্য পোস্টসিএসএস কনফিগারেশন।
  * Punjabi: ਟੇਲਵਿੰਡ ਅਤੇ ਆਟੋਪ੍ਰੀਫਿਕਸਰ ਸੰਕਲਨ ਲਈ ਪੋਸਟਸੀਐਸਐਸ ਸੰਰਚਨਾ।
@@ -23,17 +23,15 @@
  * Technical Features:
  * 1. MODULE RESOLUTION: Explicitly uses CommonJS (module.exports) to prevent .cjs build crashes.
  * 2. VENDOR PREFIXING: Automates browser compatibility via Autoprefixer.
- * 3. BUILD OPTIMIZATION: Strips unused CSS and processes modern nesting.
- * 4. HMR SYNC: Ensures Hot Module Replacement is stable in cloud IDEs.
+ * 3. VERSION ALIGNMENT: Uses the strictly compatible 'tailwindcss' plugin name for Tailwind v3.
  */
 
 module.exports = {
   plugins: {
-    // Bridges the new high-performance Tailwind engine into the Vite build pipeline
-    // This plugin engine compiles the strict SevaSetu Service Blue color palette from tailwind.config.js
-    '@tailwindcss/postcss': {},
+    // Standard Tailwind v3 PostCSS plugin
+    tailwindcss: {},
     
     // Automatically adds -webkit, -moz, and -ms prefixes for cross-device support
-    'autoprefixer': {},
+    autoprefixer: {},
   },
 };
