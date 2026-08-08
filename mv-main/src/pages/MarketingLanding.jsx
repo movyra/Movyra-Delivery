@@ -21,7 +21,7 @@ const TRANSLATIONS = {
         lang: "English", products: "Products", sitemap: "Sitemap", careers: "Careers", coming_soon: "Coming Soon", built_by: "Built by",
         badge: "NGO Support Platform",
         main_title: "Help Those\nIn Need.",
-        main_sub: "NGO and Charity Registration - Coming Soon.",
+        main_sub: "NGO and Charity Registration Coming Soon.",
         cta_btn: "Join Waitlist",
         val1_title: "Support", val1_sub: "Help people easily.",
         val2_title: "Connect", val2_sub: "Find local NGOs.",
@@ -32,7 +32,7 @@ const TRANSLATIONS = {
         lang: "हिन्दी", products: "उत्पाद", sitemap: "साइटमैप", careers: "करियर", coming_soon: "जल्द आ रहा है", built_by: "निर्मित",
         badge: "एनजीओ सपोर्ट प्लेटफॉर्म",
         main_title: "ज़रूरतमंदों की\nमदद करें।",
-        main_sub: "एनजीओ और चैरिटी पंजीकरण - जल्द आ रहा है।",
+        main_sub: "एनजीओ और चैरिटी पंजीकरण जल्द आ रहा है।",
         cta_btn: "जल्द जुड़ें",
         val1_title: "सहायता", val1_sub: "आसानी से मदद करें।",
         val2_title: "जुड़ें", val2_sub: "एनजीओ खोजें।",
@@ -43,7 +43,7 @@ const TRANSLATIONS = {
         lang: "Hinglish", products: "Products", sitemap: "Sitemap", careers: "Careers", coming_soon: "Coming Soon", built_by: "Built by",
         badge: "NGO Support Platform",
         main_title: "Zaruratmandon Ki\nMadad Karein.",
-        main_sub: "NGO aur Charity Registration - Jald Aa Raha Hai.",
+        main_sub: "NGO aur Charity Registration Jald Aa Raha Hai.",
         cta_btn: "Jald Judein",
         val1_title: "Support", val1_sub: "Asaani se madad karein.",
         val2_title: "Connect", val2_sub: "NGOs khojein.",
@@ -54,7 +54,7 @@ const TRANSLATIONS = {
         lang: "मराठी", products: "उत्पादने", sitemap: "साइटमॅप", careers: "करिअर", coming_soon: "लवकरच येत आहे", built_by: "निर्मित",
         badge: "एनजीओ सपोर्ट प्लॅटफॉर्म",
         main_title: "गरजूंना\nमदत करा.",
-        main_sub: "एनजीओ आणि चॅरिटी नोंदणी - लवकरच येत आहे.",
+        main_sub: "एनजीओ आणि चॅरिटी नोंदणी लवकरच येत आहे.",
         cta_btn: "लवकरच सामील व्हा",
         val1_title: "मदत", val1_sub: "सहज मदत करा.",
         val2_title: "जोडा", val2_sub: "एनजीओ शोधा.",
@@ -65,7 +65,7 @@ const TRANSLATIONS = {
         lang: "ગુજરાતી", products: "ઉત્પાદનો", sitemap: "સાઇટમેપ", careers: "કારકિર્દી", coming_soon: "ટૂંક સમયમાં", built_by: "દ્વારા",
         badge: "એનજીઓ સપોર્ટ પ્લેટફોર્મ",
         main_title: "જરૂરિયાતમંદોને\nમદદ કરો.",
-        main_sub: "એનજીઓ અને ચેરિટી નોંધણી - ટૂંક સમયમાં આવી રહ્યું છે.",
+        main_sub: "એનજીઓ અને ચેરિટી નોંધણી ટૂંક સમયમાં આવી રહ્યું છે.",
         cta_btn: "ટૂંક સમયમાં જોડાઓ",
         val1_title: "મદદ", val1_sub: "સરળતાથી મદદ કરો.",
         val2_title: "જોડાવો", val2_sub: "એનજીઓ શોધો.",
@@ -76,7 +76,7 @@ const TRANSLATIONS = {
         lang: "తెలుగు", products: "ఉత్పత్తులు", sitemap: "సైట్‌మ్యాప్", careers: "కెరీర్స్", coming_soon: "త్వరలో", built_by: "నిర్మించినవారు",
         badge: "ఎన్జీఓ సపోర్ట్ ప్లాట్‌ఫారమ్",
         main_title: "అవసరమైన వారికి\nసహాయం చేయండి.",
-        main_sub: "ఎన్జీఓ మరియు స్వచ్ఛంద సంస్థల నమోదు - త్వరలో వస్తుంది.",
+        main_sub: "ఎన్జీఓ మరియు స్వచ్ఛంద సంస్థల నమోదు త్వరలో వస్తుంది.",
         cta_btn: "త్వరలో చేరండి",
         val1_title: "సహాయం", val1_sub: "సులభంగా సహాయం చేయండి.",
         val2_title: "కనెక్ట్", val2_sub: "ఎన్జీఓలను కనుగొనండి.",
@@ -87,7 +87,7 @@ const TRANSLATIONS = {
         lang: "தமிழ்", products: "தயாரிப்புகள்", sitemap: "தளவரைபடம்", careers: "தொழில்கள்", coming_soon: "விரைவில்", built_by: "உருவாக்கியவர்",
         badge: "என்ஜிஓ ஆதரவு தளம்",
         main_title: "தேவையானவர்களுக்கு\nஉதவுங்கள்.",
-        main_sub: "என்ஜிஓ மற்றும் அறக்கட்டளை பதிவு - விரைவில் வருகிறது.",
+        main_sub: "என்ஜிஓ மற்றும் அறக்கட்டளை பதிவு விரைவில் வருகிறது.",
         cta_btn: "விரைவில் இணையுங்கள்",
         val1_title: "உதவி", val1_sub: "எளிதாக உதவுங்கள்.",
         val2_title: "இணைப்பு", val2_sub: "என்ஜிஓக்களைத் தேடுங்கள்.",
@@ -98,7 +98,7 @@ const TRANSLATIONS = {
         lang: "ਪੰਜਾਬੀ", products: "ਉਤਪਾਦ", sitemap: "ਸਾਈਟਮੈਪ", careers: "ਕਰੀਅਰ", coming_soon: "ਜਲਦੀ", built_by: "ਦੁਆਰਾ ਬਣਾਇਆ",
         badge: "ਐਨਜੀਓ ਸਪੋਰਟ ਪਲੇਟਫਾਰਮ",
         main_title: "ਲੋੜਵੰਦਾਂ ਦੀ\nਮਦਦ ਕਰੋ।",
-        main_sub: "ਐਨਜੀਓ ਅਤੇ ਚੈਰਿਟੀ ਰਜਿਸਟ੍ਰੇਸ਼ਨ - ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ।",
+        main_sub: "ਐਨਜੀਓ ਅਤੇ ਚੈਰਿਟੀ ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਜਲਦੀ ਆ ਰਿਹਾ ਹੈ।",
         cta_btn: "ਜਲਦੀ ਜੁੜੋ",
         val1_title: "ਮਦਦ", val1_sub: "ਆਸਾਨੀ ਨਾਲ ਮਦਦ ਕਰੋ।",
         val2_title: "ਜੁੜੋ", val2_sub: "ਐਨਜੀਓ ਲੱਭੋ।",
@@ -109,7 +109,7 @@ const TRANSLATIONS = {
         lang: "भोजपुरी", products: "उत्पाद", sitemap: "साइटमैप", careers: "करियर", coming_soon: "जल्द", built_by: "द्वारा बनावल",
         badge: "एनजीओ सपोर्ट मंच",
         main_title: "जरूरतमंद के\nमदद करीं।",
-        main_sub: "एनजीओ आ चैरिटी पंजीकरण - जल्द आवत बा।",
+        main_sub: "एनजीओ आ चैरिटी पंजीकरण जल्द आवत बा।",
         cta_btn: "जल्द जुड़ीं",
         val1_title: "मदद", val1_sub: "आसानी से मदद करीं।",
         val2_title: "जुड़ीं", val2_sub: "एनजीओ खोजीं।",
@@ -131,7 +131,7 @@ const TRANSLATIONS = {
         lang: "Español", products: "Productos", sitemap: "Mapa del sitio", careers: "Carreras", coming_soon: "Pronto", built_by: "Por",
         badge: "Plataforma de ONG",
         main_title: "Ayuda a los\nNecesitados.",
-        main_sub: "Registro de ONG y Caridad - Próximamente.",
+        main_sub: "Registro de ONG y Caridad Próximamente.",
         cta_btn: "Únete Pronto",
         val1_title: "Apoyo", val1_sub: "Ayuda fácilmente.",
         val2_title: "Conectar", val2_sub: "Encuentra ONG.",
@@ -142,7 +142,7 @@ const TRANSLATIONS = {
         lang: "Français", products: "Produits", sitemap: "Plan du site", careers: "Carrières", coming_soon: "Bientôt", built_by: "Par",
         badge: "Plateforme ONG",
         main_title: "Aidez les\nNécessiteux.",
-        main_sub: "Inscription ONG et Association - Bientôt.",
+        main_sub: "Inscription ONG et Association Bientôt.",
         cta_btn: "Rejoignez Bientôt",
         val1_title: "Soutien", val1_sub: "Aidez facilement.",
         val2_title: "Connecter", val2_sub: "Trouvez des ONG.",
@@ -153,7 +153,7 @@ const TRANSLATIONS = {
         lang: "Deutsch", products: "Produkte", sitemap: "Sitemap", careers: "Karriere", coming_soon: "Demnächst", built_by: "Von",
         badge: "NGO-Plattform",
         main_title: "Helfen Sie\nBedürftigen.",
-        main_sub: "NGO- und Wohltätigkeitsregistrierung - Demnächst.",
+        main_sub: "NGO- und Wohltätigkeitsregistrierung Demnächst.",
         cta_btn: "Bald Beitreten",
         val1_title: "Hilfe", val1_sub: "Einfach helfen.",
         val2_title: "Verbinden", val2_sub: "NGOs finden.",
@@ -226,7 +226,7 @@ export default function MarketingLanding() {
             <header className="w-full flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
                 <div className="flex items-center gap-0.3 cursor-pointer" onClick={scrollToTop}>
                     <img 
-                        src="/logo-7.png" 
+                        src="/logo.png" 
                         alt="Movyra Logo" 
                         className="h-8 w-auto mr-[1px]" 
                         onError={(e) => { e.target.style.display = 'none' }} 
@@ -382,7 +382,7 @@ export default function MarketingLanding() {
                             <div className="flex flex-col gap-4">
                                 {/* Movyra Sahay */}
                                 <a href="https://rebrand.ly/mvsahay" target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center justify-center gap-2 bg-[#F9FAFB] border border-[#E0E0E0] p-6 rounded-2xl hover:border-[#CCCCCC] hover:shadow-sm transition-all text-center w-full outline-none">
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.3">
                                         <img src="/logo-4.png" alt="Movyra" className="h-7 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <span className="font-black text-[1.4rem] tracking-tighter text-[#111111]">
                                             ovyra <span className="font-medium text-[1.1rem] text-[#666666] ml-1">Sahay</span>
@@ -393,7 +393,7 @@ export default function MarketingLanding() {
 
                                 {/* Movyra Civic */}
                                 <a href="https://rebrand.ly/mvcivic" target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center justify-center gap-2 bg-[#F9FAFB] border border-[#E0E0E0] p-6 rounded-2xl hover:border-[#CCCCCC] hover:shadow-sm transition-all text-center w-full outline-none">
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.3">
                                         <img src="/logo-3.png" alt="Movyra" className="h-7 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <span className="font-black text-[1.4rem] tracking-tighter text-[#111111]">
                                             ovyra <span className="font-medium text-[1.1rem] text-[#666666] ml-1">Civic</span>
@@ -404,7 +404,7 @@ export default function MarketingLanding() {
 
                                 {/* Movyra NagrikSetu */}
                                 <a href="https://rebrand.ly/mnagriksetu" target="_blank" rel="noopener noreferrer" className="group flex flex-col items-center justify-center gap-2 bg-[#F9FAFB] border border-[#E0E0E0] p-6 rounded-2xl hover:border-[#CCCCCC] hover:shadow-sm transition-all text-center w-full outline-none">
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.3">
                                         <img src="/logo-6.png" alt="Movyra" className="h-7 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <span className="font-black text-[1.4rem] tracking-tighter text-[#111111]">
                                             ovyra <span className="font-medium text-[1.1rem] text-[#666666] ml-1">NagrikSetu</span>
@@ -415,7 +415,7 @@ export default function MarketingLanding() {
 
                                 {/* Movyra SevaSetu */}
                                 <Link to="/landing" className="group flex flex-col items-center justify-center gap-2 bg-[#EFF6FF] border-2 border-[#2563EB] p-6 rounded-2xl transition-all text-center w-full outline-none">
-                                    <div className="flex items-center gap-1">
+                                    <div className="flex items-center gap-0.3">
                                         <img src="/logo-7.png" alt="Movyra" className="h-7 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                                         <span className="font-black text-[1.4rem] tracking-tighter text-[#2563EB]">
                                             ovyra <span className="font-bold text-[1.1rem] ml-1">SevaSetu</span>
