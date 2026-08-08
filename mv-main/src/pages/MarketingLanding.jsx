@@ -453,9 +453,9 @@ export default function MarketingLanding() {
             tag.setAttribute('content', content);
         };
 
-        setOgTag('og:title', 'SevaSetu | NGO Support Platform');
-        setOgTag('og:description', 'Join the SevaSetu waitlist. An official platform to verify NGOs, manage charitable organizations, and connect directly with local communities.');
-        setOgTag('og:image', 'https://getmovyra.in/logo-7.png');
+        setOgTag('og:title', 'SevaSetu');
+        setOgTag('og:description', 'Join the Movyra SevaSetu waitlist. An official platform to verify NGOs, manage charitable organizations, and connect directly with local communities.');
+        setOgTag('og:image', 'https://msevasetu.web.app/logo-8.png');
         setOgTag('og:url', window.location.href);
         setOgTag('og:type', 'website');
     }, []);
