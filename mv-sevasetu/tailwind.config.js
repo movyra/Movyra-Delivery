@@ -1,24 +1,3 @@
-/**
- * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
- * Context: Tailwind configuration file with SevaSetu color system.
- * 
- * English: Tailwind configuration file with SevaSetu color system.
- * Hindi: सेवासेतु रंग प्रणाली के साथ टेलविंड कॉन्फ़िगरेशन फ़ाइल।
- * Hinglish: SevaSetu color system ke sath Tailwind configuration file.
- * Marathi: सेवासेतू रंग प्रणालीसह टेलविंड कॉन्फिगरेशन फाइल.
- * Gujarati: સેવાસેતુ રંગ સિસ્ટમ સાથે ટેલવિન્ડ ગોઠવણી ફાઇલ.
- * Telugu: సేవాసేతు రంగు సిస్టమ్‌తో టెయిల్‌విండ్ కాన్ఫిగరేషన్ ఫైల్.
- * Tamil: சேவாசேது வண்ண அமைப்புடன் டெயில்விண்ட் கட்டமைப்பு கோப்பு.
- * Kannada: ಸೇವಾಸೇತು ಬಣ್ಣದ ವ್ಯವಸ್ಥೆಯೊಂದಿಗೆ ಟೈಲ್‌ವಿಂಡ್ ಕಾನ್ಫಿಗರೇಶನ್ ಫೈಲ್.
- * Malayalam: സേവാ സേതു വർണ്ണ സിസ്റ്റമുള്ള ടെയിൽവിൻഡ് കോൺഫിഗറേഷൻ ഫയൽ.
- * Bengali: সেবাসেতু রঙ সিস্টেম সহ টেলউইন্ড কনফিগারেশন ফাইল।
- * Punjabi: ਸੇਵਾਸੇਤੂ ਰੰਗ ਸਿਸਟਮ ਨਾਲ ਟੇਲਵਿੰਡ ਸੰਰਚਨਾ ਫਾਈਲ।
- * Odia: ସେବାସେତୁ ରଙ୍ଗ ସିଷ୍ଟମ୍ ସହିତ ଟେଲୱିଣ୍ଡ କନଫିଗରେସନ୍ ଫାଇଲ୍।
- * Assamese: সেৱাসেতু ৰঙৰ চিষ্টেমৰ সৈতে টেইলউইণ্ড কনফিগাৰেচন ফাইল।
- * Urdu: سیوا سیتو رنگ سسٹم کے ساتھ ٹیل ونڈ کنفیگریشن فائل۔
- * Bhojpuri: सेवासेतु रंग सिस्टम के साथ टेलविंड कॉन्फ़िगरेशन फाइल।
- */
-
 /** @type {import('tailwindcss').Config} */
 export default {
   // FEATURE 1: Precise Content Tracking
@@ -34,36 +13,24 @@ export default {
 
   theme: {
     extend: {
-      // FEATURE 3: Strict SevaSetu Brand Palette
-      // Replaces the legacy colors with the organization-focused Service Blue and designated status colors.
+      // FEATURE 3: Strict SevaSetu Color System
+      // Enforces the designated color palette for NGOs, hospitals, shelters, and public service organizations
       colors: {
-        sevasetu: {
-          primary: '#2563EB',
-          collaboration: '#60A5FA',
-          light: '#EFF6FF',
+        brand: {
+          primary: '#2563EB',       // Service Blue
+          black: '#111111',         // Deep Black
+          white: '#FFFFFF',         // Pure White
+          collaboration: '#60A5FA', // Light Blue
+          success: '#16A34A',       // Success Green
+          emergency: '#DC2626',     // Emergency Red
+          resource: '#D97706',      // Resource Amber
+          border: '#E5E7EB',        // Soft Grey Border
+          disabled: '#9CA3AF',      // Disabled Grey
         },
-        deep: {
-          black: '#111111',
-        },
-        pure: {
-          white: '#FFFFFF',
-        },
-        success: {
-          green: '#16A34A',
-          light: '#ECFDF5',
-        },
-        emergency: {
-          red: '#DC2626',
-          light: '#FEF2F2',
-        },
-        resource: {
-          amber: '#D97706',
-        },
-        border: {
-          grey: '#E5E7EB',
-        },
-        disabled: {
-          grey: '#9CA3AF',
+        surface: {
+          primary: '#EFF6FF',       // Secondary Background (Light Blue)
+          success: '#ECFDF5',       // Success Background (Light Green)
+          emergency: '#FEF2F2',     // Emergency Background (Light Red)
         }
       },
 
@@ -79,7 +46,7 @@ export default {
       },
 
       // FEATURE 5: Real-Time Interaction Animations
-      // Custom keyframes for hardware-accelerated transitions
+      // Custom keyframes for hardware-accelerated transitions used in the landing page sections
       keyframes: {
         'fade-up': {
           '0%': { opacity: '0', transform: 'translateY(20px)' },
@@ -110,13 +77,9 @@ export default {
         'spin-reverse-slow': 'spin-reverse-slow 20s linear infinite',
       },
 
-      // FEATURE 6: Signature SevaSetu Border Radius
-      // Premium, heavily rounded corners specifically requested for the floating cards and bottom navigation
+      // FEATURE 6: Signature Border Radius
+      // Premium rounded corners for containers and input fields
       borderRadius: {
-        'sevasetu-lg': '16px',
-        'sevasetu-xl': '24px',
-        'sevasetu-2xl': '32px',
-        'sevasetu-pill': '9999px',
         'uber': '14px',
         'super': '32px',
         'mega': '48px',
@@ -128,17 +91,11 @@ export default {
         '120': '30rem',
         '128': '32rem',
         '144': '36rem',
-      },
-      
-      // FEATURE 8: Depth Integration
-      boxShadow: {
-        'upward': '0 -4px 6px -1px rgba(0, 0, 0, 0.05), 0 -2px 4px -1px rgba(0, 0, 0, 0.03)',
-        'sevasetu-card': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
       }
     },
   },
 
-  // FEATURE 9: Layout & Depth Plugins
+  // FEATURE 8: Layout & Depth Plugins
   // Standard plugins for responsive design logic and complex grid layouts
   plugins: [],
 }
