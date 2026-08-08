@@ -439,6 +439,27 @@ export default function MarketingLanding() {
         { code: 'de', label: 'Deutsch' }
     ];
 
+    // Strictly dynamic Document Title and Open Graph tag injection hook for platform sharing previews
+    useEffect(() => {
+        document.title = "SevaSetu | Official NGO Support Platform";
+
+        const setOgTag = (property, content) => {
+            let tag = document.querySelector(`meta[property="${property}"]`);
+            if (!tag) {
+                tag = document.createElement('meta');
+                tag.setAttribute('property', property);
+                document.head.appendChild(tag);
+            }
+            tag.setAttribute('content', content);
+        };
+
+        setOgTag('og:title', 'SevaSetu | NGO Support Platform');
+        setOgTag('og:description', 'Join the SevaSetu waitlist. An official platform to verify NGOs, manage charitable organizations, and connect directly with local communities.');
+        setOgTag('og:image', 'https://getmovyra.in/logo-7.png');
+        setOgTag('og:url', window.location.href);
+        setOgTag('og:type', 'website');
+    }, []);
+
     useEffect(() => {
         try {
             const userLang = typeof navigator !== 'undefined' && navigator.language ? navigator.language.slice(0, 2) : 'en';
@@ -680,21 +701,42 @@ export default function MarketingLanding() {
 
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="w-full lg:w-[50%] h-[400px] lg:h-[650px] relative flex items-center justify-center">
                     <svg viewBox="0 0 600 600" className="w-full h-full max-w-[650px] drop-shadow-2xl" fill="none">
-                        <motion.circle cx="300" cy="300" r="180" stroke="rgba(255,255,255,0.1)" strokeWidth="2" strokeDasharray="10 10" animate={{ rotate: 360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} />
-                        <motion.circle cx="300" cy="300" r="120" fill="rgba(255,255,255,0.05)" animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} />
-                        <path d="M 300 300 L 150 150 M 300 300 L 450 150 M 300 300 L 150 450 M 300 300 L 450 450" stroke="rgba(255,255,255,0.2)" strokeWidth="3" strokeLinecap="round" />
-                        <circle cx="150" cy="150" r="20" fill="rgba(255,255,255,0.2)" />
-                        <circle cx="450" cy="150" r="20" fill="rgba(255,255,255,0.2)" />
-                        <circle cx="150" cy="450" r="20" fill="rgba(255,255,255,0.2)" />
-                        <circle cx="450" cy="450" r="20" fill="rgba(255,255,255,0.2)" />
-                        <motion.circle cx="150" cy="150" r="6" fill="#FFFFFF" animate={{ x: [0, 75, 150], y: [0, 75, 150], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0 }} />
-                        <motion.circle cx="450" cy="150" r="6" fill="#FFFFFF" animate={{ x: [0, -75, -150], y: [0, 75, 150], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 0.5 }} />
-                        <motion.circle cx="150" cy="450" r="6" fill="#FFFFFF" animate={{ x: [0, 75, 150], y: [0, -75, -150], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }} />
-                        <motion.circle cx="450" cy="450" r="6" fill="#FFFFFF" animate={{ x: [0, -75, -150], y: [0, -75, -150], opacity: [0, 1, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1.5 }} />
-                        <circle cx="300" cy="300" r="60" fill="#FFFFFF" shadow="0 10px 30px rgba(0,0,0,0.2)" />
-                        <motion.path d="M 300 320 C 300 320 270 290 270 275 C 270 260 285 250 300 265 C 315 250 330 260 330 275 C 330 290 300 320 300 320 Z" fill="#DC2626" animate={{ scale: [1, 1.15, 1] }} transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }} />
-                        <path d="M 260 310 C 270 330 290 340 300 340 C 310 340 330 330 340 310" stroke={theme.primary} strokeWidth="6" strokeLinecap="round" fill="none" />
-                        <path d="M 250 315 L 265 315 M 350 315 L 335 315" stroke={theme.primary} strokeWidth="6" strokeLinecap="round" />
+                        
+                        {/* Nature and Care Concept Graphic */}
+                        {/* Sun/Background Glow */}
+                        <motion.circle cx="300" cy="250" r="140" fill="rgba(255,255,255,0.08)" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+                        <motion.circle cx="300" cy="250" r="100" fill="rgba(255,255,255,0.15)" />
+                        
+                        {/* Birds Flying */}
+                        <motion.path d="M 180 180 Q 190 160 200 180 Q 210 160 220 180" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" fill="none" animate={{ y: [0, -10, 0], x: [0, 10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
+                        <motion.path d="M 230 140 Q 240 120 250 140 Q 260 120 270 140" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" animate={{ y: [0, -8, 0], x: [0, 15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
+                        
+                        {/* Landscape / Mountains */}
+                        <path d="M 50 450 L 200 250 L 350 450 Z" fill="rgba(255,255,255,0.1)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M 250 450 L 400 200 L 550 450 Z" fill="rgba(255,255,255,0.15)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
+                        
+                        {/* Community Buildings (NGO / Hospital) */}
+                        <rect x="260" y="320" width="80" height="130" fill="rgba(255,255,255,0.9)" rx="4" />
+                        <rect x="285" y="340" width="30" height="30" fill="#2563EB" rx="2" />
+                        <path d="M 295 345 L 305 345 M 300 340 L 300 350" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
+                        <rect x="275" y="390" width="15" height="20" fill="#2563EB" rx="2" />
+                        <rect x="310" y="390" width="15" height="20" fill="#2563EB" rx="2" />
+                        <rect x="275" y="420" width="15" height="30" fill="#2563EB" />
+                        
+                        <rect x="180" y="370" width="60" height="80" fill="rgba(255,255,255,0.8)" rx="4" />
+                        <rect x="195" y="390" width="12" height="15" fill="#2563EB" rx="2" />
+                        <rect x="215" y="390" width="12" height="15" fill="#2563EB" rx="2" />
+                        <rect x="195" y="420" width="12" height="30" fill="#2563EB" />
+                        
+                        <rect x="360" y="350" width="70" height="100" fill="rgba(255,255,255,0.8)" rx="4" />
+                        <rect x="375" y="370" width="12" height="15" fill="#2563EB" rx="2" />
+                        <rect x="395" y="370" width="12" height="15" fill="#2563EB" rx="2" />
+                        <rect x="380" y="410" width="30" height="40" fill="#2563EB" />
+
+                        {/* Caring Hands holding the community */}
+                        <motion.path d="M 120 480 C 180 540 250 560 300 560 C 350 560 420 540 480 480" stroke="#FFFFFF" strokeWidth="12" strokeLinecap="round" fill="none" animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} />
+                        <motion.path d="M 100 450 C 160 510 240 540 300 540 C 360 540 440 510 500 450" stroke="rgba(255,255,255,0.4)" strokeWidth="12" strokeLinecap="round" fill="none" animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+
                     </svg>
                 </motion.div>
             </main>
@@ -884,18 +926,14 @@ export default function MarketingLanding() {
                             <p className="text-[#666666] text-[0.95rem] text-left mb-8">Go directly to app pages.</p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                                <Link to="/" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors text-left outline-none flex flex-col">
-                                    <span>App Home</span>
-                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Main screen</span>
+                                <Link to="/sevaadmin" onClick={() => setShowSitemapPrompt(false)} className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors text-left outline-none flex flex-col">
+                                    <span>Admin Console</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Waitlist review and approvals</span>
                                 </Link>
-                                <Link to="/sevaadmin" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors text-left outline-none flex flex-col">
-                                    <span>Admin Portal</span>
-                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Waitlist review</span>
-                                </Link>
-                                <Link to="/alerts" className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors text-left outline-none flex flex-col">
-                                    <span>Live Map</span>
-                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">See city support</span>
-                                </Link>
+                                <button onClick={() => { setShowSitemapPrompt(false); setShowStatusModal(true); }} className="bg-[#F9FAFB] border border-[#E0E0E0] p-4 rounded-xl font-bold text-[#111111] text-[0.95rem] hover:border-[#2563EB] hover:bg-[#EFF6FF] transition-colors text-left outline-none flex flex-col">
+                                    <span>Check Status</span>
+                                    <span className="text-[#666666] font-normal text-[0.75rem] mt-1">Track application progress</span>
+                                </button>
                             </div>
                         </motion.div>
                     </motion.div>
