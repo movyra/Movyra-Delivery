@@ -89,6 +89,13 @@
         "**/.*",
         "**/node_modules/**"
       ],
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "/landing",
+          "type": 301
+        }
+      ],
       "rewrites": [
         {
           "source": "**",
