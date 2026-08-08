@@ -40,6 +40,7 @@ import FirebaseQuotaBlocker from './components/f';
 
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
+import MarketingLanding from './pages/MarketingLanding'; // NEW IMPORT
 import AboutPage from './pages/About';
 import ContactPage from './pages/Contact';
 import CareersPage from './pages/Careers';
@@ -328,6 +329,7 @@ export default function App() {
               // and evaluates the global maintenance protocol for specified modules.
               // ==============================================================
               <>
+                <Route path='/landing' element={<AnimatedRoute><MarketingLanding /></AnimatedRoute>} />
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
                 <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
                 <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
@@ -400,6 +402,7 @@ export default function App() {
               // ==============================================================
               <>
                 <Route path='/' element={<AnimatedRoute><HomePage /></AnimatedRoute>} />
+                <Route path='/landing' element={<AnimatedRoute><MarketingLanding /></AnimatedRoute>} />
                 <Route path='/about' element={<AnimatedRoute><AboutPage /></AnimatedRoute>} />
                 <Route path='/contact' element={<AnimatedRoute><ContactPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
