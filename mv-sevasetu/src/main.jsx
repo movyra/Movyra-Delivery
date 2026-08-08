@@ -55,9 +55,14 @@ const SystemTranslations = {
   bho: { loading: "सिस्टम लोड हो रहल बा", ready: "सिस्टम तइयार बा", error: "सिस्टम त्रुटि", offline: "नेटवर्क ऑफलाइन" }
 };
 
-// GLOBAL CONTEXT INITIALIZATION
-// eslint-disable-next-line react-refresh/only-export-components
-export const AppContext = createContext();
+// GLOBAL CONTEXT INITIALIZATION WITH STRICT DEFAULT FALLBACK
+// This entirely prevents the "Cannot read properties of undefined (reading 'translations')" crash
+export const AppContext = createContext({
+  colors: SystemColors,
+  translations: SystemTranslations,
+  language: 'en',
+  setLanguage: () => {}
+});
 
 function AppProvider({ children }) {
   const [language, setLanguage] = useState('en');
