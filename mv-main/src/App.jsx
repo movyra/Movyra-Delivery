@@ -40,7 +40,8 @@ import FirebaseQuotaBlocker from './components/f';
 
 // --- STANDARD PAGE IMPORTS ---
 import HomePage from './pages/Home';
-import MarketingLanding from './pages/MarketingLanding'; // NEW IMPORT
+import MarketingLanding from './pages/MarketingLanding';
+import SevaSetuAdmin from './pages/SevaSetuAdmin'; // NEW SEVASETU ADMIN IMPORT
 import AboutPage from './pages/About';
 import ContactPage from './pages/Contact';
 import CareersPage from './pages/Careers';
@@ -296,6 +297,39 @@ const SecureCivicGateway = ({ children }) => {
   return children;
 };
 
+// STRICT SEVASETU ADMIN AUTHENTICATION INTERCEPTOR
+const SecureSevaSetuAdminGate = ({ children }) => {
+  const [isVerifying, setIsVerifying] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === 'testcodecfg@gmail.com') {
+        setIsAuthorized(true);
+      } else {
+        setIsAuthorized(false);
+      }
+      setIsVerifying(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (isVerifying) {
+    return (
+      <div className="min-h-screen bg-[#F3F4F6] text-[#111111] flex flex-col items-center justify-center font-sans">
+        <div className="w-8 h-8 border-2 border-[#2563EB] border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="font-bold text-[0.9rem]">Verifying administrator credentials...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return <Navigate to="/landing" replace />;
+  }
+
+  return children;
+};
+
 // ============================================================================
 // APP ENTRY POINT
 // ============================================================================
@@ -330,6 +364,7 @@ export default function App() {
               // ==============================================================
               <>
                 <Route path='/landing' element={<AnimatedRoute><MarketingLanding /></AnimatedRoute>} />
+                <Route path='/sevaadmin' element={<AnimatedRoute><SecureSevaSetuAdminGate><SevaSetuAdmin /></SecureSevaSetuAdminGate></AnimatedRoute>} />
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
                 <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
                 <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
@@ -403,6 +438,7 @@ export default function App() {
               <>
                 <Route path='/' element={<AnimatedRoute><HomePage /></AnimatedRoute>} />
                 <Route path='/landing' element={<AnimatedRoute><MarketingLanding /></AnimatedRoute>} />
+                <Route path='/sevaadmin' element={<AnimatedRoute><SecureSevaSetuAdminGate><SevaSetuAdmin /></SecureSevaSetuAdminGate></AnimatedRoute>} />
                 <Route path='/about' element={<AnimatedRoute><AboutPage /></AnimatedRoute>} />
                 <Route path='/contact' element={<AnimatedRoute><ContactPage /></AnimatedRoute>} />
                 <Route path='/careers' element={<AnimatedRoute><CareersPage /></AnimatedRoute>} />
