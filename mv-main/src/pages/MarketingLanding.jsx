@@ -653,7 +653,7 @@ export default function MarketingLanding() {
             </style>
 
             <header className="w-full max-w-[1400px] mx-auto flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-1 cursor-pointer" onClick={scrollToTop}>
+                <div className="flex items-center gap-0.3 cursor-pointer" onClick={scrollToTop}>
                     <img src="/logo.png" alt="Movyra Logo" className="h-8 w-auto mr-[1px]" onError={(e) => { e.target.style.display = 'none' }} />
                     <span className="font-black text-[1.5rem] tracking-tighter text-[#FFFFFF]">
                         ovyra <span className="font-medium text-[1rem] ml-1 opacity-90">SevaSetu</span>
@@ -1077,6 +1077,9 @@ export default function MarketingLanding() {
                         </a>
                         <a href="https://instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity outline-none">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                        </a>
+                        <a href="#" className="hover:opacity-70 transition-opacity outline-none">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
                         </a>
                     </div>
                 </div>
