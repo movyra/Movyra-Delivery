@@ -7,17 +7,22 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    // 2. Immediately answer the Preflight (OPTIONS) request
+    // 2. Handle Preflight requests
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
 
-    // 3. Reject non-POST requests
+    // 3. Handle GET requests gracefully when visited in browser
+    if (req.method === 'GET') {
+        return res.status(200).json({ status: 'Serverless function is active. Send a POST request with an email payload.' });
+    }
+
+    // 4. Reject non-POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed. This endpoint requires a POST request.' });
     }
 
-    const { email } = req.body;
+    const { email } = req.body || {};
 
     if (!email) {
         return res.status(400).json({ error: 'Email address is required.' });
