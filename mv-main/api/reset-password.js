@@ -1,12 +1,29 @@
+const admin = require('firebase-admin');
 const { Resend } = require('resend');
 
+// Initialize Firebase Admin securely (ensure it only initializes once per serverless instance)
+if (!admin.apps.length) {
+    try {
+        admin.initializeApp({
+            credential: admin.credential.cert({
+                projectId: process.env.FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                // Replace escaped newline characters to properly format the private key string in Vercel
+                privateKey: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : undefined,
+            })
+        });
+    } catch (error) {
+        console.error('Firebase Admin Initialization Error:', error);
+    }
+}
+
 export default async function handler(req, res) {
-    // 1. Dynamic CORS Headers for the Node.js Runtime (Global access without credentials to support Codespaces & Firebase)
+    // 1. Permanent CORS Fix (Wildcard origin, no credentials)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    // 2. Immediately answer the Preflight (OPTIONS) request with a standard 200 OK
+    // 2. Immediately answer the Preflight (OPTIONS) request
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
@@ -22,18 +39,19 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Email address is required.' });
     }
 
-    const apiKey = process.env.RESEND_API_KEY;
-
-    if (!apiKey) {
-        console.error('CRITICAL ERROR: RESEND_API_KEY is not defined in Vercel.');
-        return res.status(500).json({ error: 'Internal Server Configuration Error.' });
+    // 4. Validate Environment Variables
+    if (!process.env.RESEND_API_KEY || !process.env.FIREBASE_PRIVATE_KEY) {
+        console.error('CRITICAL ERROR: Missing server environment variables.');
+        return res.status(500).json({ error: 'Internal Server Configuration Error. Missing API keys.' });
     }
 
-    const resend = new Resend(apiKey);
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     try {
-        const actionUrl = `https://msevasetu.web.app/sevaadmin?action=reset&email=${encodeURIComponent(email)}`;
+        // 5. Securely generate the Native Firebase password reset link using Admin SDK
+        const actionUrl = await admin.auth().generatePasswordResetLink(email);
 
+        // 6. Dispatch the email using Resend with custom Movyra branding
         const data = await resend.emails.send({
             from: 'Movyra SevaSetu <onboarding@resend.dev>',
             to: [email],
@@ -41,7 +59,7 @@ export default async function handler(req, res) {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background-color: #FFFFFF;">
                     <div style="background-color: #2563EB; padding: 24px; text-align: center;">
-                        <img src="https://msevasetu.web.app/logo-7.png" alt="Movyra SevaSetu" style="height: 48px; width: auto; margin-bottom: 8px;">
+                        <img src="https://msevasetu.web.app/logo.png" alt="Movyra SevaSetu" style="height: 48px; width: auto; margin-bottom: 8px;">
                         <h1 style="color: #FFFFFF; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.5px;">ovyra <span style="font-weight: 500;">SevaSetu</span></h1>
                     </div>
                     <div style="padding: 32px; color: #111111;">
@@ -62,7 +80,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({ success: true, message: 'Password reset email sent successfully.', data });
     } catch (error) {
-        console.error('Resend API Error:', error);
-        return res.status(500).json({ error: 'Failed to send password reset email.', details: error.message });
+        console.error('API Execution Error:', error);
+        return res.status(500).json({ error: 'Failed to process request to Firebase servers.', details: error.message });
     }
 }
