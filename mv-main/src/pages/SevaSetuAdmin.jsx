@@ -3,6 +3,7 @@
  * Context: Secure Administrative Dashboard for SevaSetu Waitlist Operations.
  * Database: PocketBase (https://movyra-mv-main-db-gradio.hf.space)
  * Security: Native PocketBase Auth. Super Admin RBAC applied for deletion.
+ * Routing: Password resets are routed to Vercel Serverless API (/api/reset-password).
  */
 
 import React, { useState, useEffect } from 'react';
@@ -223,15 +224,32 @@ export default function SevaSetuAdmin() {
         setRecords([]);
     };
 
+    // STRICT UPDATE: Route password resets through the Vercel API endpoint
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         setIsAuthenticating(true);
+        setAuthMessage({ text: '', type: '' });
+
         try {
-            await pb.admins.requestPasswordReset(resetEmail);
-            setAuthMessage({ text: 'Reset link sent if email exists.', type: 'success' });
-            setTimeout(() => setActiveModal(null), 3000);
+            const response = await fetch('/api/reset-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: resetEmail }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setAuthMessage({ text: 'Reset link sent successfully. Please check your inbox.', type: 'success' });
+                setTimeout(() => setActiveModal(null), 4000);
+            } else {
+                setAuthMessage({ text: result.error || 'Failed to send reset email.', type: 'error' });
+            }
         } catch (error) {
-            setAuthMessage({ text: 'Failed to process request.', type: 'error' });
+            console.error('Reset request error:', error);
+            setAuthMessage({ text: 'Network error. Please try again.', type: 'error' });
         } finally {
             setIsAuthenticating(false);
         }
@@ -368,7 +386,7 @@ export default function SevaSetuAdmin() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md bg-[#FFFFFF] rounded-2xl shadow-xl p-8 border border-[#E5E7EB]">
                     
                     <div className="flex flex-col items-center mb-8">
-                        <div className="flex items-center gap-0.3 mb-2">
+                        <div className="flex items-center gap-1 mb-2">
                             <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                             <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">
                                 ovyra <span className="font-medium text-[#2563EB]">SevaSetu</span>
@@ -432,7 +450,7 @@ export default function SevaSetuAdmin() {
                 <div className="flex items-center gap-3">
                     <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                     <div>
-                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">SevaSetu</h1>
+                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">ovyra SevaSetu</h1>
                         <p className="text-[#6B7280] text-[0.7rem] font-bold uppercase tracking-wider">{currentT.dashboard}</p>
                     </div>
                 </div>
