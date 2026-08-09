@@ -15,7 +15,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, ArrowUp, Globe, ShieldCheck, Heart, Users, Home, Camera, Upload, CheckCircle, Search } from 'lucide-react';
+import { X, ArrowRight, ArrowUp, Globe, ShieldCheck, Heart, Users, Home, Camera, Upload, CheckCircle, Search, ArrowLeft } from 'lucide-react';
 import PocketBase from 'pocketbase';
 import { FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { v4 as uuidv4 } from 'uuid';
@@ -41,7 +41,9 @@ const TRANSLATIONS = {
         contact_info: "Contact Number",
         upload_biz: "Upload Organization Document",
         capture_live: "Capture Live Photo",
-        submit: "Submit Application",
+        review_title: "Review Details",
+        confirm_submit: "Confirm & Submit",
+        go_back: "Go Back",
         processing: "Processing...",
         face_not_found: "No face detected. Look at the camera.",
         face_found: "Face verified. Ready to capture.",
@@ -69,7 +71,9 @@ const TRANSLATIONS = {
         contact_info: "संपर्क नंबर",
         upload_biz: "संगठन दस्तावेज़ अपलोड करें",
         capture_live: "लाइव फोटो लें",
-        submit: "आवेदन जमा करें",
+        review_title: "विवरण की समीक्षा करें",
+        confirm_submit: "पुष्टि करें और जमा करें",
+        go_back: "वापस जाएं",
         processing: "प्रसंस्करण...",
         face_not_found: "चेहरा नहीं मिला। कैमरे की ओर देखें।",
         face_found: "चेहरा सत्यापित। फोटो के लिए तैयार।",
@@ -97,7 +101,9 @@ const TRANSLATIONS = {
         contact_info: "Contact Number",
         upload_biz: "Organization Document Upload Karein",
         capture_live: "Live Photo Capture Karein",
-        submit: "Application Submit Karein",
+        review_title: "Details Review Karein",
+        confirm_submit: "Confirm & Submit Karein",
+        go_back: "Wapas Jayein",
         processing: "Processing...",
         face_not_found: "Face detect nahi hua. Camera dekhein.",
         face_found: "Face verify ho gaya. Capture karein.",
@@ -125,7 +131,9 @@ const TRANSLATIONS = {
         contact_info: "संपर्क क्रमांक",
         upload_biz: "संस्था दस्तऐवज अपलोड करा",
         capture_live: "थेट फोटो काढा",
-        submit: "अर्ज सबमिट करा",
+        review_title: "तपशील तपासा",
+        confirm_submit: "पुष्टी करा आणि सबमिट करा",
+        go_back: "मागे जा",
         processing: "प्रक्रिया करत आहे...",
         face_not_found: "चेहरा आढळला नाही. कॅमेऱ्याकडे पहा.",
         face_found: "चेहरा सत्यापित. कॅप्चरसाठी तयार.",
@@ -153,7 +161,9 @@ const TRANSLATIONS = {
         contact_info: "સંપર્ક નંબર",
         upload_biz: "સંસ્થા દસ્તાવેજ અપલોડ કરો",
         capture_live: "લાઇવ ફોટો લો",
-        submit: "અરજી સબમિટ કરો",
+        review_title: "વિગતોની સમીક્ષા કરો",
+        confirm_submit: "પુષ્ટિ કરો અને સબમિટ કરો",
+        go_back: "પાછા જાઓ",
         processing: "પ્રક્રિયા થઈ રહી છે...",
         face_not_found: "ચહેરો મળ્યો નથી. કેમેરા સામે જુઓ.",
         face_found: "ચહેરો ચકાસાયેલ. તૈયાર છે.",
@@ -181,7 +191,9 @@ const TRANSLATIONS = {
         contact_info: "సంప్రదింపు నంబర్",
         upload_biz: "సంస్థ పత్రం అప్‌లోడ్ చేయండి",
         capture_live: "లైవ్ ఫోటో తీయండి",
-        submit: "దరఖాస్తు సమర్పించండి",
+        review_title: "వివరాలను సమీక్షించండి",
+        confirm_submit: "నిర్ధారించండి మరియు సమర్పించండి",
+        go_back: "వెనక్కి వెళ్ళు",
         processing: "ప్రాసెస్ చేయబడుతోంది...",
         face_not_found: "ముఖం కనుగొనబడలేదు. కెమెరా చూడండి.",
         face_found: "ముఖం ధృవీకరించబడింది. సిద్ధంగా ఉంది.",
@@ -209,7 +221,9 @@ const TRANSLATIONS = {
         contact_info: "தொடர்பு எண்",
         upload_biz: "நிறுவன ஆவணத்தை பதிவேற்றவும்",
         capture_live: "நேரடி புகைப்படம் எடுக்கவும்",
-        submit: "விண்ணப்பத்தை சமர்ப்பிக்கவும்",
+        review_title: "விவரங்களை மதிப்பாய்வு செய்யவும்",
+        confirm_submit: "உறுதிசெய்து சமர்ப்பிக்கவும்",
+        go_back: "திரும்பிச் செல்",
         processing: "செயலாக்கப்படுகிறது...",
         face_not_found: "முகம் கண்டறியப்படவில்லை. கேமராவைப் பார்க்கவும்.",
         face_found: "முகம் சரிபார்க்கப்பட்டது. தயாராக உள்ளது.",
@@ -237,7 +251,9 @@ const TRANSLATIONS = {
         contact_info: "ਸੰਪਰਕ ਨੰਬਰ",
         upload_biz: "ਸੰਗਠਨ ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ",
         capture_live: "ਲਾਈਵ ਫੋਟੋ ਲਓ",
-        submit: "ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ ਕਰੋ",
+        review_title: "ਵੇਰਵਿਆਂ ਦੀ ਸਮੀਖਿਆ ਕਰੋ",
+        confirm_submit: "ਪੁਸ਼ਟੀ ਕਰੋ ਅਤੇ ਜਮ੍ਹਾਂ ਕਰੋ",
+        go_back: "ਵਾਪਸ ਜਾਓ",
         processing: "ਕਾਰਵਾਈ ਹੋ ਰਹੀ ਹੈ...",
         face_not_found: "ਚਿਹਰਾ ਨਹੀਂ ਮਿਲਿਆ। ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ।",
         face_found: "ਚਿਹਰਾ ਪ੍ਰਮਾਣਿਤ। ਤਿਆਰ ਹੈ।",
@@ -265,7 +281,9 @@ const TRANSLATIONS = {
         contact_info: "संपर्क नंबर",
         upload_biz: "संगठन दस्तावेज अपलोड करीं",
         capture_live: "लाइव फोटो लीं",
-        submit: "आवेदन जमा करीं",
+        review_title: "विवरण के समीक्षा करीं",
+        confirm_submit: "पुष्टि करीं अउर जमा करीं",
+        go_back: "वापस जाईं",
         processing: "प्रक्रिया हो रहल बा...",
         face_not_found: "चेहरा ना मिलल। कैमरा देखीं।",
         face_found: "चेहरा सत्यापित। तइयार बा।",
@@ -293,7 +311,9 @@ const TRANSLATIONS = {
         contact_info: "رقم الاتصال",
         upload_biz: "تحميل وثيقة المنظمة",
         capture_live: "التقاط صورة حية",
-        submit: "إرسال الطلب",
+        review_title: "مراجعة التفاصيل",
+        confirm_submit: "تأكيد وإرسال",
+        go_back: "عد",
         processing: "جاري المعالجة...",
         face_not_found: "لم يتم اكتشاف وجه. انظر للكاميرا.",
         face_found: "تم التحقق من الوجه. جاهز.",
@@ -321,7 +341,9 @@ const TRANSLATIONS = {
         contact_info: "Número de Contacto",
         upload_biz: "Subir Documento",
         capture_live: "Capturar Foto en Vivo",
-        submit: "Enviar Solicitud",
+        review_title: "Revisar Detalles",
+        confirm_submit: "Confirmar y Enviar",
+        go_back: "Volver",
         processing: "Procesando...",
         face_not_found: "No se detecta rostro. Mire a la cámara.",
         face_found: "Rostro verificado. Listo.",
@@ -349,7 +371,9 @@ const TRANSLATIONS = {
         contact_info: "Numéro de Contact",
         upload_biz: "Télécharger le Document",
         capture_live: "Capturer une Photo en Direct",
-        submit: "Soumettre la Demande",
+        review_title: "Vérifier les Détails",
+        confirm_submit: "Confirmer et Soumettre",
+        go_back: "Retour",
         processing: "Traitement...",
         face_not_found: "Aucun visage détecté. Regardez la caméra.",
         face_found: "Visage vérifié. Prêt.",
@@ -377,7 +401,9 @@ const TRANSLATIONS = {
         contact_info: "Kontaktnummer",
         upload_biz: "Dokument Hochladen",
         capture_live: "Live-Foto Aufnehmen",
-        submit: "Bewerbung Einreichen",
+        review_title: "Details Überprüfen",
+        confirm_submit: "Bestätigen & Einreichen",
+        go_back: "Zurück",
         processing: "Wird bearbeitet...",
         face_not_found: "Kein Gesicht erkannt. In die Kamera schauen.",
         face_found: "Gesicht verifiziert. Bereit.",
@@ -439,10 +465,8 @@ export default function MarketingLanding() {
         { code: 'de', label: 'Deutsch' }
     ];
 
-    // Strictly dynamic Document Title and Open Graph tag injection hook for platform sharing previews
     useEffect(() => {
         document.title = "SevaSetu | Official NGO Support Platform";
-
         const setOgTag = (property, content) => {
             let tag = document.querySelector(`meta[property="${property}"]`);
             if (!tag) {
@@ -452,7 +476,6 @@ export default function MarketingLanding() {
             }
             tag.setAttribute('content', content);
         };
-
         setOgTag('og:title', 'SevaSetu');
         setOgTag('og:description', 'Join the Movyra SevaSetu waitlist. An official platform to verify NGOs, manage charitable organizations, and connect directly with local communities.');
         setOgTag('og:image', 'https://msevasetu.web.app/logo-8.png');
@@ -548,11 +571,11 @@ export default function MarketingLanding() {
         canvas.toBlob((blob) => {
             setLivePhotoBlob(blob);
             stopCamera();
-            submitToPocketBase(blob);
+            setStep(3); // Proceed to Review Step
         }, 'image/jpeg', 0.9);
     };
 
-    const submitToPocketBase = async (liveBlob) => {
+    const submitToPocketBase = async () => {
         setIsUploading(true);
         try {
             const ack = uuidv4().split('-')[0].toUpperCase();
@@ -563,11 +586,11 @@ export default function MarketingLanding() {
             pbFormData.append('status', 'Pending');
             
             if (businessPhoto) pbFormData.append('business_photo', businessPhoto);
-            if (liveBlob) pbFormData.append('live_person_photo', liveBlob, 'live_photo.jpg');
+            if (livePhotoBlob) pbFormData.append('live_person_photo', livePhotoBlob, 'live_photo.jpg');
 
             await pb.collection('sevasetu_waitlist').create(pbFormData);
             setGeneratedAck(ack);
-            setStep(3);
+            setStep(4);
         } catch (error) {
             console.error("PocketBase Upload Error:", error);
             alert("Error submitting application. Please try again.");
@@ -582,7 +605,10 @@ export default function MarketingLanding() {
         setIsSearching(true);
         setStatusResult(null);
         try {
-            const record = await pb.collection('sevasetu_waitlist').getFirstListItem(`ack_number="${statusQuery.trim().toUpperCase()}"`);
+            // STRICT FIX: Pass ack_number via query parameter object so PocketBase API rules can validate @request.query.ack_number
+            const record = await pb.collection('sevasetu_waitlist').getFirstListItem(`ack_number="${statusQuery.trim().toUpperCase()}"`, {
+                query: { ack_number: statusQuery.trim().toUpperCase() }
+            });
             setStatusResult(record.status);
         } catch (error) {
             setStatusResult("Not Found");
@@ -604,12 +630,11 @@ export default function MarketingLanding() {
         stopCamera();
     };
 
+    // STRICT FIX: Ensure aggressive scroll positioning to top across all container contexts
     const scrollToTop = () => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.documentElement.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const fadeUp = {
@@ -630,7 +655,7 @@ export default function MarketingLanding() {
             </style>
 
             <header className="w-full max-w-[1400px] mx-auto flex items-center justify-between px-6 md:px-12 lg:px-24 py-8 animate-fade relative z-50">
-                <div className="flex items-center gap-0.3 cursor-pointer" onClick={scrollToTop}>
+                <div className="flex items-center gap-1 cursor-pointer" onClick={scrollToTop}>
                     <img src="/logo.png" alt="Movyra Logo" className="h-8 w-auto mr-[1px]" onError={(e) => { e.target.style.display = 'none' }} />
                     <span className="font-black text-[1.5rem] tracking-tighter text-[#FFFFFF]">
                         ovyra <span className="font-medium text-[1rem] ml-1 opacity-90">SevaSetu</span>
@@ -681,7 +706,8 @@ export default function MarketingLanding() {
                         </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 w-full max-w-lg">
+                    {/* STRICT FIX: Enforced grid-cols-2 base class to maintain 2x2 layout strictly on all mobile screens */}
+                    <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-8 w-full max-w-lg">
                         {[
                             { icon: Heart, title: currentT.val1_title, desc: currentT.val1_sub },
                             { icon: Users, title: currentT.val2_title, desc: currentT.val2_sub },
@@ -699,51 +725,66 @@ export default function MarketingLanding() {
                     </div>
                 </motion.div>
 
+                {/* STRICT FIX: Professional Enterprise-Grade Framer Motion Graphic */}
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="w-full lg:w-[50%] h-[400px] lg:h-[650px] relative flex items-center justify-center">
-                    <svg viewBox="0 0 600 600" className="w-full h-full max-w-[650px] drop-shadow-2xl" fill="none">
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        {/* Orbital Rings */}
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="absolute w-[320px] h-[320px] sm:w-[480px] sm:h-[480px] rounded-full border border-white/10"></motion.div>
+                        <motion.div animate={{ rotate: -360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} className="absolute w-[240px] h-[240px] sm:w-[360px] sm:h-[360px] rounded-full border border-white/20 border-dashed"></motion.div>
                         
-                        {/* Nature and Care Concept Graphic */}
-                        {/* Sun/Background Glow */}
-                        <motion.circle cx="300" cy="250" r="140" fill="rgba(255,255,255,0.08)" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
-                        <motion.circle cx="300" cy="250" r="100" fill="rgba(255,255,255,0.15)" />
-                        
-                        {/* Birds Flying */}
-                        <motion.path d="M 180 180 Q 190 160 200 180 Q 210 160 220 180" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" fill="none" animate={{ y: [0, -10, 0], x: [0, 10, 0] }} transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }} />
-                        <motion.path d="M 230 140 Q 240 120 250 140 Q 260 120 270 140" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" fill="none" animate={{ y: [0, -8, 0], x: [0, 15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
-                        
-                        {/* Landscape / Mountains */}
-                        <path d="M 50 450 L 200 250 L 350 450 Z" fill="rgba(255,255,255,0.1)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
-                        <path d="M 250 450 L 400 200 L 550 450 Z" fill="rgba(255,255,255,0.15)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
-                        
-                        {/* Community Buildings (NGO / Hospital) */}
-                        <rect x="260" y="320" width="80" height="130" fill="rgba(255,255,255,0.9)" rx="4" />
-                        <rect x="285" y="340" width="30" height="30" fill="#2563EB" rx="2" />
-                        <path d="M 295 345 L 305 345 M 300 340 L 300 350" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
-                        <rect x="275" y="390" width="15" height="20" fill="#2563EB" rx="2" />
-                        <rect x="310" y="390" width="15" height="20" fill="#2563EB" rx="2" />
-                        <rect x="275" y="420" width="15" height="30" fill="#2563EB" />
-                        
-                        <rect x="180" y="370" width="60" height="80" fill="rgba(255,255,255,0.8)" rx="4" />
-                        <rect x="195" y="390" width="12" height="15" fill="#2563EB" rx="2" />
-                        <rect x="215" y="390" width="12" height="15" fill="#2563EB" rx="2" />
-                        <rect x="195" y="420" width="12" height="30" fill="#2563EB" />
-                        
-                        <rect x="360" y="350" width="70" height="100" fill="rgba(255,255,255,0.8)" rx="4" />
-                        <rect x="375" y="370" width="12" height="15" fill="#2563EB" rx="2" />
-                        <rect x="395" y="370" width="12" height="15" fill="#2563EB" rx="2" />
-                        <rect x="380" y="410" width="30" height="40" fill="#2563EB" />
+                        {/* Central Hub */}
+                        <div className="relative w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-gradient-to-tr from-white/20 to-white/5 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center z-20">
+                            <Heart size={48} fill="#FFFFFF" color="#FFFFFF" className="drop-shadow-lg" />
+                        </div>
 
-                        {/* Caring Hands holding the community */}
-                        <motion.path d="M 120 480 C 180 540 250 560 300 560 C 350 560 420 540 480 480" stroke="#FFFFFF" strokeWidth="12" strokeLinecap="round" fill="none" animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} />
-                        <motion.path d="M 100 450 C 160 510 240 540 300 540 C 360 540 440 510 500 450" stroke="rgba(255,255,255,0.4)" strokeWidth="12" strokeLinecap="round" fill="none" animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} />
+                        {/* Floating Cards */}
+                        <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[10%] right-[10%] sm:right-[15%] bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
+                            <ShieldCheck size={24} color="#FFFFFF" />
+                            <span className="font-bold text-[0.95rem] tracking-wide">Verified Network</span>
+                        </motion.div>
 
-                    </svg>
+                        <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute bottom-[10%] left-[5%] sm:left-[15%] bg-[#111111] border border-white/20 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
+                            <Users size={24} color="#FFFFFF" />
+                            <span className="font-bold text-[0.95rem] tracking-wide text-white">Direct Impact</span>
+                        </motion.div>
+                    </div>
                 </motion.div>
             </main>
 
-            {/* WAITLIST MODAL */}
+            {/* FULL SCREEN CAMERA OVERLAY (STEP 2) */}
             <AnimatePresence>
-                {showWaitlistModal && (
+                {step === 2 && showWaitlistModal && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[10000] bg-[#000000] flex flex-col">
+                        <div className="w-full p-6 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 z-50">
+                            <button onClick={() => { stopCamera(); setStep(1); }} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md outline-none">
+                                <ArrowLeft size={20} />
+                            </button>
+                            <p className={`px-4 py-1.5 rounded-full font-bold text-[0.85rem] ${faceDetected ? 'bg-[#16A34A] text-white' : 'bg-[#DC2626] text-white'}`}>
+                                {faceDetected ? currentT.face_found : currentT.face_not_found}
+                            </p>
+                        </div>
+                        
+                        <div className="flex-1 relative w-full h-full flex items-center justify-center bg-[#111111]">
+                            <video ref={videoRef} autoPlay playsInline onLoadedData={predictWebcam} className="w-full h-full object-cover transform scale-x-[-1]"></video>
+                            <canvas ref={canvasRef} className="hidden"></canvas>
+                        </div>
+
+                        <div className="w-full pb-12 pt-6 flex justify-center items-center bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 z-50">
+                            <button 
+                                onClick={captureLivePhoto} 
+                                disabled={!faceDetected}
+                                className="w-20 h-20 rounded-full border-4 border-[#FFFFFF] bg-white/30 backdrop-blur-md flex items-center justify-center outline-none disabled:opacity-50 transition-transform active:scale-95"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-[#FFFFFF]"></div>
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* WAITLIST MODAL (STEPS 1, 3, 4) */}
+            <AnimatePresence>
+                {showWaitlistModal && step !== 2 && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-6">
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[500px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative overflow-hidden">
                             <button onClick={resetForms} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full transition-colors outline-none z-10"><X size={18} /></button>
@@ -764,35 +805,52 @@ export default function MarketingLanding() {
                                         <button 
                                             onClick={() => { if(formData.business_name && formData.contact_info && businessPhoto) { setStep(2); startCamera(); } }} 
                                             disabled={!formData.business_name || !formData.contact_info || !businessPhoto}
-                                            className="w-full py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black text-[1.1rem] mt-4 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1D4ED8] transition-colors"
+                                            className="w-full py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black text-[1.1rem] mt-4 disabled:opacity-50 hover:bg-[#1D4ED8] transition-colors flex items-center justify-center gap-2"
                                         >
-                                            Next Step
+                                            <Camera size={20} /> {currentT.capture_live}
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                            {step === 2 && (
-                                <div className="flex flex-col items-center">
-                                    <h2 className="text-[1.6rem] font-black tracking-tight mb-2 text-[#111111]">{currentT.capture_live}</h2>
-                                    <p className={`text-[0.9rem] font-bold mb-6 ${faceDetected ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
-                                        {faceDetected ? currentT.face_found : currentT.face_not_found}
-                                    </p>
-                                    <div className="relative w-full aspect-video bg-[#000000] rounded-2xl overflow-hidden mb-6">
-                                        <video ref={videoRef} autoPlay playsInline onLoadedData={predictWebcam} className="w-full h-full object-cover transform scale-x-[-1]"></video>
-                                        <canvas ref={canvasRef} className="hidden"></canvas>
+                            {/* REVIEW STEP */}
+                            {step === 3 && (
+                                <div className="flex flex-col">
+                                    <h2 className="text-[1.6rem] font-black tracking-tight mb-6 text-[#111111]">{currentT.review_title}</h2>
+                                    <div className="flex flex-col gap-3 mb-6 bg-[#F9FAFB] p-5 border border-[#E0E0E0] rounded-xl">
+                                        <div className="flex justify-between items-center border-b border-[#E0E0E0] pb-2">
+                                            <span className="text-[#666666] font-bold text-[0.85rem] uppercase">{currentT.biz_name}</span>
+                                            <span className="text-[#111111] font-black">{formData.business_name}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center border-b border-[#E0E0E0] pb-2">
+                                            <span className="text-[#666666] font-bold text-[0.85rem] uppercase">{currentT.contact_info}</span>
+                                            <span className="text-[#111111] font-black">{formData.contact_info}</span>
+                                        </div>
+                                        <div className="flex gap-4 mt-2">
+                                            {businessPhoto && (
+                                                <div className="w-24 h-24 rounded-lg border border-[#CCCCCC] overflow-hidden">
+                                                    <img src={URL.createObjectURL(businessPhoto)} alt="Doc" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                            {livePhotoBlob && (
+                                                <div className="w-24 h-24 rounded-lg border border-[#CCCCCC] overflow-hidden">
+                                                    <img src={URL.createObjectURL(livePhotoBlob)} alt="Live" className="w-full h-full object-cover" />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                    <button 
-                                        onClick={captureLivePhoto} 
-                                        disabled={!faceDetected || isUploading}
-                                        className="w-full py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black text-[1.1rem] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1D4ED8] transition-colors flex justify-center items-center gap-2"
-                                    >
-                                        <Camera size={20} /> {isUploading ? currentT.processing : currentT.submit}
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setStep(1)} disabled={isUploading} className="w-1/3 py-4 bg-[#F3F4F6] text-[#111111] rounded-xl font-bold text-[1rem] hover:bg-[#E5E7EB] transition-colors border border-[#D1D5DB]">
+                                            {currentT.go_back}
+                                        </button>
+                                        <button onClick={submitToPocketBase} disabled={isUploading} className="w-2/3 py-4 bg-[#16A34A] text-[#FFFFFF] rounded-xl font-black text-[1.1rem] disabled:opacity-50 hover:bg-[#15803D] transition-colors flex justify-center items-center gap-2">
+                                            {isUploading ? <span className="animate-pulse">{currentT.processing}</span> : currentT.confirm_submit}
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
-                            {step === 3 && (
+                            {step === 4 && (
                                 <div className="flex flex-col items-center text-center py-6">
                                     <div className="w-20 h-20 bg-[#ECFDF5] rounded-full flex items-center justify-center mb-6">
                                         <CheckCircle size={40} color="#16A34A" />
@@ -956,9 +1014,6 @@ export default function MarketingLanding() {
                         </a>
                         <a href="https://instagram.com/getmovyra" target="_blank" rel="noopener noreferrer" className="hover:opacity-70 transition-opacity outline-none">
                             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
-                        </a>
-                        <a href="#" className="hover:opacity-70 transition-opacity outline-none">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.006 4.15H5.078z"/></svg>
                         </a>
                     </div>
                 </div>
