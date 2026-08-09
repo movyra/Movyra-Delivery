@@ -1,9 +1,8 @@
 const { Resend } = require('resend');
 
 export default async function handler(req, res) {
-    // 1. Dynamic CORS Headers for the Node.js Runtime (Strictly bound to Firebase Production)
-    res.setHeader('Access-Control-Allow-Credentials', true);
-    res.setHeader('Access-Control-Allow-Origin', 'https://msevasetu.web.app');
+    // 1. Dynamic CORS Headers for the Node.js Runtime (Global access without credentials to support Codespaces & Firebase)
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
