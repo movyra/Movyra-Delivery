@@ -412,7 +412,7 @@ export default function SevaSetuAdmin() {
                     </div>
 
                     <div className="flex flex-col items-center mb-8 mt-4">
-                        <div className="flex items-center gap-1 mb-2">
+                        <div className="flex items-center gap-0.3 mb-2">
                             <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                             <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">
                                 ovyra <span className="font-medium text-[#2563EB]">SevaSetu</span>
