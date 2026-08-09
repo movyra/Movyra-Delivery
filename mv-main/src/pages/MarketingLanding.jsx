@@ -466,7 +466,7 @@ export default function MarketingLanding() {
     ];
 
     useEffect(() => {
-        document.title = "SevaSetu | Official NGO Support Platform";
+        document.title = "SevaSetu";
         const setOgTag = (property, content) => {
             let tag = document.querySelector(`meta[property="${property}"]`);
             if (!tag) {
