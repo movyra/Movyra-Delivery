@@ -605,7 +605,6 @@ export default function MarketingLanding() {
         setIsSearching(true);
         setStatusResult(null);
         try {
-            // STRICT FIX: Pass ack_number via query parameter object so PocketBase API rules can validate @request.query.ack_number
             const record = await pb.collection('sevasetu_waitlist').getFirstListItem(`ack_number="${statusQuery.trim().toUpperCase()}"`, {
                 query: { ack_number: statusQuery.trim().toUpperCase() }
             });
@@ -630,7 +629,6 @@ export default function MarketingLanding() {
         stopCamera();
     };
 
-    // STRICT FIX: Ensure aggressive scroll positioning to top across all container contexts
     const scrollToTop = () => {
         if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -706,7 +704,6 @@ export default function MarketingLanding() {
                         </button>
                     </div>
 
-                    {/* STRICT FIX: Enforced grid-cols-2 base class to maintain 2x2 layout strictly on all mobile screens */}
                     <div className="grid grid-cols-2 gap-x-6 sm:gap-x-10 gap-y-8 w-full max-w-lg">
                         {[
                             { icon: Heart, title: currentT.val1_title, desc: currentT.val1_sub },
@@ -725,29 +722,95 @@ export default function MarketingLanding() {
                     </div>
                 </motion.div>
 
-                {/* STRICT FIX: Professional Enterprise-Grade Framer Motion Graphic */}
+                {/* ANIMATED NATURE & COMMUNITY SUPPORT GRAPHIC */}
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1, delay: 0.2 }} className="w-full lg:w-[50%] h-[400px] lg:h-[650px] relative flex items-center justify-center">
-                    <div className="relative w-full h-full flex items-center justify-center">
-                        {/* Orbital Rings */}
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 60, repeat: Infinity, ease: "linear" }} className="absolute w-[320px] h-[320px] sm:w-[480px] sm:h-[480px] rounded-full border border-white/10"></motion.div>
-                        <motion.div animate={{ rotate: -360 }} transition={{ duration: 40, repeat: Infinity, ease: "linear" }} className="absolute w-[240px] h-[240px] sm:w-[360px] sm:h-[360px] rounded-full border border-white/20 border-dashed"></motion.div>
+                    <svg viewBox="0 0 800 600" className="w-full h-full max-w-[700px] drop-shadow-2xl" fill="none">
                         
-                        {/* Central Hub */}
-                        <div className="relative w-32 h-32 sm:w-48 sm:h-48 rounded-full bg-gradient-to-tr from-white/20 to-white/5 backdrop-blur-md border border-white/30 shadow-2xl flex items-center justify-center z-20">
-                            <Heart size={48} fill="#FFFFFF" color="#FFFFFF" className="drop-shadow-lg" />
-                        </div>
+                        {/* --- BACKGROUND / NATURE --- */}
+                        {/* Sun */}
+                        <motion.circle cx="400" cy="250" r="160" fill="rgba(255,255,255,0.05)" animate={{ scale: [1, 1.05, 1] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} />
+                        <motion.circle cx="400" cy="250" r="120" fill="rgba(255,255,255,0.1)" animate={{ scale: [1, 1.02, 1] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
+                        
+                        {/* Mountains */}
+                        <path d="M 50 450 L 250 150 L 450 450 Z" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M 300 450 L 550 100 L 800 450 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinejoin="round" />
+                        
+                        {/* Birds Flying */}
+                        <motion.g animate={{ x: [0, -30, 0], y: [0, 15, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}>
+                            <path d="M 500 150 Q 515 130 530 150 Q 545 130 560 150" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
+                            <path d="M 580 120 Q 590 105 600 120 Q 610 105 620 120" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity="0.6"/>
+                            <path d="M 450 180 Q 460 165 470 180 Q 480 165 490 180" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+                        </motion.g>
 
-                        {/* Floating Cards */}
-                        <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }} className="absolute top-[10%] right-[10%] sm:right-[15%] bg-white/10 backdrop-blur-md border border-white/20 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
-                            <ShieldCheck size={24} color="#FFFFFF" />
-                            <span className="font-bold text-[0.95rem] tracking-wide">Verified Network</span>
-                        </motion.div>
+                        {/* Trees */}
+                        <path d="M 120 450 L 150 350 L 180 450 Z" fill="rgba(255,255,255,0.4)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M 650 450 L 680 320 L 710 450 Z" fill="rgba(255,255,255,0.3)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
+                        <path d="M 700 450 L 720 370 L 740 450 Z" fill="rgba(255,255,255,0.2)" stroke="#FFFFFF" strokeWidth="2" strokeLinejoin="round" />
 
-                        <motion.div animate={{ y: [0, 15, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="absolute bottom-[10%] left-[5%] sm:left-[15%] bg-[#111111] border border-white/20 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3">
-                            <Users size={24} color="#FFFFFF" />
-                            <span className="font-bold text-[0.95rem] tracking-wide text-white">Direct Impact</span>
-                        </motion.div>
-                    </div>
+                        {/* Community Buildings (Hospital / Care Home) */}
+                        <rect x="320" y="280" width="160" height="170" fill="rgba(255,255,255,0.8)" rx="4" />
+                        <rect x="360" y="310" width="30" height="30" fill="#2563EB" rx="4" />
+                        <path d="M 375 315 L 375 335 M 365 325 L 385 325" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" />
+                        <rect x="340" y="370" width="20" height="30" fill="#2563EB" rx="2" />
+                        <rect x="390" y="370" width="20" height="30" fill="#2563EB" rx="2" />
+                        <rect x="440" y="370" width="20" height="30" fill="#2563EB" rx="2" />
+                        <rect x="380" y="410" width="40" height="40" fill="#2563EB" />
+
+                        <rect x="220" y="340" width="90" height="110" fill="rgba(255,255,255,0.6)" rx="4" />
+                        <rect x="240" y="370" width="20" height="25" fill="#2563EB" rx="2" />
+                        <rect x="270" y="370" width="20" height="25" fill="#2563EB" rx="2" />
+                        <rect x="250" y="410" width="30" height="40" fill="#2563EB" />
+
+                        {/* Ground Line */}
+                        <line x1="50" y1="450" x2="750" y2="450" stroke="#FFFFFF" strokeWidth="6" strokeLinecap="round" />
+
+                        {/* --- PEOPLE SUPPORTING EACH OTHER (Animated Walking) --- */}
+                        <motion.g animate={{ x: [-10, 10, -10] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+                            
+                            {/* Person 1 (Volunteer Leading) */}
+                            <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0 }}>
+                                <circle cx="500" cy="380" r="16" fill="#FFFFFF" />
+                                <line x1="500" y1="396" x2="500" y2="450" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+                                <line x1="500" y1="450" x2="485" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+                                <line x1="500" y1="450" x2="515" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" />
+                                <line x1="500" y1="410" x2="450" y2="420" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" />
+                            </motion.g>
+
+                            {/* Person 2 (Senior Citizen, slightly hunched, with cane) */}
+                            <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}>
+                                <circle cx="430" cy="385" r="15" fill="#FFFFFF" opacity="0.95" />
+                                <path d="M 430 400 Q 445 420 430 460" stroke="#FFFFFF" strokeWidth="8" fill="none" strokeLinecap="round" opacity="0.95" />
+                                <line x1="430" y1="460" x2="415" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.95" />
+                                <line x1="430" y1="460" x2="445" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.95" />
+                                <line x1="430" y1="415" x2="465" y2="420" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" opacity="0.95" />
+                                <line x1="430" y1="415" x2="400" y2="440" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" opacity="0.95" />
+                                <line x1="400" y1="440" x2="400" y2="500" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" opacity="0.95" />
+                            </motion.g>
+
+                            {/* Person 3 (Senior Citizen) */}
+                            <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.6 }}>
+                                <circle cx="360" cy="382" r="15" fill="#FFFFFF" opacity="0.9" />
+                                <path d="M 360 397 Q 370 420 360 455" stroke="#FFFFFF" strokeWidth="8" fill="none" strokeLinecap="round" opacity="0.9" />
+                                <line x1="360" y1="455" x2="345" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.9" />
+                                <line x1="360" y1="455" x2="375" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.9" />
+                                <line x1="360" y1="415" x2="410" y2="410" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" opacity="0.9" />
+                            </motion.g>
+
+                            {/* Person 4 (Volunteer/Helper at the back) */}
+                            <motion.g animate={{ y: [0, -4, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.9 }}>
+                                <circle cx="290" cy="375" r="16" fill="#FFFFFF" opacity="0.85" />
+                                <line x1="290" y1="391" x2="290" y2="450" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.85" />
+                                <line x1="290" y1="450" x2="275" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.85" />
+                                <line x1="290" y1="450" x2="305" y2="500" stroke="#FFFFFF" strokeWidth="8" strokeLinecap="round" opacity="0.85" />
+                                <line x1="290" y1="410" x2="345" y2="415" stroke="#FFFFFF" strokeWidth="7" strokeLinecap="round" opacity="0.85" />
+                            </motion.g>
+
+                        </motion.g>
+
+                        {/* Front Ground / Path overlay for depth */}
+                        <path d="M 50 500 Q 400 550 750 500" stroke="rgba(255,255,255,0.4)" strokeWidth="8" strokeLinecap="round" fill="none" />
+
+                    </svg>
                 </motion.div>
             </main>
 
