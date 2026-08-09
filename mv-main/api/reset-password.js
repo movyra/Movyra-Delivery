@@ -1,21 +1,21 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+const { Resend } = require('resend');
 
 export default async function handler(req, res) {
-    // Enable CORS
+    // Enable CORS for frontend communication
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
+    // Handle preflight requests
     if (req.method === 'OPTIONS') {
         res.status(200).end();
         return;
     }
 
+    // Block browser visits (GET requests)
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+        return res.status(405).json({ error: 'Method not allowed. This endpoint only accepts POST requests from the application.' });
     }
 
     const { email } = req.body;
@@ -24,8 +24,15 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Email address is required' });
     }
 
+    // Failsafe: Check if Vercel Environment Variable is missing
+    if (!process.env.RESEND_API_KEY) {
+        console.error('CRITICAL ERROR: RESEND_API_KEY is not set in Vercel Environment Variables.');
+        return res.status(500).json({ error: 'Server configuration error. API key missing.' });
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     try {
-        // Custom Password Reset Confirmation Link
         const actionUrl = `https://msevasetu.web.app/sevaadmin?action=reset&email=${encodeURIComponent(email)}`;
 
         const data = await resend.emails.send({
@@ -35,7 +42,7 @@ export default async function handler(req, res) {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; background-color: #FFFFFF;">
                     <div style="background-color: #2563EB; padding: 24px; text-align: center;">
-                        <img src="https://msevasetu.web.app/logo-8.png" alt="Movyra SevaSetu" style="height: 48px; width: auto; margin-bottom: 8px;">
+                        <img src="https://msevasetu.web.app/logo-7.png" alt="Movyra SevaSetu" style="height: 48px; width: auto; margin-bottom: 8px;">
                         <h1 style="color: #FFFFFF; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.5px;">ovyra <span style="font-weight: 500;">SevaSetu</span></h1>
                     </div>
                     <div style="padding: 32px; color: #111111;">

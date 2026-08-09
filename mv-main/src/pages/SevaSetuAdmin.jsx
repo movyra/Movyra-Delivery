@@ -231,7 +231,7 @@ export default function SevaSetuAdmin() {
         setAuthMessage({ text: '', type: '' });
 
         try {
-            const response = await fetch('/api/reset-password', {
+            const response = await fetch('https://msevasetuemail.vercel.app/api/reset-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
