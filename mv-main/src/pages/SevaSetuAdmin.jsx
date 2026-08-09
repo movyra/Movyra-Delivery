@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Search, X, CheckCircle, Clock, AlertTriangle, Shield, Globe, Image as ImageIcon, Download, Printer, Trash2, KeyRound, UserPlus, Filter } from 'lucide-react';
+import { LogOut, Search, X, CheckCircle, Clock, AlertTriangle, Shield, Globe, Image as ImageIcon, Download, Printer, Trash2, KeyRound, UserPlus, Filter, Camera } from 'lucide-react';
 import PocketBase from 'pocketbase';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
@@ -368,7 +368,7 @@ export default function SevaSetuAdmin() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md bg-[#FFFFFF] rounded-2xl shadow-xl p-8 border border-[#E5E7EB]">
                     
                     <div className="flex flex-col items-center mb-8">
-                        <div className="flex items-center gap-1 mb-2">
+                        <div className="flex items-center gap-0.3 mb-2">
                             <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                             <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">
                                 ovyra <span className="font-medium text-[#2563EB]">SevaSetu</span>
@@ -432,7 +432,7 @@ export default function SevaSetuAdmin() {
                 <div className="flex items-center gap-3">
                     <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                     <div>
-                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">ovyra SevaSetu</h1>
+                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">SevaSetu</h1>
                         <p className="text-[#6B7280] text-[0.7rem] font-bold uppercase tracking-wider">{currentT.dashboard}</p>
                     </div>
                 </div>
