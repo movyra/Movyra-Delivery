@@ -1,9 +1,9 @@
 /**
- * SYSTEM DOCUMENTATION / 15-LANGUAGE TRANSLATION
+ * SYSTEM DOCUMENTATION / 14-LANGUAGE TRANSLATION
  * Context: Secure Administrative Dashboard for SevaSetu Waitlist Operations.
  * Database: PocketBase (https://movyra-mv-main-db-gradio.hf.space)
  * Security: Native PocketBase Auth. Super Admin RBAC applied for deletion.
- * Routing: Password resets are routed to Vercel Serverless API (/api/reset-password).
+ * Routing: Password resets are safely routed to absolute Vercel Serverless API.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -34,9 +34,9 @@ const TRANSLATIONS = {
         live_photo: "लाइव फोटो", doc: "दस्तावेज़", status: "स्थिति", action: "कार्रवाई", 
         pending: "लंबित", verified: "सत्यापित", rejected: "अस्वीकृत", update: "अपडेट", 
         logout: "लॉगआउट", loading: "प्रसंस्करण...", search: "खोजें", view: "छवि देखें", 
-        total: "कुल", export_csv: "सीएसवी निर्यात", print: "प्रिंट", delete: "हटाएं", 
-        bulk_update: "थोक अद्यतन", filter_all: "सभी स्थिति", forgot_pwd: "पासवर्ड भूल गए?", 
-        request_access: "एक्सेस का अनुरोध करें", send_reset: "रीसेट लिंक भेजें", submit_req: "अनुरोध सबमिट करें", 
+        total: "कुल", export_csv: "CSV निर्यात", print: "प्रिंट", delete: "हटाएं", 
+        bulk_update: "थोक अपडेट", filter_all: "सभी स्थिति", forgot_pwd: "पासवर्ड भूल गए?", 
+        request_access: "एक्सेस अनुरोध", send_reset: "लिंक भेजें", submit_req: "अनुरोध सबमिट करें", 
         name: "पूरा नाम", reason: "कारण", back: "वापस जाएं", prev: "पिछला", next: "अगला", page: "पृष्ठ"
     },
     hinglish: {
@@ -46,9 +46,9 @@ const TRANSLATIONS = {
         action: "Action", pending: "Pending", verified: "Verified", rejected: "Rejected", 
         update: "Update Karein", logout: "Logout", loading: "Processing...", search: "Search Karein", 
         view: "Image Dekhein", total: "Total", export_csv: "CSV Export", print: "Print Karein", 
-        delete: "Delete Karein", bulk_update: "Bulk Update Karein", filter_all: "All Status", 
-        forgot_pwd: "Password Bhool Gaye?", request_access: "Access Request Karein", send_reset: "Reset Link Bhejein", 
-        submit_req: "Request Submit Karein", name: "Full Name", reason: "Access Reason", back: "Login Par Jayein", 
+        delete: "Delete Karein", bulk_update: "Bulk Update", filter_all: "All Status", 
+        forgot_pwd: "Password Bhool Gaye?", request_access: "Access Request", send_reset: "Link Bhejein", 
+        submit_req: "Submit Karein", name: "Full Name", reason: "Reason", back: "Back to Login", 
         prev: "Peechhe", next: "Aage", page: "Page"
     },
     mr: {
@@ -58,7 +58,7 @@ const TRANSLATIONS = {
         verified: "सत्यापित", rejected: "नाकारले", update: "अपडेट करा", logout: "लॉगआउट", loading: "प्रक्रिया...", 
         search: "शोधा", view: "प्रतिमा पहा", total: "एकूण", export_csv: "CSV निर्यात", print: "प्रिंट", 
         delete: "काढून टाका", bulk_update: "एकत्रित अपडेट", filter_all: "सर्व स्थिती", forgot_pwd: "पासवर्ड विसरलात?", 
-        request_access: "अॅक्सेसची विनंती करा", send_reset: "रीसेट लिंक पाठवा", submit_req: "विनंती सबमिट करा", 
+        request_access: "प्रवेश विनंती", send_reset: "लिंक पाठवा", submit_req: "विनंती सबमिट करा", 
         name: "पूर्ण नाव", reason: "कारण", back: "मागे जा", prev: "मागील", next: "पुढील", page: "पृष्ठ"
     },
     gu: {
@@ -68,17 +68,17 @@ const TRANSLATIONS = {
         verified: "ચકાસાયેલ", rejected: "નકારવામાં આવેલ", update: "અપડેટ કરો", logout: "લોગઆઉટ", loading: "પ્રક્રિયા...", 
         search: "શોધો", view: "છબી જુઓ", total: "કુલ", export_csv: "CSV નિકાસ", print: "છાપો", 
         delete: "કાઢી નાખો", bulk_update: "બલ્ક અપડેટ", filter_all: "તમામ સ્થિતિ", forgot_pwd: "પાસવર્ડ ભૂલી ગયા છો?", 
-        request_access: "ઍક્સેસની વિનંતી કરો", send_reset: "રીસેટ લિંક મોકલો", submit_req: "વિનંતી સબમિટ કરો", 
+        request_access: "ઍક્સેસ વિનંતી", send_reset: "લિન્ક મોકલો", submit_req: "વિનંતી સબમિટ કરો", 
         name: "પૂરું નામ", reason: "કારણ", back: "પાછા જાઓ", prev: "પાછલું", next: "આગળ", page: "પૃષ્ઠ"
     },
     te: {
         lang: "తెలుగు", admin_portal: "అడ్మిన్ పోర్టల్", email: "ఈమెయిల్", password: "పాస్‌వర్డ్",
         login: "లాగిన్ చేయండి", dashboard: "డాష్‌బోర్డ్", ack: "అక్నాలెడ్జ్‌మెంట్", org: "సంస్థ", contact: "సంప్రదింపు", 
         live_photo: "లైవ్ ఫోటో", doc: "పత్రం", status: "స్థితి", action: "చర్య", pending: "పెండింగ్", 
-        verified: "ధృవీకరించబడింది", rejected: "తిరస్కరించబడింది", update: "నవీకరించు", logout: "లాగ్అవుట్", loading: "ప్రాసెస్...", 
+        verified: "ధృవీకరించబడింది", rejected: "తిరస్కరించబడింది", update: "అప్‌డేట్ చేయండి", logout: "లాగౌట్", loading: "ప్రాసెస్...", 
         search: "శోధించండి", view: "చిత్రం చూడండి", total: "మొత్తం", export_csv: "CSV ఎగుమతి", print: "ప్రింట్", 
-        delete: "తొలగించు", bulk_update: "బల్క్ నవీకరణ", filter_all: "అన్ని స్థితి", forgot_pwd: "పాస్‌వర్డ్ మర్చిపోయారా?", 
-        request_access: "యాక్సెస్ అభ్యర్థించండి", send_reset: "రీసెట్ లింక్ పంపండి", submit_req: "అభ్యర్థన సమర్పించండి", 
+        delete: "తొలగించు", bulk_update: "బల్క్ అప్‌డేట్", filter_all: "అన్ని స్థితి", forgot_pwd: "పాస్‌వర్డ్ మర్చిపోయారా?", 
+        request_access: "యాక్సెస్ అభ్యర్థన", send_reset: "లింక్ పంపండి", submit_req: "సమర్పించండి", 
         name: "పూర్తి పేరు", reason: "కారణం", back: "వెనక్కి వెళ్ళు", prev: "మునుపటి", next: "తదుపరి", page: "పేజీ"
     },
     ta: {
@@ -86,19 +86,19 @@ const TRANSLATIONS = {
         login: "உள்நுழைக", dashboard: "டாஷ்போர்டு", ack: "ஒப்புகை", org: "நிறுவனம்", contact: "தொடர்பு", 
         live_photo: "நேரடி புகைப்படம்", doc: "ஆவணம்", status: "நிலை", action: "செயல்", pending: "நிலுவையில்", 
         verified: "சரிபார்க்கப்பட்டது", rejected: "நிராகரிக்கப்பட்டது", update: "புதுப்பி", logout: "வெளியேறு", loading: "செயலாக்கம்...", 
-        search: "தேடு", view: "படம் காண்", total: "மொத்தம்", export_csv: "CSV ஏற்றுமதி", print: "அச்சிடு", 
+        search: "தேடு", view: "படம் காண்", total: "மொத்தம்", export_csv: "CSV பதிவிறக்கம்", print: "அச்சிடு", 
         delete: "நீக்கு", bulk_update: "மொத்த புதுப்பிப்பு", filter_all: "அனைத்து நிலை", forgot_pwd: "கடவுச்சொல் மறந்துவிட்டதா?", 
-        request_access: "அணுகல் கோருக", send_reset: "மீட்டமை இணைப்பு அனுப்பு", submit_req: "கோரிக்கை சமர்ப்பி", 
+        request_access: "அணுகல் கோரிக்கை", send_reset: "இணைப்பை அனுப்பு", submit_req: "சமர்ப்பி", 
         name: "முழு பெயர்", reason: "காரணம்", back: "திரும்பிச் செல்", prev: "முந்தைய", next: "அடுத்தது", page: "பக்கம்"
     },
     pa: {
         lang: "ਪੰਜਾਬੀ", admin_portal: "ਐਡਮਿਨ ਪੋਰਟਲ", email: "ਈਮੇਲ", password: "ਪਾਸਵਰਡ",
         login: "ਲਾਗਇਨ ਕਰੋ", dashboard: "ਡੈਸ਼ਬੋਰਡ", ack: "ਰਸੀਦ", org: "ਸੰਗਠਨ", contact: "ਸੰਪਰਕ", 
         live_photo: "ਲਾਈਵ ਫੋਟੋ", doc: "ਦਸਤਾਵੇਜ਼", status: "ਸਥਿਤੀ", action: "ਕਾਰਵਾਈ", pending: "ਬਕਾਇਆ", 
-        verified: "ਪ੍ਰਮਾਣਿਤ", rejected: "ਰੱਦ", update: "ਅੱਪਡੇਟ", logout: "ਲਾਗਆਊਟ", loading: "ਕਾਰਵਾਈ ਹੋ ਰਹੀ ਹੈ...", 
-        search: "ਖੋਜੋ", view: "ਤਸਵੀਰ ਵੇਖੋ", total: "ਕੁੱਲ", export_csv: "CSV ਨਿਰਯਾਤ", print: "ਪ੍ਰਿੰਟ", 
+        verified: "ਪ੍ਰਮਾਣਿਤ", rejected: "ਰੱਦ", update: "ਅੱਪਡੇਟ ਕਰੋ", logout: "ਲਾਗਆਊਟ", loading: "ਪ੍ਰਕਿਰਿਆ...", 
+        search: "ਖੋਜੋ", view: "ਤਸਵੀਰ ਵੇਖੋ", total: "ਕੁੱਲ", export_csv: "CSV ਡਾਊਨਲੋਡ", print: "ਪ੍ਰਿੰਟ", 
         delete: "ਮਿਟਾਓ", bulk_update: "ਬਲਕ ਅੱਪਡੇਟ", filter_all: "ਸਾਰੀ ਸਥਿਤੀ", forgot_pwd: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?", 
-        request_access: "ਪਹੁੰਚ ਦੀ ਬੇਨਤੀ ਕਰੋ", send_reset: "ਰੀਸੈਟ ਲਿੰਕ ਭੇਜੋ", submit_req: "ਬੇਨਤੀ ਜਮ੍ਹਾਂ ਕਰੋ", 
+        request_access: "ਪਹੁੰਚ ਬੇਨਤੀ", send_reset: "ਲਿੰਕ ਭੇਜੋ", submit_req: "ਬੇਨਤੀ ਜਮ੍ਹਾਂ ਕਰੋ", 
         name: "ਪੂਰਾ ਨਾਮ", reason: "ਕਾਰਨ", back: "ਵਾਪਸ ਜਾਓ", prev: "ਪਿਛਲਾ", next: "ਅਗਲਾ", page: "ਪੰਨਾ"
     },
     bho: {
@@ -106,50 +106,60 @@ const TRANSLATIONS = {
         login: "लॉगिन करीं", dashboard: "डैशबोर्ड", ack: "पावती", org: "संगठन", contact: "संपर्क", 
         live_photo: "लाइव फोटो", doc: "दस्तावेज", status: "स्थिति", action: "कार्रवाई", pending: "लंबित", 
         verified: "सत्यापित", rejected: "अस्वीकृत", update: "अपडेट करीं", logout: "लॉगआउट", loading: "प्रक्रिया...", 
-        search: "खोजीं", view: "फोटो देखीं", total: "कुल", export_csv: "CSV निर्यात", print: "प्रिंट", 
-        delete: "हटावल जाव", bulk_update: "थोक अपडेट", filter_all: "सभ स्थिति", forgot_pwd: "पासवर्ड भुला गइल?", 
-        request_access: "एक्सेस के अनुरोध करीं", send_reset: "रीसेट लिंक भेजीं", submit_req: "अनुरोध जमा करीं", 
+        search: "खोजीं", view: "फोटो देखीं", total: "कुल", export_csv: "CSV डाउनलोड", print: "प्रिंट", 
+        delete: "हटावल जाव", bulk_update: "सब अपडेट", filter_all: "सभ स्थिति", forgot_pwd: "पासवर्ड भुला गइल?", 
+        request_access: "एक्सेस अनुरोध", send_reset: "लिंक भेजीं", submit_req: "अनुरोध जमा करीं", 
         name: "पूरा नाम", reason: "कारण", back: "वापस जाईं", prev: "पिछला", next: "अगला", page: "पन्ना"
     },
-    ar: {
-        lang: "العربية", admin_portal: "بوابة الإدارة", email: "البريد الإلكتروني", password: "كلمة المرور",
-        login: "تسجيل الدخول", dashboard: "لوحة العمليات", ack: "إقرار", org: "منظمة", contact: "اتصال", 
-        live_photo: "صورة حية", doc: "وثيقة", status: "حالة", action: "إجراء", pending: "قيد الانتظار", 
-        verified: "تم التحقق", rejected: "مرفوض", update: "تحديث", logout: "خروج", loading: "معالجة...", 
-        search: "بحث", view: "عرض الصورة", total: "المجموع", export_csv: "تصدير CSV", print: "طباعة", 
-        delete: "حذف", bulk_update: "تحديث جماعي", filter_all: "جميع الحالات", forgot_pwd: "نسيت كلمة المرور؟", 
-        request_access: "طلب وصول", send_reset: "إرسال رابط إعادة الضبط", submit_req: "إرسال الطلب", 
-        name: "الاسم الكامل", reason: "السبب", back: "رجوع", prev: "السابق", next: "التالي", page: "صفحة"
+    bn: {
+        lang: "বাংলা", admin_portal: "অ্যাডমিন পোর্টাল", email: "ইমেইল", password: "পাসওয়ার্ড",
+        login: "লগইন", dashboard: "ড্যাশবোর্ড", ack: "রসিদ", org: "প্রতিষ্ঠান", contact: "যোগাযোগ", 
+        live_photo: "লাইভ ছবি", doc: "নথি", status: "অবস্থা", action: "পদক্ষেপ", pending: "অপেক্ষমান", 
+        verified: "যাচাইকৃত", rejected: "বাতিল", update: "আপডেট", logout: "লগআউট", loading: "প্রক্রিয়া চলছে...", 
+        search: "অনুসন্ধান", view: "ছবি দেখুন", total: "মোট", export_csv: "CSV ডাউনলোড", print: "প্রিন্ট", 
+        delete: "মুছুন", bulk_update: "সব আপডেট করুন", filter_all: "সব অবস্থা", forgot_pwd: "পাসওয়ার্ড ভুলে গেছেন?", 
+        request_access: "অ্যাক্সেস অনুরোধ", send_reset: "লিঙ্ক পাঠান", submit_req: "অনুরোধ জমা দিন", 
+        name: "পুরো নাম", reason: "কারণ", back: "ফিরে যান", prev: "আগের", next: "পরবর্তী", page: "পৃষ্ঠা"
     },
-    es: {
-        lang: "Español", admin_portal: "Portal de Administración", email: "Correo Electrónico", password: "Contraseña",
-        login: "Iniciar Sesión", dashboard: "Panel", ack: "Acuse", org: "Organización", contact: "Contacto", 
-        live_photo: "Foto en Vivo", doc: "Documento", status: "Estado", action: "Acción", pending: "Pendiente", 
-        verified: "Verificado", rejected: "Rechazado", update: "Actualizar", logout: "Salir", loading: "Procesando...", 
-        search: "Buscar", view: "Ver Imagen", total: "Total", export_csv: "Exportar CSV", print: "Imprimir", 
-        delete: "Eliminar", bulk_update: "Actualización Masiva", filter_all: "Todos", forgot_pwd: "¿Olvidó su contraseña?", 
-        request_access: "Solicitar Acceso", send_reset: "Enviar Enlace", submit_req: "Enviar Solicitud", 
-        name: "Nombre Completo", reason: "Motivo", back: "Volver", prev: "Anterior", next: "Siguiente", page: "Página"
+    kn: {
+        lang: "ಕನ್ನಡ", admin_portal: "ಅಡ್ಮಿನ್ ಪೋರ್ಟಲ್", email: "ಇಮೇಲ್", password: "ಪಾಸ್ವರ್ಡ್",
+        login: "ಲಾಗಿನ್", dashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್", ack: "ರಶೀದಿ", org: "ಸಂಸ್ಥೆ", contact: "ಸಂಪರ್ಕ", 
+        live_photo: "ಲೈವ್ ಫೋಟೋ", doc: "ದಾಖಲೆ", status: "ಸ್ಥಿತಿ", action: "ಕ್ರಮ", pending: "ಬಾಕಿಯಿದೆ", 
+        verified: "ಪರಿಶೀಲಿಸಲಾಗಿದೆ", rejected: "ತಿರಸ್ಕರಿಸಲಾಗಿದೆ", update: "ಅಪ್ಡೇಟ್", logout: "ಲಾಗ್ಔಟ್", loading: "ಪ್ರಕ್ರಿಯೆ...", 
+        search: "ಹುಡುಕಿ", view: "ಚಿತ್ರ ನೋಡಿ", total: "ಒಟ್ಟು", export_csv: "CSV ಡೌನ್‌ಲೋಡ್", print: "ಪ್ರಿಂಟ್", 
+        delete: "ಅಳಿಸಿ", bulk_update: "ಎಲ್ಲಾ ಅಪ್ಡೇಟ್", filter_all: "ಎಲ್ಲಾ ಸ್ಥಿತಿ", forgot_pwd: "ಪಾಸ್ವರ್ಡ್ ಮರೆತಿರಾ?", 
+        request_access: "ಪ್ರವೇಶ ವಿನಂತಿ", send_reset: "ಲಿಂಕ್ ಕಳುಹಿಸಿ", submit_req: "ವಿನಂತಿ ಸಲ್ಲಿಸಿ", 
+        name: "ಪೂರ್ಣ ಹೆಸರು", reason: "ಕಾರಣ", back: "ಹಿಂದಕ್ಕೆ", prev: "ಹಿಂದಿನ", next: "ಮುಂದಿನ", page: "ಪುಟ"
     },
-    fr: {
-        lang: "Français", admin_portal: "Portail d'Administration", email: "Adresse E-mail", password: "Mot de passe",
-        login: "Connexion", dashboard: "Tableau de Bord", ack: "Accusé", org: "Organisation", contact: "Contact", 
-        live_photo: "Photo Direct", doc: "Document", status: "Statut", action: "Action", pending: "En attente", 
-        verified: "Vérifié", rejected: "Rejeté", update: "Mettre à jour", logout: "Déconnexion", loading: "Traitement...", 
-        search: "Rechercher", view: "Voir l'image", total: "Total", export_csv: "Exporter CSV", print: "Imprimer", 
-        delete: "Supprimer", bulk_update: "Mise à jour en masse", filter_all: "Tous", forgot_pwd: "Mot de passe oublié ?", 
-        request_access: "Demander l'accès", send_reset: "Envoyer le lien", submit_req: "Soumettre", 
-        name: "Nom Complet", reason: "Raison", back: "Retour", prev: "Précédent", next: "Suivant", page: "Page"
+    ml: {
+        lang: "മലയാളം", admin_portal: "അഡ്മിൻ പോർട്ടൽ", email: "ഇമെയിൽ", password: "പാസ്‌വേഡ്",
+        login: "ലോഗിൻ", dashboard: "ഡാഷ്‌ബോർഡ്", ack: "രസീത്", org: "സ്ഥാപനം", contact: "ബന്ധപ്പെടുക", 
+        live_photo: "ലൈവ് ഫോട്ടോ", doc: "രേഖ", status: "അവസ്ഥ", action: "നടപടി", pending: "തീരുമാനിച്ചിട്ടില്ല", 
+        verified: "ഉറപ്പാക്കി", rejected: "നിരസിച്ചു", update: "അപ്ഡേറ്റ്", logout: "ലോഗൗട്ട്", loading: "പ്രവർത്തിക്കുന്നു...", 
+        search: "തിരയുക", view: "ചിത്രം കാണുക", total: "ആകെ", export_csv: "CSV ഡൗൺലോഡ്", print: "പ്രിന്റ്", 
+        delete: "മായ്ക്കുക", bulk_update: "എല്ലാം അപ്ഡേറ്റ്", filter_all: "എല്ലാ അവസ്ഥയും", forgot_pwd: "പാസ്‌വേഡ് മറന്നോ?", 
+        request_access: "ആക്സസ് അപേക്ഷ", send_reset: "ലിങ്ക് അയക്കുക", submit_req: "സമർപ്പിക്കുക", 
+        name: "പൂർണ്ണ പേര്", reason: "കാരണം", back: "പുറകോട്ട്", prev: "മുമ്പത്തെ", next: "അടുത്തത്", page: "പേജ്"
     },
-    de: {
-        lang: "Deutsch", admin_portal: "Admin-Portal", email: "E-Mail", password: "Passwort",
-        login: "Anmelden", dashboard: "Dashboard", ack: "Bestätigung", org: "Organisation", contact: "Kontakt", 
-        live_photo: "Live-Foto", doc: "Dokument", status: "Status", action: "Aktion", pending: "Ausstehend", 
-        verified: "Verifiziert", rejected: "Abgelehnt", update: "Aktualisieren", logout: "Abmelden", loading: "Verarbeitung...", 
-        search: "Suchen", view: "Bild ansehen", total: "Gesamt", export_csv: "CSV Exportieren", print: "Drucken", 
-        delete: "Löschen", bulk_update: "Massen-Update", filter_all: "Alle Status", forgot_pwd: "Passwort vergessen?", 
-        request_access: "Zugang anfordern", send_reset: "Link senden", submit_req: "Anfrage senden", 
-        name: "Vollständiger Name", reason: "Grund", back: "Zurück", prev: "Zurück", next: "Weiter", page: "Seite"
+    or: {
+        lang: "ଓଡ଼ିଆ", admin_portal: "ଆଡମିନ୍ ପୋର୍ଟାଲ୍", email: "ଇମେଲ୍", password: "ପାସୱାର୍ଡ",
+        login: "ଲଗଇନ୍", dashboard: "ଡ୍ୟାସବୋର୍ଡ", ack: "ରସିଦ", org: "ସଂସ୍ଥା", contact: "ସମ୍ପର୍କ", 
+        live_photo: "ଲାଇଭ୍ ଫଟୋ", doc: "କାଗଜପତ୍ର", status: "ସ୍ଥିତି", action: "କାର୍ଯ୍ୟ", pending: "ବାକି ଅଛି", 
+        verified: "ଯାଞ୍ଚ ହୋଇଛି", rejected: "ପ୍ରତ୍ୟାଖ୍ୟାନ", update: "ଅପଡେଟ୍", logout: "ଲଗଆଉଟ୍", loading: "ପ୍ରକ୍ରିୟା...", 
+        search: "ସନ୍ଧାନ", view: "ଫଟୋ ଦେଖନ୍ତୁ", total: "ମୋଟ", export_csv: "CSV ଡାଉନଲୋଡ୍", print: "ପ୍ରିଣ୍ଟ", 
+        delete: "ଡିଲିଟ୍", bulk_update: "ସବୁ ଅପଡେଟ୍", filter_all: "ସବୁ ସ୍ଥିତି", forgot_pwd: "ପାସୱାର୍ଡ ଭୁଲିଗଲେ କି?", 
+        request_access: "ଆକ୍ସେସ୍ ଅନୁରୋଧ", send_reset: "ଲିଙ୍କ୍ ପଠାନ୍ତୁ", submit_req: "ଦାଖଲ କରନ୍ତୁ", 
+        name: "ପୂରା ନାମ", reason: "କାରଣ", back: "ପଛକୁ ଯାଆନ୍ତୁ", prev: "ପୂର୍ବ", next: "ପରବର୍ତ୍ତୀ", page: "ପୃଷ୍ଠା"
+    },
+    as: {
+        lang: "অসমীয়া", admin_portal: "এডমিন প'ৰ্টেল", email: "ইমেইল", password: "পাছৱৰ্ড",
+        login: "লগইন", dashboard: "ডেচবৰ্ড", ack: "ৰচিদ", org: "সংস্থা", contact: "যোগাযোগ", 
+        live_photo: "লাইভ ফটো", doc: "নথি", status: "অৱস্থা", action: "পদক্ষেপ", pending: "বাকি আছে", 
+        verified: "পৰীক্ষা কৰা হ'ল", rejected: "বাতিল", update: "আপডেট", logout: "লগআউট", loading: "প্ৰক্ৰিয়া...", 
+        search: "সন্ধান", view: "ফটো চাওক", total: "মুঠ", export_csv: "CSV ডাউনলোড", print: "প্ৰিণ্ট", 
+        delete: "মচি পেলাওক", bulk_update: "সকলো আপডেট", filter_all: "সকলো অৱস্থা", forgot_pwd: "পাছৱৰ্ড পাহৰিলে নেকি?", 
+        request_access: "এক্সেস অনুৰোধ", send_reset: "লিংক পঠাওক", submit_req: "জমা দিয়ক", 
+        name: "সম্পূৰ্ণ নাম", reason: "কাৰণ", back: "উভতি যাওক", prev: "পূৰ্বৱৰ্তী", next: "পৰৱৰ্তী", page: "পৃষ্ঠা"
     }
 };
 
@@ -224,7 +234,7 @@ export default function SevaSetuAdmin() {
         setRecords([]);
     };
 
-    // STRICT UPDATE: Route password resets through the Vercel API endpoint
+    // STRICT UPDATE: Safe Vercel API routing with strict JSON parsing check
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         setIsAuthenticating(true);
@@ -239,7 +249,16 @@ export default function SevaSetuAdmin() {
                 body: JSON.stringify({ email: resetEmail }),
             });
 
-            const result = await response.json();
+            // Fallback safety to prevent 'Unexpected end of JSON input' crash
+            const textResponse = await response.text();
+            let result;
+            try {
+                result = JSON.parse(textResponse);
+            } catch (jsonError) {
+                console.error('Non-JSON response from server:', textResponse);
+                setAuthMessage({ text: 'Server error: Invalid response format. Please try again.', type: 'error' });
+                return;
+            }
 
             if (response.ok) {
                 setAuthMessage({ text: 'Reset link sent successfully. Please check your inbox.', type: 'success' });
@@ -248,7 +267,7 @@ export default function SevaSetuAdmin() {
                 setAuthMessage({ text: result.error || 'Failed to send reset email.', type: 'error' });
             }
         } catch (error) {
-            console.error('Reset request error:', error);
+            console.error('Reset request network error:', error);
             setAuthMessage({ text: 'Network error. Please try again.', type: 'error' });
         } finally {
             setIsAuthenticating(false);
@@ -383,9 +402,16 @@ export default function SevaSetuAdmin() {
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen bg-[#F3F4F6] flex items-center justify-center p-6 font-sans">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md bg-[#FFFFFF] rounded-2xl shadow-xl p-8 border border-[#E5E7EB]">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md bg-[#FFFFFF] rounded-2xl shadow-xl p-8 border border-[#E5E7EB] relative">
                     
-                    <div className="flex flex-col items-center mb-8">
+                    {/* Translate Icon Button added to Unauthenticated View */}
+                    <div className="absolute top-4 right-4">
+                        <button type="button" onClick={() => setShowLangPrompt(true)} className="flex items-center gap-1.5 px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-[#374151] font-bold text-[0.8rem] hover:bg-[#F9FAFB] transition-colors bg-[#FFFFFF] outline-none shadow-sm" title="Translate">
+                            <Globe size={14} /> {currentT.lang}
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col items-center mb-8 mt-4">
                         <div className="flex items-center gap-1 mb-2">
                             <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                             <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">
@@ -435,6 +461,23 @@ export default function SevaSetuAdmin() {
                     )}
 
                 </motion.div>
+                
+                {/* Language Prompt for Unauthenticated view */}
+                <AnimatePresence>
+                    {showLangPrompt && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
+                            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto hide-scrollbar">
+                                <button type="button" onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full outline-none"><X size={18} /></button>
+                                <h2 className="text-[1.4rem] font-black tracking-tight mb-4 text-[#111111] text-center">{currentT.lang}</h2>
+                                <div className="flex flex-col gap-2">
+                                    {languageOptions.map((opt) => (
+                                        <button type="button" key={opt.code} onClick={() => { setLang(opt.code); setShowLangPrompt(false); }} className={`p-3 rounded-xl font-bold text-left border outline-none ${lang === opt.code ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-[#F9FAFB] text-[#111111] border-[#E5E7EB]'}`}>{opt.label}</button>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         );
     }
@@ -460,10 +503,10 @@ export default function SevaSetuAdmin() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#9CA3AF]" size={16} />
                         <input type="text" placeholder={currentT.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 py-2 bg-[#F9FAFB] border border-[#E5E7EB] rounded-lg text-[0.9rem] font-medium outline-none focus:border-[#2563EB] w-48 sm:w-64" />
                     </div>
-                    <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#374151] font-bold text-[0.85rem] hover:bg-[#F9FAFB] transition-colors bg-[#FFFFFF]">
+                    <button onClick={() => setShowLangPrompt(true)} className="flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#374151] font-bold text-[0.85rem] hover:bg-[#F9FAFB] transition-colors bg-[#FFFFFF] outline-none">
                         <Globe size={16} /> <span className="hidden sm:inline">{currentT.lang}</span>
                     </button>
-                    <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 bg-[#FEE2E2] text-[#DC2626] rounded-lg font-bold text-[0.85rem] hover:bg-[#FECACA] transition-colors border border-[#FCA5A5]">
+                    <button onClick={handleLogout} className="flex items-center gap-2 px-3 py-2 bg-[#FEE2E2] text-[#DC2626] rounded-lg font-bold text-[0.85rem] hover:bg-[#FECACA] transition-colors border border-[#FCA5A5] outline-none">
                         <LogOut size={16} /> <span className="hidden sm:inline">{currentT.logout}</span>
                     </button>
                 </div>
@@ -496,7 +539,7 @@ export default function SevaSetuAdmin() {
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-[#6B7280]" />
-                            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-[#F9FAFB] border border-[#D1D5DB] rounded-lg px-3 py-1.5 text-[#111111] font-bold text-[0.85rem] outline-none">
+                            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-[#F9FAFB] border border-[#D1D5DB] rounded-lg px-3 py-1.5 text-[#111111] font-bold text-[0.85rem] outline-none cursor-pointer">
                                 <option value="All">{currentT.filter_all}</option>
                                 <option value="Pending">{currentT.pending}</option>
                                 <option value="Verified">{currentT.verified}</option>
@@ -507,18 +550,18 @@ export default function SevaSetuAdmin() {
                         {selectedRecords.length > 0 && (
                             <div className="flex items-center gap-2 border-l border-[#E5E7EB] pl-4">
                                 <span className="text-[#2563EB] font-bold text-[0.85rem]">{selectedRecords.length} selected</span>
-                                <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className="bg-[#EFF6FF] border border-[#BFDBFE] text-[#1D4ED8] rounded-lg px-2 py-1 text-[0.8rem] font-bold outline-none">
+                                <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className="bg-[#EFF6FF] border border-[#BFDBFE] text-[#1D4ED8] rounded-lg px-2 py-1 text-[0.8rem] font-bold outline-none cursor-pointer">
                                     <option value="">Status...</option>
                                     <option value="Pending">{currentT.pending}</option>
                                     <option value="Verified">{currentT.verified}</option>
                                     <option value="Rejected">{currentT.rejected}</option>
                                 </select>
-                                <button onClick={handleBulkUpdate} className="bg-[#2563EB] text-[#FFFFFF] px-3 py-1 rounded-lg text-[0.8rem] font-bold hover:bg-[#1D4ED8]">{currentT.update}</button>
+                                <button onClick={handleBulkUpdate} className="bg-[#2563EB] text-[#FFFFFF] px-3 py-1 rounded-lg text-[0.8rem] font-bold hover:bg-[#1D4ED8] outline-none">{currentT.update}</button>
                             </div>
                         )}
                     </div>
                     
-                    <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-[#FFFFFF] rounded-lg font-bold text-[0.85rem] hover:bg-[#000000] transition-colors">
+                    <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-[#FFFFFF] rounded-lg font-bold text-[0.85rem] hover:bg-[#000000] transition-colors outline-none">
                         <Download size={16} /> {currentT.export_csv}
                     </button>
                 </div>
@@ -554,12 +597,12 @@ export default function SevaSetuAdmin() {
                                             <td className="p-4 font-medium text-[#4B5563]">{record.contact_info}</td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
-                                                    {record.business_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.business_photo))} className="w-8 h-8 bg-[#F3F4F6] rounded flex items-center justify-center border border-[#D1D5DB]" title="Document"><ImageIcon size={14} /></button>}
-                                                    {record.live_person_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.live_person_photo))} className="w-8 h-8 bg-[#F3F4F6] rounded flex items-center justify-center border border-[#D1D5DB]" title="Live Photo"><Camera size={14} /></button>}
+                                                    {record.business_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.business_photo))} className="w-8 h-8 bg-[#F3F4F6] rounded flex items-center justify-center border border-[#D1D5DB] outline-none hover:bg-[#E5E7EB]" title="Document"><ImageIcon size={14} /></button>}
+                                                    {record.live_person_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.live_person_photo))} className="w-8 h-8 bg-[#F3F4F6] rounded flex items-center justify-center border border-[#D1D5DB] outline-none hover:bg-[#E5E7EB]" title="Live Photo"><Camera size={14} /></button>}
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <select value={record.status} onChange={(e) => updateStatus(record.id, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none ${record.status === 'Verified' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#A7F3D0]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
+                                                <select value={record.status} onChange={(e) => updateStatus(record.id, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none cursor-pointer ${record.status === 'Verified' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#A7F3D0]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA]' : 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]'}`}>
                                                     <option value="Pending">{currentT.pending}</option>
                                                     <option value="Verified">{currentT.verified}</option>
                                                     <option value="Rejected">{currentT.rejected}</option>
@@ -567,9 +610,9 @@ export default function SevaSetuAdmin() {
                                             </td>
                                             <td className="p-4 text-right">
                                                 <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => setRecordToPrint(record)} className="p-1.5 text-[#4B5563] hover:text-[#2563EB] hover:bg-[#EFF6FF] rounded transition-colors" title={currentT.print}><Printer size={16} /></button>
+                                                    <button onClick={() => setRecordToPrint(record)} className="p-1.5 text-[#4B5563] hover:text-[#2563EB] hover:bg-[#EFF6FF] rounded transition-colors outline-none" title={currentT.print}><Printer size={16} /></button>
                                                     {isSuperAdmin && (
-                                                        <button onClick={() => deleteRecord(record.id)} className="p-1.5 text-[#DC2626] hover:bg-[#FEE2E2] rounded transition-colors" title={currentT.delete}><Trash2 size={16} /></button>
+                                                        <button onClick={() => deleteRecord(record.id)} className="p-1.5 text-[#DC2626] hover:bg-[#FEE2E2] rounded transition-colors outline-none" title={currentT.delete}><Trash2 size={16} /></button>
                                                     )}
                                                 </div>
                                             </td>
@@ -583,9 +626,9 @@ export default function SevaSetuAdmin() {
                     {/* Pagination */}
                     {totalPages > 1 && (
                         <div className="bg-[#F9FAFB] p-3 border-t border-[#E5E7EB] flex items-center justify-between text-[0.85rem] font-bold text-[#374151]">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border border-[#D1D5DB] rounded bg-[#FFFFFF] disabled:opacity-50">{currentT.prev}</button>
+                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border border-[#D1D5DB] rounded bg-[#FFFFFF] disabled:opacity-50 outline-none">{currentT.prev}</button>
                             <span>{currentT.page} {currentPage} of {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border border-[#D1D5DB] rounded bg-[#FFFFFF] disabled:opacity-50">{currentT.next}</button>
+                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border border-[#D1D5DB] rounded bg-[#FFFFFF] disabled:opacity-50 outline-none">{currentT.next}</button>
                         </div>
                     )}
                 </div>
@@ -597,7 +640,7 @@ export default function SevaSetuAdmin() {
             <AnimatePresence>
                 {selectedImage && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex items-center justify-center p-6">
-                        <button onClick={() => setSelectedImage(null)} className="absolute top-6 right-6 w-10 h-10 bg-[#FFFFFF] rounded-full flex items-center justify-center text-[#111111] hover:bg-[#F3F4F6] shadow-xl z-50"><X size={20} /></button>
+                        <button onClick={() => setSelectedImage(null)} className="absolute top-6 right-6 w-10 h-10 bg-[#FFFFFF] rounded-full flex items-center justify-center text-[#111111] hover:bg-[#F3F4F6] shadow-xl z-50 outline-none"><X size={20} /></button>
                         <motion.img initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} src={selectedImage} alt="Application Document" className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl border border-white/20" />
                     </motion.div>
                 )}
@@ -656,24 +699,24 @@ export default function SevaSetuAdmin() {
 
                         {/* Print Controls (Hidden during actual printing via CSS injected below) */}
                         <div className="fixed bottom-0 left-0 right-0 bg-[#111111] p-4 flex justify-center gap-4 z-50 print:hidden">
-                            <button onClick={() => setRecordToPrint(null)} className="px-6 py-2 bg-[#374151] text-white font-bold rounded-lg hover:bg-[#4B5563]">Cancel</button>
-                            <button onClick={() => window.print()} className="px-6 py-2 bg-[#2563EB] text-white font-bold rounded-lg flex items-center gap-2 hover:bg-[#1D4ED8]"><Printer size={18} /> Print Record</button>
+                            <button onClick={() => setRecordToPrint(null)} className="px-6 py-2 bg-[#374151] text-white font-bold rounded-lg hover:bg-[#4B5563] outline-none">Cancel</button>
+                            <button onClick={() => window.print()} className="px-6 py-2 bg-[#2563EB] text-white font-bold rounded-lg flex items-center gap-2 hover:bg-[#1D4ED8] outline-none"><Printer size={18} /> Print Record</button>
                         </div>
                         <style>{`@media print { body * { visibility: hidden; } #print-area, #print-area * { visibility: visible; } #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; box-shadow: none; border: none; } }`}</style>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Language Prompt */}
+            {/* Language Prompt for Authenticated View */}
             <AnimatePresence>
                 {showLangPrompt && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
                         <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto hide-scrollbar">
-                            <button onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full"><X size={18} /></button>
+                            <button type="button" onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full outline-none"><X size={18} /></button>
                             <h2 className="text-[1.4rem] font-black tracking-tight mb-4 text-[#111111] text-center">{currentT.lang}</h2>
                             <div className="flex flex-col gap-2">
                                 {languageOptions.map((opt) => (
-                                    <button key={opt.code} onClick={() => { setLang(opt.code); setShowLangPrompt(false); }} className={`p-3 rounded-xl font-bold text-left border ${lang === opt.code ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-[#F9FAFB] text-[#111111] border-[#E5E7EB]'}`}>{opt.label}</button>
+                                    <button type="button" key={opt.code} onClick={() => { setLang(opt.code); setShowLangPrompt(false); }} className={`p-3 rounded-xl font-bold text-left border outline-none ${lang === opt.code ? 'bg-[#2563EB] text-white border-[#2563EB]' : 'bg-[#F9FAFB] text-[#111111] border-[#E5E7EB]'}`}>{opt.label}</button>
                                 ))}
                             </div>
                         </motion.div>
