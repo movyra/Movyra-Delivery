@@ -1,36 +1,36 @@
 const { Resend } = require('resend');
 
 export default async function handler(req, res) {
-    // Enable CORS for frontend communication
+    // 1. Dynamic CORS Headers for the Node.js Runtime
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
     res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    // Handle preflight requests
+    // 2. Immediately answer the Preflight (OPTIONS) request
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
-    // Block browser visits (GET requests)
+    // 3. Reject non-POST requests
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed. This endpoint only accepts POST requests from the application.' });
+        return res.status(405).json({ error: 'Method Not Allowed. This endpoint requires a POST request.' });
     }
 
     const { email } = req.body;
 
     if (!email) {
-        return res.status(400).json({ error: 'Email address is required' });
+        return res.status(400).json({ error: 'Email address is required.' });
     }
 
-    // Failsafe: Check if Vercel Environment Variable is missing
-    if (!process.env.RESEND_API_KEY) {
-        console.error('CRITICAL ERROR: RESEND_API_KEY is not set in Vercel Environment Variables.');
-        return res.status(500).json({ error: 'Server configuration error. API key missing.' });
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey) {
+        console.error('CRITICAL ERROR: RESEND_API_KEY is not defined in Vercel.');
+        return res.status(500).json({ error: 'Internal Server Configuration Error.' });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    const resend = new Resend(apiKey);
 
     try {
         const actionUrl = `https://msevasetu.web.app/sevaadmin?action=reset&email=${encodeURIComponent(email)}`;
@@ -61,9 +61,9 @@ export default async function handler(req, res) {
             `
         });
 
-        return res.status(200).json({ success: true, message: 'Password reset email sent successfully', data });
+        return res.status(200).json({ success: true, message: 'Password reset email sent successfully.', data });
     } catch (error) {
         console.error('Resend API Error:', error);
-        return res.status(500).json({ error: 'Failed to send password reset email', details: error.message });
+        return res.status(500).json({ error: 'Failed to send password reset email.', details: error.message });
     }
 }
