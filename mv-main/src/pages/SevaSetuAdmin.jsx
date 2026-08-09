@@ -234,7 +234,7 @@ export default function SevaSetuAdmin() {
         setRecords([]);
     };
 
-    // STRICT UPDATE: Safe Vercel API routing with strict JSON parsing check
+    // STRICT UPDATE: Enhanced fetch configuration for explicit CORS and omitted credentials
     const handleForgotPassword = async (e) => {
         e.preventDefault();
         setIsAuthenticating(true);
@@ -243,8 +243,11 @@ export default function SevaSetuAdmin() {
         try {
             const response = await fetch('https://msevasetuemail.vercel.app/api/reset-password', {
                 method: 'POST',
+                mode: 'cors',
+                credentials: 'omit',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({ email: resetEmail }),
             });
