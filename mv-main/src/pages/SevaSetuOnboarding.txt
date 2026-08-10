@@ -2,7 +2,7 @@
  * SYSTEM DOCUMENTATION / PUBLIC NGO ONBOARDING & PAYMENT PORTAL
  * Context: Organization Registration and Subscription.
  * Database: PocketBase (ngo_users auth collection).
- * Gateway: PayU Checkout (Standard POST Redirect targeting /api/payu-callback).
+ * Gateway: PayU Checkout (Standard POST Redirect).
  * Features: Super Admin Testing Override & Dedicated Transaction Receipt UI.
  */
 
@@ -194,7 +194,7 @@ const TRANSLATIONS = {
         desc_free: "ନାଗରିକ ରିପୋର୍ଟ ଏବଂ ଯାଞ୍ଚ ଉପକରଣଗୁଡ଼ିକ ପାଇଁ ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", 
         desc_support: "ଯାଞ୍ଚ ହୋଇଥିବା ପ୍ରୋଫାଇଲ୍, କେସ୍ ପରିଚାଳନା ଏବଂ ଟିମ୍ ଉପକରଣ।", 
         desc_pro: "ଏକାଧିକ ଶାଖା, ଉନ୍ନତ ବିଶ୍ଳେଷଣ ଏବଂ ପ୍ରାଥମିକତା ସମର୍ଥନ।",
-        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି.", recommended: "ସୁପାରିଶ କରାଯାଇଛି",
+        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି।", recommended: "ସୁପାରିଶ କରାଯାଇଛି",
         txn_status: "କାରବାର ସ୍ଥିତି", txn_success: "ପେମେଣ୍ଟ ସଫଳ", txn_fail: "ପେମେଣ୍ଟ ବିଫଳ",
         txn_id: "କାରବାର ସନ୍ଦର୍ଭ", retry: "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ", go_home: "ହୋମପେଜକୁ ଯାଆନ୍ତୁ"
     },
@@ -317,6 +317,7 @@ export default function SevaSetuOnboarding() {
             });
         } catch (error) {
             console.error("PocketBase Creation Error:", error);
+            // Even if DB fails, keep them on the receipt screen to see the PayU txnid for support
         }
     };
 
@@ -370,9 +371,9 @@ export default function SevaSetuOnboarding() {
                 throw new Error(currentT.pay_failed);
             }
 
-            // STRICT UPDATE: Pointing surl and furl to the backend serverless callback endpoint
-            const surlUrl = `https://msevasetupay.vercel.app/api/payu-callback`;
-            const furlUrl = `https://msevasetupay.vercel.app/api/payu-callback`;
+            // Standard PayU Post Redirect Logic
+            const surlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=success&txnid=${txnid}`;
+            const furlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=failure&txnid=${txnid}`;
 
             sessionStorage.setItem('seva_onboard_data', JSON.stringify({ ...formData, selectedPlan, txnid }));
 

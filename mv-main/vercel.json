@@ -13,6 +13,10 @@
   ],
   "rewrites": [
     {
+      "source": "/api/payu-callback",
+      "destination": "/api/payu-callback"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
