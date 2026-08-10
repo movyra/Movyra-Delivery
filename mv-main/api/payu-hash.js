@@ -3,6 +3,7 @@
  * Context: Secure Payment Gateway Processing.
  * Security: Merchant Salt is strictly hidden in Vercel Environment Variables.
  * Output: SHA-512 Hash required by PayU authorization.
+ * Syntax: Strict CommonJS for Vercel Node.js compatibility.
  */
 
 const crypto = require('crypto');
@@ -24,7 +25,7 @@ const TRANSLATIONS = {
     as: { success: "পেমেন্ট সুৰক্ষিত বৈধতা সফল।", error: "অবৈধ পেমেন্ট পেৰামিটাৰ।" }
 };
 
-export default async function handler(req, res) {
+module.exports = async function (req, res) {
     // 1. AGGRESSIVE CORS HEADERS FOR PREFLIGHT BYPASS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -89,4 +90,4 @@ export default async function handler(req, res) {
         console.error('Cryptographic Generation Error:', error);
         return res.status(500).json({ error: 'Transaction validation processing failed.', code: 500 });
     }
-}
+};

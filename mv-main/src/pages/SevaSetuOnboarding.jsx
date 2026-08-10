@@ -2,12 +2,12 @@
  * SYSTEM DOCUMENTATION / PUBLIC NGO ONBOARDING & PAYMENT PORTAL
  * Context: Organization Registration and Subscription.
  * Database: PocketBase (ngo_users auth collection).
- * Gateway: PayU Checkout (Strict test routing for super admin).
+ * Gateway: PayU Checkout (Strict Standard POST Redirect to bypass proxy blocks).
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, Building, Mail, Phone, Lock, ArrowRight } from 'lucide-react';
+import { Globe, X, Building, Mail, Phone, Lock, ArrowRight, IndianRupee, ShieldCheck, FileCheck } from 'lucide-react';
 import PocketBase from 'pocketbase';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
@@ -206,23 +206,19 @@ export default function SevaSetuOnboarding() {
     // Custom SVG Sliding Animation Sequence Logic
     const [animIndex, setAnimIndex] = useState(0);
     const CUSTOM_SVGS = [
-        // 1. Rupee Payment Graphic
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="rupee">
             <path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3c3.314 0 6-2.686 6-6 0-1.28-.404-2.46-1.087-3.42M13.5 13H6"/>
             <circle cx="12" cy="12" r="10" stroke="#111111" strokeWidth="0" strokeDasharray="2 2" />
         </svg>,
-        // 2. Shield Verification Graphic
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="shield">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
             <path d="M9 12l2 2 4-4"/>
         </svg>,
-        // 3. Organization Building Graphic
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="building">
             <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
             <path d="M9 22v-4h6v4"/>
             <path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M16 10h.01M8 10h.01M12 14h.01M16 14h.01M8 14h.01"/>
         </svg>,
-        // 4. File Document Graphic
         <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="file">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14 2 14 8 20 8"/>
@@ -237,14 +233,58 @@ export default function SevaSetuOnboarding() {
         return () => clearInterval(interval);
     }, [CUSTOM_SVGS.length]);
 
-    // Load PayU Bolt Script
+    // Handle Return from PayU Standard Redirect
     useEffect(() => {
-        const script = document.createElement('script');
-        script.src = "https://sboxcheckout-static.citruspay.com/bolt/run/bolt.min.js";
-        script.id = "bolt";
-        document.body.appendChild(script);
-        return () => { document.body.removeChild(script); };
+        const urlParams = new URLSearchParams(window.location.search);
+        const payuStatus = urlParams.get('payu_status');
+        const returnedTxnId = urlParams.get('txnid');
+
+        if (payuStatus) {
+            const storedDataStr = sessionStorage.getItem('seva_onboard_data');
+            if (storedDataStr) {
+                const storedData = JSON.parse(storedDataStr);
+                setFormData({
+                    org_name: storedData.org_name || '',
+                    email: storedData.email || '',
+                    contact: storedData.contact || '',
+                    password: storedData.password || ''
+                });
+                setSelectedPlan(storedData.selectedPlan || 'Support Plan');
+                
+                if (payuStatus === 'success') {
+                    setIsProcessing(true);
+                    createPocketBaseUserFromRedirect(storedData, returnedTxnId || storedData.txnid);
+                } else {
+                    setStep(2);
+                    setErrorMessage('Payment validation failed. Please try again.');
+                }
+            }
+            window.history.replaceState({}, document.title, window.location.pathname);
+            sessionStorage.removeItem('seva_onboard_data');
+        }
     }, []);
+
+    const createPocketBaseUserFromRedirect = async (data, txnId) => {
+        try {
+            await pb.collection('ngo_users').create({
+                email: data.email,
+                password: data.password,
+                passwordConfirm: data.password,
+                org_name: data.org_name,
+                contact: data.contact,
+                plan_type: data.selectedPlan,
+                payu_txn_id: txnId,
+                status: 'Active'
+            });
+            setIsProcessing(false);
+            setStep(3);
+        } catch (error) {
+            console.error("PocketBase Creation Error:", error);
+            setStep(2);
+            setErrorMessage("Database registration failed. Please contact support.");
+            setIsProcessing(false);
+        }
+    };
 
     const handlePlanSelect = (planName) => {
         setSelectedPlan(planName);
@@ -264,12 +304,11 @@ export default function SevaSetuOnboarding() {
         const txnid = "SEVA" + new Date().getTime();
 
         if (amount === '0.00') {
-            await createPocketBaseUser(txnid, 'Free');
+            await createPocketBaseUserFromRedirect({ ...formData, selectedPlan }, txnid);
             return;
         }
 
         try {
-            // STRICT UPDATE: Pointing to correct backend URL
             const hashResponse = await fetch('https://msevasetupay.vercel.app/api/payu-hash', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -289,62 +328,45 @@ export default function SevaSetuOnboarding() {
                 throw new Error(currentT.pay_failed);
             }
 
-            if (!window.bolt) {
-                throw new Error("Payment gateway failed to load.");
-            }
+            // Standard PayU Post Redirect Logic
+            const surlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=success&txnid=${txnid}`;
+            const furlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=failure`;
 
-            window.bolt.launch({
+            sessionStorage.setItem('seva_onboard_data', JSON.stringify({ ...formData, selectedPlan, txnid }));
+
+            const payuUrl = isTestMode ? 'https://test.payu.in/_payment' : 'https://secure.payu.in/_payment';
+            const form = document.createElement('form');
+            form.action = payuUrl;
+            form.method = 'POST';
+            form.style.display = 'none';
+
+            const params = {
                 key: isTestMode ? 'gtKFFx' : import.meta.env.VITE_PAYU_MERCHANT_KEY,
                 txnid: txnid,
                 hash: hashData.hash,
                 amount: amount,
+                productinfo: `${selectedPlan} Subscription`,
                 firstname: formData.org_name.substring(0, 10),
                 email: formData.email,
                 phone: formData.contact,
-                productinfo: `${selectedPlan} Subscription`,
-                surl: window.location.origin, 
-                furl: window.location.origin,
-                mode: 'dropout'
-            }, {
-                responseHandler: async function(BOLT) {
-                    if (BOLT.response.txnStatus === "SUCCESS" || BOLT.response.status === "success") {
-                        await createPocketBaseUser(BOLT.response.txnid || txnid, 'Active');
-                    } else {
-                        setErrorMessage(currentT.pay_failed);
-                        setIsProcessing(false);
-                    }
-                },
-                catchException: function(BOLT) {
-                    console.error("Payment Exception:", BOLT.message);
-                    setErrorMessage(currentT.pay_failed);
-                    setIsProcessing(false);
-                }
-            });
+                surl: surlUrl,
+                furl: furlUrl
+            };
+
+            for (const key in params) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = params[key];
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
 
         } catch (error) {
             console.error("Registration Processing Error:", error);
             setErrorMessage(error.message || currentT.pay_failed);
-            setIsProcessing(false);
-        }
-    };
-
-    const createPocketBaseUser = async (txnId, paymentStatus) => {
-        try {
-            await pb.collection('ngo_users').create({
-                email: formData.email,
-                password: formData.password,
-                passwordConfirm: formData.password,
-                org_name: formData.org_name,
-                contact: formData.contact,
-                plan_type: selectedPlan,
-                payu_txn_id: txnId,
-                status: 'Active'
-            });
-            setIsProcessing(false);
-            setStep(3);
-        } catch (error) {
-            console.error("PocketBase Creation Error:", error);
-            setErrorMessage("Database registration failed. Please contact support.");
             setIsProcessing(false);
         }
     };
