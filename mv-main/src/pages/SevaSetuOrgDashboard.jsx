@@ -284,7 +284,7 @@ export default function SevaSetuOrgDashboard() {
                 <div className="flex items-center gap-3">
                     <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                     <div>
-                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">ovyra SevaSetu</h1>
+                        <h1 className="text-[1.2rem] font-black text-[#111111] leading-tight tracking-tight">SevaSetu</h1>
                         <p className="text-[#6B7280] text-[0.7rem] font-bold uppercase tracking-wider">{currentT.dashboard}</p>
                     </div>
                 </div>

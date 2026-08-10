@@ -2,13 +2,15 @@
  * SYSTEM DOCUMENTATION / PUBLIC NGO ONBOARDING & PAYMENT PORTAL
  * Context: Organization Registration and Subscription.
  * Database: PocketBase (ngo_users auth collection).
- * Gateway: PayU Checkout (Strict Standard POST Redirect to bypass proxy blocks).
+ * Gateway: PayU Checkout (Standard POST Redirect).
+ * Features: Super Admin Testing Override & Dedicated Transaction Receipt UI.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, Building, Mail, Phone, Lock, ArrowRight, IndianRupee, ShieldCheck, FileCheck } from 'lucide-react';
+import { Globe, X, Building, Mail, Phone, Lock, ArrowRight, ShieldCheck, AlertCircle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
 import PocketBase from 'pocketbase';
+import { useNavigate } from 'react-router-dom';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
 const pb = new PocketBase(PB_URL);
@@ -24,7 +26,9 @@ const TRANSLATIONS = {
         desc_free: "Basic access to civic reports and verification tools.", 
         desc_support: "Verified profile, case management, and team tools.", 
         desc_pro: "Multiple branches, advanced analytics, and priority support.",
-        pay_failed: "Payment validation failed. Please try again.", recommended: "Recommended"
+        pay_failed: "Payment validation failed.", recommended: "Recommended",
+        txn_status: "Transaction Status", txn_success: "Payment Successful", txn_fail: "Payment Failed",
+        txn_id: "Transaction Reference", retry: "Retry Payment", go_home: "Go to Homepage"
     },
     hi: {
         lang: "हिन्दी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
@@ -36,7 +40,9 @@ const TRANSLATIONS = {
         desc_free: "नागरिक रिपोर्ट और सत्यापन उपकरणों तक बुनियादी पहुंच।", 
         desc_support: "सत्यापित प्रोफ़ाइल, केस प्रबंधन और टीम टूल।", 
         desc_pro: "कई शाखाएं, उन्नत एनालिटिक्स और प्राथमिकता समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल रहा। कृपया पुनः प्रयास करें।", recommended: "अनुशंसित"
+        pay_failed: "भुगतान सत्यापन विफल रहा।", recommended: "अनुशंसित",
+        txn_status: "लेनदेन की स्थिति", txn_success: "भुगतान सफल रहा", txn_fail: "भुगतान विफल रहा",
+        txn_id: "लेनदेन संदर्भ", retry: "पुनः प्रयास करें", go_home: "होमपेज पर जाएं"
     },
     hinglish: {
         lang: "Hinglish", onboarding: "Organization Onboarding", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Professional Plan",
@@ -48,7 +54,9 @@ const TRANSLATIONS = {
         desc_free: "Civic reports aur verification tools ka basic access.", 
         desc_support: "Verified profile, case management, aur team tools.", 
         desc_pro: "Multiple branches, advanced analytics, aur priority support.",
-        pay_failed: "Payment validation fail ho gaya. Kripaya dubara try karein.", recommended: "Recommended"
+        pay_failed: "Payment validation fail ho gaya.", recommended: "Recommended",
+        txn_status: "Transaction Status", txn_success: "Payment Successful", txn_fail: "Payment Fail Ho Gaya",
+        txn_id: "Transaction ID", retry: "Phirse Try Karein", go_home: "Homepage Par Jayein"
     },
     mr: {
         lang: "मराठी", onboarding: "संस्था ऑनबोर्डिंग", free_plan: "मोफत योजना", support_plan: "आधार योजना", pro_plan: "व्यावसायिक योजना",
@@ -60,7 +68,9 @@ const TRANSLATIONS = {
         desc_free: "नागरी अहवाल आणि पडताळणी साधनांमध्ये मूलभूत प्रवेश.", 
         desc_support: "सत्यापित प्रोफाइल, केस व्यवस्थापन आणि टीम साधने.", 
         desc_pro: "अनेक शाखा, प्रगत विश्लेषण आणि प्राधान्य समर्थन.",
-        pay_failed: "पेमेंट प्रमाणीकरण अयशस्वी. कृपया पुन्हा प्रयत्न करा.", recommended: "शिफारस केलेले"
+        pay_failed: "पेमेंट प्रमाणीकरण अयशस्वी.", recommended: "शिफारस केलेले",
+        txn_status: "व्यवहार स्थिती", txn_success: "पेमेंट यशस्वी", txn_fail: "पेमेंट अयशस्वी",
+        txn_id: "व्यवहार संदर्भ", retry: "पुन्हा प्रयत्न करा", go_home: "होमपेजवर जा"
     },
     gu: {
         lang: "ગુજરાતી", onboarding: "સંસ્થા ઓનબોર્ડિંગ", free_plan: "મફત યોજના", support_plan: "આધાર યોજના", pro_plan: "વ્યવસાયિક યોજના",
@@ -72,7 +82,9 @@ const TRANSLATIONS = {
         desc_free: "નાગરિક અહેવાલો અને ચકાસણી સાધનોની મૂળભૂત ઍક્સેસ.", 
         desc_support: "ચકાસાયેલ પ્રોફાઇલ, કેસ મેનેજમેન્ટ અને ટીમ સાધનો.", 
         desc_pro: "બહુવિધ શાખાઓ, અદ્યતન વિશ્લેષણ અને પ્રાધાન્યતા સપોર્ટ.",
-        pay_failed: "ચુકવણી માન્યતા નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.", recommended: "ભલામણ કરેલ"
+        pay_failed: "ચુકવણી માન્યતા નિષ્ફળ.", recommended: "ભલામણ કરેલ",
+        txn_status: "વ્યવહાર સ્થિતિ", txn_success: "ચુકવણી સફળ", txn_fail: "ચુકવણી નિષ્ફળ",
+        txn_id: "વ્યવહાર સંદર્ભ", retry: "ફરી પ્રયાસ કરો", go_home: "હોમપેજ પર જાઓ"
     },
     te: {
         lang: "తెలుగు", onboarding: "సంస్థ ఆన్‌బోర్డింగ్", free_plan: "ఉచిత ప్రణాళిక", support_plan: "మద్దతు ప్రణాళిక", pro_plan: "వృత్తిపరమైన ప్రణాళిక",
@@ -84,7 +96,9 @@ const TRANSLATIONS = {
         desc_free: "పౌర నివేదికలు మరియు ధృవీకరణ సాధనాలకు ప్రాథమిక ప్రాప్యత.", 
         desc_support: "ధృవీకరించబడిన ప్రొఫైల్, కేస్ నిర్వహణ మరియు జట్టు సాధనాలు.", 
         desc_pro: "బహుళ శాఖలు, అధునాతన విశ్లేషణలు మరియు ప్రాధాన్యత మద్దతు.",
-        pay_failed: "చెల్లింపు ధృవీకరణ విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.", recommended: "సిఫార్సు చేయబడింది"
+        pay_failed: "చెల్లింపు ధృవీకరణ విఫలమైంది.", recommended: "సిఫార్సు చేయబడింది",
+        txn_status: "లావాదేవీ స్థితి", txn_success: "చెల్లింపు విజయవంతమైంది", txn_fail: "చెల్లింపు విఫలమైంది",
+        txn_id: "లావాదేవీ సూచన", retry: "మళ్లీ ప్రయత్నించండి", go_home: "హోమ్‌పేజీకి వెళ్లండి"
     },
     ta: {
         lang: "தமிழ்", onboarding: "நிறுவன ஆன்போர்டிங்", free_plan: "இலவச திட்டம்", support_plan: "ஆதரவு திட்டம்", pro_plan: "தொழில்முறை திட்டம்",
@@ -96,7 +110,9 @@ const TRANSLATIONS = {
         desc_free: "குடிமக்கள் அறிக்கைகள் மற்றும் சரிபார்ப்பு கருவிகளுக்கான அடிப்படை அணுகல்.", 
         desc_support: "சரிபார்க்கப்பட்ட சுயவிவரம், வழக்கு மேலாண்மை மற்றும் குழு கருவிகள்.", 
         desc_pro: "பல கிளைகள், மேம்பட்ட பகுப்பாய்வு மற்றும் முன்னுரிமை ஆதரவு.",
-        pay_failed: "கட்டண சரிபார்ப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.", recommended: "பரிந்துரைக்கப்படுகிறது"
+        pay_failed: "கட்டண சரிபார்ப்பு தோல்வியடைந்தது.", recommended: "பரிந்துரைக்கப்படுகிறது",
+        txn_status: "பரிவர்த்தனை நிலை", txn_success: "கட்டணம் வெற்றிகரமானது", txn_fail: "கட்டணம் தோல்வியடைந்தது",
+        txn_id: "பரிவர்த்தனை குறிப்பு", retry: "மீண்டும் முயற்சிக்கவும்", go_home: "முகப்புப்பக்கத்திற்குச் செல்லவும்"
     },
     pa: {
         lang: "ਪੰਜਾਬੀ", onboarding: "ਸੰਗਠਨ ਆਨਬੋਰਡਿੰਗ", free_plan: "ਮੁਫਤ ਯੋਜਨਾ", support_plan: "ਸਹਾਇਤਾ ਯੋਜਨਾ", pro_plan: "ਪੇਸ਼ੇਵਰ ਯੋਜਨਾ",
@@ -108,7 +124,9 @@ const TRANSLATIONS = {
         desc_free: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ ਅਤੇ ਤਸਦੀਕ ਸਾਧਨਾਂ ਤੱਕ ਬੁਨਿਆਦੀ ਪਹੁੰਚ।", 
         desc_support: "ਪ੍ਰਮਾਣਿਤ ਪ੍ਰੋਫਾਈਲ, ਕੇਸ ਪ੍ਰਬੰਧਨ, ਅਤੇ ਟੀਮ ਟੂਲ।", 
         desc_pro: "ਕਈ ਸ਼ਾਖਾਵਾਂ, ਉੱਨਤ ਵਿਸ਼ਲੇਸ਼ਣ, ਅਤੇ ਤਰਜੀਹੀ ਸਹਾਇਤਾ।",
-        pay_failed: "ਭੁਗਤਾਨ ਪ੍ਰਮਾਣਿਕਤਾ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", recommended: "ਸਿਫਾਰਸ਼ੀ"
+        pay_failed: "ਭੁਗਤਾਨ ਪ੍ਰਮਾਣਿਕਤਾ ਅਸਫਲ।", recommended: "ਸਿਫਾਰਸ਼ੀ",
+        txn_status: "ਲੈਣ-ਦੇਣ ਦੀ ਸਥਿਤੀ", txn_success: "ਭੁਗਤਾਨ ਸਫਲ", txn_fail: "ਭੁਗਤਾਨ ਅਸਫਲ",
+        txn_id: "ਲੈਣ-ਦੇਣ ਦਾ ਹਵਾਲਾ", retry: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ", go_home: "ਹੋਮਪੇਜ 'ਤੇ ਜਾਓ"
     },
     bho: {
         lang: "भोजपुरी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
@@ -120,7 +138,9 @@ const TRANSLATIONS = {
         desc_free: "नागरिक रिपोर्ट अउर सत्यापन उपकरण तक बुनियादी पहुंच।", 
         desc_support: "सत्यापित प्रोफाइल, केस प्रबंधन, अउर टीम टूल।", 
         desc_pro: "कई गो शाखा, उन्नत एनालिटिक्स, अउर प्राथमिकता समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल हो गइल। कृपया फेर से कोशिश करीं।", recommended: "अनुशंसित"
+        pay_failed: "भुगतान सत्यापन विफल हो गइल।", recommended: "अनुशंसित",
+        txn_status: "लेनदेन के स्थिति", txn_success: "भुगतान सफल", txn_fail: "भुगतान विफल",
+        txn_id: "लेनदेन संदर्भ", retry: "फेर से कोशिश करीं", go_home: "होमपेज पर जाईं"
     },
     bn: {
         lang: "বাংলা", onboarding: "প্রতিষ্ঠান অনবোর্ডিং", free_plan: "বিনামূল্যে পরিকল্পনা", support_plan: "সহায়তা পরিকল্পনা", pro_plan: "পেশাদার পরিকল্পনা",
@@ -132,7 +152,9 @@ const TRANSLATIONS = {
         desc_free: "নাগরিক প্রতিবেদন এবং যাচাইকরণ সরঞ্জামগুলিতে প্রাথমিক অ্যাক্সেস।", 
         desc_support: "যাচাইকৃত প্রোফাইল, কেস পরিচালনা এবং দলীয় সরঞ্জাম।", 
         desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ এবং অগ্রাধিকার সমর্থন।",
-        pay_failed: "পেমেন্ট বৈধতা ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", recommended: "প্রস্তাবিত"
+        pay_failed: "পেমেন্ট বৈধতা ব্যর্থ হয়েছে।", recommended: "প্রস্তাবিত",
+        txn_status: "লেনদেনের অবস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট ব্যর্থ হয়েছে",
+        txn_id: "লেনদেন রেফারেন্স", retry: "আবার চেষ্টা করুন", go_home: "হোমপেজে যান"
     },
     kn: {
         lang: "ಕನ್ನಡ", onboarding: "ಸಂಸ್ಥೆ ಆನ್‌ಬೋರ್ಡಿಂಗ್", free_plan: "ಉಚಿತ ಯೋಜನೆ", support_plan: "ಬೆಂಬಲ ಯೋಜನೆ", pro_plan: "ವೃತ್ತಿಪರ ಯೋಜನೆ",
@@ -144,7 +166,9 @@ const TRANSLATIONS = {
         desc_free: "ನಾಗರಿಕ ವರದಿಗಳು ಮತ್ತು ಪರಿಶೀಲನಾ ಸಾಧನಗಳಿಗೆ ಮೂಲ ಪ್ರವೇಶ.", 
         desc_support: "ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್, ಪ್ರಕರಣ ನಿರ್ವಹಣೆ ಮತ್ತು ತಂಡದ ಪರಿಕರಗಳು.", 
         desc_pro: "ಬಹು ಶಾಖೆಗಳು, ಸುಧಾರಿತ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಆದ್ಯತೆಯ ಬೆಂಬಲ.",
-        pay_failed: "ಪಾವತಿ ಮೌಲ್ಯೀಕರಣ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", recommended: "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ"
+        pay_failed: "ಪಾವತಿ ಮೌಲ್ಯೀಕರಣ ವಿಫಲವಾಗಿದೆ.", recommended: "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ",
+        txn_status: "ವಹಿವಾಟು ಸ್ಥಿತಿ", txn_success: "ಪಾವತಿ ಯಶಸ್ವಿ", txn_fail: "ಪಾವತಿ ವಿಫಲವಾಗಿದೆ",
+        txn_id: "ವಹಿವಾಟು ಉಲ್ಲೇಖ", retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ", go_home: "ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ"
     },
     ml: {
         lang: "മലയാളം", onboarding: "സ്ഥാപന ഓൺബോർഡിംഗ്", free_plan: "സൗജന്യ പ്ലാൻ", support_plan: "പിന്തുണ പ്ലാൻ", pro_plan: "പ്രൊഫഷണൽ പ്ലാൻ",
@@ -156,7 +180,9 @@ const TRANSLATIONS = {
         desc_free: "സിവിക് റിപ്പോർട്ടുകളിലേക്കും സ്ഥിരീകരണ ഉപകരണങ്ങളിലേക്കുമുള്ള അടിസ്ഥാന ആക്സസ്.", 
         desc_support: "പരിശോധിച്ചുറപ്പിച്ച പ്രൊഫൈൽ, കേസ് മാനേജ്മെന്റ്, ടീം ടൂളുകൾ.", 
         desc_pro: "ഒന്നിലധികം ശാഖകൾ, വിപുലമായ വിശകലനം, മുൻഗണനാ പിന്തുണ.",
-        pay_failed: "പേയ്‌മെന്റ് സാധൂകരണം പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.", recommended: "ശുപാർശ ചെയ്യുന്നത്"
+        pay_failed: "പേയ്‌മെന്റ് സാധൂകരണം പരാജയപ്പെട്ടു.", recommended: "ശുപാർശ ചെയ്യുന്നത്",
+        txn_status: "ഇടപാട് നില", txn_success: "പേയ്‌മെന്റ് വിജയകരം", txn_fail: "പേയ്‌മെന്റ് പരാജയപ്പെട്ടു",
+        txn_id: "ഇടപാട് റഫറൻസ്", retry: "വീണ്ടും ശ്രമിക്കുക", go_home: "ഹോംപേജിലേക്ക് പോകുക"
     },
     or: {
         lang: "ଓଡ଼ିଆ", onboarding: "ସଂସ୍ଥା ଅନବୋର୍ଡିଂ", free_plan: "ମାଗଣା ଯୋଜନା", support_plan: "ସମର୍ଥନ ଯୋଜନା", pro_plan: "ପେସାଦାର ଯୋଜନା",
@@ -168,7 +194,9 @@ const TRANSLATIONS = {
         desc_free: "ନାଗରିକ ରିପୋର୍ଟ ଏବଂ ଯାଞ୍ଚ ଉପକରଣଗୁଡ଼ିକ ପାଇଁ ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", 
         desc_support: "ଯାଞ୍ଚ ହୋଇଥିବା ପ୍ରୋଫାଇଲ୍, କେସ୍ ପରିଚାଳନା ଏବଂ ଟିମ୍ ଉପକରଣ।", 
         desc_pro: "ଏକାଧିକ ଶାଖା, ଉନ୍ନତ ବିଶ୍ଳେଷଣ ଏବଂ ପ୍ରାଥମିକତା ସମର୍ଥନ।",
-        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।", recommended: "ସୁପାରିଶ କରାଯାଇଛି"
+        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି।", recommended: "ସୁପାରିଶ କରାଯାଇଛି",
+        txn_status: "କାରବାର ସ୍ଥିତି", txn_success: "ପେମେଣ୍ଟ ସଫଳ", txn_fail: "ପେମେଣ୍ଟ ବିଫଳ",
+        txn_id: "କାରବାର ସନ୍ଦର୍ଭ", retry: "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ", go_home: "ହୋମପେଜକୁ ଯାଆନ୍ତୁ"
     },
     as: {
         lang: "অসমীয়া", onboarding: "সংস্থা অনবৰ্ডিং", free_plan: "বিনামূলীয়া পৰিকল্পনা", support_plan: "সহায় পৰিকল্পনা", pro_plan: "পেছাদাৰী পৰিকল্পনা",
@@ -180,14 +208,18 @@ const TRANSLATIONS = {
         desc_free: "নাগৰিক প্ৰতিবেদন আৰু সত্যাগ্ৰহ সঁজুলিলৈ প্ৰাথমিক প্ৰৱেশাধিকাৰ।", 
         desc_support: "প্ৰমাণিত প্ৰফাইল, কেছ পৰিচালনা, আৰু দলীয় সঁজুলি।", 
         desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ, আৰু অগ্ৰাধিকাৰ সমৰ্থন।",
-        pay_failed: "পেমেন্ট বৈধতা বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।", recommended: "পৰামৰ্শ দিয়া হৈছে"
+        pay_failed: "পেমেন্ট বৈধতা বিফল হৈছে।", recommended: "পৰামৰ্শ দিয়া হৈছে",
+        txn_status: "লেনদেনৰ অৱস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট বিফল",
+        txn_id: "লেনদেনৰ প্ৰসংগ", retry: "পুনৰ চেষ্টা কৰক", go_home: "হোমপেজলৈ যাওক"
     }
 };
 
 export default function SevaSetuOnboarding() {
+    const navigate = useNavigate();
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
+    // Application States: 1=Plan, 2=Details, 3=Success (Free), 4=Transaction Receipt
     const [step, setStep] = useState(1); 
     const [selectedPlan, setSelectedPlan] = useState('Support Plan');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -199,6 +231,12 @@ export default function SevaSetuOnboarding() {
         contact: '',
         password: ''
     });
+
+    // Transaction Receipt State
+    const [receiptData, setReceiptData] = useState({ status: null, txnid: null });
+
+    // Super Admin Gateway Testing Override State
+    const [adminOverrideAmount, setAdminOverrideAmount] = useState(null);
 
     const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     const languageOptions = Object.keys(TRANSLATIONS).map(key => ({ code: key, label: TRANSLATIONS[key].lang }));
@@ -233,7 +271,7 @@ export default function SevaSetuOnboarding() {
         return () => clearInterval(interval);
     }, [CUSTOM_SVGS.length]);
 
-    // Handle Return from PayU Standard Redirect
+    // Handle Return from PayU Standard Redirect & Trigger Receipt UI
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const payuStatus = urlParams.get('payu_status');
@@ -241,6 +279,11 @@ export default function SevaSetuOnboarding() {
 
         if (payuStatus) {
             const storedDataStr = sessionStorage.getItem('seva_onboard_data');
+            
+            // Set Dedicated Receipt Data
+            setReceiptData({ status: payuStatus, txnid: returnedTxnId });
+            setStep(4); // Trigger Transaction Receipt UI
+            
             if (storedDataStr) {
                 const storedData = JSON.parse(storedDataStr);
                 setFormData({
@@ -252,11 +295,7 @@ export default function SevaSetuOnboarding() {
                 setSelectedPlan(storedData.selectedPlan || 'Support Plan');
                 
                 if (payuStatus === 'success') {
-                    setIsProcessing(true);
                     createPocketBaseUserFromRedirect(storedData, returnedTxnId || storedData.txnid);
-                } else {
-                    setStep(2);
-                    setErrorMessage('Payment validation failed. Please try again.');
                 }
             }
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -276,13 +315,9 @@ export default function SevaSetuOnboarding() {
                 payu_txn_id: txnId,
                 status: 'Active'
             });
-            setIsProcessing(false);
-            setStep(3);
         } catch (error) {
             console.error("PocketBase Creation Error:", error);
-            setStep(2);
-            setErrorMessage("Database registration failed. Please contact support.");
-            setIsProcessing(false);
+            // Even if DB fails, keep them on the receipt screen to see the PayU txnid for support
         }
     };
 
@@ -296,15 +331,23 @@ export default function SevaSetuOnboarding() {
         setIsProcessing(true);
         setErrorMessage('');
 
-        let amount = '0.00';
-        if (selectedPlan === 'Support Plan') amount = '29.00';
-        if (selectedPlan === 'Professional Plan') amount = '99.00';
-
         const isTestMode = formData.email === 'testcodecfg@gmail.com';
+        let amount = '0.00';
+
+        // STRICT ADMIN GATEWAY TESTING OVERRIDE
+        if (isTestMode && adminOverrideAmount !== null) {
+            amount = adminOverrideAmount;
+        } else {
+            if (selectedPlan === 'Support Plan') amount = '29.00';
+            if (selectedPlan === 'Professional Plan') amount = '99.00';
+        }
+
         const txnid = "SEVA" + new Date().getTime();
 
         if (amount === '0.00') {
             await createPocketBaseUserFromRedirect({ ...formData, selectedPlan }, txnid);
+            setStep(3); // Route to standard Free Success
+            setIsProcessing(false);
             return;
         }
 
@@ -330,7 +373,7 @@ export default function SevaSetuOnboarding() {
 
             // Standard PayU Post Redirect Logic
             const surlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=success&txnid=${txnid}`;
-            const furlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=failure`;
+            const furlUrl = `${window.location.origin}/sevasetu-onboarding?payu_status=failure&txnid=${txnid}`;
 
             sessionStorage.setItem('seva_onboard_data', JSON.stringify({ ...formData, selectedPlan, txnid }));
 
@@ -385,7 +428,7 @@ export default function SevaSetuOnboarding() {
             <div className="w-full max-w-6xl flex flex-col md:flex-row bg-[#FFFFFF] rounded-2xl shadow-2xl overflow-hidden z-10 relative">
                 
                 {/* Left Side: Graphic & Branding */}
-                <div className="w-full md:w-1/3 bg-[#F9FAFB] border-r border-[#E5E7EB] p-8 flex flex-col items-center justify-center relative">
+                <div className="w-full md:w-1/3 bg-[#F9FAFB] border-r border-[#E5E7EB] p-8 flex flex-col items-center justify-center relative hidden md:flex">
                     <div className="flex items-center gap-0.3 mb-12">
                         <img src="/logo-7.png" alt="Movyra" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                         <span className="font-black text-[1.8rem] tracking-tighter text-[#111111]">ovyra <span className="text-[#2563EB]">SevaSetu</span></span>
@@ -393,14 +436,7 @@ export default function SevaSetuOnboarding() {
 
                     <div className="relative w-48 h-48 flex items-center justify-center mb-8 overflow-hidden">
                         <AnimatePresence mode="wait">
-                            <motion.div
-                                key={animIndex}
-                                initial={{ opacity: 0, x: 50 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -50 }}
-                                transition={{ duration: 0.5, ease: "easeInOut" }}
-                                className="absolute flex items-center justify-center"
-                            >
+                            <motion.div key={animIndex} initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.5, ease: "easeInOut" }} className="absolute flex items-center justify-center">
                                 {CUSTOM_SVGS[animIndex]}
                             </motion.div>
                         </AnimatePresence>
@@ -411,21 +447,25 @@ export default function SevaSetuOnboarding() {
                 </div>
 
                 {/* Right Side: Interactive Content */}
-                <div className="w-full md:w-2/3 p-8 md:p-12 bg-[#FFFFFF]">
+                <div className="w-full md:w-2/3 p-6 md:p-12 bg-[#FFFFFF]">
                     
+                    {/* Mobile Header */}
+                    <div className="flex md:hidden items-center justify-center gap-0.3 mb-8">
+                        <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                        <span className="font-black text-[1.4rem] tracking-tighter text-[#111111]">ovyra <span className="text-[#2563EB]">SevaSetu</span></span>
+                    </div>
+
                     {step === 1 && (
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-full justify-center">
                             <h3 className="text-2xl font-black text-[#111111] mb-6 text-center md:text-left">{currentT.select_plan}</h3>
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                                 
-                                {/* Free Plan */}
                                 <div onClick={() => handlePlanSelect('Free Plan')} className="border-2 border-[#E5E7EB] rounded-xl p-6 cursor-pointer hover:border-[#6B7280] transition-colors bg-[#F9FAFB]">
                                     <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.free_plan}</h4>
                                     <p className="text-xl font-black text-[#6B7280] mb-4">{currentT.price_free}</p>
                                     <p className="text-[#4B5563] text-xs font-medium leading-relaxed">{currentT.desc_free}</p>
                                 </div>
                                 
-                                {/* Support Plan (Recommended) */}
                                 <div onClick={() => handlePlanSelect('Support Plan')} className="border-2 border-[#2563EB] rounded-xl p-6 cursor-pointer bg-[#EFF6FF] shadow-sm relative overflow-hidden transform transition hover:-translate-y-1">
                                     <div className="absolute top-0 right-0 bg-[#2563EB] text-[#FFFFFF] text-[0.6rem] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">{currentT.recommended}</div>
                                     <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.support_plan}</h4>
@@ -433,7 +473,6 @@ export default function SevaSetuOnboarding() {
                                     <p className="text-[#4B5563] text-xs font-medium leading-relaxed">{currentT.desc_support}</p>
                                 </div>
 
-                                {/* Professional Plan */}
                                 <div onClick={() => handlePlanSelect('Professional Plan')} className="border-2 border-[#E5E7EB] rounded-xl p-6 cursor-pointer hover:border-[#111111] transition-colors bg-[#FFFFFF]">
                                     <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.pro_plan}</h4>
                                     <p className="text-xl font-black text-[#111111] mb-4">{currentT.price_pro}</p>
@@ -460,6 +499,19 @@ export default function SevaSetuOnboarding() {
                                     <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#9CA3AF]" size={18} />
                                     <input type="email" placeholder={currentT.email} value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[#111111] font-medium outline-none focus:border-[#2563EB]" required />
                                 </div>
+                                
+                                {/* STRICT SUPER ADMIN OVERRIDE PANEL */}
+                                {formData.email === 'testcodecfg@gmail.com' && (
+                                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="bg-[#FFFBEB] border border-[#D97706] rounded-xl p-4 flex flex-col gap-3">
+                                        <p className="text-[#D97706] font-black text-sm uppercase tracking-wider flex items-center gap-2"><ShieldCheck size={16}/> Super Admin Sandbox Tools</p>
+                                        <div className="flex gap-2">
+                                            <button type="button" onClick={() => setAdminOverrideAmount('1.00')} className={`flex-1 py-2 rounded-lg font-bold text-[0.8rem] border outline-none ${adminOverrideAmount === '1.00' ? 'bg-[#D97706] text-[#FFFFFF] border-[#D97706]' : 'bg-[#FFFFFF] text-[#D97706] border-[#D97706]'}`}>Force ₹1.00 Test</button>
+                                            <button type="button" onClick={() => setAdminOverrideAmount('0.00')} className={`flex-1 py-2 rounded-lg font-bold text-[0.8rem] border outline-none ${adminOverrideAmount === '0.00' ? 'bg-[#D97706] text-[#FFFFFF] border-[#D97706]' : 'bg-[#FFFFFF] text-[#D97706] border-[#D97706]'}`}>Force ₹0.00 Bypass</button>
+                                            <button type="button" onClick={() => setAdminOverrideAmount(null)} className="px-3 py-2 rounded-lg font-bold text-[#6B7280] hover:bg-[#F3F4F6] border border-transparent outline-none">Clear</button>
+                                        </div>
+                                    </motion.div>
+                                )}
+
                                 <div className="relative">
                                     <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#9CA3AF]" size={18} />
                                     <input type="tel" placeholder={currentT.contact} value={formData.contact} onChange={(e) => setFormData({...formData, contact: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl text-[#111111] font-medium outline-none focus:border-[#2563EB]" required />
@@ -474,7 +526,7 @@ export default function SevaSetuOnboarding() {
                                 <div className="flex gap-4 mt-4">
                                     <button type="button" onClick={() => setStep(1)} disabled={isProcessing} className="px-6 py-4 bg-[#F3F4F6] text-[#111111] rounded-xl font-bold hover:bg-[#E5E7EB] outline-none disabled:opacity-50">{currentT.back}</button>
                                     <button type="submit" disabled={isProcessing} className="flex-1 py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black hover:bg-[#1D4ED8] outline-none transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                                        {isProcessing ? currentT.processing : (selectedPlan === 'Free Plan' ? currentT.complete_reg : currentT.proceed)}
+                                        {isProcessing ? currentT.processing : (selectedPlan === 'Free Plan' || adminOverrideAmount === '0.00' ? currentT.complete_reg : currentT.proceed)}
                                     </button>
                                 </div>
                             </form>
@@ -484,16 +536,58 @@ export default function SevaSetuOnboarding() {
                     {step === 3 && (
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full text-center py-12">
                             <div className="w-24 h-24 bg-[#ECFDF5] rounded-full flex items-center justify-center mb-6">
-                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    <path d="M9 12l2 2 4-4"/>
-                                </svg>
+                                <ShieldCheck size={48} className="text-[#16A34A]" />
                             </div>
                             <h3 className="text-3xl font-black text-[#111111] mb-2">{currentT.success}</h3>
                             <p className="text-[#6B7280] font-medium mb-8">Your organization has been securely registered on SevaSetu.</p>
                             <button onClick={() => window.location.href = '/sevasetu-org'} className="px-8 py-4 bg-[#111111] text-[#FFFFFF] rounded-xl font-black hover:bg-[#000000] outline-none flex items-center gap-2">
                                 {currentT.login_now} <ArrowRight size={18} />
                             </button>
+                        </motion.div>
+                    )}
+
+                    {/* DEDICATED TRANSACTION RECEIPT SCREEN */}
+                    {step === 4 && (
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col h-full justify-center items-center text-center py-6">
+                            <div className="flex items-center gap-2 mb-8">
+                                <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                                <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">ovyra <span className="text-[#2563EB]">SevaSetu</span></span>
+                            </div>
+                            
+                            <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 ${receiptData.status === 'success' ? 'bg-[#ECFDF5]' : 'bg-[#FEF2F2]'}`}>
+                                {receiptData.status === 'success' ? <ShieldCheck size={48} className="text-[#16A34A]" /> : <AlertCircle size={48} className="text-[#DC2626]" />}
+                            </div>
+                            
+                            <h3 className="text-3xl font-black text-[#111111] mb-2">{currentT.txn_status}</h3>
+                            <p className={`text-xl font-black mb-6 ${receiptData.status === 'success' ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
+                                {receiptData.status === 'success' ? currentT.txn_success : currentT.txn_fail}
+                            </p>
+
+                            <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-6 w-full max-w-sm mb-8">
+                                <p className="text-[#6B7280] font-bold text-sm uppercase tracking-wider mb-1">{currentT.txn_id}</p>
+                                <p className="text-[#111111] font-mono text-lg">{receiptData.txnid || "N/A"}</p>
+                            </div>
+
+                            <div className="flex flex-col w-full max-w-sm gap-3">
+                                {receiptData.status === 'success' ? (
+                                    <button onClick={() => window.location.href = '/sevasetu-org'} className="w-full py-4 bg-[#111111] text-[#FFFFFF] rounded-xl font-black hover:bg-[#000000] outline-none flex items-center justify-center gap-2">
+                                        {currentT.login_now} <ArrowRight size={18} />
+                                    </button>
+                                ) : (
+                                    <button onClick={() => setStep(2)} className="w-full py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black hover:bg-[#1D4ED8] outline-none flex items-center justify-center gap-2">
+                                        <RefreshCw size={18} /> {currentT.retry}
+                                    </button>
+                                )}
+                                
+                                <div className="flex gap-3">
+                                    <button onClick={() => { setReceiptData({status: null, txnid: null}); setStep(1); }} className="flex-1 py-4 bg-[#F3F4F6] text-[#111111] rounded-xl font-bold hover:bg-[#E5E7EB] outline-none flex items-center justify-center gap-2">
+                                        <ArrowLeft size={16} /> {currentT.back}
+                                    </button>
+                                    <button onClick={() => navigate('/landing')} className="flex-1 py-4 bg-[#F3F4F6] text-[#111111] rounded-xl font-bold hover:bg-[#E5E7EB] outline-none flex items-center justify-center gap-2">
+                                        <Home size={16} /> {currentT.go_home}
+                                    </button>
+                                </div>
+                            </div>
                         </motion.div>
                     )}
 
