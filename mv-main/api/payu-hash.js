@@ -3,10 +3,10 @@
  * Context: Secure Payment Gateway Processing.
  * Security: Merchant Salt is strictly hidden in Vercel Environment Variables.
  * Output: SHA-512 Hash required by PayU authorization.
- * Syntax: Strict CommonJS for Vercel Node.js compatibility.
+ * Syntax: Strict ES Module for Vite Project Compatibility.
  */
 
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const TRANSLATIONS = {
     en: { success: "Payment secure validation successful.", error: "Invalid payment parameters." },
@@ -25,46 +25,49 @@ const TRANSLATIONS = {
     as: { success: "পেমেন্ট সুৰক্ষিত বৈধতা সফল।", error: "অবৈধ পেমেন্ট পেৰামিটাৰ।" }
 };
 
-module.exports = async function (req, res) {
-    // 1. AGGRESSIVE CORS HEADERS FOR PREFLIGHT BYPASS
-    res.setHeader('Access-Control-Allow-Credentials', true);
+export default async function handler(req, res) {
+    // 1. Redundant CORS fallback (Primary CORS handled by vercel.json)
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
 
-    // 2. IMMEDIATE PREFLIGHT RESOLUTION
+    // 2. Preflight Request Resolution
     if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+        return res.status(200).end();
     }
 
-    // 3. STRICT METHOD VALIDATION
+    // 3. Strict Method Validation
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed. Require POST method.' });
-    }
-
-    // 4. PAYLOAD EXTRACTION
-    const { txnid, amount, productinfo, firstname, email, lang = 'en' } = req.body;
-    
-    // 5. LANGUAGE DICTIONARY RESOLUTION
-    const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
-
-    // 6. STRICT PARAMETER VALIDATION
-    if (!txnid || !amount || !productinfo || !firstname || !email) {
-        return res.status(400).json({ error: currentT.error, code: 400 });
-    }
-
-    // 7. SECURE ENVIRONMENT VARIABLE EXTRACTION
-    const merchantKey = process.env.PAYU_MERCHANT_KEY;
-    const merchantSalt = process.env.PAYU_MERCHANT_SALT;
-
-    if (!merchantKey || !merchantSalt) {
-        console.error('CRITICAL ERROR: PayU Merchant Configuration Missing in Vercel Environment.');
-        return res.status(500).json({ error: 'Internal Server Configuration Error.', code: 500 });
+        return res.status(405).json({ error: 'Method Not Allowed. Require POST method.', code: 405 });
     }
 
     try {
-        // 8. STRICT PAYU HASH SEQUENCE ASSEMBLY (key|txnid|amount|productinfo|firstname|email|udf1...udf10|salt)
+        // 4. Safe Payload Extraction
+        let body = req.body;
+        if (typeof body === 'string') {
+            try { body = JSON.parse(body); } catch (e) { /* Ignore non-JSON strings */ }
+        }
+
+        const { txnid, amount, productinfo, firstname, email, lang = 'en' } = body || {};
+        
+        // 5. Language Dictionary Resolution
+        const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+
+        // 6. Strict Parameter Validation
+        if (!txnid || !amount || !productinfo || !firstname || !email) {
+            return res.status(400).json({ error: currentT.error, code: 400 });
+        }
+
+        // 7. Secure Environment Variable Extraction
+        const merchantKey = process.env.PAYU_MERCHANT_KEY;
+        const merchantSalt = process.env.PAYU_MERCHANT_SALT;
+
+        if (!merchantKey || !merchantSalt) {
+            console.error('CRITICAL ERROR: PayU Merchant Configuration Missing in Vercel Environment.');
+            return res.status(500).json({ error: 'Internal Server Configuration Error.', code: 500 });
+        }
+
+        // 8. Strict PayU Hash Sequence Assembly (key|txnid|amount|productinfo|firstname|email|udf1...udf10|salt)
         const hashSequence = [
             merchantKey, 
             txnid, 
@@ -76,10 +79,10 @@ module.exports = async function (req, res) {
             merchantSalt
         ].join('|');
 
-        // 9. CRYPTOGRAPHIC SHA-512 HASH GENERATION
+        // 9. Cryptographic SHA-512 Hash Generation
         const generatedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
 
-        // 10. SECURE OUTPUT TO FRONTEND
+        // 10. Secure Output to Frontend
         return res.status(200).json({
             success: true,
             hash: generatedHash,
@@ -90,4 +93,4 @@ module.exports = async function (req, res) {
         console.error('Cryptographic Generation Error:', error);
         return res.status(500).json({ error: 'Transaction validation processing failed.', code: 500 });
     }
-};
+}
