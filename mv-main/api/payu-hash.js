@@ -58,12 +58,13 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: currentT.error, code: 400 });
         }
 
-        // 7. SECURE DYNAMIC CREDENTIAL ROUTING (Fixes the Firewall Block)
-        // Strictly routes to PayU Test credentials if the testing email is detected.
+        // 7. SECURE DYNAMIC CREDENTIAL ROUTING
         const isTestMode = email === 'testcodecfg@gmail.com';
         
         const merchantKey = isTestMode ? 'gtKFFx' : process.env.PAYU_MERCHANT_KEY;
-        const merchantSalt = isTestMode ? 'eCwWELxi' : process.env.PAYU_MERCHANT_SALT;
+        
+        // STRICT UPDATE: Applied the exact test salt required by PayU for the gtKFFx sandbox key
+        const merchantSalt = isTestMode ? '4R38IvwiV57FwVpsgOvTXBdLE4tHUXFW' : process.env.PAYU_MERCHANT_SALT;
 
         if (!merchantKey || !merchantSalt) {
             console.error('CRITICAL ERROR: PayU Merchant Configuration Missing in Vercel Environment.');
