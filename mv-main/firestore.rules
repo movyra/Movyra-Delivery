@@ -1,3 +1,25 @@
+/*
+ * 15-Language System Documentation: Firestore Security Rules for NagrikSetu
+ * English: Security rules configured for SOS guest access, guest reporting validation, and Super Admin controls.
+ * Hindi: एसओएस अतिथि पहुंच, अतिथि रिपोर्टिंग सत्यापन और सुपर एडमिन नियंत्रणों के लिए कॉन्फ़िगर किए गए सुरक्षा नियम।
+ * Hinglish: SOS guest access, guest reporting validation, aur Super Admin controls ke liye security rules configure kiye gaye.
+ * Marathi: एसओएस अतिथी प्रवेश, अतिथी अहवाल पडताळणी आणि सुपर अॅडमिन नियंत्रणांसाठी सुरक्षा नियम कॉन्फिगर केले आहेत.
+ * Gujarati: એસઓએસ અતિથિ ઍક્સેસ, અતિથિ રિપોર્ટિંગ માન્યતા અને સુપર એડમિન નિયંત્રણો માટે સુરક્ષા નિયમો ગોઠવેલ છે.
+ * Telugu: ఎస్ఓఎస్ అతిథి యాక్సెస్, అతిథి రిపోర్టింగ్ ధృవీకరణ మరియు సూపర్ అడ్మిన్ నియంత్రణల కోసం భద్రతా నియమాలు కాన్ఫిగర్ చేయబడ్డాయి.
+ * Tamil: எஸ்ஓஎஸ் விருந்தினர் அணுகல், விருந்தினர் அறிக்கையிடல் சரிபார்ப்பு மற்றும் சூப்பர் நிர்வாகி கட்டுப்பாடுகளுக்கான பாதுகாப்பு விதிகள் கட்டமைக்கப்பட்டுள்ளன.
+ * Kannada: ಎಸ್‌ಒಎಸ್ ಅತಿಥಿ ಪ್ರವೇಶ, ಅತಿಥಿ ವರದಿ ಪರಿಶೀಲನೆ ಮತ್ತು ಸೂಪರ್ ಅಡ್ಮಿನ್ ನಿಯಂತ್ರಣಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಕಾನ್ಫಿಗರ್ ಮಾಡಲಾಗಿದೆ.
+ * Malayalam: എസ്ഒഎസ് അതിഥി പ്രവേശനത്തിനും അതിഥി റിപ്പോർട്ടിംഗ് പരിശോധനയ്ക്കും സൂപ്പർ അഡ്മിൻ നിയന്ത്രണങ്ങൾക്കുമായി സുരക്ഷാ നിയമങ്ങൾ കോൺഫിഗർ ചെയ്തു.
+ * Bengali: এসওএস অতিথি অ্যাক্সেস, অতিথি রিপোর্টিং বৈধকরণ এবং সুপার অ্যাডমিন নিয়ন্ত্রণের জন্য নিরাপত্তা নিয়ম কনফিগার করা হয়েছে।
+ * Punjabi: ਐਸਓਐਸ ਮਹਿਮਾਨ ਪਹੁੰਚ, ਮਹਿਮਾਨ ਰਿਪੋਰਟਿੰਗ ਪ੍ਰਮਾਣਿਕਤਾ ਅਤੇ ਸੁਪਰ ਐਡਮਿਨ ਨਿਯੰਤਰਣਾਂ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸੰਰਚਿਤ ਕੀਤੇ ਗਏ ਹਨ।
+ * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ, ଅତିଥି ରିପୋର୍ଟିଂ ଯାଞ୍ଚ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
+ * Assamese: এছঅএছ অতিথি প্ৰৱেশ, অতিথি প্ৰতিবেদন বৈধকৰণ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
+ * Urdu: ایس او ایس مہمان کی رسائی، مہمان رپورٹنگ کی توثیق اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
+ * भोजपुरी: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
+ * 
+ * Strict Color System Adherence (For Frontend Implementation Reference):
+ * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
+ */
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -14,6 +36,11 @@ service cloud.firestore {
         '8zAyPwFZZBfU7MD1NkBDDWbIzXt1', 
         'REr2KNUjOmWOsUxuvq3YtmlkJsB3'
       ];
+    }
+
+    // Super Admin Verification (Strict Override)
+    function isSuperAdmin() {
+      return request.auth != null && request.auth.token.email == 'testcodecfg@gmail.com';
     }
 
     // Standard User Verification
@@ -39,6 +66,12 @@ service cloud.firestore {
     match /pre_registrations/{document} {
       allow create: if true; // Unauthenticated creation permitted for waitlist and vendor intake
       allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
+    }
+
+    // STRICT FIX: Added explicit waitlist collection matching to resolve Missing Permissions Error
+    match /waitlist/{document} {
+      allow create: if true; // Unauthenticated public registration permitted
+      allow read, update, delete: if isAdmin(); // Administrative protection
     }
 
     // ========================================================================
@@ -233,8 +266,10 @@ service cloud.firestore {
     // ========================================================================
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
+    
+    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
     match /users/{userId} {
-      allow read, write: if isOwner(userId) || isAdmin();
+      allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
     }
 
     match /orders/{orderId} {
@@ -403,6 +438,63 @@ service cloud.firestore {
       allow create: if isAuthenticated();
       // Only system administrators can view the email delivery logs
       allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // NAGRIKSETU MODULE (NEW CORE FEATURES)
+    // ========================================================================
+    
+    // Core Reporting Feed
+    match /nagrik_reports/{reportId} {
+      // Allow authenticated users. Allow unauthenticated guests strictly if they provide personal details.
+      allow create: if isAuthenticated() || (request.resource.data.keys().hasAll(['guestName', 'guestContact']));
+      allow read: if true;
+      // Strictly revoke report deletion and update capabilities from standard users.
+      // Only the designated testcodecfg@gmail.com account is granted override permissions.
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Community Video Updates (Instagram Reels/Stories)
+    match /nagrik_reels/{reelId} {
+      allow read: if true; // Public can view the community feed
+      allow create: if isAuthenticated(); // Only authenticated users can post to the community feed
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin(); // Strict SuperAdmin moderation
+    }
+
+    // NEW: Community Engagement (Likes)
+    match /nagrik_likes/{likeId} {
+      allow read: if true; // Public can see like counts
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid; // Only logged in users can like
+      allow update: if false; // Likes are only created or deleted
+      allow delete: if isOwner(resource.data.userId) || isSuperAdmin(); // SuperAdmin can purge artificial likes
+    }
+
+    // NEW: Direct Messaging Gateway
+    match /nagrik_messages/{messageId} {
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid; // Only authenticated senders
+      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) || isSuperAdmin(); // Strict private reading + Admin Audit
+      allow update, delete: if isOwner(resource.data.senderId) || isSuperAdmin(); // Sender can unsend, Admin can purge
+    }
+
+    // Live SOS & Panic Broadcast Engine
+    match /nagrik_sos/{sosId} {
+      // Allow public creation to prevent permission denial crashes when a guest user triggers an emergency panic broadcast.
+      allow create: if true;
+      // Allow public read to enable 5km proximity radar alerts for all users.
+      allow read: if true;
+      allow update, delete: if isSuperAdmin() || isAdmin();
+    }
+
+    // Civic Leaderboard & Gamification (Karma Points)
+    match /nagrik_leaderboard/{userId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin(); // Points are updated securely via backend cloud functions
+    }
+
+    // Official Local Announcements Feed
+    match /nagrik_announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
     }
 
   }
