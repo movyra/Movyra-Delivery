@@ -25,33 +25,35 @@ const TRANSLATIONS = {
 };
 
 export default async function handler(req, res) {
-    // 1. CORS Headers for Secure Frontend Access
+    // 1. AGGRESSIVE CORS HEADERS FOR PREFLIGHT BYPASS
+    res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-    // 2. Preflight Request Resolution
+    // 2. IMMEDIATE PREFLIGHT RESOLUTION
     if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+        res.status(200).end();
+        return;
     }
 
-    // 3. Strict Method Validation
+    // 3. STRICT METHOD VALIDATION
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed. Require POST method.' });
     }
 
-    // 4. Payload Extraction
+    // 4. PAYLOAD EXTRACTION
     const { txnid, amount, productinfo, firstname, email, lang = 'en' } = req.body;
     
-    // 5. Language Dictionary Resolution
+    // 5. LANGUAGE DICTIONARY RESOLUTION
     const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
 
-    // 6. Strict Parameter Validation
+    // 6. STRICT PARAMETER VALIDATION
     if (!txnid || !amount || !productinfo || !firstname || !email) {
         return res.status(400).json({ error: currentT.error, code: 400 });
     }
 
-    // 7. Secure Environment Variable Extraction
+    // 7. SECURE ENVIRONMENT VARIABLE EXTRACTION
     const merchantKey = process.env.PAYU_MERCHANT_KEY;
     const merchantSalt = process.env.PAYU_MERCHANT_SALT;
 
@@ -61,7 +63,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 8. Strict PayU Hash Sequence Assembly (key|txnid|amount|productinfo|firstname|email|udf1...udf10|salt)
+        // 8. STRICT PAYU HASH SEQUENCE ASSEMBLY (key|txnid|amount|productinfo|firstname|email|udf1...udf10|salt)
         const hashSequence = [
             merchantKey, 
             txnid, 
@@ -73,10 +75,10 @@ export default async function handler(req, res) {
             merchantSalt
         ].join('|');
 
-        // 9. Cryptographic SHA-512 Hash Generation
+        // 9. CRYPTOGRAPHIC SHA-512 HASH GENERATION
         const generatedHash = crypto.createHash('sha512').update(hashSequence).digest('hex');
 
-        // 10. Secure Output to Frontend
+        // 10. SECURE OUTPUT TO FRONTEND
         return res.status(200).json({
             success: true,
             hash: generatedHash,
