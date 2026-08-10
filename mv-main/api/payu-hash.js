@@ -1,7 +1,7 @@
 /**
  * SYSTEM DOCUMENTATION / PAYU SECURE HASH GENERATOR & 14-LANGUAGE TRANSLATION
  * Context: Secure Payment Gateway Processing.
- * Security: Merchant Salt is strictly hidden in Vercel Environment Variables.
+ * Security: Dynamic Credential Routing (Test vs Production).
  * Output: SHA-512 Hash required by PayU authorization.
  * Syntax: Strict ES Module for Vite Project Compatibility.
  */
@@ -26,7 +26,7 @@ const TRANSLATIONS = {
 };
 
 export default async function handler(req, res) {
-    // 1. Redundant CORS fallback (Primary CORS handled by vercel.json)
+    // 1. Redundant CORS fallback (Primary CORS handled strictly by vercel.json)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
@@ -58,9 +58,12 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: currentT.error, code: 400 });
         }
 
-        // 7. Secure Environment Variable Extraction
-        const merchantKey = process.env.PAYU_MERCHANT_KEY;
-        const merchantSalt = process.env.PAYU_MERCHANT_SALT;
+        // 7. SECURE DYNAMIC CREDENTIAL ROUTING (Fixes the Firewall Block)
+        // Strictly routes to PayU Test credentials if the testing email is detected.
+        const isTestMode = email === 'testcodecfg@gmail.com';
+        
+        const merchantKey = isTestMode ? 'gtKFFx' : process.env.PAYU_MERCHANT_KEY;
+        const merchantSalt = isTestMode ? 'eCwWELxi' : process.env.PAYU_MERCHANT_SALT;
 
         if (!merchantKey || !merchantSalt) {
             console.error('CRITICAL ERROR: PayU Merchant Configuration Missing in Vercel Environment.');
