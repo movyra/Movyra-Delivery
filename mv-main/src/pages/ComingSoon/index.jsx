@@ -161,7 +161,7 @@ export default function ComingSoon() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 5. 14-LANGUAGE DICTIONARY (Updated Delivery Hold Status)
+  // 5. 14-LANGUAGE DICTIONARY
   const t = {
     en: {
       help: "Help Center", lang: "English", login: "Sign In", careers: "Careers", products: "Products",
@@ -286,6 +286,80 @@ export default function ComingSoon() {
       pathLength: 1, 
       opacity: 1, 
       transition: { duration: 0.8, ease: "easeInOut" } 
+    }
+  };
+
+  // 6. OPERATIONAL LOGIC FUNCTIONS
+  const startFaceScan = async () => {
+    setStatus('KYC_FACE');
+    setIsDetecting(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+    } catch (err) {
+      console.error("Camera access denied:", err);
+      setStatus('ERROR');
+    }
+  };
+
+  const processCapture = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], "face_capture.jpg", { type: "image/jpeg" });
+        setFaceImageFile(file);
+      }
+      // Stop camera
+      const stream = video.srcObject;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      setIsDetecting(false);
+      setStatus('KYC_DOCS');
+    }, 'image/jpeg');
+  };
+
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    setStatus('SUBMITTING');
+    
+    try {
+      // Create record in Firestore waitlist
+      await addDoc(collection(db, "waitlist"), {
+        ...formData,
+        ...businessData,
+        timestamp: serverTimestamp(),
+      });
+      
+      // If KYC files exist, upload to PocketBase
+      if (faceImageFile && !isConsumer) {
+        const kycFormData = new FormData();
+        kycFormData.append('phone', formData.phone);
+        kycFormData.append('face_image', faceImageFile);
+        if (files.aadhaarFront) kycFormData.append('aadhaar_front', files.aadhaarFront);
+        if (files.aadhaarBack) kycFormData.append('aadhaar_back', files.aadhaarBack);
+        if (files.panFront) kycFormData.append('pan_front', files.panFront);
+        if (files.panBack) kycFormData.append('pan_back', files.panBack);
+        if (files.gst) kycFormData.append('gst_cert', files.gst);
+        if (files.businessDocs) kycFormData.append('business_proof', files.businessDocs);
+        
+        await uploadVendorKYCDocuments(kycFormData);
+      }
+      
+      setStatus('SUCCESS');
+    } catch (err) {
+      console.error("Submission error:", err);
+      setStatus('ERROR');
     }
   };
 
