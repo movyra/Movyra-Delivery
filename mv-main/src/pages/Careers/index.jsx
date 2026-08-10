@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebaseConfig'; 
 import { motion, AnimatePresence } from 'framer-motion';
+// STRICT FIX: Imported missing X icon to resolve the ReferenceError crash
+import { X } from 'lucide-react';
 
 /**
  * ============================================================================
