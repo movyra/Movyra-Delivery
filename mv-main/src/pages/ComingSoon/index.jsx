@@ -329,7 +329,7 @@ export default function ComingSoon() {
               <p className="text-[#888888] text-[0.9rem] text-center mb-8">Discover our other platforms.</p>
 
               <Link to="/sahay" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1.5 mb-2">
                       <img 
                           src="/logo.png" 
                           alt="Movyra" 
@@ -348,7 +348,7 @@ export default function ComingSoon() {
               </Link>
 
               <Link to="/civic" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-1.5 mb-2">
                       <img 
                           src="/logo.png" 
                           alt="Movyra" 
@@ -372,7 +372,7 @@ export default function ComingSoon() {
 
       {/* TOP HEADER */}
       <header className="w-full flex items-center justify-between px-8 md:px-16 py-8 animate-fade relative z-50">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <img src="/logo.png" alt="Movyra" className="h-8 w-auto" onError={(e) => e.target.style.display = 'none'} />
           <span className="font-black text-[1.5rem] tracking-tighter ml-[-5px]">ovyra</span>
         </div>
