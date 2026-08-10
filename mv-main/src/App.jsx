@@ -126,6 +126,10 @@ import SahayInactivityTimer from './components/SahayInactivityTimer';
 import PocketHome from './pages/Pocket/PocketHome';
 import PocketAuth from './pages/Pocket/PocketAuth';
 
+// --- SEVASETU NGO MODULE IMPORTS ---
+import SevaSetuOnboarding from './pages/SevaSetuOnboarding';
+import SevaSetuOrgDashboard from './pages/SevaSetuOrgDashboard';
+
 // ============================================================================
 // MASTER ARCHITECTURE CONTROLS
 // ============================================================================
@@ -335,6 +339,10 @@ export default function App() {
                 {/* STRICT UPDATE: Removed SecureSevaSetuAdminGate wrapper to allow public access to native PocketBase login and access requests */}
                 <Route path='/sevaadmin' element={<AnimatedRoute><SevaSetuAdmin /></AnimatedRoute>} />
                 
+                {/* SEVASETU NGO ROUTES */}
+                <Route path='/sevasetu-onboarding' element={<AnimatedRoute><SevaSetuOnboarding /></AnimatedRoute>} />
+                <Route path='/sevasetu-org' element={<AnimatedRoute><SevaSetuOrgDashboard /></AnimatedRoute>} />
+                
                 <Route path='/admin' element={<AnimatedRoute><SecureAdminGate><WaitlistDashboard /></SecureAdminGate></AnimatedRoute>} />
                 <Route path='/order' element={<AnimatedRoute><ConsumerPortal /></AnimatedRoute>} />
                 <Route path='/vendor' element={<AnimatedRoute><VendorPortal /></AnimatedRoute>} />
@@ -411,6 +419,10 @@ export default function App() {
                 
                 {/* STRICT UPDATE: Removed SecureSevaSetuAdminGate wrapper */}
                 <Route path='/sevaadmin' element={<AnimatedRoute><SevaSetuAdmin /></AnimatedRoute>} />
+
+                {/* SEVASETU NGO ROUTES */}
+                <Route path='/sevasetu-onboarding' element={<AnimatedRoute><SevaSetuOnboarding /></AnimatedRoute>} />
+                <Route path='/sevasetu-org' element={<AnimatedRoute><SevaSetuOrgDashboard /></AnimatedRoute>} />
                 
                 <Route path='/about' element={<AnimatedRoute><AboutPage /></AnimatedRoute>} />
                 <Route path='/contact' element={<AnimatedRoute><ContactPage /></AnimatedRoute>} />
