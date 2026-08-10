@@ -22,9 +22,12 @@ export default function ComingSoon() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [showHelpPrompt, setShowHelpPrompt] = useState(false);
   const [showProductsPrompt, setShowProductsPrompt] = useState(false);
-  const [showExplorePrompt, setShowExplorePrompt] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  
+  // Navigation & UI States
+  const [showExploreOptions, setShowExploreOptions] = useState(false);
+  const [showOrderExpansions, setShowOrderExpansions] = useState(false);
   
   // Auth States
   const [authEmail, setAuthEmail] = useState('');
@@ -73,7 +76,7 @@ export default function ComingSoon() {
     });
 
     const sysLang = navigator.language.slice(0, 2);
-    const supported = ['en', 'hi', 'hinglish', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'bn', 'kn', 'ml', 'or', 'as'];
+    const supported = ['en', 'hi', 'mr', 'gu', 'te', 'ta', 'pa', 'bho', 'ar', 'es', 'fr', 'de'];
     if (supported.includes(sysLang)) setLang(sysLang);
 
     const indianCities = ['Mumbai', 'Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad'];
@@ -161,16 +164,16 @@ export default function ComingSoon() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 5. 14-LANGUAGE DICTIONARY (Updated Delivery Hold Status)
+  // 5. 13-LANGUAGE MARKETING DICTIONARY (Simplified Terminology)
   const t = {
     en: {
       help: "Help Center", lang: "English", login: "Sign In", careers: "Careers", products: "Products",
-      main_title: "Deliveries are on hold.",
-      main_sub: "Right now, we are only focusing on our community help services.",
-      val1_title: "Very Fast", val1_sub: "We reach you quickly.",
-      val2_title: "No Extra Cost", val2_sub: "Clear prices. Pay only what you see.",
-      val3_title: "Live Updates", val3_sub: "Track your request on the map.",
-      val4_title: "Always Here", val4_sub: "We are ready to help anytime.",
+      main_title: "India's Smartest Delivery Network is Coming.",
+      main_sub: "Experience zero delays. A fast and easy network built for you.",
+      val1_title: "Super Fast", val1_sub: "Smart maps to avoid traffic.",
+      val2_title: "No Extra Fees", val2_sub: "Clear prices. Pay only what you see.",
+      val3_title: "Live Tracking", val3_sub: "Watch your order move on the map.",
+      val4_title: "24/7 Support", val4_sub: "We are always here to help you.",
       form_title: "Join the Waitlist", form_desc: "Sign up now for early access and special benefits.",
       form_name: "Full Name", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Your City", form_role: "I want to be a", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Save My Spot", form_kyc_btn: "Start Verification",
       kyc_face_title: "Face Check", kyc_face_desc: "Look at the camera. The system will take a photo automatically.",
@@ -181,12 +184,12 @@ export default function ComingSoon() {
     },
     hi: {
       help: "सहायता केंद्र", lang: "हिन्दी", login: "साइन इन", careers: "करियर", products: "उत्पाद",
-      main_title: "डिलीवरी अभी बंद है।",
-      main_sub: "अभी हम सिर्फ अपनी सामुदायिक सहायता सेवाओं पर ध्यान दे रहे हैं।",
-      val1_title: "बहुत तेज़", val1_sub: "हम आप तक जल्दी पहुँचते हैं।",
-      val2_title: "कोई अतिरिक्त खर्च नहीं", val2_sub: "साफ कीमतें। केवल वही चुकाएं जो आप देखते हैं।",
-      val3_title: "लाइव अपडेट", val3_sub: "मैप पर अपने अनुरोध को ट्रैक करें।",
-      val4_title: "हमेशा मौजूद", val4_sub: "हम कभी भी मदद के लिए तैयार हैं।",
+      main_title: "भारत का सबसे स्मार्ट डिलीवरी नेटवर्क आ रहा है।",
+      main_sub: "बिना किसी देरी के। आपके लिए बना एक तेज़ और आसान नेटवर्क।",
+      val1_title: "बहुत तेज़", val1_sub: "ट्रैफिक से बचने के लिए स्मार्ट मैप।",
+      val2_title: "कोई अतिरिक्त शुल्क नहीं", val2_sub: "साफ कीमतें। केवल वही चुकाएं जो आप देखते हैं।",
+      val3_title: "लाइव ट्रैकिंग", val3_sub: "अपने ऑर्डर को मैप पर चलते हुए देखें।",
+      val4_title: "24/7 सहायता", val4_sub: "हम आपकी मदद के लिए हमेशा यहाँ हैं।",
       form_title: "वेटलिस्ट में शामिल हों", form_desc: "जल्दी लाभ पाने के लिए अभी साइन अप करें।",
       form_name: "पूरा नाम", form_phone: "व्हाट्सएप नंबर", form_email: "ईमेल पता", form_city: "आपका शहर", form_role: "मैं बनना चाहता हूँ", form_vehicle: "वाहन प्रकार", form_business: "व्यवसाय का नाम", form_submit: "मेरी जगह पक्की करें", form_kyc_btn: "सत्यापन शुरू करें",
       kyc_face_title: "चेहरा जांच", kyc_face_desc: "कैमरे की ओर देखें। सिस्टम अपने आप फोटो ले लेगा।",
@@ -197,12 +200,12 @@ export default function ComingSoon() {
     },
     hinglish: {
       help: "Help Center", lang: "Hinglish", login: "Sign In", careers: "Careers", products: "Products",
-      main_title: "Deliveries abhi hold par hain.",
-      main_sub: "Abhi hum sirf apni community help services par focus kar rahe hain.",
-      val1_title: "Bahut Tez", val1_sub: "Hum aap tak jaldi pahunchte hain.",
-      val2_title: "Koi Extra Cost Nahi", val2_sub: "Clear prices. Sirf wahi pay karein jo dikhe.",
-      val3_title: "Live Updates", val3_sub: "Apni request ko map par track karein.",
-      val4_title: "Hamesha Yahan", val4_sub: "Hum kabhi bhi help ke liye taiyar hain.",
+      main_title: "India ka Smartest Delivery Network aa raha hai.",
+      main_sub: "Zero delays ka maza lein. Aapke liye bana fast aur easy network.",
+      val1_title: "Bahut Tez", val1_sub: "Traffic se bachne ke liye smart maps.",
+      val2_title: "No Extra Fees", val2_sub: "Clear prices. Sirf wahi pay karein jo dikhe.",
+      val3_title: "Live Tracking", val3_sub: "Apne order ko map par track karein.",
+      val4_title: "24/7 Support", val4_sub: "Hum hamesha aapki help ke liye yahan hain.",
       form_title: "Waitlist Join Karein", form_desc: "Early access aur fayde ke liye abhi sign up karein.",
       form_name: "Pura Naam", form_phone: "WhatsApp Number", form_email: "Email Address", form_city: "Aapka City", form_role: "Main banna chahta hu", form_vehicle: "Vehicle Type", form_business: "Business Name", form_submit: "Meri Jagah Pukki Karein", form_kyc_btn: "Verification Shuru Karein",
       kyc_face_title: "Face Check", kyc_face_desc: "Camera ki taraf dekhein. System automatically photo le lega.",
@@ -211,61 +214,16 @@ export default function ComingSoon() {
       error: "Fail ho gaya. Phir se try karein.",
       help_title: "Contact Us", help_desc: "Apni problem batayein, hum help karenge.", help_btn: "Message Bhejein", help_succ: "Message Bhej Diya"
     },
-    mr: { 
-      help: "मदत केंद्र", lang: "मराठी", login: "साइन इन", careers: "करिअर", products: "उत्पादने", 
-      main_title: "डिलिव्हरी सध्या बंद आहे.", main_sub: "सध्या आम्ही फक्त आमच्या समुदाय मदत सेवांवर लक्ष केंद्रित करत आहोत.", 
-      val1_title: "अतिशय वेगवान", val1_sub: "आम्ही तुमच्यापर्यंत लवकर पोहोचतो.", val2_title: "कोणताही अतिरिक्त खर्च नाही", val2_sub: "स्पष्ट किंमती. जे दिसते तेच द्या.", val3_title: "लाइव्ह अपडेट्स", val3_sub: "तुमच्या विनंतीचा नकाशावर मागोवा घ्या.", val4_title: "नेहमी येथे", val4_sub: "आम्ही कधीही मदतीसाठी तयार आहोत.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "लवकर प्रवेश मिळवण्यासाठी आता साइन अप करा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "माझी जागा निश्चित करा", form_kyc_btn: "पडताळणी सुरू करा", kyc_face_title: "चेहरा तपासा", kyc_face_desc: "कॅमेराकडे पहा. सिस्टम आपोआप फोटो घेईल.", kyc_docs_title: "कागदपत्रे अपलोड करा", kyc_docs_desc: "तुमच्या आयडी कार्डचे स्पष्ट फोटो अपलोड करा.", success: "प्राप्त झाले!", successSub: "आम्ही लवकरच आपल्याशी संपर्क साधू.", back: "मागे जा", error: "अयशस्वी. पुन्हा प्रयत्न करा.", help_title: "संपर्क साधा", help_desc: "तुमची समस्या सांगा आणि आम्ही मदत करू.", help_btn: "संदेश पाठवा", help_succ: "संदेश पाठवला" 
-    },
-    gu: { 
-      help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", login: "સાઇન ઇન", careers: "કારકિર્દી", products: "ઉત્પાદનો", 
-      main_title: "ડિલિવરી હાલમાં બંધ છે.", main_sub: "અત્યારે અમે ફક્ત અમારી સામુદાયિક મદદ સેવાઓ પર જ ધ્યાન આપી રહ્યા છીએ.", 
-      val1_title: "ખૂબ ઝડપી", val1_sub: "અમે તમારા સુધી ઝડપથી પહોંચીએ છીએ.", val2_title: "કોઈ વધારાનો ખર્ચ નથી", val2_sub: "સ્પષ્ટ કિંમતો. જે જુઓ તે જ ચૂકવો.", val3_title: "લાઇવ અપડેટ્સ", val3_sub: "નકશા પર તમારી વિનંતીને ટ્રૅક કરો.", val4_title: "હંમેશા અહીં", val4_sub: "અમે કોઈપણ સમયે મદદ કરવા માટે તૈયાર છીએ.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "વહેલો પ્રવેશ મેળવવા માટે અત્યારે સાઇન અપ કરો.", form_name: "પૂરું નામ", form_phone: "ફોન નંબર", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "મારી જગ્યા નક્કી કરો", form_kyc_btn: "ચકાસણી શરૂ કરો", kyc_face_title: "ચહેરો તપાસો", kyc_face_desc: "કેમેરા સામે જુઓ. સિસ્ટમ આપમેળે ફોટો લેશે.", kyc_docs_title: "દસ્તાવેજો અપલોડ કરો", kyc_docs_desc: "તમારા આઈડી કાર્ડના સ્પષ્ટ ફોટા અપલોડ કરો.", success: "પ્રાપ્ત થયું!", successSub: "અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.", back: "પાછા જાઓ", error: "નિષ્ફળ. ફરીથી પ્રયાસ કરો.", help_title: "સંપર્ક કરો", help_desc: "તમારી સમસ્યા જણાવો અને અમે મદદ કરીશું.", help_btn: "સંદેશ મોકલો", help_succ: "સંદેશ મોકલ્યો" 
-    },
-    te: { 
-      help: "సహాయ కేంద్రం", lang: "తెలుగు", login: "సైన్ ఇన్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", 
-      main_title: "డెలివరీలు ప్రస్తుతం ఆపివేయబడ్డాయి.", main_sub: "ప్రస్తుతం, మేము మా కమ్యూనిటీ సహాయ సేవలపై మాత్రమే దృష్టి పెడుతున్నాము.", 
-      val1_title: "చాలా వేగంగా", val1_sub: "మేము మిమ్మల్ని త్వరగా చేరుకుంటాము.", val2_title: "అదనపు ఖర్చు లేదు", val2_sub: "స్పష్టమైన ధరలు. మీరు చూసేదే చెల్లించండి.", val3_title: "లైవ్ అప్‌డేట్‌లు", val3_sub: "మ్యాప్‌లో మీ అభ్యర్థనను ట్రాక్ చేయండి.", val4_title: "ఎల్లప్పుడూ ఇక్కడే", val4_sub: "మేము ఎప్పుడైనా సహాయం చేయడానికి సిద్ధంగా ఉన్నాము.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "ముందస్తు యాక్సెస్ కోసం ఇప్పుడే సైన్ అప్ చేయండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నా స్థానాన్ని సేవ్ చేయండి", form_kyc_btn: "ధృవీకరణ ప్రారంభించండి", kyc_face_title: "ముఖ తనిఖీ", kyc_face_desc: "కెమెరాను చూడండి. సిస్టమ్ స్వయంచాలకంగా ఫోటో తీస్తుంది.", kyc_docs_title: "పత్రాలను అప్‌లోడ్ చేయండి", kyc_docs_desc: "మీ ID కార్డ్‌ల స్పష్టమైన ఫోటోలను అప్‌లోడ్ చేయండి.", success: "స్వీకరించబడింది!", successSub: "మేము త్వరలో మిమ్మల్ని సంప్రదిస్తాము.", back: "వెనక్కి వెళ్ళు", error: "విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.", help_title: "మమ్మల్ని సంప్రదించండి", help_desc: "మీ సమస్యను చెప్పండి మరియు మేము సహాయం చేస్తాము.", help_btn: "సందేశం పంపండి", help_succ: "సందేశం పంపబడింది" 
-    },
-    ta: { 
-      help: "உதவி மையம்", lang: "தமிழ்", login: "உள்நுழைய", careers: "தொழில்", products: "தயாரிப்புகள்", 
-      main_title: "டெலிவரிகள் இப்போது நிறுத்தப்பட்டுள்ளன.", main_sub: "தற்போது, நாங்கள் எங்கள் சமூக உதவி சேவைகளில் மட்டுமே கவனம் செலுத்துகிறோம்.", 
-      val1_title: "மிக வேகமாக", val1_sub: "நாங்கள் உங்களை விரைவாக சென்றடைகிறோம்.", val2_title: "கூடுதல் செலவு இல்லை", val2_sub: "தெளிவான விலைகள். நீங்கள் பார்ப்பதை மட்டும் செலுத்துங்கள்.", val3_title: "நேரலை புதுப்பிப்புகள்", val3_sub: "வரைபடத்தில் உங்கள் கோரிக்கையை கண்காணிக்கவும்.", val4_title: "எப்போதும் இங்கே", val4_sub: "நாங்கள் எப்போது வேண்டுமானாலும் உதவ தயாராக இருக்கிறோம்.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முன்கூட்டியே அணுக இப்போதே பதிவு செய்யவும்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "எனது இடத்தை உறுதி செய்யவும்", form_kyc_btn: "சரிபார்ப்பை தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள். கணினி தானாகவே புகைப்படம் எடுக்கும்.", kyc_docs_title: "ஆவணங்களை பதிவேற்றவும்", kyc_docs_desc: "உங்கள் அடையாள அட்டைகளின் தெளிவான புகைப்படங்களை பதிவேற்றவும்.", success: "பெறப்பட்டது!", successSub: "நாங்கள் விரைவில் உங்களை தொடர்புகொள்வோம்.", back: "திரும்பி செல்", error: "தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.", help_title: "தொடர்பு கொள்ள", help_desc: "உங்கள் பிரச்சனையை சொல்லுங்கள் நாங்கள் உதவுகிறோம்.", help_btn: "செய்தி அனுப்பு", help_succ: "செய்தி அனுப்பப்பட்டது" 
-    },
-    pa: { 
-      help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", login: "ਸਾਈਨ ਇਨ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", 
-      main_title: "ਡਿਲਿਵਰੀ ਫਿਲਹਾਲ ਬੰਦ ਹੈ।", main_sub: "ਹੁਣ ਅਸੀਂ ਸਿਰਫ਼ ਆਪਣੀਆਂ ਕਮਿਊਨਿਟੀ ਮਦਦ ਸੇਵਾਵਾਂ 'ਤੇ ਧਿਆਨ ਦੇ ਰਹੇ ਹਾਂ।", 
-      val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਅਸੀਂ ਤੁਹਾਡੇ ਤੱਕ ਜਲਦੀ ਪਹੁੰਚਦੇ ਹਾਂ।", val2_title: "ਕੋਈ ਵਾਧੂ ਖਰਚਾ ਨਹੀਂ", val2_sub: "ਸਾਫ਼ ਕੀਮਤਾਂ। ਸਿਰਫ਼ ਉਹੀ ਭੁਗਤਾਨ ਕਰੋ ਜੋ ਤੁਸੀਂ ਦੇਖਦੇ ਹੋ।", val3_title: "ਲਾਈਵ ਅੱਪਡੇਟ", val3_sub: "ਨਕਸ਼ੇ 'ਤੇ ਆਪਣੀ ਬੇਨਤੀ ਨੂੰ ਟਰੈਕ ਕਰੋ।", val4_title: "ਹਮੇਸ਼ਾ ਇੱਥੇ", val4_sub: "ਅਸੀਂ ਕਿਸੇ ਵੀ ਸਮੇਂ ਮਦਦ ਲਈ ਤਿਆਰ ਹਾਂ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਜਲਦੀ ਪਹੁੰਚ ਲਈ ਹੁਣੇ ਸਾਈਨ ਅੱਪ ਕਰੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕਾ", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਮੇਰੀ ਜਗ੍ਹਾ ਪੱਕੀ ਕਰੋ", form_kyc_btn: "ਤਸਦੀਕ ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰਾ ਚੈੱਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ। ਸਿਸਟਮ ਆਪਣੇ ਆਪ ਫੋਟੋ ਲੈ ਲਵੇਗਾ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ", kyc_docs_desc: "ਆਪਣੇ ਆਈਡੀ ਕਾਰਡਾਂ ਦੀਆਂ ਸਾਫ਼ ਫੋਟੋਆਂ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਪ੍ਰਾਪਤ ਹੋਇਆ!", successSub: "ਅਸੀਂ ਜਲਦੀ ਹੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰਾਂਗੇ।", back: "ਵਾਪਸ ਜਾਓ", error: "ਅਸਫਲ. ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", help_title: "ਸੰਪਰਕ ਕਰੋ", help_desc: "ਆਪਣੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਅਸੀਂ ਮਦਦ ਕਰਾਂਗੇ।", help_btn: "ਸੁਨੇਹਾ ਭੇਜੋ", help_succ: "ਸੁਨੇਹਾ ਭੇਜਿਆ ਗਿਆ" 
-    },
-    bho: { 
-      help: "मदद केंद्र", lang: "भोजपुरी", login: "साइन इन", careers: "करियर", products: "उत्पाद", 
-      main_title: "डिलीवरी अभी बंद बा।", main_sub: "अभी हमनी के खाली आपन समुदाय मदद सेवा पर ध्यान देत बानी जा।", 
-      val1_title: "बहुत तेज", val1_sub: "हमनी के रउआ लगे जल्दी पहुँचेनी जा।", val2_title: "कौनो अतिरिक्त खर्च ना", val2_sub: "साफ कीमत। खाली उहे दीं जवन रउआ देखत बानी।", val3_title: "लाइव अपडेट", val3_sub: "मैप पर आपन अनुरोध के ट्रैक करीं।", val4_title: "हमेशा इहाँ", val4_sub: "हमनी के कबो मदद करे खातिर तैयार बानी जा।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "जल्दी फायदा पावे खातिर अभी साइन अप करीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "हमर जगह पक्का करीं", form_kyc_btn: "सत्यापन शुरू करीं", kyc_face_title: "चेहरा जांच", kyc_face_desc: "कैमरा में देखीं। सिस्टम अपने आप फोटो ले ली।", kyc_docs_title: "दस्तावेज अपलोड करीं", kyc_docs_desc: "आपन आईडी कार्ड के साफ फोटो अपलोड करीं।", success: "मिल गइल!", successSub: "हमनी के टीम जल्दिए रउआ से संपर्क करी।", back: "पीछे जाईं", error: "विफल। फेरू कोशिश करीं।", help_title: "संपर्क करीं", help_desc: "आपन समस्या बताईं आ हमनी के मदद करब जा।", help_btn: "संदेश भेजीं", help_succ: "संदेश भेजल गइल" 
-    },
-    bn: { 
-      help: "সাহায্য কেন্দ্র", lang: "বাংলা", login: "সাইন ইন", careers: "ক্যারিয়ার", products: "পণ্য", 
-      main_title: "ডেলিভারি এখন বন্ধ আছে।", main_sub: "বর্তমানে, আমরা শুধুমাত্র আমাদের সম্প্রদায়ের সাহায্য পরিষেবাগুলিতে ফোকাস করছি।", 
-      val1_title: "খুব দ্রুত", val1_sub: "আমরা দ্রুত আপনার কাছে পৌঁছাই।", val2_title: "কোনো অতিরিক্ত খরচ নেই", val2_sub: "পরিষ্কার দাম। আপনি যা দেখেন তা প্রদান করুন।", val3_title: "লাইভ আপডেট", val3_sub: "মানচিত্রে আপনার অনুরোধ ট্র্যাক করুন।", val4_title: "সবসময় এখানে", val4_sub: "আমরা যেকোনো সময় সাহায্য করতে প্রস্তুত।", form_title: "ওয়েটলিস্টে যোগ দিন", form_desc: "প্রাথমিক অ্যাক্সেসের জন্য এখনই সাইন আপ করুন।", form_name: "নাম", form_phone: "ফোন", form_email: "ইমেইল", form_city: "শহর", form_role: "ভূমিকা", form_vehicle: "যানবাহন", form_business: "ব্যবসার নাম", form_submit: "আমার জায়গা সংরক্ষণ করুন", form_kyc_btn: "যাচাইকরণ শুরু করুন", kyc_face_title: "মুখ পরীক্ষা", kyc_face_desc: "ক্যামেরার দিকে তাকান। সিস্টেম স্বয়ংক্রিয়ভাবে ছবি তুলবে।", kyc_docs_title: "নথি আপলোড করুন", kyc_docs_desc: "আপনার আইডি কার্ডের পরিষ্কার ছবি আপলোড করুন।", success: "গৃহীত!", successSub: "আমরা শীঘ্রই আপনার সাথে যোগাযোগ করব।", back: "ফিরে যান", error: "ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", help_title: "যোগাযোগ করুন", help_desc: "আপনার সমস্যা জানান এবং আমরা সাহায্য করব।", help_btn: "বার্তা পাঠান", help_succ: "বার্তা পাঠানো হয়েছে" 
-    },
-    kn: { 
-      help: "ಸಹಾಯ ಕೇಂದ್ರ", lang: "ಕನ್ನಡ", login: "ಸೈನ್ ಇನ್", careers: "ವೃತ್ತಿ", products: "ಉತ್ಪನ್ನಗಳು", 
-      main_title: "ವಿತರಣೆಗಳು ಪ್ರಸ್ತುತ ಸ್ಥಗಿತಗೊಂಡಿವೆ.", main_sub: "ಈಗ, ನಾವು ನಮ್ಮ ಸಮುದಾಯ ಸಹಾಯ ಸೇವೆಗಳ ಮೇಲೆ ಮಾತ್ರ ಗಮನ ಹರಿಸುತ್ತಿದ್ದೇವೆ.", 
-      val1_title: "ಅತ್ಯಂತ ವೇಗ", val1_sub: "ನಾವು ನಿಮ್ಮನ್ನು ತ್ವರಿತವಾಗಿ ತಲುಪುತ್ತೇವೆ.", val2_title: "ಹೆಚ್ಚುವರಿ ವೆಚ್ಚವಿಲ್ಲ", val2_sub: "ಸ್ಪಷ್ಟ ಬೆಲೆಗಳು. ನೀವು ನೋಡುವುದನ್ನು ಮಾತ್ರ ಪಾವತಿಸಿ.", val3_title: "ಲೈವ್ ನವೀಕರಣಗಳು", val3_sub: "ನಕ್ಷೆಯಲ್ಲಿ ನಿಮ್ಮ ವಿನಂತಿಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.", val4_title: "ಯಾವಾಗಲೂ ಇಲ್ಲಿದ್ದೇವೆ", val4_sub: "ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ಸಹಾಯ ಮಾಡಲು ನಾವು ಸಿದ್ಧರಿದ್ದೇವೆ.", form_title: "ವೇಟ್‌ಲಿಸ್ಟ್‌ಗೆ ಸೇರಿ", form_desc: "ಆರಂಭಿಕ ಪ್ರವೇಶಕ್ಕಾಗಿ ಈಗ ಸೈನ್ ಅಪ್ ಮಾಡಿ.", form_name: "ಹೆಸರು", form_phone: "ಫೋನ್", form_email: "ಇಮೇಲ್", form_city: "ನಗರ", form_role: "ಪಾತ್ರ", form_vehicle: "ವಾಹನ", form_business: "ವ್ಯಾಪಾರದ ಹೆಸರು", form_submit: "ನನ್ನ ಸ್ಥಾನವನ್ನು ಉಳಿಸಿ", form_kyc_btn: "ಪರಿಶೀಲನೆ ಪ್ರಾರಂಭಿಸಿ", kyc_face_title: "ಮುಖ ಪರಿಶೀಲನೆ", kyc_face_desc: "ಕ್ಯಾಮೆರಾ ನೋಡಿ. ಸಿಸ್ಟಮ್ ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಫೋಟೋ ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ.", kyc_docs_title: "ದಾಖಲೆಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", kyc_docs_desc: "ನಿಮ್ಮ ಗುರುತಿನ ಚೀಟಿಗಳ ಸ್ಪಷ್ಟ ಫೋಟೋಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.", success: "ಸ್ವೀಕರಿಸಲಾಗಿದೆ!", successSub: "ನಾವು ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸುತ್ತೇವೆ.", back: "ಹಿಂದಕ್ಕೆ", error: "ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", help_title: "ಸಂಪರ್ಕಿಸಿ", help_desc: "ನಿಮ್ಮ ಸಮಸ್ಯೆಯನ್ನು ಹೇಳಿ ಮತ್ತು ನಾವು ಸಹಾಯ ಮಾಡುತ್ತೇವೆ.", help_btn: "ಸಂದೇಶ ಕಳುಹಿಸಿ", help_succ: "ಸಂದೇಶ ಕಳುಹಿಸಲಾಗಿದೆ" 
-    },
-    ml: { 
-      help: "സഹായ കേന്ദ്രം", lang: "മലയാളം", login: "സൈൻ ഇൻ", careers: "കരിയർ", products: "ഉൽപ്പന്നങ്ങൾ", 
-      main_title: "ഡെലിവറികൾ ഇപ്പോൾ നിർത്തിവെച്ചിരിക്കുകയാണ്.", main_sub: "ഇപ്പോൾ, ഞങ്ങൾ ഞങ്ങളുടെ കമ്മ്യൂണിറ്റി സഹായ സേവനങ്ങളിൽ മാത്രമാണ് ശ്രദ്ധ കേന്ദ്രീകരിക്കുന്നത്.", 
-      val1_title: "വളരെ വേഗം", val1_sub: "ഞങ്ങൾ നിങ്ങളിലേക്ക് വേഗത്തിൽ എത്തുന്നു.", val2_title: "അധിക ചെലവില്ല", val2_sub: "വ്യക്തമായ വിലകൾ. കാണുന്നത് മാത്രം നൽകുക.", val3_title: "ലൈവ് അപ്‌ഡേറ്റുകൾ", val3_sub: "മാപ്പിൽ നിങ്ങളുടെ അഭ്യർത്ഥന ട്രാക്ക് ചെയ്യുക.", val4_title: "എപ്പോഴും ഇവിടെയുണ്ട്", val4_sub: "ഏത് സമയത്തും സഹായിക്കാൻ ഞങ്ങൾ തയ്യാറാണ്.", form_title: "വെയ്റ്റ്‌ലിസ്റ്റിൽ ചേരുക", form_desc: "നേരത്തെ ആക്‌സസ്സ് ലഭിക്കാൻ ഇപ്പോൾ സൈൻ അപ്പ് ചെയ്യുക.", form_name: "പേര്", form_phone: "ഫോൺ", form_email: "ഇമെയിൽ", form_city: "നഗരം", form_role: "പങ്ക്", form_vehicle: "വാഹനം", form_business: "ബിസിനസ്സ് പേര്", form_submit: "എന്റെ സ്ഥാനം ഉറപ്പാക്കുക", form_kyc_btn: "സ്ഥിരീകരണം ആരംഭിക്കുക", kyc_face_title: "മുഖം പരിശോധിക്കുക", kyc_face_desc: "ക്യാമറയിലേക്ക് നോക്കുക. സിസ്റ്റം സ്വയമേവ ഫോട്ടോ എടുക്കും.", kyc_docs_title: "രേഖകൾ അപ്‌ലോഡ് ചെയ്യുക", kyc_docs_desc: "നിങ്ങളുടെ ഐഡി കാർഡുകളുടെ വ്യക്തമായ ഫോട്ടോകൾ അപ്‌ലോഡ് ചെയ്യുക.", success: "ലഭിച്ചു!", successSub: "ഞങ്ങൾ ഉടൻ നിങ്ങളെ ബന്ധപ്പെടും.", back: "പുറകോട്ട്", error: "പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.", help_title: "ബന്ധപ്പെടുക", help_desc: "നിങ്ങളുടെ പ്രശ്നം പറയുക, ഞങ്ങൾ സഹായിക്കാം.", help_btn: "സന്ദേശം അയയ്ക്കുക", help_succ: "സന്ദേശം അയച്ചു" 
-    },
-    or: { 
-      help: "ସହାୟତା କେନ୍ଦ୍ର", lang: "ଓଡ଼ିଆ", login: "ସାଇନ୍ ଇନ୍", careers: "କ୍ୟାରିୟର", products: "ଉତ୍ପାଦ", 
-      main_title: "ଡେଲିଭରୀ ବର୍ତ୍ତମାନ ବନ୍ଦ ଅଛି।", main_sub: "ବର୍ତ୍ତମାନ, ଆମେ କେବଳ ଆମର ସମ୍ପ୍ରଦାୟ ସାହାଯ୍ୟ ସେବା ଉପରେ ଧ୍ୟାନ ଦେଉଛୁ।", 
-      val1_title: "ବହୁତ ଦ୍ରୁତ", val1_sub: "ଆମେ ଶୀଘ୍ର ଆପଣଙ୍କ ପାଖରେ ପହଞ୍ଚୁ।", val2_title: "କୌଣସି ଅତିରିକ୍ତ ଖର୍ଚ୍ଚ ନାହିଁ", val2_sub: "ସ୍ପଷ୍ଟ ମୂଲ୍ୟ। କେବଳ ଯାହା ଦେଖୁଛନ୍ତି ତାହା ପ୍ରଦାନ କରନ୍ତୁ।", val3_title: "ଲାଇଭ୍ ଅପଡେଟ୍", val3_sub: "ମାନଚିତ୍ରରେ ଆପଣଙ୍କର ଅନୁରୋଧ ଟ୍ରାକ୍ କରନ୍ତୁ।", val4_title: "ସବୁବେଳେ ଏଠାରେ", val4_sub: "ଆମେ ଯେକୌଣସି ସମୟରେ ସାହାଯ୍ୟ ପାଇଁ ପ୍ରସ୍ତୁତ।", form_title: "ୱେଟଲିଷ୍ଟରେ ଯୋଗ ଦିଅନ୍ତୁ", form_desc: "ଶୀଘ୍ର ଆକ୍ସେସ୍ ପାଇଁ ବର୍ତ୍ତମାନ ସାଇନ୍ ଅପ୍ କରନ୍ତୁ।", form_name: "ନାମ", form_phone: "ଫୋନ୍", form_email: "ଇମେଲ୍", form_city: "ସହର", form_role: "ଭୂମିକା", form_vehicle: "ଯାନ", form_business: "ବ୍ୟବସାୟ ନାମ", form_submit: "ମୋର ସ୍ଥାନ ସଂରକ୍ଷଣ କରନ୍ତୁ", form_kyc_btn: "ଯାଞ୍ଚ ଆରମ୍ଭ କରନ୍ତୁ", kyc_face_title: "ଚେହେରା ଯାଞ୍ଚ", kyc_face_desc: "କ୍ୟାମେରା ଆଡକୁ ଦେଖନ୍ତୁ। ସିଷ୍ଟମ୍ ସ୍ୱୟଂଚାଳିତ ଭାବରେ ଫଟୋ ନେବ।", kyc_docs_title: "ଡକ୍ୟୁମେଣ୍ଟ୍ ଅପଲୋଡ୍ କରନ୍ତୁ", kyc_docs_desc: "ଆପଣଙ୍କର ଆଇଡି କାର୍ଡର ସ୍ପଷ୍ଟ ଫଟୋ ଅପଲୋଡ୍ କରନ୍ତୁ।", success: "ପ୍ରାପ୍ତ ହେଲା!", successSub: "ଆମେ ଶୀଘ୍ର ଆପଣଙ୍କ ସହିତ ଯୋଗାଯୋଗ କରିବୁ।", back: "ପଛକୁ ଯାଆନ୍ତୁ", error: "ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।", help_title: "ଯୋଗାଯୋଗ କରନ୍ତୁ", help_desc: "ଆପଣଙ୍କ ସମସ୍ୟା ଜଣାନ୍ତୁ ଏବଂ ଆମେ ସାହାଯ୍ୟ କରିବୁ।", help_btn: "ବାର୍ତ୍ତା ପଠାନ୍ତୁ", help_succ: "ବାର୍ତ୍ତା ପଠାଯାଇଛି" 
-    },
-    as: { 
-      help: "সহায় কেন্দ্ৰ", lang: "অসমীয়া", login: "ছাইন ইন", careers: "কেৰিয়াৰ", products: "সামগ্ৰী", 
-      main_title: "ডেলিভাৰী এতিয়া বন্ধ আছে।", main_sub: "বৰ্তমান আমি কেৱল আমাৰ সম্প্ৰদায়ৰ সহায় সেৱাত গুৰুত্ব দিছো।", 
-      val1_title: "অতি দ্ৰুত", val1_sub: "আমি আপোনাৰ ওচৰলৈ সোনকালে পাওঁগৈ।", val2_title: "কোনো অতিৰিক্ত খৰচ নাই", val2_sub: "স্পষ্ট মূল্য। আপুনি যি দেখিছে সেয়াহে পৰিশোধ কৰক।", val3_title: "লাইভ আপডেট", val3_sub: "মেপত আপোনাৰ অনুৰোধ ট্ৰেক কৰক।", val4_title: "সদায় ইয়াতে", val4_sub: "আমি যিকোনো সময়তে সহায়ৰ বাবে সাজু।", form_title: "ৱেটলিষ্টত যোগদান কৰক", form_desc: "প্ৰাৰম্ভিক প্ৰৱেশৰ বাবে এতিয়াই ছাইন আপ কৰক।", form_name: "নাম", form_phone: "ফোন", form_email: "ইমেইল", form_city: "চহৰ", form_role: "ভূমিকা", form_vehicle: "বাহন", form_business: "ব্যৱসায়ৰ নাম", form_submit: "মোৰ স্থান সংৰক্ষণ কৰক", form_kyc_btn: "সত্যাপন আৰম্ভ কৰক", kyc_face_title: "মুখৰ পৰীক্ষা", kyc_face_desc: "কেমেৰালৈ চাওক। ছিষ্টেমে স্বয়ংক্ৰিয়ভাৱে ফটো ল'ব।", kyc_docs_title: "নথি আপলোড কৰক", kyc_docs_desc: "আপোনাৰ আইডি কাৰ্ডৰ স্পষ্ট ফটো আপলোড কৰক।", success: "গ্ৰহণ কৰা হৈছে!", successSub: "আমি সোনকালেই আপোনাৰ সৈতে যোগাযোগ কৰিম।", back: "উভতি যাওক", error: "বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।", help_title: "যোগাযোগ কৰক", help_desc: "আপোনাৰ সমস্যা জনাওক আৰু আমি সহায় কৰিম।", help_btn: "বাৰ্তা পঠিয়াওক", help_succ: "বাৰ্তা পঠিওৱা হৈছে" 
-    }
+    mr: { help: "मदत केंद्र", lang: "मराठी", login: "साइन इन", careers: "करिअर", products: "उत्पादने", main_title: "भारताचे सर्वात स्मार्ट डिलिव्हरी नेटवर्क येत आहे.", main_sub: "कोणताही विलंब नाही. तुमच्यासाठी बनवलेले वेगवान नेटवर्क.", val1_title: "अतिशय वेगवान", val1_sub: "ट्रॅफिक टाळण्यासाठी स्मार्ट नकाशे.", val2_title: "कोणतेही अतिरिक्त शुल्क नाही", val2_sub: "स्पष्ट किंमती. जे दिसते तेच द्या.", val3_title: "लाइव्ह ट्रॅकिंग", val3_sub: "तुमची ऑर्डर नकाशावर पहा.", val4_title: "24/7 मदत", val4_sub: "आम्ही नेहमी मदतीसाठी येथे आहोत.", form_title: "वेटलिस्टमध्ये सामील व्हा", form_desc: "लवकर प्रवेश मिळवण्यासाठी आता साइन अप करा.", form_name: "पूर्ण नाव", form_phone: "व्हॉट्सॲप नंबर", form_email: "ईमेल", form_city: "तुमचे शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यवसायाचे नाव", form_submit: "माझी जागा निश्चित करा", form_kyc_btn: "पडताळणी सुरू करा", kyc_face_title: "चेहरा तपासा", kyc_face_desc: "कॅमेराकडे पहा. सिस्टम आपोआप फोटो घेईल.", kyc_docs_title: "कागदपत्रे अपलोड करा", kyc_docs_desc: "तुमच्या आयडी कार्डचे स्पष्ट फोटो अपलोड करा.", success: "प्राप्त झाले!", successSub: "आम्ही लवकरच आपल्याशी संपर्क साधू.", back: "मागे जा", error: "अयशस्वी. पुन्हा प्रयत्न करा.", help_title: "संपर्क साधा", help_desc: "तुमची समस्या सांगा आणि आम्ही मदत करू.", help_btn: "संदेश पाठवा", help_succ: "संदेश पाठवला" },
+    gu: { help: "મદદ કેન્દ્ર", lang: "ગુજરાતી", login: "સાઇન ઇન", careers: "કારકિર્દી", products: "ઉત્પાદનો", main_title: "ભારતનું સૌથી સ્માર્ટ ડિલિવરી નેટવર્ક આવી રહ્યું છે.", main_sub: "કોઈ વિલંબ નહીં. તમારા માટે બનાવેલ ઝડપી નેટવર્ક.", val1_title: "ખૂબ ઝડપી", val1_sub: "ટ્રાફિક ટાળવા માટે સ્માર્ટ નકશા.", val2_title: "કોઈ વધારાની ફી નથી", val2_sub: "સ્પષ્ટ કિંમતો. જે જુઓ તે જ ચૂકવો.", val3_title: "લાઇવ ટ્રેકિંગ", val3_sub: "તમારો ઓર્ડર નકશા પર જુઓ.", val4_title: "24/7 મદદ", val4_sub: "અમે હંમેશા મદદ માટે અહીં છીએ.", form_title: "વેઇટલિસ્ટમાં જોડાઓ", form_desc: "વહેલો પ્રવેશ મેળવવા માટે અત્યારે સાઇન અપ કરો.", form_name: "પૂરું નામ", form_phone: "ફોન નંબર", form_email: "ઈમેલ", form_city: "શહેર", form_role: "ભૂમિકા", form_vehicle: "વાહન", form_business: "વ્યવસાયનું નામ", form_submit: "મારી જગ્યા નક્કી કરો", form_kyc_btn: "ચકાસણી શરૂ કરો", kyc_face_title: "ચહેરો તપાસો", kyc_face_desc: "કેમેરા સામે જુઓ. સિસ્ટમ આપમેળે ફોટો લેશે.", kyc_docs_title: "દસ્તાવેજો અપલોડ કરો", kyc_docs_desc: "તમારા આઈડી કાર્ડના સ્પષ્ટ ફોટા અપલોડ કરો.", success: "પ્રાપ્ત થયું!", successSub: "અમે ટૂંક સમયમાં તમારો સંપર્ક કરીશું.", back: "પાછા જાઓ", error: "નિષ્ફળ. ફરીથી પ્રયાસ કરો.", help_title: "સંપર્ક કરો", help_desc: "તમારી સમસ્યા જણાવો અને અમે મદદ કરીશું.", help_btn: "સંદેશ મોકલો", help_succ: "સંદેશ મોકલ્યો" },
+    te: { help: "సహాయ కేంద్రం", lang: "తెలుగు", login: "సైన్ ఇన్", careers: "కెరీర్స్", products: "ఉత్పత్తులు", main_title: "భారతదేశపు స్మార్ట్ డెలివరీ నెట్‌వర్క్ వస్తోంది.", main_sub: "ఆలస్యం లేదు. మీ కోసం రూపొందించబడిన వేగవంతమైన నెట్‌వర్క్.", val1_title: "చాలా వేగంగా", val1_sub: "ట్రాఫిక్ నివారించడానికి స్మార్ట్ మ్యాప్‌లు.", val2_title: "అదనపు రుసుము లేదు", val2_sub: "స్పష్టమైన ధరలు. మీరు చూసేదే చెల్లించండి.", val3_title: "లైవ్ ట్రాకింగ్", val3_sub: "మీ ఆర్డర్‌ను మ్యాప్‌లో చూడండి.", val4_title: "24/7 మద్దతు", val4_sub: "మేము ఎల్లప్పుడూ సహాయం చేయడానికి ఇక్కడే ఉన్నాము.", form_title: "వెయిట్‌లిస్ట్‌లో చేరండి", form_desc: "ముందస్తు యాక్సెస్ కోసం ఇప్పుడే సైన్ అప్ చేయండి.", form_name: "పేరు", form_phone: "ఫోన్", form_email: "ఇమెయిల్", form_city: "నగరం", form_role: "పాత్ర", form_vehicle: "వాహనం", form_business: "వ్యాపారం పేరు", form_submit: "నా స్థానాన్ని సేవ్ చేయండి", form_kyc_btn: "ధృవీకరణ ప్రారంభించండి", kyc_face_title: "ముఖ తనిఖీ", kyc_face_desc: "కెమెరాను చూడండి. సిస్టమ్ స్వయంచాలకంగా ఫోటో తీస్తుంది.", kyc_docs_title: "పత్రాలను అప్‌లోడ్ చేయండి", kyc_docs_desc: "మీ ID కార్డ్‌ల స్పష్టమైన ఫోటోలను అప్‌లోడ్ చేయండి.", success: "స్వీకరించబడింది!", successSub: "మేము త్వరలో మిమ్మల్ని సంప్రదిస్తాము.", back: "వెనక్కి వెళ్ళు", error: "విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.", help_title: "మమ్మల్ని సంప్రదించండి", help_desc: "మీ సమస్యను చెప్పండి మరియు మేము సహాయం చేస్తాము.", help_btn: "సందేశం పంపండి", help_succ: "సందేశం పంపబడింది" },
+    ta: { help: "உதவி மையம்", lang: "தமிழ்", login: "உள்நுழைய", careers: "தொழில்", products: "தயாரிப்புகள்", main_title: "இந்தியாவின் ஸ்மார்ட் டெலிவரி நெட்வொர்க் வருகிறது.", main_sub: "தாமதம் இல்லை. உங்களுக்காக உருவாக்கப்பட்ட விரைவான நெட்வொர்க்.", val1_title: "மிக வேகமாக", val1_sub: "போக்குவரத்தை தவிர்க்க ஸ்மார்ட் வரைபடங்கள்.", val2_title: "கூடுதல் கட்டணம் இல்லை", val2_sub: "தெளிவான விலைகள். நீங்கள் பார்ப்பதை மட்டும் செலுத்துங்கள்.", val3_title: "நேரலை கண்காணிப்பு", val3_sub: "உங்கள் ஆர்டரை வரைபடத்தில் பார்க்கவும்.", val4_title: "24/7 ஆதரவு", val4_sub: "உதவ நாங்கள் எப்போதும் இருக்கிறோம்.", form_title: "காத்திருப்பு பட்டியலில் சேரவும்", form_desc: "முன்கூட்டியே அணுக இப்போதே பதிவு செய்யவும்.", form_name: "பெயர்", form_phone: "தொலைபேசி", form_email: "மின்னஞ்சல்", form_city: "நகரம்", form_role: "பங்கு", form_vehicle: "வாகனம்", form_business: "வணிக பெயர்", form_submit: "எனது இடத்தை உறுதி செய்யவும்", form_kyc_btn: "சரிபார்ப்பை தொடங்கவும்", kyc_face_title: "முக சரிபார்ப்பு", kyc_face_desc: "காமிராவைப் பாருங்கள். கணினி தானாகவே புகைப்படம் எடுக்கும்.", kyc_docs_title: "ஆவணங்களை பதிவேற்றவும்", kyc_docs_desc: "உங்கள் அடையாள அட்டைகளின் தெளிவான புகைப்படங்களை பதிவேற்றவும்.", success: "பெறப்பட்டது!", successSub: "நாங்கள் விரைவில் உங்களை தொடர்புகொள்வோம்.", back: "திரும்பி செல்", error: "தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.", help_title: "தொடர்பு கொள்ள", help_desc: "உங்கள் பிரச்சனையை சொல்லுங்கள் நாங்கள் உதவுகிறோம்.", help_btn: "செய்தி அனுப்பு", help_succ: "செய்தி அனுப்பப்பட்டது" },
+    pa: { help: "ਸਹਾਇਤਾ ਕੇਂਦਰ", lang: "ਪੰਜਾਬੀ", login: "ਸਾਈਨ ਇਨ", careers: "ਕਰੀਅਰ", products: "ਉਤਪਾਦ", main_title: "ਭਾਰਤ ਦਾ ਸਭ ਤੋਂ ਸਮਾਰਟ ਡਿਲਿਵਰੀ ਨੈੱਟਵਰਕ ਆ ਰਿਹਾ ਹੈ।", main_sub: "ਕੋਈ ਦੇਰੀ ਨਹੀਂ। ਤੁਹਾਡੇ ਲਈ ਬਣਾਇਆ ਇੱਕ ਤੇਜ਼ ਨੈੱਟਵਰਕ।", val1_title: "ਬਹੁਤ ਤੇਜ਼", val1_sub: "ਟ੍ਰੈਫਿਕ ਤੋਂ ਬਚਣ ਲਈ ਸਮਾਰਟ ਨਕਸ਼ੇ।", val2_title: "ਕੋਈ ਵਾਧੂ ਫੀਸ ਨਹੀਂ", val2_sub: "ਸਾਫ਼ ਕੀਮਤਾਂ। ਸਿਰਫ਼ ਉਹੀ ਭੁਗਤਾਨ ਕਰੋ ਜੋ ਤੁਸੀਂ ਦੇਖਦੇ ਹੋ।", val3_title: "ਲਾਈਵ ਟ੍ਰੈਕਿੰਗ", val3_sub: "ਆਪਣੇ ਆਰਡਰ ਨੂੰ ਨਕਸ਼ੇ 'ਤੇ ਦੇਖੋ।", val4_title: "24/7 ਮਦਦ", val4_sub: "ਅਸੀਂ ਹਮੇਸ਼ਾ ਮਦਦ ਲਈ ਇੱਥੇ ਹਾਂ।", form_title: "ਵੇਟਲਿਸਟ ਵਿੱਚ ਸ਼ਾਮਲ ਹੋਵੋ", form_desc: "ਜਲਦੀ ਪਹੁੰਚ ਲਈ ਹੁਣੇ ਸਾਈਨ ਅੱਪ ਕਰੋ।", form_name: "ਨਾਮ", form_phone: "ਫੋਨ", form_email: "ਈਮੇਲ", form_city: "ਸ਼ਹਿਰ", form_role: "ਭੂਮਿਕਾ", form_vehicle: "ਵਾਹਨ", form_business: "ਕਾਰੋਬਾਰ ਦਾ ਨਾਮ", form_submit: "ਮੇਰੀ ਜਗ੍ਹਾ ਪੱਕੀ ਕਰੋ", form_kyc_btn: "ਤਸਦੀਕ ਸ਼ੁਰੂ ਕਰੋ", kyc_face_title: "ਚਿਹਰਾ ਚੈੱਕ", kyc_face_desc: "ਕੈਮਰੇ ਵੱਲ ਦੇਖੋ। ਸਿਸਟਮ ਆਪਣੇ ਆਪ ਫੋਟੋ ਲੈ ਲਵੇਗਾ।", kyc_docs_title: "ਦਸਤਾਵੇਜ਼ ਅੱਪਲੋਡ ਕਰੋ", kyc_docs_desc: "ਆਪਣੇ ਆਈਡੀ ਕਾਰਡਾਂ ਦੀਆਂ ਸਾਫ਼ ਫੋਟੋਆਂ ਅੱਪਲੋਡ ਕਰੋ।", success: "ਪ੍ਰਾਪਤ ਹੋਇਆ!", successSub: "ਅਸੀਂ ਜਲਦੀ ਹੀ ਤੁਹਾਡੇ ਨਾਲ ਸੰਪਰਕ ਕਰਾਂਗੇ।", back: "ਵਾਪਸ ਜਾਓ", error: "ਅਸਫਲ. ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", help_title: "ਸੰਪਰਕ ਕਰੋ", help_desc: "ਆਪਣੀ ਸਮੱਸਿਆ ਦੱਸੋ ਅਤੇ ਅਸੀਂ ਮਦਦ ਕਰਾਂਗੇ।", help_btn: "ਸੁਨੇਹਾ ਭੇਜੋ", help_succ: "ਸੁਨੇਹਾ ਭੇਜਿਆ ਗਿਆ" },
+    bho: { help: "मदद केंद्र", lang: "भोजपुरी", login: "साइन इन", careers: "करियर", products: "उत्पाद", main_title: "भारत के स्मार्ट डिलीवरी नेटवर्क आवत बा।", main_sub: "कौनो देरी ना। रउआ खातिर बनल तेज नेटवर्क।", val1_title: "बहुत तेज", val1_sub: "ट्रैफिक से बचे खातिर स्मार्ट मैप।", val2_title: "कौनो अतिरिक्त फीस ना", val2_sub: "साफ कीमत। खाली उहे दीं जवन रउआ देखत बानी।", val3_title: "लाइव ट्रैकिंग", val3_sub: "आपन ऑर्डर के मैप पर देखीं।", val4_title: "24/7 मदद", val4_sub: "हमनी के रउआ मदद खातिर हमेशा इहाँ बानी जा।", form_title: "वेटलिस्ट में शामिल होईं", form_desc: "जल्दी फायदा पावे खातिर अभी साइन अप करीं।", form_name: "नाम", form_phone: "फोन", form_email: "ईमेल", form_city: "शहर", form_role: "भूमिका", form_vehicle: "वाहन", form_business: "व्यापार के नाम", form_submit: "हमर जगह पक्का करीं", form_kyc_btn: "सत्यापन शुरू करीं", kyc_face_title: "चेहरा जांच", kyc_face_desc: "कैमरा में देखीं। सिस्टम अपने आप फोटो ले ली।", kyc_docs_title: "दस्तावेज अपलोड करीं", kyc_docs_desc: "आपन आईडी कार्ड के साफ फोटो अपलोड करीं।", success: "मिल गइल!", successSub: "हमनी के टीम जल्दिए रउआ से संपर्क करी।", back: "पीछे जाईं", error: "विफल। फेरू कोशिश करीं।", help_title: "संपर्क करीं", help_desc: "आपन समस्या बताईं आ हमनी के मदद करब जा।", help_btn: "संदेश भेजीं", help_succ: "संदेश भेजल गइल" },
+    ar: { help: "مركز المساعدة", lang: "العربية", login: "تسجيل الدخول", careers: "وظائف", products: "المنتجات", main_title: "أذكى شبكة توصيل في الهند قادمة.", main_sub: "تجربة بدون تأخير. شبكة سريعة مصممة لك.", val1_title: "سريع جداً", val1_sub: "خرائط ذكية لتجنب الازدحام.", val2_title: "لا رسوم إضافية", val2_sub: "أسعار واضحة. ادفع فقط ما تراه.", val3_title: "تتبع مباشر", val3_sub: "شاهد طلبك على الخريطة.", val4_title: "مساعدة 24/7", val4_sub: "نحن دائماً هنا للمساعدة.", form_title: "انضم إلى قائمة الانتظار", form_desc: "سجل الآن للوصول المبكر.", form_name: "الاسم", form_phone: "الهاتف", form_email: "البريد", form_city: "المدينة", form_role: "الدور", form_vehicle: "المركبة", form_business: "اسم العمل", form_submit: "احجز مكاني", form_kyc_btn: "بدء التحقق", kyc_face_title: "فحص الوجه", kyc_face_desc: "انظر للكاميرا. سيلتقط النظام صورة تلقائياً.", kyc_docs_title: "رفع المستندات", kyc_docs_desc: "ارفع صور واضحة لبطاقات الهوية الخاصة بك.", success: "تم الاستلام!", successSub: "سنتصل بك قريباً.", back: "العودة", error: "فشل. حاول مرة أخرى.", help_title: "اتصل بنا", help_desc: "أخبرنا بمشكلتك وسنساعدك.", help_btn: "إرسال رسالة", help_succ: "تم الإرسال" },
+    es: { help: "Centro de ayuda", lang: "Español", login: "Iniciar Sesión", careers: "Carreras", products: "Productos", main_title: "La red de entrega más inteligente está en camino.", main_sub: "Cero retrasos. Una red rápida construida para ti.", val1_title: "Súper rápido", val1_sub: "Mapas inteligentes para evitar el tráfico.", val2_title: "Sin tarifas extra", val2_sub: "Precios claros. Paga solo lo que ves.", val3_title: "Rastreo en vivo", val3_sub: "Mira tu pedido en el mapa.", val4_title: "Ayuda 24/7", val4_sub: "Siempre estamos aquí para ayudar.", form_title: "Únete a la lista", form_desc: "Regístrate ahora para acceso anticipado.", form_name: "Nombre", form_phone: "Teléfono", form_email: "Correo", form_city: "Ciudad", form_role: "Rol", form_vehicle: "Vehículo", form_business: "Nombre de la empresa", form_submit: "Guardar mi lugar", form_kyc_btn: "Iniciar Verificación", kyc_face_title: "Comprobación facial", kyc_face_desc: "Mire a la cámara. El sistema tomará una foto automáticamente.", kyc_docs_title: "Subir Documentos", kyc_docs_desc: "Sube fotos claras de tus tarjetas de identificación.", success: "¡Recibido!", successSub: "Te contactaremos pronto.", back: "Volver", error: "Falló. Inténtalo de nuevo.", help_title: "Contáctanos", help_desc: "Dinos tu problema y te ayudaremos.", help_btn: "Enviar Mensaje", help_succ: "Mensaje Enviado" },
+    fr: { help: "Centre d'aide", lang: "Français", login: "Se Connecter", careers: "Carrières", products: "Produits", main_title: "Le réseau de livraison le plus intelligent arrive.", main_sub: "Zéro retard. Un réseau rapide conçu pour vous.", val1_title: "Super rapide", val1_sub: "Cartes intelligentes pour éviter le trafic.", val2_title: "Pas de frais supplémentaires", val2_sub: "Prix clairs. Payez uniquement ce que vous voyez.", val3_title: "Suivi en direct", val3_sub: "Regardez votre commande sur la carte.", val4_title: "Aide 24/7", val4_sub: "Nous sommes toujours là pour aider.", form_title: "Rejoindre la liste", form_desc: "Inscrivez-vous maintenant pour un accès anticipé.", form_name: "Nom", form_phone: "Téléphone", form_email: "Email", form_city: "Ville", form_role: "Rôle", form_vehicle: "Véhicule", form_business: "Nom de l'entreprise", form_submit: "Garder ma place", form_kyc_btn: "Commencer la Vérification", kyc_face_title: "Vérification faciale", kyc_face_desc: "Regardez la caméra. Le système prendra une photo automatiquement.", kyc_docs_title: "Télécharger des documents", kyc_docs_desc: "Téléchargez des photos claires de vos pièces d'identité.", success: "Reçu !", successSub: "Nous vous contacterons bientôt.", back: "Retour", error: "Échec. Réessayez.", help_title: "Contactez-nous", help_desc: "Dites-nous votre problème et nous vous aiderons.", help_btn: "Envoyer le message", help_succ: "Message Envoyé" },
+    de: { help: "Hilfezentrum", lang: "Deutsch", login: "Anmelden", careers: "Karriere", products: "Produkte", main_title: "Das intelligenteste Liefernetzwerk kommt.", main_sub: "Keine Verzögerungen. Ein schnelles Netzwerk für Sie.", val1_title: "Super schnell", val1_sub: "Intelligente Karten, um Staus zu vermeiden.", val2_title: "Keine Extragebühren", val2_sub: "Klare Preise. Zahlen Sie nur, was Sie sehen.", val3_title: "Live-Tracking", val3_sub: "Sehen Sie Ihre Bestellung auf der Karte.", val4_title: "24/7 Hilfe", val4_sub: "Wir sind immer hier, um zu helfen.", form_title: "Warteliste beitreten", form_desc: "Melden Sie sich jetzt für frühen Zugang an.", form_name: "Name", form_phone: "Telefon", form_email: "E-Mail", form_city: "Stadt", form_role: "Rolle", form_vehicle: "Fahrzeug", form_business: "Firmenname", form_submit: "Meinen Platz speichern", form_kyc_btn: "Überprüfung Starten", kyc_face_title: "Gesichtsprüfung", kyc_face_desc: "Schauen Sie in die Kamera. Das System macht automatisch ein Foto.", kyc_docs_title: "Dokumente Hochladen", kyc_docs_desc: "Laden Sie klare Fotos Ihrer Ausweise hoch.", success: "Erhalten!", successSub: "Wir werden Sie bald kontaktieren.", back: "Zurück", error: "Fehlgeschlagen. Bitte versuchen Sie es erneut.", help_title: "Kontakt", help_desc: "Sagen Sie uns Ihr Problem und wir helfen.", help_btn: "Nachricht Senden", help_succ: "Nachricht Gesendet" }
   };
 
   const currentT = t[lang] || t['en'];
@@ -273,8 +231,8 @@ export default function ComingSoon() {
     { code: 'en', label: 'English' }, { code: 'hi', label: 'हिन्दी' }, { code: 'mr', label: 'मराठी' },
     { code: 'gu', label: 'ગુજરાતી' }, { code: 'te', label: 'తెలుగు' }, { code: 'ta', label: 'தமிழ்' },
     { code: 'pa', label: 'ਪੰਜਾਬੀ' }, { code: 'bho', label: 'भोजपुरी' }, { code: 'hinglish', label: 'Hinglish' },
-    { code: 'bn', label: 'বাংলা' }, { code: 'kn', label: 'ಕನ್ನಡ' }, { code: 'ml', label: 'മലയാളം' },
-    { code: 'or', label: 'ଓଡ଼ିଆ' }, { code: 'as', label: 'অসমীয়া' }
+    { code: 'ar', label: 'العربية' }, { code: 'es', label: 'Español' }, { code: 'fr', label: 'Français' },
+    { code: 'de', label: 'Deutsch' }
   ];
 
   // ----------------------------------------------------------------------------
@@ -344,108 +302,6 @@ export default function ComingSoon() {
                   </button>
                 </form>
               )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* EXPLORE NOW MODAL */}
-      <AnimatePresence>
-        {showExplorePrompt && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-6"
-          >
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-[500px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[90vh] overflow-y-auto hide-scrollbar"
-            >
-              <button 
-                onClick={() => setShowExplorePrompt(false)} 
-                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#888888] hover:text-white transition-colors outline-none"
-              >
-                <X size={18} />
-              </button>
-
-              <h2 className="text-[1.5rem] font-black tracking-tight mb-2 text-white text-center mt-2">Our Services</h2>
-              <p className="text-[#888888] text-[0.9rem] text-center mb-8">See how we help you and your community.</p>
-
-              <Link to="/sahay" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
-                  <div className="flex items-center gap-1.5 mb-2">
-                      <img 
-                          src="/logo.png" 
-                          alt="Movyra" 
-                          className="h-6 w-auto" 
-                          onError={(e) => e.target.style.display = 'none'} 
-                      />
-                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
-                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">Sahay</span>
-                      </span>
-                  </div>
-                  <div>
-                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
-                          Humanitarian rescue operations. Connect and report easily.
-                      </p>
-                  </div>
-              </Link>
-
-              <Link to="/civic" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
-                  <div className="flex items-center gap-1.5 mb-2">
-                      <img 
-                          src="/logo.png" 
-                          alt="Movyra" 
-                          className="h-6 w-auto" 
-                          onError={(e) => e.target.style.display = 'none'} 
-                      />
-                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
-                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">Civic</span>
-                      </span>
-                  </div>
-                  <div>
-                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
-                          Smart city management. Report issues easily.
-                      </p>
-                  </div>
-              </Link>
-
-              <Link to="https://rebrand.ly/mnagriksetu" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
-                  <div className="flex items-center gap-1.5 mb-2">
-                      <img 
-                          src="/logo.png" 
-                          alt="Movyra" 
-                          className="h-6 w-auto" 
-                          onError={(e) => e.target.style.display = 'none'} 
-                      />
-                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
-                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">NagrikSetu</span>
-                      </span>
-                  </div>
-                  <div>
-                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
-                          Citizen portal. Access public services easily.
-                      </p>
-                  </div>
-              </Link>
-
-              <Link to="https://rebrand.ly/msevasetu" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none">
-                  <div className="flex items-center gap-1.5 mb-2">
-                      <img 
-                          src="/logo.png" 
-                          alt="Movyra" 
-                          className="h-6 w-auto" 
-                          onError={(e) => e.target.style.display = 'none'} 
-                      />
-                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
-                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">SevaSetu</span>
-                      </span>
-                  </div>
-                  <div>
-                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
-                          NGO onboarding portal. Join the verified civic support network.
-                      </p>
-                  </div>
-              </Link>
-
             </motion.div>
           </motion.div>
         )}
@@ -711,12 +567,45 @@ export default function ComingSoon() {
 
           {/* DYNAMIC NAVIGATION ROUTING */}
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full max-w-md mb-16 relative">
-            <button onClick={() => setShowExplorePrompt(true)} className="w-full bg-white text-black py-4 rounded-full font-black text-[1rem] hover:bg-[#e0e0e0] transition-colors outline-none">
-              Explore Now
-            </button>
-            <Link to="/vendor" className="w-full bg-[#111111] border border-[#333333] text-white py-4 rounded-full font-black text-[1rem] text-center hover:border-white transition-colors outline-none">
-              Partner With Us
-            </Link>
+            <AnimatePresence mode="wait">
+              {!showExploreOptions ? (
+                <motion.div key="main-btns" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex w-full gap-4">
+                  <button onClick={() => setShowExploreOptions(true)} className="w-full bg-white text-black py-4 rounded-full font-black text-[1rem] hover:bg-[#e0e0e0] transition-colors outline-none">
+                    Explore Now
+                  </button>
+                  <Link to="/vendor" className="w-full bg-[#111111] border border-[#333333] text-white py-4 rounded-full font-black text-[1rem] text-center hover:border-white transition-colors outline-none">
+                    Partner With Us
+                  </Link>
+                </motion.div>
+              ) : (
+                <motion.div key="expanded-btns" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-col w-full gap-3 bg-[#111111] p-4 rounded-3xl border border-[#333333]">
+                  <div className="flex justify-between items-center mb-2 px-2">
+                    <span className="text-[#888888] font-bold text-[0.8rem] uppercase tracking-widest">Select Ecosystem</span>
+                    <button onClick={() => { setShowExploreOptions(false); setShowOrderExpansions(false); }} className="text-[#888888] hover:text-white outline-none"><X size={18} /></button>
+                  </div>
+                  
+                  <Link to="/delivery" className="w-full bg-white text-black py-3.5 rounded-2xl font-black text-[0.95rem] text-center hover:bg-[#e0e0e0] transition-colors outline-none">
+                    Deliver Now
+                  </Link>
+                  
+                  {!showOrderExpansions ? (
+                    <button onClick={() => setShowOrderExpansions(true)} className="w-full bg-[#000000] border border-[#333333] text-white py-3.5 rounded-2xl font-black text-[0.95rem] text-center hover:border-white transition-colors flex items-center justify-center gap-2 outline-none">
+                      Order Now <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                  ) : (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="flex flex-col gap-2 pl-4 border-l-2 border-[#333333] ml-2">
+                      <Link to="/order" className="text-[#aaaaaa] font-bold text-[0.9rem] hover:text-white py-2 flex items-center gap-2 outline-none"><div className="w-1.5 h-1.5 rounded-full bg-white"></div> Complete Marketplace</Link>
+                      <Link to="/grocery" className="text-[#aaaaaa] font-bold text-[0.9rem] hover:text-white py-2 flex items-center gap-2 outline-none"><div className="w-1.5 h-1.5 rounded-full bg-[#00ff88]"></div> Daily Needs & Grocery</Link>
+                      <Link to="/veggies" className="text-[#aaaaaa] font-bold text-[0.9rem] hover:text-white py-2 flex items-center gap-2 outline-none"><div className="w-1.5 h-1.5 rounded-full bg-[#00A9F7]"></div> Fresh Veggies & Fruits</Link>
+                    </motion.div>
+                  )}
+                  
+                  <Link to="/vendor" className="w-full bg-[#000000] border border-[#333333] text-white py-3.5 rounded-2xl font-black text-[0.95rem] text-center hover:border-white transition-colors mt-1 outline-none">
+                    Partner With Us
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
