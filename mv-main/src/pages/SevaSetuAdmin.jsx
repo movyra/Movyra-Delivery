@@ -1,16 +1,17 @@
 /**
  * SYSTEM DOCUMENTATION / FRONTEND FIREBASE AUTH, ANIMATIONS & 14-LANGUAGE TRANSLATION
  * Context: Secure Administrative Dashboard.
- * Database: PocketBase for primary data.
+ * Database: PocketBase for primary data (Waitlist & NGO Subscriptions).
  * Auth/Reset: Native Firebase Client SDK for Password Resets & Session Updates.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Search, X, Globe, Image as ImageIcon, Download, Printer, Trash2, Filter, Camera, Key, Map, FileCheck, LayoutDashboard, Headset, ChevronRight, ChevronLeft, CheckCircle } from 'lucide-react';
+import { LogOut, Search, X, Globe, Image as ImageIcon, Download, Printer, Trash2, Filter, Camera, Key, Map, FileCheck, LayoutDashboard, Headset, ChevronRight, ChevronLeft, CheckCircle, ExternalLink } from 'lucide-react';
 import PocketBase from 'pocketbase';
 import { auth } from '../firebase';
-import { sendPasswordResetEmail, updatePassword } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
 const pb = new PocketBase(PB_URL);
@@ -31,7 +32,9 @@ const TRANSLATIONS = {
         tut_1: "Welcome to SevaSetu", tut_desc_1: "Manage and verify organizations effectively.",
         tut_2: "Filter & Search", tut_desc_2: "Locate specific records using the search bar and status filters.",
         tut_3: "Bulk Actions", tut_desc_3: "Select multiple records to update statuses simultaneously.",
-        tut_4: "Export & Print", tut_desc_4: "Download data as CSV or print individual acknowledgements.", finish_tut: "Finish Tutorial"
+        tut_4: "Export & Print", tut_desc_4: "Download data as CSV or print individual acknowledgements.", finish_tut: "Finish Tutorial",
+        tab_reports: "Civic Reports", tab_ngos: "Registered NGOs", plan: "Plan Type", txn_id: "Transaction ID", 
+        go_onboarding: "Onboarding Portal", contact_no: "Contact Number"
     },
     hi: {
         lang: "हिन्दी", admin_portal: "एडमिन पोर्टल", email: "ईमेल पता", password: "पासवर्ड", login: "लॉगिन करें", 
@@ -41,7 +44,8 @@ const TRANSLATIONS = {
         print: "प्रिंट", delete: "हटाएं", bulk_update: "थोक अपडेट", filter_all: "सभी स्थिति", forgot_pwd: "पासवर्ड भूल गए?", 
         request_access: "एक्सेस अनुरोध", send_reset: "लिंक भेजें", submit_req: "अनुरोध सबमिट करें", name: "पूरा नाम", 
         reason: "कारण", back: "वापस जाएं", prev: "पिछला", next: "अगला", page: "पृष्ठ", change_pwd: "पासवर्ड बदलें", support: "डेवलपर सहायता",
-        tut_1: "SevaSetu में स्वागत है", tut_desc_1: "संगठनों को प्रभावी ढंग से प्रबंधित करें।", tut_2: "फ़िल्टर और खोज", tut_desc_2: "विशिष्ट रिकॉर्ड खोजें।", tut_3: "थोक कार्रवाई", tut_desc_3: "एक साथ कई स्थिति अपडेट करें।", tut_4: "निर्यात और प्रिंट", tut_desc_4: "डेटा डाउनलोड या प्रिंट करें।", finish_tut: "ट्यूटोरियल समाप्त करें"
+        tut_1: "SevaSetu में स्वागत है", tut_desc_1: "संगठनों को प्रभावी ढंग से प्रबंधित करें।", tut_2: "फ़िल्टर और खोज", tut_desc_2: "विशिष्ट रिकॉर्ड खोजें।", tut_3: "थोक कार्रवाई", tut_desc_3: "एक साथ कई स्थिति अपडेट करें।", tut_4: "निर्यात और प्रिंट", tut_desc_4: "डेटा डाउनलोड या प्रिंट करें।", finish_tut: "ट्यूटोरियल समाप्त करें",
+        tab_reports: "नागरिक रिपोर्ट", tab_ngos: "पंजीकृत एनजीओ", plan: "योजना प्रकार", txn_id: "लेनदेन आईडी", go_onboarding: "ऑनबोर्डिंग पोर्टल", contact_no: "संपर्क नंबर"
     },
     hinglish: {
         lang: "Hinglish", admin_portal: "Admin Portal", email: "Email Address", password: "Password", login: "Login Karein", 
@@ -52,7 +56,8 @@ const TRANSLATIONS = {
         filter_all: "All Status", forgot_pwd: "Password Bhool Gaye?", request_access: "Access Request", send_reset: "Link Bhejein", 
         submit_req: "Submit Karein", name: "Full Name", reason: "Reason", back: "Back to Login", prev: "Peechhe", 
         next: "Aage", page: "Page", change_pwd: "Password Badlein", support: "Developer Support",
-        tut_1: "SevaSetu mein Swagat Hai", tut_desc_1: "Organizations manage karein.", tut_2: "Filter aur Search", tut_desc_2: "Specific records dhoondein.", tut_3: "Bulk Actions", tut_desc_3: "Ek saath multiple status update karein.", tut_4: "Export aur Print", tut_desc_4: "Data download ya print karein.", finish_tut: "Tutorial Khatam Karein"
+        tut_1: "SevaSetu mein Swagat Hai", tut_desc_1: "Organizations manage karein.", tut_2: "Filter aur Search", tut_desc_2: "Specific records dhoondein.", tut_3: "Bulk Actions", tut_desc_3: "Ek saath multiple status update karein.", tut_4: "Export aur Print", tut_desc_4: "Data download ya print karein.", finish_tut: "Tutorial Khatam Karein",
+        tab_reports: "Civic Reports", tab_ngos: "Registered NGOs", plan: "Plan Type", txn_id: "Transaction ID", go_onboarding: "Onboarding Portal", contact_no: "Contact Number"
     },
     mr: {
         lang: "मराठी", admin_portal: "प्रशासक पोर्टल", email: "ईमेल पत्ता", password: "पासवर्ड", login: "लॉग इन करा", 
@@ -62,7 +67,8 @@ const TRANSLATIONS = {
         print: "प्रिंट", delete: "काढून टाका", bulk_update: "एकत्रित अपडेट", filter_all: "सर्व स्थिती", forgot_pwd: "पासवर्ड विसरलात?", 
         request_access: "प्रवेश विनंती", send_reset: "लिंक पाठवा", submit_req: "विनंती सबमिट करा", name: "पूर्ण नाव", 
         reason: "कारण", back: "मागे जा", prev: "मागील", next: "पुढील", page: "पृष्ठ", change_pwd: "पासवर्ड बदला", support: "डेव्हलपर सपोर्ट",
-        tut_1: "SevaSetu मध्ये स्वागत आहे", tut_desc_1: "संस्थांचे प्रभावीपणे व्यवस्थापन करा.", tut_2: "फिल्टर आणि शोध", tut_desc_2: "विशिष्ट रेकॉर्ड शोधा.", tut_3: "एकत्रित कृती", tut_desc_3: "एकाच वेळी अनेक स्थिती अपडेट करा.", tut_4: "निर्यात आणि प्रिंट", tut_desc_4: "डेटा डाउनलोड किंवा प्रिंट करा.", finish_tut: "ट्यूटोरियल पूर्ण करा"
+        tut_1: "SevaSetu मध्ये स्वागत आहे", tut_desc_1: "संस्थांचे प्रभावीपणे व्यवस्थापन करा.", tut_2: "फिल्टर आणि शोध", tut_desc_2: "विशिष्ट रेकॉर्ड शोधा.", tut_3: "एकत्रित कृती", tut_desc_3: "एकाच वेळी अनेक स्थिती अपडेट करा.", tut_4: "निर्यात आणि प्रिंट", tut_desc_4: "डेटा डाउनलोड किंवा प्रिंट करा.", finish_tut: "ट्यूटोरियल पूर्ण करा",
+        tab_reports: "नागरी अहवाल", tab_ngos: "नोंदणीकृत एनजीओ", plan: "योजना प्रकार", txn_id: "व्यवहार आयडी", go_onboarding: "ऑनबोर्डिंग पोर्टल", contact_no: "संपर्क क्रमांक"
     },
     gu: {
         lang: "ગુજરાતી", admin_portal: "એડમિન પોર્ટલ", email: "ઇમેઇલ સરનામું", password: "પાસવર્ડ", login: "લૉગિન કરો", 
@@ -72,7 +78,8 @@ const TRANSLATIONS = {
         print: "છાપો", delete: "કાઢી નાખો", bulk_update: "બલ્ક અપડેટ", filter_all: "તમામ સ્થિતિ", forgot_pwd: "પાસવર્ડ ભૂલી ગયા છો?", 
         request_access: "ઍક્સેસ વિનંતી", send_reset: "લિન્ક મોકલો", submit_req: "વિનંતી સબમિટ કરો", name: "પૂરું નામ", 
         reason: "કારણ", back: "પાછા જાઓ", prev: "પાછલું", next: "આગળ", page: "પૃષ્ઠ", change_pwd: "પાસવર્ડ બદલો", support: "ડેવલપર સપોર્ટ",
-        tut_1: "SevaSetu માં સ્વાગત છે", tut_desc_1: "સંસ્થાઓનું સંચાલન કરો.", tut_2: "ફિલ્ટર અને શોધ", tut_desc_2: "ચોક્કસ રેકોર્ડ શોધો.", tut_3: "બલ્ક ક્રિયાઓ", tut_desc_3: "એક સાથે બહુવિધ સ્થિતિ અપડેટ કરો.", tut_4: "નિકાસ અને પ્રિન્ટ", tut_desc_4: "ડેટા ડાઉનલોડ અથવા પ્રિન્ટ કરો.", finish_tut: "ટ્યુટોરીયલ સમાપ્ત કરો"
+        tut_1: "SevaSetu માં સ્વાગત છે", tut_desc_1: "સંસ્થાઓનું સંચાલન કરો.", tut_2: "ફિલ્ટર અને શોધ", tut_desc_2: "ચોક્કસ રેકોર્ડ શોધો.", tut_3: "બલ્ક ક્રિયાઓ", tut_desc_3: "એક સાથે બહુવિધ સ્થિતિ અપડેટ કરો.", tut_4: "નિકાસ અને પ્રિન્ટ", tut_desc_4: "ડેટા ડાઉનલોડ અથવા પ્રિન્ટ કરો.", finish_tut: "ટ્યુટોરીયલ સમાપ્ત કરો",
+        tab_reports: "નાગરિક અહેવાલો", tab_ngos: "નોંધાયેલ એનજીઓ", plan: "યોજના પ્રકાર", txn_id: "વ્યવહાર આઈડી", go_onboarding: "ઓનબોર્ડિંગ પોર્ટલ", contact_no: "સંપર્ક નંબર"
     },
     te: {
         lang: "తెలుగు", admin_portal: "అడ్మిన్ పోర్టల్", email: "ఈమెయిల్", password: "పాస్‌వర్డ్", login: "లాగిన్ చేయండి", 
@@ -83,7 +90,8 @@ const TRANSLATIONS = {
         forgot_pwd: "పాస్‌వర్డ్ మర్చిపోయారా?", request_access: "యాక్సెస్ అభ్యర్థన", send_reset: "లింక్ పంపండి", submit_req: "సమర్పించండి", 
         name: "పూర్తి పేరు", reason: "కారణం", back: "వెనక్కి వెళ్ళు", prev: "మునుపటి", next: "తదుపరి", page: "పేజీ", 
         change_pwd: "పాస్‌వర్డ్ మార్చండి", support: "డెవలపర్ మద్దతు",
-        tut_1: "SevaSetu కు స్వాగతం", tut_desc_1: "సంస్థలను సమర్థవంతంగా నిర్వహించండి.", tut_2: "ఫిల్టర్ & శోధన", tut_desc_2: "నిర్దిష్ట రికార్డులను కనుగొనండి.", tut_3: "బల్క్ చర్యలు", tut_desc_3: "ఒకేసారి బహుళ రికార్డులను నవీకరించండి.", tut_4: "ఎగుమతి & ప్రింట్", tut_desc_4: "సమాచారాన్ని డౌన్‌లోడ్ చేయండి లేదా ప్రింట్ చేయండి.", finish_tut: "ట్యుటోరియల్ ముగించు"
+        tut_1: "SevaSetu కు స్వాగతం", tut_desc_1: "సంస్థలను సమర్థవంతంగా నిర్వహించండి.", tut_2: "ఫిల్టర్ & శోధన", tut_desc_2: "నిర్దిష్ట రికార్డులను కనుగొనండి.", tut_3: "బల్క్ చర్యలు", tut_desc_3: "ఒకేసారి బహుళ రికార్డులను నవీకరించండి.", tut_4: "ఎగుమతి & ప్రింట్", tut_desc_4: "సమాచారాన్ని డౌన్‌లోడ్ చేయండి లేదా ప్రింట్ చేయండి.", finish_tut: "ట్యుటోరియల్ ముగించు",
+        tab_reports: "పౌర నివేదికలు", tab_ngos: "నమోదిత ఎన్జీఓలు", plan: "ప్రణాళిక రకం", txn_id: "లావాదేవీ ఐడీ", go_onboarding: "ఆన్‌బోర్డింగ్ పోర్టల్", contact_no: "సంప్రదింపు నంబర్"
     },
     ta: {
         lang: "தமிழ்", admin_portal: "நிர்வாகி போர்டல்", email: "மின்னஞ்சல்", password: "கடவுச்சொல்", login: "உள்நுழைக", 
@@ -94,7 +102,8 @@ const TRANSLATIONS = {
         forgot_pwd: "கடவுச்சொல் மறந்துவிட்டதா?", request_access: "அணுகல் கோரிக்கை", send_reset: "இணைப்பை அனுப்பு", submit_req: "சமர்ப்பி", 
         name: "முழு பெயர்", reason: "காரணம்", back: "திரும்பிச் செல்", prev: "முந்தைய", next: "அடுத்தது", page: "பக்கம்", 
         change_pwd: "கடவுச்சொல் மாற்று", support: "டெவலப்பர் ஆதரவு",
-        tut_1: "SevaSetu க்கு வரவேற்கிறோம்", tut_desc_1: "நிறுவனங்களை நிர்வகிக்கவும்.", tut_2: "வடிகட்டி & தேடல்", tut_desc_2: "குறிப்பிட்ட பதிவுகளை தேடவும்.", tut_3: "மொத்த செயல்கள்", tut_desc_3: "பல பதிவுகளை ஒரே நேரத்தில் புதுப்பிக்கவும்.", tut_4: "ஏற்றுமதி & அச்சிடு", tut_desc_4: "தரவை பதிவிறக்க அல்லது அச்சிடவும்.", finish_tut: "பயிற்சியை முடிக்கவும்"
+        tut_1: "SevaSetu க்கு வரவேற்கிறோம்", tut_desc_1: "நிறுவனங்களை நிர்வகிக்கவும்.", tut_2: "வடிகட்டி & தேடல்", tut_desc_2: "குறிப்பிட்ட பதிவுகளை தேடவும்.", tut_3: "மொத்த செயல்கள்", tut_desc_3: "பல பதிவுகளை ஒரே நேரத்தில் புதுப்பிக்கவும்.", tut_4: "ஏற்றுமதி & அச்சிடு", tut_desc_4: "தரவை பதிவிறக்க அல்லது அச்சிடவும்.", finish_tut: "பயிற்சியை முடிக்கவும்",
+        tab_reports: "குடிமக்கள் அறிக்கைகள்", tab_ngos: "பதிவுசெய்யப்பட்ட என்ஜிஓக்கள்", plan: "திட்ட வகை", txn_id: "பரிவர்த்தனை ஐடி", go_onboarding: "ஆன்போர்டிங் போர்டல்", contact_no: "தொடர்பு எண்"
     },
     pa: {
         lang: "ਪੰਜਾਬੀ", admin_portal: "ਐਡਮਿਨ ਪੋਰਟਲ", email: "ਈਮੇਲ", password: "ਪਾਸਵਰਡ", login: "ਲਾਗਇਨ ਕਰੋ", 
@@ -104,7 +113,8 @@ const TRANSLATIONS = {
         print: "ਪ੍ਰਿੰਟ", delete: "ਮਿਟਾਓ", bulk_update: "ਬਲਕ ਅੱਪਡੇਟ", filter_all: "ਸਾਰੀ ਸਥਿਤੀ", forgot_pwd: "ਪਾਸਵਰਡ ਭੁੱਲ ਗਏ?", 
         request_access: "ਪਹੁੰਚ ਬੇਨਤੀ", send_reset: "ਲਿੰਕ ਭੇਜੋ", submit_req: "ਬੇਨਤੀ ਜਮ੍ਹਾਂ ਕਰੋ", name: "ਪੂਰਾ ਨਾਮ", 
         reason: "ਕਾਰਨ", back: "ਵਾਪਸ ਜਾਓ", prev: "ਪਿਛਲਾ", next: "ਅਗਲਾ", page: "ਪੰਨਾ", change_pwd: "ਪਾਸਵਰਡ ਬਦਲੋ", support: "ਡਿਵੈਲਪਰ ਸਹਾਇਤਾ",
-        tut_1: "SevaSetu ਵਿੱਚ ਜੀ ਆਇਆਂ ਨੂੰ", tut_desc_1: "ਸੰਗਠਨਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ।", tut_2: "ਫਿਲਟਰ ਅਤੇ ਖੋਜ", tut_desc_2: "ਖਾਸ ਰਿਕਾਰਡ ਲੱਭੋ।", tut_3: "ਬਲਕ ਕਾਰਵਾਈਆਂ", tut_desc_3: "ਇੱਕੋ ਸਮੇਂ ਕਈ ਰਿਕਾਰਡ ਅੱਪਡੇਟ ਕਰੋ।", tut_4: "ਨਿਰਯਾਤ ਅਤੇ ਪ੍ਰਿੰਟ", tut_desc_4: "ਡਾਟਾ ਡਾਊਨਲੋਡ ਜਾਂ ਪ੍ਰਿੰਟ ਕਰੋ।", finish_tut: "ਟਿਊਟੋਰਿਅਲ ਖਤਮ ਕਰੋ"
+        tut_1: "SevaSetu ਵਿੱਚ ਜੀ ਆਇਆਂ ਨੂੰ", tut_desc_1: "ਸੰਗਠਨਾਂ ਦਾ ਪ੍ਰਬੰਧਨ ਕਰੋ।", tut_2: "ਫਿਲਟਰ ਅਤੇ ਖੋਜ", tut_desc_2: "ਖਾਸ ਰਿਕਾਰਡ ਲੱਭੋ।", tut_3: "ਬਲਕ ਕਾਰਵਾਈਆਂ", tut_desc_3: "ਇੱਕੋ ਸਮੇਂ ਕਈ ਰਿਕਾਰਡ ਅੱਪਡੇਟ ਕਰੋ।", tut_4: "ਨਿਰਯਾਤ ਅਤੇ ਪ੍ਰਿੰਟ", tut_desc_4: "ਡਾਟਾ ਡਾਊਨਲੋਡ ਜਾਂ ਪ੍ਰਿੰਟ ਕਰੋ।", finish_tut: "ਟਿਊਟੋਰਿਅਲ ਖਤਮ ਕਰੋ",
+        tab_reports: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ", tab_ngos: "ਰਜਿਸਟਰਡ ਐਨਜੀਓ", plan: "ਯੋਜਨਾ ਦੀ ਕਿਸਮ", txn_id: "ਲੈਣ-ਦੇਣ ਆਈਡੀ", go_onboarding: "ਆਨਬੋਰਡਿੰਗ ਪੋਰਟਲ", contact_no: "ਸੰਪਰਕ ਨੰਬਰ"
     },
     bho: {
         lang: "भोजपुरी", admin_portal: "एडमिन पोर्टल", email: "ईमेल", password: "पासवर्ड", login: "लॉगिन करीं", 
@@ -114,7 +124,8 @@ const TRANSLATIONS = {
         print: "प्रिंट", delete: "हटावल जाव", bulk_update: "सब अपडेट", filter_all: "सभ स्थिति", forgot_pwd: "पासवर्ड भुला गइल?", 
         request_access: "एक्सेस अनुरोध", send_reset: "लिंक भेजीं", submit_req: "अनुरोध जमा करीं", name: "पूरा नाम", 
         reason: "कारण", back: "वापस जाईं", prev: "पिछला", next: "अगला", page: "पन्ना", change_pwd: "पासवर्ड बदलीं", support: "डेवलपर सहायता",
-        tut_1: "SevaSetu में रउआँ के स्वागत बा", tut_desc_1: "संगठन के प्रबंधन करीं।", tut_2: "फिल्टर अउर खोज", tut_desc_2: "विशिष्ट रिकार्ड खोजीं।", tut_3: "थोक कार्रवाई", tut_desc_3: "एक संगे कई गो अपडेट करीं।", tut_4: "निर्यात अउर प्रिंट", tut_desc_4: "डेटा डाउनलोड भा प्रिंट करीं।", finish_tut: "ट्यूटोरियल खतम करीं"
+        tut_1: "SevaSetu में रउआँ के स्वागत बा", tut_desc_1: "संगठन के प्रबंधन करीं।", tut_2: "फिल्टर अउर खोज", tut_desc_2: "विशिष्ट रिकार्ड खोजीं।", tut_3: "थोक कार्रवाई", tut_desc_3: "एक संगे कई गो अपडेट करीं।", tut_4: "निर्यात अउर प्रिंट", tut_desc_4: "डेटा डाउनलोड भा प्रिंट करीं।", finish_tut: "ट्यूटोरियल खतम करीं",
+        tab_reports: "नागरिक रिपोर्ट", tab_ngos: "पंजीकृत एनजीओ", plan: "योजना प्रकार", txn_id: "लेनदेन आईडी", go_onboarding: "ऑनबोर्डिंग पोर्टल", contact_no: "संपर्क नंबर"
     },
     bn: {
         lang: "বাংলা", admin_portal: "অ্যাডমিন পোর্টাল", email: "ইমেইল", password: "পাসওয়ার্ড", login: "লগইন", 
@@ -124,7 +135,8 @@ const TRANSLATIONS = {
         print: "প্রিন্ট", delete: "মুছুন", bulk_update: "সব আপডেট করুন", filter_all: "সব অবস্থা", forgot_pwd: "পাসওয়ার্ড ভুলে গেছেন?", 
         request_access: "অ্যাক্সেস অনুরোধ", send_reset: "লিঙ্ক পাঠান", submit_req: "অনুরোধ জমা দিন", name: "পুরো নাম", 
         reason: "কারণ", back: "ফিরে যান", prev: "আগের", next: "পরবর্তী", page: "পৃষ্ঠা", change_pwd: "পাসওয়ার্ড পরিবর্তন", support: "ডেভেলপার সাপোর্ট",
-        tut_1: "SevaSetu তে স্বাগতম", tut_desc_1: "প্রতিষ্ঠানগুলি পরিচালনা করুন।", tut_2: "ফিল্টার এবং অনুসন্ধান", tut_desc_2: "নির্দিষ্ট রেকর্ড খুঁজুন।", tut_3: "বাল্ক কাজ", tut_desc_3: "একসাথে একাধিক আপডেট করুন।", tut_4: "এক্সপোর্ট এবং প্রিন্ট", tut_desc_4: "ডেটা ডাউনলোড বা প্রিন্ট করুন।", finish_tut: "টিউটোরিয়াল শেষ করুন"
+        tut_1: "SevaSetu তে স্বাগতম", tut_desc_1: "প্রতিষ্ঠানগুলি পরিচালনা করুন।", tut_2: "ফিল্টার এবং অনুসন্ধান", tut_desc_2: "নির্দিষ্ট রেকর্ড খুঁজুন।", tut_3: "বাল্ক কাজ", tut_desc_3: "একসাথে একাধিক আপডেট করুন।", tut_4: "এক্সপোর্ট এবং প্রিন্ট", tut_desc_4: "ডেটা ডাউনলোড বা প্রিন্ট করুন।", finish_tut: "টিউটোরিয়াল শেষ করুন",
+        tab_reports: "নাগরিক প্রতিবেদন", tab_ngos: "নিবন্ধিত এনজিও", plan: "পরিকল্পনা প্রকার", txn_id: "লেনদেন আইডি", go_onboarding: "অনবোর্ডিং পোর্টাল", contact_no: "যোগাযোগ নম্বর"
     },
     kn: {
         lang: "ಕನ್ನಡ", admin_portal: "ಅಡ್ಮಿನ್ ಪೋರ್ಟಲ್", email: "ಇಮೇಲ್", password: "ಪಾಸ್ವರ್ಡ್", login: "ಲಾಗಿನ್", 
@@ -134,7 +146,8 @@ const TRANSLATIONS = {
         print: "ಪ್ರಿಂಟ್", delete: "ಅಳಿಸಿ", bulk_update: "ಎಲ್ಲಾ ಅಪ್ಡೇಟ್", filter_all: "ಎಲ್ಲಾ ಸ್ಥಿತಿ", forgot_pwd: "ಪಾಸ್ವರ್ಡ್ ಮರೆತಿರಾ?", 
         request_access: "ಪ್ರವೇಶ ವಿನಂತಿ", send_reset: "ಲಿಂಕ್ ಕಳುಹಿಸಿ", submit_req: "ವಿನಂತಿ ಸಲ್ಲಿಸಿ", name: "ಪೂರ್ಣ ಹೆಸರು", 
         reason: "ಕಾರಣ", back: "ಹಿಂದಕ್ಕೆ", prev: "ಹಿಂದಿನ", next: "ಮುಂದಿನ", page: "ಪುಟ", change_pwd: "ಪಾಸ್ವರ್ಡ್ ಬದಲಾಯಿಸಿ", support: "ಡೆವಲಪರ್ ಬೆಂಬಲ",
-        tut_1: "SevaSetu ಗೆ ಸುಸ್ವಾಗತ", tut_desc_1: "ಸಂಸ್ಥೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ.", tut_2: "ಫಿಲ್ಟರ್ ಮತ್ತು ಹುಡುಕಾಟ", tut_desc_2: "ನಿರ್ದಿಷ್ಟ ದಾಖಲೆಗಳನ್ನು ಹುಡುಕಿ.", tut_3: "ಬಲ್ಕ್ ಕ್ರಿಯೆಗಳು", tut_desc_3: "ಒಂದೇ ಬಾರಿಗೆ ಅನೇಕ ಅಪ್ಡೇಟ್ ಮಾಡಿ.", tut_4: "ರಫ್ತು ಮತ್ತು ಮುದ್ರಣ", tut_desc_4: "ಡೇಟಾ ಡೌನ್‌ಲೋಡ್ ಅಥವಾ ಮುದ್ರಿಸಿ.", finish_tut: "ಟ್ಯುಟೋರಿಯಲ್ ಮುಗಿಸಿ"
+        tut_1: "SevaSetu ಗೆ ಸುಸ್ವಾಗತ", tut_desc_1: "ಸಂಸ್ಥೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ.", tut_2: "ಫಿಲ್ಟರ್ ಮತ್ತು ಹುಡುಕಾಟ", tut_desc_2: "ನಿರ್ದಿಷ್ಟ ದಾಖಲೆಗಳನ್ನು ಹುಡುಕಿ.", tut_3: "ಬಲ್ಕ್ ಕ್ರಿಯೆಗಳು", tut_desc_3: "ಒಂದೇ ಬಾರಿಗೆ ಅನೇಕ ಅಪ್ಡೇಟ್ ಮಾಡಿ.", tut_4: "ರಫ್ತು ಮತ್ತು ಮುದ್ರಣ", tut_desc_4: "ಡೇಟಾ ಡೌನ್‌ಲೋಡ್ ಅಥವಾ ಮುದ್ರಿಸಿ.", finish_tut: "ಟ್ಯುಟೋರಿಯಲ್ ಮುಗಿಸಿ",
+        tab_reports: "ನಾಗರಿಕ ವರದಿಗಳು", tab_ngos: "ನೋಂದಾಯಿತ ಎನ್ಜಿಒಗಳು", plan: "ಯೋಜನೆ ಪ್ರಕಾರ", txn_id: "ವಹಿವಾಟು ಐಡಿ", go_onboarding: "ಆನ್‌ಬೋರ್ಡಿಂಗ್ ಪೋರ್ಟಲ್", contact_no: "ಸಂಪರ್ಕ ಸಂಖ್ಯೆ"
     },
     ml: {
         lang: "മലയാളം", admin_portal: "അഡ്മിൻ പോർട്ടൽ", email: "ഇമെയിൽ", password: "പാസ്‌വേഡ്", login: "ലോഗിൻ", 
@@ -144,7 +157,8 @@ const TRANSLATIONS = {
         print: "പ്രിന്റ്", delete: "മായ്ക്കുക", bulk_update: "എല്ലാം അപ്ഡേറ്റ്", filter_all: "എല്ലാ അവസ്ഥയും", forgot_pwd: "പാസ്‌വേഡ് മറന്നോ?", 
         request_access: "ആക്സസ് അപേക്ഷ", send_reset: "ലിങ്ക് അയക്കുക", submit_req: "സമർപ്പിക്കുക", name: "പൂർണ്ണ പേര്", 
         reason: "കാരണം", back: "പുറകോട്ട്", prev: "മുമ്പത്തെ", next: "അടുത്തത്", page: "പേജ്", change_pwd: "പാസ്‌വേഡ് മാറ്റുക", support: "ഡെവലപ്പർ പിന്തുണ",
-        tut_1: "SevaSetu ലേക്ക് സ്വാഗതം", tut_desc_1: "സ്ഥാപനങ്ങളെ നിയന്ത്രിക്കുക.", tut_2: "ഫിൽറ്ററും തിരയലും", tut_desc_2: "പ്രത്യേക രേഖകൾ കണ്ടെത്തുക.", tut_3: "ബൾക്ക് പ്രവർത്തനങ്ങൾ", tut_desc_3: "ഒന്നിലധികം അവസ്ഥകൾ അപ്‌ഡേറ്റ് ചെയ്യുക.", tut_4: "കയറ്റുമതിയും പ്രിന്റും", tut_desc_4: "ഡാറ്റ ഡൗൺലോഡ് അല്ലെങ്കിൽ പ്രിന്റ് ചെയ്യുക.", finish_tut: "ട്യൂട്ടോറിയൽ പൂർത്തിയാക്കുക"
+        tut_1: "SevaSetu ലേക്ക് സ്വാഗതം", tut_desc_1: "സ്ഥാപനങ്ങളെ നിയന്ത്രിക്കുക.", tut_2: "ഫിൽറ്ററും തിരയലും", tut_desc_2: "പ്രത്യേക രേഖകൾ കണ്ടെത്തുക.", tut_3: "ബൾക്ക് പ്രവർത്തനങ്ങൾ", tut_desc_3: "ഒന്നിലധികം അവസ്ഥകൾ അപ്‌ഡേറ്റ് ചെയ്യുക.", tut_4: "കയറ്റുമതിയും പ്രിന്റും", tut_desc_4: "ഡാറ്റ ഡൗൺലോഡ് അല്ലെങ്കിൽ പ്രിന്റ് ചെയ്യുക.", finish_tut: "ട്യൂട്ടോറിയൽ പൂർത്തിയാക്കുക",
+        tab_reports: "സിവിക് റിപ്പോർട്ടുകൾ", tab_ngos: "രജിസ്റ്റർ ചെയ്ത എൻ‌ജി‌ഒകൾ", plan: "പ്ലാൻ തരം", txn_id: "ഇടപാട് ഐഡി", go_onboarding: "ഓൺബോർഡിംഗ് പോർട്ടൽ", contact_no: "ബന്ധപ്പെടേണ്ട നമ്പർ"
     },
     or: {
         lang: "ଓଡ଼ିଆ", admin_portal: "ଆଡମିନ୍ ପୋର୍ଟାଲ୍", email: "ଇମେଲ୍", password: "ପାସୱାର୍ଡ", login: "ଲଗଇନ୍", 
@@ -154,7 +168,8 @@ const TRANSLATIONS = {
         print: "ପ୍ରିଣ୍ଟ", delete: "ଡିଲିଟ୍", bulk_update: "ସବୁ ଅପଡେଟ୍", filter_all: "ସବୁ ସ୍ଥିତି", forgot_pwd: "ପାସୱାର୍ଡ ଭୁଲିଗଲେ କି?", 
         request_access: "ଆକ୍ସେସ୍ ଅନୁରୋଧ", send_reset: "ଲିଙ୍କ୍ ପଠାନ୍ତୁ", submit_req: "ଦାଖଲ କରନ୍ତୁ", name: "ପୂରା ନାମ", 
         reason: "କାରଣ", back: "ପଛକୁ ଯାଆନ୍ତୁ", prev: "ପୂର୍ବ", next: "ପରବର୍ତ୍ତୀ", page: "ପୃଷ୍ଠା", change_pwd: "ପାସୱାର୍ଡ ବଦଳାନ୍ତୁ", support: "ଡେଭଲପର୍ ସମର୍ଥନ",
-        tut_1: "SevaSetu କୁ ସ୍ୱାଗତ", tut_desc_1: "ସଂସ୍ଥାଗୁଡ଼ିକୁ ପରିଚାଳନା କରନ୍ତୁ।", tut_2: "ଫିଲ୍ଟର୍ ଏବଂ ସନ୍ଧାନ", tut_desc_2: "ନିର୍ଦ୍ଦିଷ୍ଟ ରେକର୍ଡ ଖୋଜନ୍ତୁ।", tut_3: "ବଲ୍କ୍ କାର୍ଯ୍ୟ", tut_desc_3: "ଏକାସାଙ୍ଗରେ ଏକାଧିକ ସ୍ଥିତି ଅପଡେଟ୍ କରନ୍ତୁ।", tut_4: "ରପ୍ତାନି ଏବଂ ପ୍ରିଣ୍ଟ୍", tut_desc_4: "ଡାଟା ଡାଉନଲୋଡ୍ କିମ୍ବା ପ୍ରିଣ୍ଟ୍ କରନ୍ତୁ।", finish_tut: "ଟ୍ୟୁଟୋରିଆଲ୍ ଶେଷ କରନ୍ତୁ"
+        tut_1: "SevaSetu କୁ ସ୍ୱାଗତ", tut_desc_1: "ସଂସ୍ଥାଗୁଡ଼ିକୁ ପରିଚାଳନା କରନ୍ତୁ।", tut_2: "ଫିଲ୍ଟର୍ ଏବଂ ସନ୍ଧାନ", tut_desc_2: "ନିର୍ଦ୍ଦିଷ୍ଟ ରେକର୍ଡ ଖୋଜନ୍ତୁ।", tut_3: "ବଲ୍କ୍ କାର୍ଯ୍ୟ", tut_desc_3: "ଏକାସାଙ୍ଗରେ ଏକାଧିକ ସ୍ଥିତି ଅପଡେଟ୍ କରନ୍ତୁ।", tut_4: "ରପ୍ତାନି ଏବଂ ପ୍ରିଣ୍ଟ୍", tut_desc_4: "ଡାଟା ଡାଉନଲୋଡ୍ କିମ୍ବା ପ୍ରିଣ୍ଟ୍ କରନ୍ତୁ।", finish_tut: "ଟ୍ୟୁଟୋରିଆଲ୍ ଶେଷ କରନ୍ତୁ",
+        tab_reports: "ନାଗରିକ ରିପୋର୍ଟ", tab_ngos: "ପଞ୍ଜିକୃତ ଏନଜିଓ", plan: "ଯୋଜନା ପ୍ରକାର", txn_id: "କାରବାର ଆଇଡି", go_onboarding: "ଅନବୋର୍ଡିଂ ପୋର୍ଟାଲ୍", contact_no: "ସମ୍ପର୍କ ନମ୍ବର"
     },
     as: {
         lang: "অসমীয়া", admin_portal: "এডমিন প'ৰ্টেল", email: "ইমেইল", password: "পাছৱৰ্ড", login: "লগইন", 
@@ -164,11 +179,13 @@ const TRANSLATIONS = {
         print: "প্ৰিণ্ট", delete: "মচি পেলাওক", bulk_update: "সকলো আপডেট", filter_all: "সকলো অৱস্থা", forgot_pwd: "পাছৱৰ্ড পাহৰিলে নেকি?", 
         request_access: "এক্সেস অনুৰোধ", send_reset: "লিংক পঠাওক", submit_req: "জমা দিয়ক", name: "সম্পূৰ্ণ নাম", 
         reason: "কাৰণ", back: "উভতি যাওক", prev: "পূৰ্বৱৰ্তী", next: "পৰৱৰ্তী", page: "পৃষ্ঠা", change_pwd: "পাছৱৰ্ড সলনি কৰক", support: "ডেভেলপাৰ সহায়",
-        tut_1: "SevaSetu লৈ স্বাগতম", tut_desc_1: "সংস্থাসমূহ পৰিচালনা কৰক।", tut_2: "ফিল্টাৰ আৰু সন্ধান", tut_desc_2: "নিৰ্দিষ্ট ৰেকৰ্ড বিচাৰক।", tut_3: "বাল্ক কাৰ্য্য", tut_desc_3: "একেবাৰতে একাধিক আপডেট কৰক।", tut_4: "ৰপ্তানি আৰু প্ৰিণ্ট", tut_desc_4: "ডাটা ডাউনলোড বা প্ৰিণ্ট কৰক।", finish_tut: "টিউটোৰিয়েল সমাপ্ত কৰক"
+        tut_1: "SevaSetu লৈ স্বাগতম", tut_desc_1: "সংস্থাসমূহ পৰিচালনা কৰক।", tut_2: "ফিল্টাৰ আৰু সন্ধান", tut_desc_2: "নিৰ্দিষ্ট ৰেকৰ্ড বিচাৰক।", tut_3: "বাল্ক কাৰ্য্য", tut_desc_3: "একেবাৰতে একাধিক আপডেট কৰক।", tut_4: "ৰপ্তানি আৰু প্ৰিণ্ট", tut_desc_4: "ডাটা ডাউনলোড বা প্ৰিণ্ট কৰক।", finish_tut: "টিউটোৰিয়েল সমাপ্ত কৰক",
+        tab_reports: "নাগৰিক প্ৰতিবেদন", tab_ngos: "পঞ্জীভুক্ত এনজিঅ'", plan: "পৰিকল্পনা প্ৰকাৰ", txn_id: "লেনদেন আইডি", go_onboarding: "অনবৰ্ডিং প'ৰ্টেল", contact_no: "যোগাযোগ নম্বৰ"
     }
 };
 
 export default function SevaSetuAdmin() {
+    const navigate = useNavigate();
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
@@ -183,11 +200,18 @@ export default function SevaSetuAdmin() {
     const [resetEmail, setResetEmail] = useState('');
     const [reqForm, setReqForm] = useState({ name: '', email: '', reason: '' });
 
+    const [activeTab, setActiveTab] = useState('reports'); // 'reports' or 'ngos'
+    
+    // Reports State
     const [records, setRecords] = useState([]);
     const [isLoadingData, setIsLoadingData] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
+    
+    // NGOs State
+    const [ngos, setNgos] = useState([]);
+
     const itemsPerPage = 10;
     
     const [selectedRecords, setSelectedRecords] = useState([]);
@@ -213,6 +237,7 @@ export default function SevaSetuAdmin() {
         if (isAuthenticated) {
             setIsSuperAdmin(pb.authStore.model?.email === SUPER_ADMIN_EMAIL);
             fetchRecords();
+            fetchNGOs();
         }
     }, [isAuthenticated]);
 
@@ -227,7 +252,7 @@ export default function SevaSetuAdmin() {
         try {
             await pb.admins.authWithPassword(email, loginPassword);
             setIsAuthenticated(true);
-            setShowTutorial(true); // Trigger tutorial on successful login
+            setShowTutorial(true); 
         } catch (error) {
             setAuthMessage({ text: 'Authentication failed.', type: 'error' });
             pb.authStore.clear();
@@ -242,6 +267,7 @@ export default function SevaSetuAdmin() {
         setIsAuthenticated(false);
         setIsSuperAdmin(false);
         setRecords([]);
+        setNgos([]);
     };
 
     const handleForgotPassword = async (e) => {
@@ -297,7 +323,7 @@ export default function SevaSetuAdmin() {
     };
 
     // ==========================================
-    // DASHBOARD FEATURES
+    // DASHBOARD DATA FETCHING
     // ==========================================
 
     const fetchRecords = async () => {
@@ -309,6 +335,15 @@ export default function SevaSetuAdmin() {
             console.error("Fetch Error:", error);
         } finally {
             setIsLoadingData(false);
+        }
+    };
+
+    const fetchNGOs = async () => {
+        try {
+            const resultList = await pb.collection('ngo_users').getFullList({ sort: '-created' });
+            setNgos(resultList);
+        } catch (error) {
+            console.error("Fetch NGO Error:", error);
         }
     };
 
@@ -378,10 +413,15 @@ export default function SevaSetuAdmin() {
         return pb.files.getUrl(record, filename);
     };
 
+    // Filter Logic for Active Tab
     const filteredRecords = records.filter(rec => {
-        const matchesSearch = rec.ack_number.toLowerCase().includes(searchQuery.toLowerCase()) || rec.business_name.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = rec.ack_number?.toLowerCase().includes(searchQuery.toLowerCase()) || rec.business_name?.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'All' || rec.status === statusFilter;
         return matchesSearch && matchesStatus;
+    });
+
+    const filteredNgos = ngos.filter(ngo => {
+        return ngo.org_name?.toLowerCase().includes(searchQuery.toLowerCase()) || ngo.email?.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
     const kpi = {
@@ -391,13 +431,14 @@ export default function SevaSetuAdmin() {
         rejected: filteredRecords.filter(r => r.status === 'Rejected').length
     };
 
-    const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
-    const currentRecords = filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const activeList = activeTab === 'reports' ? filteredRecords : filteredNgos;
+    const totalPages = Math.ceil(activeList.length / itemsPerPage);
+    const currentRecords = activeList.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-    useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter]);
+    useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTab]);
 
     // ==========================================
-    // RENDER UNAUTHENTICATED PUBLIC VIEW (Split Screen & Pure White Container)
+    // RENDER UNAUTHENTICATED PUBLIC VIEW
     // ==========================================
     if (!isAuthenticated) {
         return (
@@ -406,7 +447,7 @@ export default function SevaSetuAdmin() {
                 {/* Left Side: Animated Brand Sequence */}
                 <div className="hidden md:flex md:w-1/2 bg-[#2563EB] flex-col items-center justify-center p-12 relative overflow-hidden">
                     <div className="absolute top-8 left-8 flex items-center gap-0.3">
-                        <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto brightness-0 invert" onError={(e) => { e.target.style.display = 'none' }} />
+                        <img src="/logo.png" alt="Movyra" className="h-8 w-auto brightness-0 invert" onError={(e) => { e.target.style.display = 'none' }} />
                         <span className="font-black text-[1.4rem] tracking-tighter text-[#FFFFFF]">ovyra SevaSetu</span>
                     </div>
                     
@@ -489,7 +530,7 @@ export default function SevaSetuAdmin() {
                     {showLangPrompt && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-6">
                             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-[400px] bg-[#FFFFFF] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[80vh] overflow-y-auto hide-scrollbar">
-                                <button type="button" onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F5F5F5] rounded-full outline-none"><X size={18} /></button>
+                                <button type="button" onClick={() => setShowLangPrompt(false)} className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-[#111111] hover:bg-[#F3F4F6] rounded-full outline-none"><X size={18} /></button>
                                 <h2 className="text-[1.4rem] font-black tracking-tight mb-4 text-[#111111] text-center">Language</h2>
                                 <div className="flex flex-col gap-2">
                                     {languageOptions.map((opt) => (
@@ -523,6 +564,10 @@ export default function SevaSetuAdmin() {
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#9CA3AF]" size={16} />
                         <input type="text" placeholder={currentT.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 pr-4 py-2 bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg text-[#111111] font-medium outline-none focus:border-[#2563EB] w-48 sm:w-64" />
                     </div>
+                    {/* Navigation Bridge to Onboarding Portal */}
+                    <button onClick={() => navigate('/sevasetu-onboarding')} className="flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#111111] font-bold text-[0.85rem] bg-[#FFFFFF] outline-none hover:bg-[#F9FAFB] transition-colors">
+                        <ExternalLink size={16} className="text-[#D97706]" /> <span className="hidden sm:inline">{currentT.go_onboarding}</span>
+                    </button>
                     {/* Developer Support Button */}
                     <button onClick={handleSupportRequest} className="flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] rounded-lg text-[#111111] font-bold text-[0.85rem] bg-[#FFFFFF] outline-none hover:bg-[#F9FAFB] transition-colors">
                         <Headset size={16} className="text-[#16A34A]" /> <span className="hidden sm:inline">{currentT.support}</span>
@@ -541,6 +586,8 @@ export default function SevaSetuAdmin() {
             </header>
 
             <main className="flex-1 p-6 flex flex-col gap-6">
+                
+                {/* KPI Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="bg-[#FFFFFF] border border-[#E5E7EB] p-4 rounded-xl shadow-sm flex flex-col">
                         <span className="text-[#6B7280] text-[0.8rem] font-bold uppercase">{currentT.total}</span>
@@ -560,101 +607,161 @@ export default function SevaSetuAdmin() {
                     </div>
                 </div>
 
-                <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-sm p-4 flex flex-wrap items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Filter size={16} className="text-[#6B7280]" />
-                            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[#111111] font-bold text-[0.85rem] outline-none cursor-pointer">
-                                <option value="All">{currentT.filter_all}</option>
-                                <option value="Pending">{currentT.pending}</option>
-                                <option value="Verified">{currentT.verified}</option>
-                                <option value="Rejected">{currentT.rejected}</option>
-                            </select>
-                        </div>
-                        
-                        {selectedRecords.length > 0 && (
-                            <div className="flex items-center gap-2 border-l border-[#E5E7EB] pl-4">
-                                <span className="text-[#2563EB] font-bold text-[0.85rem]">{selectedRecords.length} selected</span>
-                                <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className="bg-[#FFFFFF] border border-[#2563EB] text-[#2563EB] rounded-lg px-2 py-1 text-[0.8rem] font-bold outline-none cursor-pointer">
-                                    <option value="">Status...</option>
-                                    <option value="Pending">{currentT.pending}</option>
-                                    <option value="Verified">{currentT.verified}</option>
-                                    <option value="Rejected">{currentT.rejected}</option>
-                                </select>
-                                <button onClick={handleBulkUpdate} className="bg-[#2563EB] text-[#FFFFFF] px-3 py-1 rounded-lg text-[0.8rem] font-bold hover:bg-[#1D4ED8] outline-none">{currentT.update}</button>
-                            </div>
-                        )}
-                    </div>
-                    
-                    <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-[#FFFFFF] rounded-lg font-bold text-[0.85rem] hover:bg-[#000000] transition-colors outline-none">
-                        <Download size={16} /> {currentT.export_csv}
+                {/* Tab Switcher */}
+                <div className="flex border-b border-[#E5E7EB]">
+                    <button onClick={() => setActiveTab('reports')} className={`px-6 py-3 font-bold outline-none transition-colors ${activeTab === 'reports' ? 'border-b-2 border-[#2563EB] text-[#2563EB]' : 'text-[#6B7280] hover:text-[#111111]'}`}>
+                        {currentT.tab_reports}
+                    </button>
+                    <button onClick={() => setActiveTab('ngos')} className={`px-6 py-3 font-bold outline-none transition-colors ${activeTab === 'ngos' ? 'border-b-2 border-[#2563EB] text-[#2563EB]' : 'text-[#6B7280] hover:text-[#111111]'}`}>
+                        {currentT.tab_ngos}
                     </button>
                 </div>
 
-                <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB] text-[#111111] text-[0.8rem] uppercase tracking-wider font-bold">
-                                    <th className="p-4 w-10 text-center"><input type="checkbox" checked={selectedRecords.length === currentRecords.length && currentRecords.length > 0} onChange={toggleSelectAll} className="cursor-pointer" /></th>
-                                    <th className="p-4">{currentT.ack}</th>
-                                    <th className="p-4">{currentT.org}</th>
-                                    <th className="p-4">{currentT.contact}</th>
-                                    <th className="p-4">{currentT.doc}</th>
-                                    <th className="p-4">{currentT.status}</th>
-                                    <th className="p-4 text-right">{currentT.action}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[0.9rem]">
-                                {isLoadingData ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-[#6B7280] font-bold">{currentT.loading}</td></tr>
-                                ) : currentRecords.length === 0 ? (
-                                    <tr><td colSpan="7" className="p-8 text-center text-[#6B7280] font-bold">No records available.</td></tr>
-                                ) : (
-                                    currentRecords.map((record) => (
-                                        <tr key={record.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors">
-                                            <td className="p-4 text-center">
-                                                <input type="checkbox" checked={selectedRecords.includes(record.id)} onChange={() => toggleSelect(record.id)} className="cursor-pointer" />
-                                            </td>
-                                            <td className="p-4 font-mono font-bold text-[#2563EB]">{record.ack_number}</td>
-                                            <td className="p-4 font-black text-[#111111] max-w-[200px] truncate" title={record.business_name}>{record.business_name}</td>
-                                            <td className="p-4 font-medium text-[#4B5563]">{record.contact_info}</td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    {record.business_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.business_photo))} className="w-8 h-8 bg-[#FFFFFF] rounded flex items-center justify-center border border-[#E5E7EB] text-[#111111] outline-none hover:bg-[#F3F4F6]" title="Document"><ImageIcon size={14} /></button>}
-                                                    {record.live_person_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.live_person_photo))} className="w-8 h-8 bg-[#FFFFFF] rounded flex items-center justify-center border border-[#E5E7EB] text-[#111111] outline-none hover:bg-[#F3F4F6]" title="Live Photo"><Camera size={14} /></button>}
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <select value={record.status} onChange={(e) => updateStatus(record.id, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none cursor-pointer ${record.status === 'Verified' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#16A34A]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#DC2626]' : 'bg-[#FFFBEB] text-[#D97706] border-[#D97706]'}`}>
-                                                    <option value="Pending">{currentT.pending}</option>
-                                                    <option value="Verified">{currentT.verified}</option>
-                                                    <option value="Rejected">{currentT.rejected}</option>
-                                                </select>
-                                            </td>
-                                            <td className="p-4 text-right">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button onClick={() => setRecordToPrint(record)} className="p-1.5 text-[#111111] hover:text-[#2563EB] hover:bg-[#EFF6FF] rounded transition-colors outline-none" title={currentT.print}><Printer size={16} /></button>
-                                                    {isSuperAdmin && (
-                                                        <button onClick={() => deleteRecord(record.id)} className="p-1.5 text-[#DC2626] hover:bg-[#FEF2F2] rounded transition-colors outline-none" title={currentT.delete}><Trash2 size={16} /></button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
+                {/* Tab Content: Waitlist / Reports */}
+                {activeTab === 'reports' && (
+                    <>
+                        <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-sm p-4 flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Filter size={16} className="text-[#6B7280]" />
+                                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-lg px-3 py-1.5 text-[#111111] font-bold text-[0.85rem] outline-none cursor-pointer">
+                                        <option value="All">{currentT.filter_all}</option>
+                                        <option value="Pending">{currentT.pending}</option>
+                                        <option value="Verified">{currentT.verified}</option>
+                                        <option value="Rejected">{currentT.rejected}</option>
+                                    </select>
+                                </div>
+                                
+                                {selectedRecords.length > 0 && (
+                                    <div className="flex items-center gap-2 border-l border-[#E5E7EB] pl-4">
+                                        <span className="text-[#2563EB] font-bold text-[0.85rem]">{selectedRecords.length} selected</span>
+                                        <select value={bulkStatus} onChange={(e) => setBulkStatus(e.target.value)} className="bg-[#FFFFFF] border border-[#2563EB] text-[#2563EB] rounded-lg px-2 py-1 text-[0.8rem] font-bold outline-none cursor-pointer">
+                                            <option value="">Status...</option>
+                                            <option value="Pending">{currentT.pending}</option>
+                                            <option value="Verified">{currentT.verified}</option>
+                                            <option value="Rejected">{currentT.rejected}</option>
+                                        </select>
+                                        <button onClick={handleBulkUpdate} className="bg-[#2563EB] text-[#FFFFFF] px-3 py-1 rounded-lg text-[0.8rem] font-bold hover:bg-[#1D4ED8] outline-none">{currentT.update}</button>
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    {totalPages > 1 && (
-                        <div className="bg-[#FFFFFF] p-3 border-t border-[#E5E7EB] flex items-center justify-between text-[0.85rem] font-bold text-[#111111]">
-                            <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border border-[#E5E7EB] rounded bg-[#FFFFFF] text-[#111111] disabled:opacity-50 outline-none">{currentT.prev}</button>
-                            <span>{currentT.page} {currentPage} of {totalPages}</span>
-                            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border border-[#E5E7EB] rounded bg-[#FFFFFF] text-[#111111] disabled:opacity-50 outline-none">{currentT.next}</button>
+                            </div>
+                            
+                            <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-[#111111] text-[#FFFFFF] rounded-lg font-bold text-[0.85rem] hover:bg-[#000000] transition-colors outline-none">
+                                <Download size={16} /> {currentT.export_csv}
+                            </button>
                         </div>
-                    )}
-                </div>
+
+                        <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden flex flex-col">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB] text-[#111111] text-[0.8rem] uppercase tracking-wider font-bold">
+                                            <th className="p-4 w-10 text-center"><input type="checkbox" checked={selectedRecords.length === currentRecords.length && currentRecords.length > 0} onChange={toggleSelectAll} className="cursor-pointer" /></th>
+                                            <th className="p-4">{currentT.ack}</th>
+                                            <th className="p-4">{currentT.org}</th>
+                                            <th className="p-4">{currentT.contact}</th>
+                                            <th className="p-4">{currentT.doc}</th>
+                                            <th className="p-4">{currentT.status}</th>
+                                            <th className="p-4 text-right">{currentT.action}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-[0.9rem]">
+                                        {isLoadingData ? (
+                                            <tr><td colSpan="7" className="p-8 text-center text-[#6B7280] font-bold">{currentT.loading}</td></tr>
+                                        ) : currentRecords.length === 0 ? (
+                                            <tr><td colSpan="7" className="p-8 text-center text-[#6B7280] font-bold">No records available.</td></tr>
+                                        ) : (
+                                            currentRecords.map((record) => (
+                                                <tr key={record.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors">
+                                                    <td className="p-4 text-center">
+                                                        <input type="checkbox" checked={selectedRecords.includes(record.id)} onChange={() => toggleSelect(record.id)} className="cursor-pointer" />
+                                                    </td>
+                                                    <td className="p-4 font-mono font-bold text-[#2563EB]">{record.ack_number}</td>
+                                                    <td className="p-4 font-black text-[#111111] max-w-[200px] truncate" title={record.business_name}>{record.business_name}</td>
+                                                    <td className="p-4 font-medium text-[#4B5563]">{record.contact_info}</td>
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-2">
+                                                            {record.business_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.business_photo))} className="w-8 h-8 bg-[#FFFFFF] rounded flex items-center justify-center border border-[#E5E7EB] text-[#111111] outline-none hover:bg-[#F3F4F6]" title="Document"><ImageIcon size={14} /></button>}
+                                                            {record.live_person_photo && <button onClick={() => setSelectedImage(getFileUrl(record, record.live_person_photo))} className="w-8 h-8 bg-[#FFFFFF] rounded flex items-center justify-center border border-[#E5E7EB] text-[#111111] outline-none hover:bg-[#F3F4F6]" title="Live Photo"><Camera size={14} /></button>}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <select value={record.status} onChange={(e) => updateStatus(record.id, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none cursor-pointer ${record.status === 'Verified' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#16A34A]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#DC2626]' : 'bg-[#FFFBEB] text-[#D97706] border-[#D97706]'}`}>
+                                                            <option value="Pending">{currentT.pending}</option>
+                                                            <option value="Verified">{currentT.verified}</option>
+                                                            <option value="Rejected">{currentT.rejected}</option>
+                                                        </select>
+                                                    </td>
+                                                    <td className="p-4 text-right">
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <button onClick={() => setRecordToPrint(record)} className="p-1.5 text-[#111111] hover:text-[#2563EB] hover:bg-[#EFF6FF] rounded transition-colors outline-none" title={currentT.print}><Printer size={16} /></button>
+                                                            {isSuperAdmin && (
+                                                                <button onClick={() => deleteRecord(record.id)} className="p-1.5 text-[#DC2626] hover:bg-[#FEF2F2] rounded transition-colors outline-none" title={currentT.delete}><Trash2 size={16} /></button>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* Tab Content: Registered NGOs */}
+                {activeTab === 'ngos' && (
+                    <div className="bg-[#FFFFFF] border border-[#E5E7EB] rounded-xl shadow-sm overflow-hidden flex flex-col">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB] text-[#111111] text-[0.8rem] uppercase tracking-wider font-bold">
+                                        <th className="p-4">{currentT.org}</th>
+                                        <th className="p-4">{currentT.email}</th>
+                                        <th className="p-4">{currentT.contact_no}</th>
+                                        <th className="p-4">{currentT.plan}</th>
+                                        <th className="p-4 font-mono">{currentT.txn_id}</th>
+                                        <th className="p-4 text-right">{currentT.status}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-[0.9rem]">
+                                    {currentRecords.length === 0 ? (
+                                        <tr><td colSpan="6" className="p-8 text-center text-[#6B7280] font-bold">No registered organizations found.</td></tr>
+                                    ) : (
+                                        currentRecords.map((ngo) => (
+                                            <tr key={ngo.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors">
+                                                <td className="p-4 font-black text-[#111111]">{ngo.org_name}</td>
+                                                <td className="p-4 font-medium text-[#4B5563]">{ngo.email}</td>
+                                                <td className="p-4 font-medium text-[#4B5563]">{ngo.contact}</td>
+                                                <td className="p-4">
+                                                    <span className={`px-2 py-1 rounded font-bold text-[0.75rem] ${ngo.plan_type === 'Impact Plan' ? 'bg-[#EFF6FF] text-[#2563EB]' : 'bg-[#F3F4F6] text-[#4B5563]'}`}>
+                                                        {ngo.plan_type}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 font-mono text-[0.8rem] text-[#6B7280]">{ngo.payu_txn_id || "N/A"}</td>
+                                                <td className="p-4 text-right">
+                                                    <span className={`px-2 py-1 rounded font-bold text-[0.75rem] ${ngo.status === 'Active' ? 'bg-[#ECFDF5] text-[#16A34A]' : 'bg-[#FEF2F2] text-[#DC2626]'}`}>
+                                                        {ngo.status}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Common Pagination */}
+                {totalPages > 1 && (
+                    <div className="bg-[#FFFFFF] p-3 border border-[#E5E7EB] rounded-xl flex items-center justify-between text-[0.85rem] font-bold text-[#111111]">
+                        <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1 border border-[#E5E7EB] rounded bg-[#FFFFFF] text-[#111111] disabled:opacity-50 outline-none">{currentT.prev}</button>
+                        <span>{currentT.page} {currentPage} of {totalPages}</span>
+                        <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-3 py-1 border border-[#E5E7EB] rounded bg-[#FFFFFF] text-[#111111] disabled:opacity-50 outline-none">{currentT.next}</button>
+                    </div>
+                )}
             </main>
 
             {/* MODALS */}
