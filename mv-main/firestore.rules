@@ -78,8 +78,18 @@ service cloud.firestore {
     // CORPORATE RECRUITMENT PORTAL
     // ========================================================================
     match /career_applications/{document} {
-      // Require authentication to submit an application
-      allow create: if isAuthenticated();
+      // Allow unauthenticated public users to submit applications
+      allow create: if true;
+      // Strictly restrict reading/processing to internal administrators only
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // TECHNICAL SUPPORT WIDGET
+    // ========================================================================
+    match /technical_issues/{document} {
+      // Allow unauthenticated public users to submit support tickets
+      allow create: if true;
       // Strictly restrict reading/processing to internal administrators only
       allow read, update, delete: if isAdmin();
     }
