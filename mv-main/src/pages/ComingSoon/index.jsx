@@ -316,7 +316,7 @@ export default function ComingSoon() {
           >
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-[500px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative"
+              className="w-full max-w-[500px] bg-[#050505] border border-[#333333] rounded-3xl p-8 flex flex-col shadow-2xl relative max-h-[90vh] overflow-y-auto hide-scrollbar"
             >
               <button 
                 onClick={() => setShowProductsPrompt(false)} 
@@ -347,7 +347,7 @@ export default function ComingSoon() {
                   </div>
               </Link>
 
-              <Link to="/civic" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none">
+              <Link to="/civic" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
                   <div className="flex items-center gap-1.5 mb-2">
                       <img 
                           src="/logo.png" 
@@ -365,6 +365,45 @@ export default function ComingSoon() {
                       </p>
                   </div>
               </Link>
+
+              <Link to="https://rebrand.ly/mnagriksetu" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none mb-4">
+                  <div className="flex items-center gap-1.5 mb-2">
+                      <img 
+                          src="/logo.png" 
+                          alt="Movyra" 
+                          className="h-6 w-auto" 
+                          onError={(e) => e.target.style.display = 'none'} 
+                      />
+                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
+                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">NagrikSetu</span>
+                      </span>
+                  </div>
+                  <div>
+                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
+                          Citizen portal. Access public services easily.
+                      </p>
+                  </div>
+              </Link>
+
+              <Link to="https://rebrand.ly/msevasetu" className="group flex flex-col items-center gap-4 bg-[#111111] border border-[#333333] p-6 rounded-2xl hover:border-white transition-colors text-center w-full outline-none">
+                  <div className="flex items-center gap-1.5 mb-2">
+                      <img 
+                          src="/logo.png" 
+                          alt="Movyra" 
+                          className="h-6 w-auto" 
+                          onError={(e) => e.target.style.display = 'none'} 
+                      />
+                      <span className="font-black text-[1.2rem] tracking-tighter ml-[-5px] text-white">
+                          ovyra <span className="text-[#888888] font-medium text-[1rem] ml-1">SevaSetu</span>
+                      </span>
+                  </div>
+                  <div>
+                      <p className="text-[#888888] text-[0.85rem] leading-relaxed group-hover:text-[#aaaaaa] transition-colors">
+                          NGO onboarding portal. Join the verified civic support network.
+                      </p>
+                  </div>
+              </Link>
+
             </motion.div>
           </motion.div>
         )}
