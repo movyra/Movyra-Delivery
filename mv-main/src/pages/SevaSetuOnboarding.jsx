@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, IndianRupee, ShieldCheck, Building, Mail, Phone, Lock, ArrowRight, FileCheck } from 'lucide-react';
+import { Globe, X, Building, Mail, Phone, Lock, ArrowRight } from 'lucide-react';
 import PocketBase from 'pocketbase';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
@@ -203,21 +203,39 @@ export default function SevaSetuOnboarding() {
     const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     const languageOptions = Object.keys(TRANSLATIONS).map(key => ({ code: key, label: TRANSLATIONS[key].lang }));
 
-    // Sliding Animation Sequence logic
+    // Custom SVG Sliding Animation Sequence Logic
     const [animIndex, setAnimIndex] = useState(0);
-    const ICONS = [
-        <IndianRupee size={80} className="text-[#111111]" key="rupee" />,
-        <ShieldCheck size={80} className="text-[#16A34A]" key="shield" />,
-        <Building size={80} className="text-[#2563EB]" key="building" />,
-        <FileCheck size={80} className="text-[#111111]" key="file" />
+    const CUSTOM_SVGS = [
+        // 1. Rupee Payment Graphic
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="rupee">
+            <path d="M6 3h12M6 8h12M6 13l8.5 8M6 13h3c3.314 0 6-2.686 6-6 0-1.28-.404-2.46-1.087-3.42M13.5 13H6"/>
+            <circle cx="12" cy="12" r="10" stroke="#111111" strokeWidth="0" strokeDasharray="2 2" />
+        </svg>,
+        // 2. Shield Verification Graphic
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="shield">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4"/>
+        </svg>,
+        // 3. Organization Building Graphic
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="building">
+            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"/>
+            <path d="M9 22v-4h6v4"/>
+            <path d="M8 6h.01M16 6h.01M12 6h.01M12 10h.01M16 10h.01M8 10h.01M12 14h.01M16 14h.01M8 14h.01"/>
+        </svg>,
+        // 4. File Document Graphic
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" key="file">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <path d="M9 15l2 2 4-4"/>
+        </svg>
     ];
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setAnimIndex(prev => (prev + 1) % ICONS.length);
+            setAnimIndex(prev => (prev + 1) % CUSTOM_SVGS.length);
         }, 3000);
         return () => clearInterval(interval);
-    }, [ICONS.length]);
+    }, [CUSTOM_SVGS.length]);
 
     // Load PayU Bolt Script
     useEffect(() => {
@@ -251,7 +269,8 @@ export default function SevaSetuOnboarding() {
         }
 
         try {
-            const hashResponse = await fetch('https://msevasetuemail.vercel.app/api/payu-hash', {
+            // STRICT UPDATE: Pointing to correct backend URL
+            const hashResponse = await fetch('https://msevasetupay.vercel.app/api/payu-hash', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -360,7 +379,7 @@ export default function SevaSetuOnboarding() {
                                 transition={{ duration: 0.5, ease: "easeInOut" }}
                                 className="absolute flex items-center justify-center"
                             >
-                                {ICONS[animIndex]}
+                                {CUSTOM_SVGS[animIndex]}
                             </motion.div>
                         </AnimatePresence>
                     </div>
@@ -443,7 +462,10 @@ export default function SevaSetuOnboarding() {
                     {step === 3 && (
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full text-center py-12">
                             <div className="w-24 h-24 bg-[#ECFDF5] rounded-full flex items-center justify-center mb-6">
-                                <ShieldCheck size={48} className="text-[#16A34A]" />
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    <path d="M9 12l2 2 4-4"/>
+                                </svg>
                             </div>
                             <h3 className="text-3xl font-black text-[#111111] mb-2">{currentT.success}</h3>
                             <p className="text-[#6B7280] font-medium mb-8">Your organization has been securely registered on SevaSetu.</p>
