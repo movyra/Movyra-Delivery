@@ -236,7 +236,7 @@ export default function SevaSetuOrgDashboard() {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md bg-[#FFFFFF] rounded-2xl shadow-xl p-8 border border-[#E5E7EB]">
                     <div className="flex flex-col items-center mb-8">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-0.3 mb-2">
                             <img src="/logo-7.png" alt="Movyra" className="h-8 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                             <span className="font-black text-[1.6rem] tracking-tighter text-[#111111]">ovyra <span className="text-[#2563EB]">SevaSetu</span></span>
                         </div>
