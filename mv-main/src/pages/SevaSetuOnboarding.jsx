@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, X, IndianRupee, ShieldCheck, CheckSquare, Building, Mail, Phone, Lock, ArrowRight } from 'lucide-react';
+import { Globe, X, IndianRupee, ShieldCheck, Building, Mail, Phone, Lock, ArrowRight, FileCheck } from 'lucide-react';
 import PocketBase from 'pocketbase';
 
 const PB_URL = 'https://movyra-mv-main-db-gradio.hf.space';
@@ -15,130 +15,172 @@ const pb = new PocketBase(PB_URL);
 
 const TRANSLATIONS = {
     en: {
-        lang: "English", onboarding: "Organization Onboarding", free_plan: "Free Support", impact_plan: "Impact Plan",
+        lang: "English", onboarding: "Organization Onboarding", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Professional Plan",
         org_name: "Organization Name", email: "Email Address", contact: "Contact Number", password: "Secure Password",
         proceed: "Proceed to Checkout", complete_reg: "Complete Registration", select_plan: "Select Your Plan",
         fill_details: "Organization Details", success: "Registration Successful", processing: "Processing Payment...",
-        back: "Go Back", login_now: "Proceed to Dashboard", price_free: "₹0 / month", price_impact: "₹999 / year",
-        desc_free: "Basic access to civic reports and verification tools.", desc_impact: "Advanced filtering, bulk actions, and premium support.",
-        pay_failed: "Payment validation failed. Please try again."
+        back: "Go Back", login_now: "Proceed to Dashboard", 
+        price_free: "₹0 / month", price_support: "₹29 / month", price_pro: "₹99 / month",
+        desc_free: "Basic access to civic reports and verification tools.", 
+        desc_support: "Verified profile, case management, and team tools.", 
+        desc_pro: "Multiple branches, advanced analytics, and priority support.",
+        pay_failed: "Payment validation failed. Please try again.", recommended: "Recommended"
     },
     hi: {
-        lang: "हिन्दी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त सहायता", impact_plan: "प्रभाव योजना",
+        lang: "हिन्दी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
         org_name: "संगठन का नाम", email: "ईमेल पता", contact: "संपर्क नंबर", password: "सुरक्षित पासवर्ड",
         proceed: "चेकआउट के लिए आगे बढ़ें", complete_reg: "पंजीकरण पूरा करें", select_plan: "अपनी योजना चुनें",
         fill_details: "संगठन विवरण", success: "पंजीकरण सफल", processing: "भुगतान संसाधित हो रहा है...",
-        back: "वापस जाएं", login_now: "डैशबोर्ड पर जाएं", price_free: "₹0 / माह", price_impact: "₹999 / वर्ष",
-        desc_free: "नागरिक रिपोर्ट और सत्यापन उपकरण तक बुनियादी पहुंच।", desc_impact: "उन्नत फ़िल्टरिंग, थोक कार्रवाई, और प्रीमियम समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल रहा। कृपया पुनः प्रयास करें।"
+        back: "वापस जाएं", login_now: "डैशबोर्ड पर जाएं", 
+        price_free: "₹0 / माह", price_support: "₹29 / माह", price_pro: "₹99 / माह",
+        desc_free: "नागरिक रिपोर्ट और सत्यापन उपकरणों तक बुनियादी पहुंच।", 
+        desc_support: "सत्यापित प्रोफ़ाइल, केस प्रबंधन और टीम टूल।", 
+        desc_pro: "कई शाखाएं, उन्नत एनालिटिक्स और प्राथमिकता समर्थन।",
+        pay_failed: "भुगतान सत्यापन विफल रहा। कृपया पुनः प्रयास करें।", recommended: "अनुशंसित"
     },
     hinglish: {
-        lang: "Hinglish", onboarding: "Organization Onboarding", free_plan: "Free Support", impact_plan: "Impact Plan",
+        lang: "Hinglish", onboarding: "Organization Onboarding", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Professional Plan",
         org_name: "Organization Name", email: "Email Address", contact: "Contact Number", password: "Secure Password",
         proceed: "Checkout Karein", complete_reg: "Registration Poora Karein", select_plan: "Plan Select Karein",
         fill_details: "Organization Details", success: "Registration Successful", processing: "Payment Process Ho Raha Hai...",
-        back: "Peechhe Jayein", login_now: "Dashboard Par Jayein", price_free: "₹0 / month", price_impact: "₹999 / year",
-        desc_free: "Civic reports aur verification tools ka basic access.", desc_impact: "Advanced filtering, bulk actions, aur premium support.",
-        pay_failed: "Payment validation fail ho gaya. Kripaya dubara try karein."
+        back: "Peechhe Jayein", login_now: "Dashboard Par Jayein", 
+        price_free: "₹0 / month", price_support: "₹29 / month", price_pro: "₹99 / month",
+        desc_free: "Civic reports aur verification tools ka basic access.", 
+        desc_support: "Verified profile, case management, aur team tools.", 
+        desc_pro: "Multiple branches, advanced analytics, aur priority support.",
+        pay_failed: "Payment validation fail ho gaya. Kripaya dubara try karein.", recommended: "Recommended"
     },
     mr: {
-        lang: "मराठी", onboarding: "संस्था ऑनबोर्डिंग", free_plan: "मोफत आधार", impact_plan: "प्रभाव योजना",
+        lang: "मराठी", onboarding: "संस्था ऑनबोर्डिंग", free_plan: "मोफत योजना", support_plan: "आधार योजना", pro_plan: "व्यावसायिक योजना",
         org_name: "संस्थेचे नाव", email: "ईमेल पत्ता", contact: "संपर्क क्रमांक", password: "सुरक्षित पासवर्ड",
         proceed: "चेकआउट करण्यासाठी पुढे जा", complete_reg: "नोंदणी पूर्ण करा", select_plan: "तुमची योजना निवडा",
         fill_details: "संस्थेचे तपशील", success: "नोंदणी यशस्वी", processing: "पेमेंट प्रक्रियेत आहे...",
-        back: "मागे जा", login_now: "डॅशबोर्डवर जा", price_free: "₹0 / महिना", price_impact: "₹999 / वर्ष",
-        desc_free: "नागरी अहवाल आणि पडताळणी साधनांमध्ये मूलभूत प्रवेश.", desc_impact: "प्रगत फिल्टरिंग, एकत्रित कृती आणि प्रीमियम समर्थन.",
-        pay_failed: "पेमेंट प्रमाणीकरण अयशस्वी. कृपया पुन्हा प्रयत्न करा."
+        back: "मागे जा", login_now: "डॅशबोर्डवर जा", 
+        price_free: "₹0 / महिना", price_support: "₹29 / महिना", price_pro: "₹99 / महिना",
+        desc_free: "नागरी अहवाल आणि पडताळणी साधनांमध्ये मूलभूत प्रवेश.", 
+        desc_support: "सत्यापित प्रोफाइल, केस व्यवस्थापन आणि टीम साधने.", 
+        desc_pro: "अनेक शाखा, प्रगत विश्लेषण आणि प्राधान्य समर्थन.",
+        pay_failed: "पेमेंट प्रमाणीकरण अयशस्वी. कृपया पुन्हा प्रयत्न करा.", recommended: "शिफारस केलेले"
     },
     gu: {
-        lang: "ગુજરાતી", onboarding: "સંસ્થા ઓનબોર્ડિંગ", free_plan: "મફત આધાર", impact_plan: "અસર યોજના",
+        lang: "ગુજરાતી", onboarding: "સંસ્થા ઓનબોર્ડિંગ", free_plan: "મફત યોજના", support_plan: "આધાર યોજના", pro_plan: "વ્યવસાયિક યોજના",
         org_name: "સંસ્થાનું નામ", email: "ઇમેઇલ સરનામું", contact: "સંપર્ક નંબર", password: "સુરક્ષિત પાસવર્ડ",
         proceed: "ચેકઆઉટ માટે આગળ વધો", complete_reg: "નોંધણી પૂર્ણ કરો", select_plan: "તમારી યોજના પસંદ કરો",
         fill_details: "સંસ્થાની વિગતો", success: "નોંધણી સફળ", processing: "ચુકવણી પ્રક્રિયામાં છે...",
-        back: "પાછા જાઓ", login_now: "ડેશબોર્ડ પર જાઓ", price_free: "₹0 / મહિનો", price_impact: "₹999 / વર્ષ",
-        desc_free: "નાગરિક અહેવાલો અને ચકાસણી સાધનોની મૂળભૂત ઍક્સેસ.", desc_impact: "અદ્યતન ફિલ્ટરિંગ, બલ્ક ક્રિયાઓ અને પ્રીમિયમ સપોર્ટ.",
-        pay_failed: "ચુકવણી માન્યતા નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો."
+        back: "પાછા જાઓ", login_now: "ડેશબોર્ડ પર જાઓ", 
+        price_free: "₹0 / મહિનો", price_support: "₹29 / મહિનો", price_pro: "₹99 / મહિનો",
+        desc_free: "નાગરિક અહેવાલો અને ચકાસણી સાધનોની મૂળભૂત ઍક્સેસ.", 
+        desc_support: "ચકાસાયેલ પ્રોફાઇલ, કેસ મેનેજમેન્ટ અને ટીમ સાધનો.", 
+        desc_pro: "બહુવિધ શાખાઓ, અદ્યતન વિશ્લેષણ અને પ્રાધાન્યતા સપોર્ટ.",
+        pay_failed: "ચુકવણી માન્યતા નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો.", recommended: "ભલામણ કરેલ"
     },
     te: {
-        lang: "తెలుగు", onboarding: "సంస్థ ఆన్‌బోర్డింగ్", free_plan: "ఉచిత మద్దతు", impact_plan: "ప్రభావ ప్రణాళిక",
+        lang: "తెలుగు", onboarding: "సంస్థ ఆన్‌బోర్డింగ్", free_plan: "ఉచిత ప్రణాళిక", support_plan: "మద్దతు ప్రణాళిక", pro_plan: "వృత్తిపరమైన ప్రణాళిక",
         org_name: "సంస్థ పేరు", email: "ఈమెయిల్", contact: "సంప్రదింపు నంబర్", password: "సురక్షిత పాస్‌వర్డ్",
         proceed: "చెల్లింపుకు కొనసాగండి", complete_reg: "నమోదును పూర్తి చేయండి", select_plan: "మీ ప్రణాళికను ఎంచుకోండి",
         fill_details: "సంస్థ వివరాలు", success: "నమోదు విజయవంతమైంది", processing: "చెల్లింపు ప్రాసెస్ చేయబడుతోంది...",
-        back: "వెనక్కి వెళ్ళు", login_now: "డాష్‌బోర్డ్‌కు వెళ్లండి", price_free: "₹0 / నెల", price_impact: "₹999 / సంవత్సరం",
-        desc_free: "పౌర నివేదికలు మరియు ధృవీకరణ సాధనాలకు ప్రాథమిక ప్రాప్యత.", desc_impact: "అధునాతన వడపోత, బల్క్ చర్యలు మరియు ప్రీమియం మద్దతు.",
-        pay_failed: "చెల్లింపు ధృవీకరణ విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి."
+        back: "వెనక్కి వెళ్ళు", login_now: "డాష్‌బోర్డ్‌కు వెళ్లండి", 
+        price_free: "₹0 / నెల", price_support: "₹29 / నెల", price_pro: "₹99 / నెల",
+        desc_free: "పౌర నివేదికలు మరియు ధృవీకరణ సాధనాలకు ప్రాథమిక ప్రాప్యత.", 
+        desc_support: "ధృవీకరించబడిన ప్రొఫైల్, కేస్ నిర్వహణ మరియు జట్టు సాధనాలు.", 
+        desc_pro: "బహుళ శాఖలు, అధునాతన విశ్లేషణలు మరియు ప్రాధాన్యత మద్దతు.",
+        pay_failed: "చెల్లింపు ధృవీకరణ విఫలమైంది. దయచేసి మళ్లీ ప్రయత్నించండి.", recommended: "సిఫార్సు చేయబడింది"
     },
     ta: {
-        lang: "தமிழ்", onboarding: "நிறுவன ஆன்போர்டிங்", free_plan: "இலவச ஆதரவு", impact_plan: "தாக்க திட்டம்",
+        lang: "தமிழ்", onboarding: "நிறுவன ஆன்போர்டிங்", free_plan: "இலவச திட்டம்", support_plan: "ஆதரவு திட்டம்", pro_plan: "தொழில்முறை திட்டம்",
         org_name: "நிறுவனத்தின் பெயர்", email: "மின்னஞ்சல்", contact: "தொடர்பு எண்", password: "பாதுகாப்பான கடவுச்சொல்",
         proceed: "பணம் செலுத்த தொடரவும்", complete_reg: "பதிவை முடிக்கவும்", select_plan: "உங்கள் திட்டத்தை தேர்ந்தெடுக்கவும்",
         fill_details: "நிறுவனத்தின் விவரங்கள்", success: "பதிவு வெற்றிகரமானது", processing: "கட்டணம் செயலாக்கப்படுகிறது...",
-        back: "திரும்பிச் செல்", login_now: "டாஷ்போர்டுக்குச் செல்லவும்", price_free: "₹0 / மாதம்", price_impact: "₹999 / வருடம்",
-        desc_free: "குடிமக்கள் அறிக்கைகள் மற்றும் சரிபார்ப்பு கருவிகளுக்கான அடிப்படை அணுகல்.", desc_impact: "மேம்பட்ட வடிகட்டுதல், மொத்த செயல்கள் மற்றும் பிரீமியம் ஆதரவு.",
-        pay_failed: "கட்டண சரிபார்ப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்."
+        back: "திரும்பிச் செல்", login_now: "டாஷ்போர்டுக்குச் செல்லவும்", 
+        price_free: "₹0 / மாதம்", price_support: "₹29 / மாதம்", price_pro: "₹99 / மாதம்",
+        desc_free: "குடிமக்கள் அறிக்கைகள் மற்றும் சரிபார்ப்பு கருவிகளுக்கான அடிப்படை அணுகல்.", 
+        desc_support: "சரிபார்க்கப்பட்ட சுயவிவரம், வழக்கு மேலாண்மை மற்றும் குழு கருவிகள்.", 
+        desc_pro: "பல கிளைகள், மேம்பட்ட பகுப்பாய்வு மற்றும் முன்னுரிமை ஆதரவு.",
+        pay_failed: "கட்டண சரிபார்ப்பு தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.", recommended: "பரிந்துரைக்கப்படுகிறது"
     },
     pa: {
-        lang: "ਪੰਜਾਬੀ", onboarding: "ਸੰਗਠਨ ਆਨਬੋਰਡਿੰਗ", free_plan: "ਮੁਫਤ ਸਹਾਇਤਾ", impact_plan: "ਪ੍ਰਭਾਵ ਯੋਜਨਾ",
+        lang: "ਪੰਜਾਬੀ", onboarding: "ਸੰਗਠਨ ਆਨਬੋਰਡਿੰਗ", free_plan: "ਮੁਫਤ ਯੋਜਨਾ", support_plan: "ਸਹਾਇਤਾ ਯੋਜਨਾ", pro_plan: "ਪੇਸ਼ੇਵਰ ਯੋਜਨਾ",
         org_name: "ਸੰਗਠਨ ਦਾ ਨਾਮ", email: "ਈਮੇਲ", contact: "ਸੰਪਰਕ ਨੰਬਰ", password: "ਸੁਰੱਖਿਅਤ ਪਾਸਵਰਡ",
         proceed: "ਭੁਗਤਾਨ ਲਈ ਅੱਗੇ ਵਧੋ", complete_reg: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ", select_plan: "ਆਪਣੀ ਯੋਜਨਾ ਚੁਣੋ",
         fill_details: "ਸੰਗਠਨ ਦੇ ਵੇਰਵੇ", success: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਸਫਲ", processing: "ਭੁਗਤਾਨ ਪ੍ਰਕਿਰਿਆ ਵਿੱਚ ਹੈ...",
-        back: "ਵਾਪਸ ਜਾਓ", login_now: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਜਾਓ", price_free: "₹0 / ਮਹੀਨਾ", price_impact: "₹999 / ਸਾਲ",
-        desc_free: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ ਅਤੇ ਤਸਦੀਕ ਸਾਧਨਾਂ ਤੱਕ ਬੁਨਿਆਦੀ ਪਹੁੰਚ।", desc_impact: "ਉੱਨਤ ਫਿਲਟਰਿੰਗ, ਬਲਕ ਕਾਰਵਾਈਆਂ, ਅਤੇ ਪ੍ਰੀਮੀਅਮ ਸਹਾਇਤਾ।",
-        pay_failed: "ਭੁਗਤਾਨ ਪ੍ਰਮਾਣਿਕਤਾ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+        back: "ਵਾਪਸ ਜਾਓ", login_now: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਜਾਓ", 
+        price_free: "₹0 / ਮਹੀਨਾ", price_support: "₹29 / ਮਹੀਨਾ", price_pro: "₹99 / ਮਹੀਨਾ",
+        desc_free: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ ਅਤੇ ਤਸਦੀਕ ਸਾਧਨਾਂ ਤੱਕ ਬੁਨਿਆਦੀ ਪਹੁੰਚ।", 
+        desc_support: "ਪ੍ਰਮਾਣਿਤ ਪ੍ਰੋਫਾਈਲ, ਕੇਸ ਪ੍ਰਬੰਧਨ, ਅਤੇ ਟੀਮ ਟੂਲ।", 
+        desc_pro: "ਕਈ ਸ਼ਾਖਾਵਾਂ, ਉੱਨਤ ਵਿਸ਼ਲੇਸ਼ਣ, ਅਤੇ ਤਰਜੀਹੀ ਸਹਾਇਤਾ।",
+        pay_failed: "ਭੁਗਤਾਨ ਪ੍ਰਮਾਣਿਕਤਾ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", recommended: "ਸਿਫਾਰਸ਼ੀ"
     },
     bho: {
-        lang: "भोजपुरी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त सहायता", impact_plan: "प्रभाव योजना",
+        lang: "भोजपुरी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
         org_name: "संगठन के नाम", email: "ईमेल", contact: "संपर्क नंबर", password: "सुरक्षित पासवर्ड",
         proceed: "भुगतान खातिर आगे बढ़ीं", complete_reg: "पंजीकरण पूरा करीं", select_plan: "आपन योजना चुनीं",
         fill_details: "संगठन के विवरण", success: "पंजीकरण सफल", processing: "भुगतान के प्रक्रिया चल रहल बा...",
-        back: "वापस जाईं", login_now: "डैशबोर्ड पर जाईं", price_free: "₹0 / महिना", price_impact: "₹999 / साल",
-        desc_free: "नागरिक रिपोर्ट अउर सत्यापन उपकरण तक बुनियादी पहुंच।", desc_impact: "उन्नत फिल्टरिंग, थोक कार्रवाई, अउर प्रीमियम समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल हो गइल। कृपया फेर से कोशिश करीं।"
+        back: "वापस जाईं", login_now: "डैशबोर्ड पर जाईं", 
+        price_free: "₹0 / महिना", price_support: "₹29 / महिना", price_pro: "₹99 / महिना",
+        desc_free: "नागरिक रिपोर्ट अउर सत्यापन उपकरण तक बुनियादी पहुंच।", 
+        desc_support: "सत्यापित प्रोफाइल, केस प्रबंधन, अउर टीम टूल।", 
+        desc_pro: "कई गो शाखा, उन्नत एनालिटिक्स, अउर प्राथमिकता समर्थन।",
+        pay_failed: "भुगतान सत्यापन विफल हो गइल। कृपया फेर से कोशिश करीं।", recommended: "अनुशंसित"
     },
     bn: {
-        lang: "বাংলা", onboarding: "প্রতিষ্ঠান অনবোর্ডিং", free_plan: "বিনামূল্যে সহায়তা", impact_plan: "প্রভাব পরিকল্পনা",
+        lang: "বাংলা", onboarding: "প্রতিষ্ঠান অনবোর্ডিং", free_plan: "বিনামূল্যে পরিকল্পনা", support_plan: "সহায়তা পরিকল্পনা", pro_plan: "পেশাদার পরিকল্পনা",
         org_name: "প্রতিষ্ঠানের নাম", email: "ইমেইল", contact: "যোগাযোগ নম্বর", password: "নিরাপদ পাসওয়ার্ড",
         proceed: "চেকআউটে এগিয়ে যান", complete_reg: "নিবন্ধন সম্পূর্ণ করুন", select_plan: "আপনার পরিকল্পনা নির্বাচন করুন",
         fill_details: "প্রতিষ্ঠানের বিবরণ", success: "নিবন্ধন সফল", processing: "পেমেন্ট প্রক্রিয়াধীন...",
-        back: "ফিরে যান", login_now: "ড্যাশবোর্ডে যান", price_free: "₹0 / মাস", price_impact: "₹999 / বছর",
-        desc_free: "নাগরিক প্রতিবেদন এবং যাচাইকরণ সরঞ্জামগুলিতে প্রাথমিক অ্যাক্সেস।", desc_impact: "উন্নত ফিল্টারিং, বাল্ক কাজ এবং প্রিমিয়াম সমর্থন।",
-        pay_failed: "পেমেন্ট বৈধতা ব্যর্থ হয়েছে। আবার চেষ্টা করুন।"
+        back: "ফিরে যান", login_now: "ড্যাশবোর্ডে যান", 
+        price_free: "₹0 / মাস", price_support: "₹29 / মাস", price_pro: "₹99 / মাস",
+        desc_free: "নাগরিক প্রতিবেদন এবং যাচাইকরণ সরঞ্জামগুলিতে প্রাথমিক অ্যাক্সেস।", 
+        desc_support: "যাচাইকৃত প্রোফাইল, কেস পরিচালনা এবং দলীয় সরঞ্জাম।", 
+        desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ এবং অগ্রাধিকার সমর্থন।",
+        pay_failed: "পেমেন্ট বৈধতা ব্যর্থ হয়েছে। আবার চেষ্টা করুন।", recommended: "প্রস্তাবিত"
     },
     kn: {
-        lang: "ಕನ್ನಡ", onboarding: "ಸಂಸ್ಥೆ ಆನ್‌ಬೋರ್ಡಿಂಗ್", free_plan: "ಉಚಿತ ಬೆಂಬಲ", impact_plan: "ಪ್ರಭಾವ ಯೋಜನೆ",
+        lang: "ಕನ್ನಡ", onboarding: "ಸಂಸ್ಥೆ ಆನ್‌ಬೋರ್ಡಿಂಗ್", free_plan: "ಉಚಿತ ಯೋಜನೆ", support_plan: "ಬೆಂಬಲ ಯೋಜನೆ", pro_plan: "ವೃತ್ತಿಪರ ಯೋಜನೆ",
         org_name: "ಸಂಸ್ಥೆಯ ಹೆಸರು", email: "ಇಮೇಲ್", contact: "ಸಂಪರ್ಕ ಸಂಖ್ಯೆ", password: "ಸುರಕ್ಷಿತ ಪಾಸ್ವರ್ಡ್",
         proceed: "ಪಾವತಿಗೆ ಮುಂದುವರಿಯಿರಿ", complete_reg: "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ", select_plan: "ನಿಮ್ಮ ಯೋಜನೆ ಆಯ್ಕೆಮಾಡಿ",
         fill_details: "ಸಂಸ್ಥೆಯ ವಿವರಗಳು", success: "ನೋಂದಣಿ ಯಶಸ್ವಿಯಾಗಿದೆ", processing: "ಪಾವತಿ ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿದೆ...",
-        back: "ಹಿಂದಕ್ಕೆ", login_now: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ", price_free: "₹0 / ತಿಂಗಳು", price_impact: "₹999 / ವರ್ಷ",
-        desc_free: "ನಾಗರಿಕ ವರದಿಗಳು ಮತ್ತು ಪರಿಶೀಲನಾ ಸಾಧನಗಳಿಗೆ ಮೂಲ ಪ್ರವೇಶ.", desc_impact: "ಸುಧಾರಿತ ಫಿಲ್ಟರಿಂಗ್, ಬಲ್ಕ್ ಕ್ರಿಯೆಗಳು ಮತ್ತು ಪ್ರೀಮಿಯಂ ಬೆಂಬಲ.",
-        pay_failed: "ಪಾವತಿ ಮೌಲ್ಯೀಕರಣ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+        back: "ಹಿಂದಕ್ಕೆ", login_now: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ", 
+        price_free: "₹0 / ತಿಂಗಳು", price_support: "₹29 / ತಿಂಗಳು", price_pro: "₹99 / ತಿಂಗಳು",
+        desc_free: "ನಾಗರಿಕ ವರದಿಗಳು ಮತ್ತು ಪರಿಶೀಲನಾ ಸಾಧನಗಳಿಗೆ ಮೂಲ ಪ್ರವೇಶ.", 
+        desc_support: "ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್, ಪ್ರಕರಣ ನಿರ್ವಹಣೆ ಮತ್ತು ತಂಡದ ಪರಿಕರಗಳು.", 
+        desc_pro: "ಬಹು ಶಾಖೆಗಳು, ಸುಧಾರಿತ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಆದ್ಯತೆಯ ಬೆಂಬಲ.",
+        pay_failed: "ಪಾವತಿ ಮೌಲ್ಯೀಕರಣ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", recommended: "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ"
     },
     ml: {
-        lang: "മലയാളം", onboarding: "സ്ഥാപന ഓൺബോർഡിംഗ്", free_plan: "സൗജന്യ പിന്തുണ", impact_plan: "ഇംപാക്ട് പ്ലാൻ",
+        lang: "മലയാളം", onboarding: "സ്ഥാപന ഓൺബോർഡിംഗ്", free_plan: "സൗജന്യ പ്ലാൻ", support_plan: "പിന്തുണ പ്ലാൻ", pro_plan: "പ്രൊഫഷണൽ പ്ലാൻ",
         org_name: "സ്ഥാപനത്തിന്റെ പേര്", email: "ഇമെയിൽ", contact: "ബന്ധപ്പെടേണ്ട നമ്പർ", password: "സുരക്ഷിത പാസ്‌വേഡ്",
         proceed: "പേയ്‌മെന്റിലേക്ക് തുടരുക", complete_reg: "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക", select_plan: "നിങ്ങളുടെ പ്ലാൻ തിരഞ്ഞെടുക്കുക",
         fill_details: "സ്ഥാപനത്തിന്റെ വിവരങ്ങൾ", success: "രജിസ്ട്രേഷൻ വിജയകരം", processing: "പേയ്‌മെന്റ് പ്രോസസ്സ് ചെയ്യുന്നു...",
-        back: "പുറകോട്ട്", login_now: "ഡാഷ്‌ബോർഡിലേക്ക് പോകുക", price_free: "₹0 / മാസം", price_impact: "₹999 / വർഷം",
-        desc_free: "സിവിക് റിപ്പോർട്ടുകളിലേക്കും സ്ഥിരീകരണ ഉപകരണങ്ങളിലേക്കുമുള്ള അടിസ്ഥാന ആക്സസ്.", desc_impact: "നൂതന ഫിൽട്ടറിംഗ്, ബൾക്ക് പ്രവർത്തനങ്ങൾ, പ്രീമിയം പിന്തുണ.",
-        pay_failed: "പേയ്‌മെന്റ് സാധൂകരണം പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക."
+        back: "പുറകോട്ട്", login_now: "ഡാഷ്‌ബോർഡിലേക്ക് പോകുക", 
+        price_free: "₹0 / മാസം", price_support: "₹29 / മാസം", price_pro: "₹99 / മാസം",
+        desc_free: "സിവിക് റിപ്പോർട്ടുകളിലേക്കും സ്ഥിരീകരണ ഉപകരണങ്ങളിലേക്കുമുള്ള അടിസ്ഥാന ആക്സസ്.", 
+        desc_support: "പരിശോധിച്ചുറപ്പിച്ച പ്രൊഫൈൽ, കേസ് മാനേജ്മെന്റ്, ടീം ടൂളുകൾ.", 
+        desc_pro: "ഒന്നിലധികം ശാഖകൾ, വിപുലമായ വിശകലനം, മുൻഗണനാ പിന്തുണ.",
+        pay_failed: "പേയ്‌മെന്റ് സാധൂകരണം പരാജയപ്പെട്ടു. വീണ്ടും ശ്രമിക്കുക.", recommended: "ശുപാർശ ചെയ്യുന്നത്"
     },
     or: {
-        lang: "ଓଡ଼ିଆ", onboarding: "ସଂସ୍ଥା ଅନବୋର୍ଡିଂ", free_plan: "ମାଗଣା ସମର୍ଥନ", impact_plan: "ପ୍ରଭାବ ଯୋଜନା",
+        lang: "ଓଡ଼ିଆ", onboarding: "ସଂସ୍ଥା ଅନବୋର୍ଡିଂ", free_plan: "ମାଗଣା ଯୋଜନା", support_plan: "ସମର୍ଥନ ଯୋଜନା", pro_plan: "ପେସାଦାର ଯୋଜନା",
         org_name: "ସଂସ୍ଥାର ନାମ", email: "ଇମେଲ୍", contact: "ସମ୍ପର୍କ ନମ୍ବର", password: "ସୁରକ୍ଷିତ ପାସୱାର୍ଡ",
         proceed: "ପେମେଣ୍ଟକୁ ଆଗକୁ ବଢନ୍ତୁ", complete_reg: "ପଞ୍ଜିକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ", select_plan: "ଆପଣଙ୍କର ଯୋଜନା ବାଛନ୍ତୁ",
         fill_details: "ସଂସ୍ଥାର ବିବରଣୀ", success: "ପଞ୍ଜିକରଣ ସଫଳ", processing: "ପେମେଣ୍ଟ ପ୍ରକ୍ରିୟାକରଣ ହେଉଛି...",
-        back: "ପଛକୁ ଯାଆନ୍ତୁ", login_now: "ଡ୍ୟାସବୋର୍ଡକୁ ଯାଆନ୍ତୁ", price_free: "₹0 / ମାସ", price_impact: "₹999 / ବର୍ଷ",
-        desc_free: "ନାଗରିକ ରିପୋର୍ଟ ଏବଂ ଯାଞ୍ଚ ଉପକରଣଗୁଡ଼ିକ ପାଇଁ ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", desc_impact: "ଉନ୍ନତ ଫିଲ୍ଟରିଂ, ବଲ୍କ୍ କାର୍ଯ୍ୟ ଏବଂ ପ୍ରିମିୟମ୍ ସମର୍ଥନ।",
-        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।"
+        back: "ପଛକୁ ଯାଆନ୍ତୁ", login_now: "ଡ୍ୟାସବୋର୍ଡକୁ ଯାଆନ୍ତୁ", 
+        price_free: "₹0 / ମାସ", price_support: "₹29 / ମାସ", price_pro: "₹99 / ମାସ",
+        desc_free: "ନାଗରିକ ରିପୋର୍ଟ ଏବଂ ଯାଞ୍ଚ ଉପକରଣଗୁଡ଼ିକ ପାଇଁ ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", 
+        desc_support: "ଯାଞ୍ଚ ହୋଇଥିବା ପ୍ରୋଫାଇଲ୍, କେସ୍ ପରିଚାଳନା ଏବଂ ଟିମ୍ ଉପକରଣ।", 
+        desc_pro: "ଏକାଧିକ ଶାଖା, ଉନ୍ନତ ବିଶ୍ଳେଷଣ ଏବଂ ପ୍ରାଥମିକତା ସମର୍ଥନ।",
+        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି। ଦୟାକରି ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ।", recommended: "ସୁପାରିଶ କରାଯାଇଛି"
     },
     as: {
-        lang: "অসমীয়া", onboarding: "সংস্থা অনবৰ্ডিং", free_plan: "বিনামূলীয়া সহায়", impact_plan: "প্ৰভাৱ পৰিকল্পনা",
+        lang: "অসমীয়া", onboarding: "সংস্থা অনবৰ্ডিং", free_plan: "বিনামূলীয়া পৰিকল্পনা", support_plan: "সহায় পৰিকল্পনা", pro_plan: "পেছাদাৰী পৰিকল্পনা",
         org_name: "সংস্থাৰ নাম", email: "ইমেইল", contact: "যোগাযোগ নম্বৰ", password: "সুৰক্ষিত পাছৱৰ্ড",
         proceed: "চেকআউটলৈ আগবাঢ়ক", complete_reg: "পঞ্জীয়ন সম্পূৰ্ণ কৰক", select_plan: "আপোনাৰ পৰিকল্পনা নিৰ্বাচন কৰক",
         fill_details: "সংস্থাৰ বিৱৰণ", success: "পঞ্জীয়ন সফল", processing: "পেমেন্ট প্ৰক্ৰিয়া চলি আছে...",
-        back: "উভতি যাওক", login_now: "ডেচবৰ্ডলৈ যাওক", price_free: "₹0 / মাহ", price_impact: "₹999 / বছৰ",
-        desc_free: "নাগৰিক প্ৰতিবেদন আৰু সত্যাগ্ৰহ সঁজুলিলৈ প্ৰাথমিক প্ৰৱেশাধিকাৰ।", desc_impact: "উন্নত ফিল্টাৰিং, বাল্ক কাৰ্য্য, আৰু প্ৰিমিয়াম সমৰ্থন।",
-        pay_failed: "পেমেন্ট বৈধতা বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।"
+        back: "উভতি যাওক", login_now: "ডেচবৰ্ডলৈ যাওক", 
+        price_free: "₹0 / মাহ", price_support: "₹29 / মাহ", price_pro: "₹99 / মাহ",
+        desc_free: "নাগৰিক প্ৰতিবেদন আৰু সত্যাগ্ৰহ সঁজুলিলৈ প্ৰাথমিক প্ৰৱেশাধিকাৰ।", 
+        desc_support: "প্ৰমাণিত প্ৰফাইল, কেছ পৰিচালনা, আৰু দলীয় সঁজুলি।", 
+        desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ, আৰু অগ্ৰাধিকাৰ সমৰ্থন।",
+        pay_failed: "পেমেন্ট বৈধতা বিফল হৈছে। অনুগ্ৰহ কৰি পুনৰ চেষ্টা কৰক।", recommended: "পৰামৰ্শ দিয়া হৈছে"
     }
 };
 
@@ -146,8 +188,8 @@ export default function SevaSetuOnboarding() {
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
-    const [step, setStep] = useState(1); // 1: Plan, 2: Details, 3: Success
-    const [selectedPlan, setSelectedPlan] = useState('Free Support');
+    const [step, setStep] = useState(1); 
+    const [selectedPlan, setSelectedPlan] = useState('Support Plan');
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -160,6 +202,22 @@ export default function SevaSetuOnboarding() {
 
     const currentT = TRANSLATIONS[lang] || TRANSLATIONS['en'];
     const languageOptions = Object.keys(TRANSLATIONS).map(key => ({ code: key, label: TRANSLATIONS[key].lang }));
+
+    // Sliding Animation Sequence logic
+    const [animIndex, setAnimIndex] = useState(0);
+    const ICONS = [
+        <IndianRupee size={80} className="text-[#111111]" key="rupee" />,
+        <ShieldCheck size={80} className="text-[#16A34A]" key="shield" />,
+        <Building size={80} className="text-[#2563EB]" key="building" />,
+        <FileCheck size={80} className="text-[#111111]" key="file" />
+    ];
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setAnimIndex(prev => (prev + 1) % ICONS.length);
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [ICONS.length]);
 
     // Load PayU Bolt Script
     useEffect(() => {
@@ -180,7 +238,10 @@ export default function SevaSetuOnboarding() {
         setIsProcessing(true);
         setErrorMessage('');
 
-        const amount = selectedPlan === 'Impact Plan' ? '999.00' : '0.00';
+        let amount = '0.00';
+        if (selectedPlan === 'Support Plan') amount = '29.00';
+        if (selectedPlan === 'Professional Plan') amount = '99.00';
+
         const isTestMode = formData.email === 'testcodecfg@gmail.com';
         const txnid = "SEVA" + new Date().getTime();
 
@@ -196,7 +257,7 @@ export default function SevaSetuOnboarding() {
                 body: JSON.stringify({
                     txnid: txnid,
                     amount: amount,
-                    productinfo: 'Impact Plan Subscription',
+                    productinfo: `${selectedPlan} Subscription`,
                     firstname: formData.org_name.substring(0, 10),
                     email: formData.email,
                     lang: lang
@@ -221,14 +282,14 @@ export default function SevaSetuOnboarding() {
                 firstname: formData.org_name.substring(0, 10),
                 email: formData.email,
                 phone: formData.contact,
-                productinfo: 'Impact Plan Subscription',
+                productinfo: `${selectedPlan} Subscription`,
                 surl: window.location.origin, 
                 furl: window.location.origin,
                 mode: 'dropout'
             }, {
                 responseHandler: async function(BOLT) {
                     if (BOLT.response.txnStatus === "SUCCESS" || BOLT.response.status === "success") {
-                        await createPocketBaseUser(BOLT.response.txnid || txnid, 'Impact');
+                        await createPocketBaseUser(BOLT.response.txnid || txnid, 'Active');
                     } else {
                         setErrorMessage(currentT.pay_failed);
                         setIsProcessing(false);
@@ -280,25 +341,28 @@ export default function SevaSetuOnboarding() {
             </div>
 
             {/* Main Wrapper */}
-            <div className="w-full max-w-5xl flex flex-col md:flex-row bg-[#FFFFFF] rounded-2xl shadow-2xl overflow-hidden z-10 relative">
+            <div className="w-full max-w-6xl flex flex-col md:flex-row bg-[#FFFFFF] rounded-2xl shadow-2xl overflow-hidden z-10 relative">
                 
                 {/* Left Side: Graphic & Branding */}
                 <div className="w-full md:w-1/3 bg-[#F9FAFB] border-r border-[#E5E7EB] p-8 flex flex-col items-center justify-center relative">
                     <div className="flex items-center gap-0.3 mb-12">
-                        <img src="/logo.png" alt="Movyra" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
+                        <img src="/logo-7.png" alt="Movyra" className="h-10 w-auto" onError={(e) => { e.target.style.display = 'none' }} />
                         <span className="font-black text-[1.8rem] tracking-tighter text-[#111111]">ovyra <span className="text-[#2563EB]">SevaSetu</span></span>
                     </div>
 
-                    <div className="relative w-48 h-48 flex items-center justify-center mb-8">
-                        <motion.div animate={{ opacity: [0, 1, 1, 0], y: [10, 0, 0, -10] }} transition={{ duration: 6, repeat: Infinity, times: [0, 0.1, 0.8, 1], delay: 0 }} className="absolute">
-                            <CheckSquare size={80} className="text-[#2563EB]" />
-                        </motion.div>
-                        <motion.div animate={{ opacity: [0, 1, 1, 0], y: [10, 0, 0, -10] }} transition={{ duration: 6, repeat: Infinity, times: [0, 0.1, 0.8, 1], delay: 2 }} className="absolute">
-                            <ShieldCheck size={80} className="text-[#16A34A]" />
-                        </motion.div>
-                        <motion.div animate={{ opacity: [0, 1, 1, 0], y: [10, 0, 0, -10] }} transition={{ duration: 6, repeat: Infinity, times: [0, 0.1, 0.8, 1], delay: 4 }} className="absolute">
-                            <IndianRupee size={80} className="text-[#111111]" />
-                        </motion.div>
+                    <div className="relative w-48 h-48 flex items-center justify-center mb-8 overflow-hidden">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={animIndex}
+                                initial={{ opacity: 0, x: 50 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -50 }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
+                                className="absolute flex items-center justify-center"
+                            >
+                                {ICONS[animIndex]}
+                            </motion.div>
+                        </AnimatePresence>
                     </div>
 
                     <h2 className="text-xl font-black text-[#111111] text-center mb-2">{currentT.onboarding}</h2>
@@ -310,21 +374,31 @@ export default function SevaSetuOnboarding() {
                     
                     {step === 1 && (
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-full justify-center">
-                            <h3 className="text-2xl font-black text-[#111111] mb-6">{currentT.select_plan}</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <h3 className="text-2xl font-black text-[#111111] mb-6 text-center md:text-left">{currentT.select_plan}</h3>
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                
                                 {/* Free Plan */}
-                                <div onClick={() => handlePlanSelect('Free Support')} className="border-2 border-[#E5E7EB] rounded-xl p-6 cursor-pointer hover:border-[#2563EB] transition-colors bg-[#F9FAFB] hover:bg-[#EFF6FF]">
-                                    <h4 className="text-xl font-black text-[#111111] mb-2">{currentT.free_plan}</h4>
-                                    <p className="text-2xl font-black text-[#2563EB] mb-4">{currentT.price_free}</p>
-                                    <p className="text-[#4B5563] text-sm font-medium leading-relaxed">{currentT.desc_free}</p>
+                                <div onClick={() => handlePlanSelect('Free Plan')} className="border-2 border-[#E5E7EB] rounded-xl p-6 cursor-pointer hover:border-[#6B7280] transition-colors bg-[#F9FAFB]">
+                                    <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.free_plan}</h4>
+                                    <p className="text-xl font-black text-[#6B7280] mb-4">{currentT.price_free}</p>
+                                    <p className="text-[#4B5563] text-xs font-medium leading-relaxed">{currentT.desc_free}</p>
                                 </div>
-                                {/* Impact Plan */}
-                                <div onClick={() => handlePlanSelect('Impact Plan')} className="border-2 border-[#2563EB] rounded-xl p-6 cursor-pointer bg-[#FFFFFF] shadow-sm relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 bg-[#2563EB] text-[#FFFFFF] text-[0.6rem] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">Recommended</div>
-                                    <h4 className="text-xl font-black text-[#111111] mb-2">{currentT.impact_plan}</h4>
-                                    <p className="text-2xl font-black text-[#2563EB] mb-4">{currentT.price_impact}</p>
-                                    <p className="text-[#4B5563] text-sm font-medium leading-relaxed">{currentT.desc_impact}</p>
+                                
+                                {/* Support Plan (Recommended) */}
+                                <div onClick={() => handlePlanSelect('Support Plan')} className="border-2 border-[#2563EB] rounded-xl p-6 cursor-pointer bg-[#EFF6FF] shadow-sm relative overflow-hidden transform transition hover:-translate-y-1">
+                                    <div className="absolute top-0 right-0 bg-[#2563EB] text-[#FFFFFF] text-[0.6rem] font-bold px-2 py-1 rounded-bl-lg uppercase tracking-wider">{currentT.recommended}</div>
+                                    <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.support_plan}</h4>
+                                    <p className="text-xl font-black text-[#2563EB] mb-4">{currentT.price_support}</p>
+                                    <p className="text-[#4B5563] text-xs font-medium leading-relaxed">{currentT.desc_support}</p>
                                 </div>
+
+                                {/* Professional Plan */}
+                                <div onClick={() => handlePlanSelect('Professional Plan')} className="border-2 border-[#E5E7EB] rounded-xl p-6 cursor-pointer hover:border-[#111111] transition-colors bg-[#FFFFFF]">
+                                    <h4 className="text-lg font-black text-[#111111] mb-2">{currentT.pro_plan}</h4>
+                                    <p className="text-xl font-black text-[#111111] mb-4">{currentT.price_pro}</p>
+                                    <p className="text-[#4B5563] text-xs font-medium leading-relaxed">{currentT.desc_pro}</p>
+                                </div>
+
                             </div>
                         </motion.div>
                     )}
@@ -359,7 +433,7 @@ export default function SevaSetuOnboarding() {
                                 <div className="flex gap-4 mt-4">
                                     <button type="button" onClick={() => setStep(1)} disabled={isProcessing} className="px-6 py-4 bg-[#F3F4F6] text-[#111111] rounded-xl font-bold hover:bg-[#E5E7EB] outline-none disabled:opacity-50">{currentT.back}</button>
                                     <button type="submit" disabled={isProcessing} className="flex-1 py-4 bg-[#2563EB] text-[#FFFFFF] rounded-xl font-black hover:bg-[#1D4ED8] outline-none transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                                        {isProcessing ? currentT.processing : (selectedPlan === 'Free Support' ? currentT.complete_reg : currentT.proceed)}
+                                        {isProcessing ? currentT.processing : (selectedPlan === 'Free Plan' ? currentT.complete_reg : currentT.proceed)}
                                     </button>
                                 </div>
                             </form>
@@ -367,7 +441,7 @@ export default function SevaSetuOnboarding() {
                     )}
 
                     {step === 3 && (
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full text-center">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center h-full text-center py-12">
                             <div className="w-24 h-24 bg-[#ECFDF5] rounded-full flex items-center justify-center mb-6">
                                 <ShieldCheck size={48} className="text-[#16A34A]" />
                             </div>
