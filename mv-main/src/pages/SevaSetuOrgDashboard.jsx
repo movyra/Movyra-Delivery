@@ -1,15 +1,15 @@
 /**
  * SYSTEM DOCUMENTATION / NGO MASTER ORGANIZATION DASHBOARD
  * Context: Secure multi-platform portal for verified NGOs and Super Admins.
- * Database: Dual-Backend (PocketBase for Civic/Sahay/Admin, Firestore for NagrikSetu public reports).
+ * Database: Dual-Backend (PocketBase for Civic/Sahay/Admin, Firestore strictly for NagrikSetu public reports).
  * Features: Dark Mode, Staggered Slide Animations, URL Query Parsing, Super Admin Gatekeeping, Real-time Sync, CSV Export.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Search, X, Globe, Image as ImageIcon, Filter, CheckCircle, IndianRupee, ShieldCheck, MapPin, Moon, Sun, Download, LayoutDashboard, LifeBuoy, Lock, Megaphone } from 'lucide-react';
-// STRICT FIX: Imported the new dual-backend fetchers and updaters
-import { pocketbaseClient, fetchCivicReports, fetchSahayCases, fetchSevaSetuAdminRequests, fetchFirestoreNagrikReports, fetchNagrikReportsPB, subscribeToCollection, subscribeToFirestoreNagrikReports, updateCrossPlatformStatus } from '../services/pocketbase';
+// STRICT FIX: Removed fetchNagrikReportsPB to prevent 404 errors. Nagrik reports are now fetched exclusively from Firestore.
+import { pocketbaseClient, fetchCivicReports, fetchSahayCases, fetchSevaSetuAdminRequests, fetchFirestoreNagrikReports, subscribeToCollection, subscribeToFirestoreNagrikReports, updateCrossPlatformStatus } from '../services/pocketbase';
 import { useLocation } from 'react-router-dom';
 
 const TRANSLATIONS = {
@@ -57,7 +57,7 @@ const TRANSLATIONS = {
         status: "સ્થિતિ", action: "ક્રિયા", pending: "બાકી", verified: "ચકાસાયેલ", in_progress: "પ્રગતિમાં છે", resolved: "ઉકેલાઈ ગયું", rejected: "નકારવામાં આવેલ",
         update: "અપડેટ", logout: "લોગઆઉટ", loading: "પ્રક્રિયા...", search: "રેકોર્ડ શોધો",
         total: "કુલ રેકોર્ડ", active_plan: "સક્રિય પ્લાન", txn_id: "વ્યવહાર", plan_desc: "તમારી સંસ્થા નેટવર્ક પર ચકાસાયેલ છે.",
-        tab_civic: "નાગરિક અહેવાલો", tab_sahay: "બચાવ કામગીરી", tab_nagrik: "જાહેર અહેવાલો", tab_admin: "સુપર એડમિન", dark_mode: "ડાર્ક મોડ", light_mode: "લાઇટ મોડ",
+        tab_civic: "નાગરિક અહેવાલો", tab_sahay: "બચાવ કામગીરી", tab_nagrik: "જાહેર અહેવાલો", tab_admin: "સુपर એડમિન", dark_mode: "ડાર્ક મોડ", light_mode: "લાઇટ મોડ",
         export: "ડાઉનલોડ", sync: "લાઇવ સિંક ચાલુ", no_data: "કોઈ રેકોર્ડ મળ્યો નથી."
     },
     te: {
@@ -66,7 +66,7 @@ const TRANSLATIONS = {
         status: "స్థితి", action: "చర్య", pending: "పెండింగ్", verified: "ధృవీకరించబడింది", in_progress: "పురోగతిలో ఉంది", resolved: "పరిష్కరించబడింది", rejected: "తిరస్కరించబడింది",
         update: "నవీకరించండి", logout: "లాగౌట్", loading: "ప్రాసెస్...", search: "రికార్డులను శోధించండి",
         total: "మొత్తం రికార్డులు", active_plan: "క్రియాశీల ప్లాన్", txn_id: "లావాదేవీ", plan_desc: "మీ సంస్థ నెట్‌వర్క్‌లో ధృవీకరించబడింది.",
-        tab_civic: "పౌర నివేదికలు", tab_sahay: "రెస్క్యూ ఆపరేషన్స్", tab_nagrik: "ప్రజా నివేదికలు", tab_admin: "సూపర్ అడ్మిన్", dark_mode: "డార్క్ మోడ్", light_mode: "లైట్ మోడ్",
+        tab_civic: "పౌర నివేదికలు", tab_sahay: "రెస్క్యూ ఆపరేషన్స్", tab_nagrik: "ప్రజా నివేదికలు", tab_admin: "సూపర్ అడ్మిన్", dark_mode: "డార్క్ మోડ", light_mode: "లైట్ మోડ",
         export: "డౌన్‌లోడ్ చేయండి", sync: "లైవ్ సింక్ ఆన్‌లో ఉంది", no_data: "ఎలాంటి డేటా లేదు."
     },
     ta: {
@@ -163,7 +163,7 @@ export default function SevaSetuOrgDashboard() {
     // Multi-Platform Data State
     const [civicData, setCivicData] = useState([]);
     const [sahayData, setSahayData] = useState([]);
-    const [nagrikData, setNagrikData] = useState([]); // NEW: State for public reports
+    const [nagrikData, setNagrikData] = useState([]); // State for public reports
     const [adminData, setAdminData] = useState([]);
     
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -213,18 +213,17 @@ export default function SevaSetuOrgDashboard() {
         }
     }, [location.search]);
 
-    // Dual-Backend Real-time Subscriptions
+    // STRICT FIX: Removed PocketBase nagrik listener. Now exclusively relies on Firestore for public reports.
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        let unsubCivic, unsubSahay, unsubNagrikPB, unsubAdmin, unsubFirestore;
+        let unsubCivic, unsubSahay, unsubAdmin, unsubFirestore;
 
         const setupSubscriptions = async () => {
             unsubCivic = subscribeToCollection('civic_reports', () => { fetchAllPlatformData(false); });
             unsubSahay = subscribeToCollection('volunteer_verifications', () => { fetchAllPlatformData(false); });
-            unsubNagrikPB = subscribeToCollection('nagrik_reports', () => { fetchAllPlatformData(false); }); // PB listener
             
-            // NEW: Firestore Listener
+            // Firestore Listener for public reports
             unsubFirestore = subscribeToFirestoreNagrikReports(() => { fetchAllPlatformData(false); });
 
             if (isSuperAdmin) {
@@ -237,7 +236,6 @@ export default function SevaSetuOrgDashboard() {
         return () => {
             if (unsubCivic) unsubCivic();
             if (unsubSahay) unsubSahay();
-            if (unsubNagrikPB) unsubNagrikPB();
             if (unsubFirestore) unsubFirestore();
             if (unsubAdmin) unsubAdmin();
         };
@@ -275,22 +273,21 @@ export default function SevaSetuOrgDashboard() {
         setAdminData([]);
     };
 
-    // Master Fetcher for all platforms (Firestore + PocketBase)
+    // STRICT FIX: Removed fetchNagrikReportsPB(). Public reports are now fetched solely from Firestore.
     const fetchAllPlatformData = async (showLoader = true) => {
         if (showLoader) setIsLoadingData(true);
         try {
-            const [civicRes, sahayRes, pbNagrikRes, firestoreNagrikRes] = await Promise.all([
+            const [civicRes, sahayRes, firestoreNagrikRes] = await Promise.all([
                 fetchCivicReports(),
                 fetchSahayCases(),
-                fetchNagrikReportsPB(),
-                fetchFirestoreNagrikReports() // From Firebase
+                fetchFirestoreNagrikReports() // Exclusively from Firebase
             ]);
             
             setCivicData(civicRes);
             setSahayData(sahayRes);
             
-            // Merge Firestore and PocketBase public reports, sort by newest
-            const mergedNagrik = [...firestoreNagrikRes, ...pbNagrikRes].sort((a, b) => new Date(b.created) - new Date(a.created));
+            // Use exclusively Firestore public reports, sort by newest
+            const mergedNagrik = [...firestoreNagrikRes].sort((a, b) => new Date(b.created) - new Date(a.created));
             setNagrikData(mergedNagrik);
 
             if (pocketbaseClient.authStore.model?.email === 'testcodecfg@gmail.com') {
@@ -482,7 +479,7 @@ export default function SevaSetuOrgDashboard() {
                 
                 {/* Tab Navigation */}
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] dark:border-[#222222] pb-2 overflow-x-auto hide-scrollbar">
-                    {/* NEW: NagrikSetu Public Reports Tab */}
+                    {/* NagrikSetu Public Reports Tab */}
                     <button onClick={() => setActiveTab('nagrik')} className={`px-4 py-2 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 outline-none whitespace-nowrap transition-colors ${activeTab === 'nagrik' ? activeBlue : inactiveBlue}`}>
                         <Megaphone size={16}/> {currentT.tab_nagrik}
                     </button>
