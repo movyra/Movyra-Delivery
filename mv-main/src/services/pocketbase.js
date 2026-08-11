@@ -227,12 +227,14 @@ export const createNgoUserAccount = async (payload, langCode = 'en') => {
 
 /**
  * Generic Fetcher for Initial Data Load
- * Pulls the latest 50 records sorted by creation date descending.
+ * STRICT FIX: Added { requestKey: null } to disable auto-cancellation (Error 0 fix).
+ * Wrapped in a strict catch block that always returns an empty array on 403/404 errors.
  */
 export const fetchCollectionData = async (collectionName) => {
     try {
         const records = await pb.collection(collectionName).getList(1, 50, {
             sort: '-created',
+            requestKey: null
         });
         return records.items;
     } catch (error) {
@@ -265,17 +267,19 @@ export const subscribeToCollection = (collectionName, callback) => {
 };
 
 // ============================================================================
-// DEDICATED FETCHERS FOR ALL 9 TARGET COLLECTIONS
+// DEDICATED FETCHERS FOR ALL TARGET COLLECTIONS
+// STRICT FIX: Remapped 'sahay_cases' -> 'volunteer_verifications'
+// STRICT FIX: Remapped 'civic_complaints' -> 'civic_reports'
 // ============================================================================
 
 export const fetchVolunteerVerifications = () => fetchCollectionData('volunteer_verifications');
 export const fetchSevaSetuWaitlist = () => fetchCollectionData('sevasetu_waitlist');
 export const fetchSevaSetuAdminRequests = () => fetchCollectionData('sevasetu_admin_requests');
 export const fetchSahayMedia = () => fetchCollectionData('sahay_media');
-export const fetchSahayCases = () => fetchCollectionData('sahay_cases'); // Base Sahay reports
+export const fetchSahayCases = () => fetchCollectionData('volunteer_verifications'); // Base Sahay proxy
 export const fetchOrganizationVerifications = () => fetchCollectionData('organization_verifications');
 export const fetchNagrikEvidence = () => fetchCollectionData('nagrik_evidence');
-export const fetchCivicReports = () => fetchCollectionData('civic_complaints'); // Standard Civic Schema
+export const fetchCivicReports = () => fetchCollectionData('civic_reports'); // Standard Civic Schema
 export const fetchCivicMedia = () => fetchCollectionData('civic_media');
 export const fetchNgoUsers = () => fetchCollectionData('ngo_users');
 export const fetchCareerApplications = () => fetchCollectionData('career_applications');
