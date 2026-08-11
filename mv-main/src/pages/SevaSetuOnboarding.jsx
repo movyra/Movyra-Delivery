@@ -296,7 +296,12 @@ export default function SevaSetuOnboarding() {
                 setSelectedPlan(storedData.selectedPlan || 'Support Plan');
                 
                 if (payuStatus === 'success') {
-                    createPocketBaseUserFromRedirect(storedData, returnedTxnId || storedData.txnid).catch(err => {
+                    // Injecting strict DB mapped value via argument override
+                    let dbMappedPlan = 'Free';
+                    if (storedData.selectedPlan === 'Support Plan') dbMappedPlan = 'Support';
+                    if (storedData.selectedPlan === 'Professional Plan') dbMappedPlan = 'Impact';
+
+                    createPocketBaseUserFromRedirect({ ...storedData, selectedPlan: dbMappedPlan }, returnedTxnId || storedData.txnid).catch(err => {
                         console.error("Post-Payment PB Error:", err);
                         setReceiptData({ status: 'failure', txnid: returnedTxnId, error: err.message });
                     });
@@ -316,7 +321,7 @@ export default function SevaSetuOnboarding() {
                 passwordConfirm: data.password,
                 org_name: data.org_name,
                 contact: data.contact,
-                plan_type: data.selectedPlan || 'Free Plan',
+                plan_type: data.selectedPlan || 'Free', // DB Enum fallback
                 payu_txn_id: txnId || 'FREE_TXN',
                 status: 'Active'
             });
@@ -359,10 +364,15 @@ export default function SevaSetuOnboarding() {
 
         const txnid = "SEVA" + new Date().getTime();
 
-        // STRICT UPDATE: Capture database errors for Free Plan immediately
+        // STRICT FIX: Convert UI plan name to database schema enum BEFORE any transmission
+        let dbMappedPlan = 'Free';
+        if (selectedPlan === 'Support Plan') dbMappedPlan = 'Support';
+        if (selectedPlan === 'Professional Plan') dbMappedPlan = 'Impact';
+
+        // Capture database errors for Free Plan immediately
         if (amount === '0.00') {
             try {
-                await createPocketBaseUserFromRedirect({ ...formData, selectedPlan }, txnid);
+                await createPocketBaseUserFromRedirect({ ...formData, selectedPlan: dbMappedPlan }, txnid);
                 setStep(3); // Route to standard Free Success
             } catch (err) {
                 setErrorMessage(err.message);
