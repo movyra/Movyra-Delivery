@@ -1,7 +1,7 @@
 /**
  * SYSTEM DOCUMENTATION / NGO MASTER ORGANIZATION DASHBOARD
  * Context: Secure multi-platform portal for verified NGOs and Super Admins.
- * Database: PocketBase (Unified queries for civic_reports, sahay_cases, sevasetu_admin_requests).
+ * Database: PocketBase (Unified queries for civic_reports, volunteer_verifications, sevasetu_admin_requests).
  * Features: Dark Mode, Staggered Slide Animations, Super Admin Gatekeeping, Real-time Sync, CSV Export.
  */
 
@@ -203,14 +203,15 @@ export default function SevaSetuOrgDashboard() {
     }, []);
 
     // NEW: Real-time SSE Subscriptions
+    // STRICT UPDATE: Adjusted to target the exact database collections
     useEffect(() => {
         if (!isAuthenticated) return;
 
         let unsubCivic, unsubSahay, unsubAdmin;
 
         const setupSubscriptions = async () => {
-            unsubCivic = subscribeToCollection('civic_complaints', () => { fetchAllPlatformData(false); });
-            unsubSahay = subscribeToCollection('sahay_cases', () => { fetchAllPlatformData(false); });
+            unsubCivic = subscribeToCollection('civic_reports', () => { fetchAllPlatformData(false); });
+            unsubSahay = subscribeToCollection('volunteer_verifications', () => { fetchAllPlatformData(false); });
             if (isSuperAdmin) {
                 unsubAdmin = subscribeToCollection('sevasetu_admin_requests', () => { fetchAllPlatformData(false); });
             }
@@ -278,15 +279,16 @@ export default function SevaSetuOrgDashboard() {
         }
     };
 
+    // STRICT UPDATE: Adjusted to target the exact database collections for status mutations
     const updateStatus = async (collection, recordId, newStatus) => {
         try {
             await pocketbaseClient.collection(collection).update(recordId, { status: newStatus });
             // Optimistic update
-            if (collection === 'civic_complaints') setCivicData(civicData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
-            if (collection === 'sahay_cases') setSahayData(sahayData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
+            if (collection === 'civic_reports') setCivicData(civicData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
+            if (collection === 'volunteer_verifications') setSahayData(sahayData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
             if (collection === 'sevasetu_admin_requests') setAdminData(adminData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
         } catch (error) {
-            alert("Error updating status.");
+            alert("Error updating status. Ensure you have the required permissions.");
         }
     };
 
@@ -320,8 +322,9 @@ export default function SevaSetuOrgDashboard() {
     };
 
     // Active Data Selection based on Tab
+    // STRICT UPDATE: Adjusted to map the UI tabs to the exact correct collections
     const currentDataSet = activeTab === 'civic' ? civicData : activeTab === 'sahay' ? sahayData : adminData;
-    const currentCollectionName = activeTab === 'civic' ? 'civic_complaints' : activeTab === 'sahay' ? 'sahay_cases' : 'sevasetu_admin_requests';
+    const currentCollectionName = activeTab === 'civic' ? 'civic_reports' : activeTab === 'sahay' ? 'volunteer_verifications' : 'sevasetu_admin_requests';
 
     const filteredData = currentDataSet.filter(rec => {
         const rawString = `${rec.ack_number || ''} ${rec.title || ''} ${rec.location || ''} ${rec.needyName || ''} ${rec.request_type || ''}`.toLowerCase();
@@ -423,7 +426,7 @@ export default function SevaSetuOrgDashboard() {
                         <input type="text" placeholder={currentT.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`pl-9 pr-4 py-2 ${bgInput} border ${borderCol} rounded-lg ${textMain} font-medium outline-none focus:border-[#2563EB] w-48 sm:w-64 transition-colors`} />
                     </div>
                     
-                    {/* NEW: Export Button */}
+                    {/* Export Button */}
                     <button onClick={exportToCSV} className={`flex items-center gap-2 px-3 py-2 border ${borderCol} rounded-lg ${textMain} font-bold text-[0.85rem] ${bgInput} outline-none hover:border-[#2563EB] transition-colors`} title={currentT.export}>
                         <Download size={16} /> <span className="hidden sm:inline">{currentT.export}</span>
                     </button>
@@ -444,7 +447,7 @@ export default function SevaSetuOrgDashboard() {
 
             <main className="flex-1 p-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
                 
-                {/* NEW: Tab Navigation */}
+                {/* Tab Navigation */}
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] dark:border-[#222222] pb-2 overflow-x-auto hide-scrollbar">
                     <button onClick={() => setActiveTab('civic')} className={`px-4 py-2 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 outline-none whitespace-nowrap transition-colors ${activeTab === 'civic' ? activeBlue : inactiveBlue}`}>
                         <LayoutDashboard size={16}/> {currentT.tab_civic}
