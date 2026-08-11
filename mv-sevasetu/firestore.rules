@@ -14,7 +14,7 @@
  * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ, ଅତିଥି ରିପୋର୍ଟିଂ ଯାଞ୍ଚ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
  * Assamese: এছঅএছ অতিথি প্ৰৱেশ, অতিথি প্ৰতিবেদন বৈধকৰণ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
  * Urdu: ایس او ایس مہمان کی رسائی، مہمان رپورٹنگ کی توثیق اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
- * Bhojpuri: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
+ * भोजपुरी: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
  * 
  * Strict Color System Adherence (For Frontend Implementation Reference):
  * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
@@ -68,12 +68,28 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
     }
 
+    // STRICT FIX: Added explicit waitlist collection matching to resolve Missing Permissions Error
+    match /waitlist/{document} {
+      allow create: if true; // Unauthenticated public registration permitted
+      allow read, update, delete: if isAdmin(); // Administrative protection
+    }
+
     // ========================================================================
     // CORPORATE RECRUITMENT PORTAL
     // ========================================================================
     match /career_applications/{document} {
-      // Require authentication to submit an application
-      allow create: if isAuthenticated();
+      // Allow unauthenticated public users to submit applications
+      allow create: if true;
+      // Strictly restrict reading/processing to internal administrators only
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // TECHNICAL SUPPORT WIDGET
+    // ========================================================================
+    match /technical_issues/{document} {
+      // Allow unauthenticated public users to submit support tickets
+      allow create: if true;
       // Strictly restrict reading/processing to internal administrators only
       allow read, update, delete: if isAdmin();
     }

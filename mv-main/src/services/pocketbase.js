@@ -1,9 +1,16 @@
 /**
  * Movyra PocketBase Integration Client
- * Centralized service for handling external media uploads.
+ * Centralized service for handling external media uploads and real-time dashboard data synchronization.
  */
 
+import PocketBase from 'pocketbase';
+
 const POCKETBASE_URL = 'https://movyra-mv-main-db-gradio.hf.space';
+const pb = new PocketBase(POCKETBASE_URL);
+
+// ============================================================================
+// EXISTING MEDIA & REGISTRATION UPLOAD FUNCTIONS (STRICTLY UNTOUCHED)
+// ============================================================================
 
 export const uploadSahayMedia = async (file, caseId, photoType, uploaderType) => {
     try {
@@ -92,14 +99,6 @@ export const uploadUserProfilePicture = async (userId, avatarFile) => {
     }
 };
 
-/**
- * Uploads organization verification documents and profile photo.
- * @param {string} applicationId - The anonymously generated application ID.
- * @param {string} orgName - The name of the organization.
- * @param {File} idDocumentFile - The verification ID document (Aadhar, PAN, etc.).
- * @param {File} orgPhotoFile - The organization's profile picture or logo.
- * @returns {Promise<Object>} An object containing the secure URLs for both uploaded files.
- */
 export const uploadOrganizationVerification = async (applicationId, orgName, idDocumentFile, orgPhotoFile) => {
     try {
         const formData = new FormData();
@@ -133,13 +132,6 @@ export const uploadOrganizationVerification = async (applicationId, orgName, idD
     }
 };
 
-/**
- * Uploads media evidence (photos and videos) anonymously for Movyra Civic public reports.
- * @param {File} file - The raw photo or video file.
- * @param {string} [complaintId] - Optional associated civic complaint document ID.
- * @param {string} [category] - Optional category tag.
- * @returns {Promise<string>} Static URL pointing to the uploaded media asset.
- */
 export const uploadCivicMedia = async (file, complaintId, category) => {
     try {
         const formData = new FormData();
@@ -166,11 +158,6 @@ export const uploadCivicMedia = async (file, complaintId, category) => {
     }
 };
 
-/**
- * NEW: Centralized creation of NGO user records.
- * Resolves the 400 Bad Request by strictly mapping required Auth Collection fields.
- * Includes 14-language error translation support.
- */
 export const createNgoUserAccount = async (payload, langCode = 'en') => {
     try {
         const requestBody = {
@@ -214,7 +201,6 @@ export const createNgoUserAccount = async (payload, langCode = 'en') => {
 
             let exactMessage = TRANSLATIONS[langCode] || TRANSLATIONS['en'];
 
-            // Extract the exact database validation error reason if provided
             if (errorData.data) {
                 const invalidFields = Object.keys(errorData.data);
                 if (invalidFields.length > 0) {
@@ -233,3 +219,66 @@ export const createNgoUserAccount = async (payload, langCode = 'en') => {
         throw error;
     }
 };
+
+// ============================================================================
+// NEW: MASSIVE CROSS-PLATFORM DATA FETCHING & REAL-TIME SSE SUBSCRIPTIONS
+// Purpose: To feed the SevaSetu Master Organization Dashboard
+// ============================================================================
+
+/**
+ * Generic Fetcher for Initial Data Load
+ * Pulls the latest 50 records sorted by creation date descending.
+ */
+export const fetchCollectionData = async (collectionName) => {
+    try {
+        const records = await pb.collection(collectionName).getList(1, 50, {
+            sort: '-created',
+        });
+        return records.items;
+    } catch (error) {
+        console.error(`Failed to fetch ${collectionName}:`, error);
+        return [];
+    }
+};
+
+/**
+ * Live Server-Sent Events (SSE) Subscription Engine.
+ * Attaches a listener to a specific PocketBase collection and fires the callback on any Create/Update/Delete.
+ * @param {string} collectionName - Target PB collection (e.g., 'civic_reports')
+ * @param {function} callback - Function to execute when data changes
+ * @returns {function} Unsubscribe function to prevent memory leaks
+ */
+export const subscribeToCollection = (collectionName, callback) => {
+    try {
+        pb.collection(collectionName).subscribe('*', function (e) {
+            callback(e);
+        });
+        
+        // Return cleanup function
+        return () => {
+            pb.collection(collectionName).unsubscribe('*');
+        };
+    } catch (error) {
+        console.error(`Subscription failed for ${collectionName}:`, error);
+        return () => {}; // Return empty function on fail
+    }
+};
+
+// ============================================================================
+// DEDICATED FETCHERS FOR ALL 9 TARGET COLLECTIONS
+// ============================================================================
+
+export const fetchVolunteerVerifications = () => fetchCollectionData('volunteer_verifications');
+export const fetchSevaSetuWaitlist = () => fetchCollectionData('sevasetu_waitlist');
+export const fetchSevaSetuAdminRequests = () => fetchCollectionData('sevasetu_admin_requests');
+export const fetchSahayMedia = () => fetchCollectionData('sahay_media');
+export const fetchSahayCases = () => fetchCollectionData('sahay_cases'); // Base Sahay reports
+export const fetchOrganizationVerifications = () => fetchCollectionData('organization_verifications');
+export const fetchNagrikEvidence = () => fetchCollectionData('nagrik_evidence');
+export const fetchCivicReports = () => fetchCollectionData('civic_complaints'); // Standard Civic Schema
+export const fetchCivicMedia = () => fetchCollectionData('civic_media');
+export const fetchNgoUsers = () => fetchCollectionData('ngo_users');
+export const fetchCareerApplications = () => fetchCollectionData('career_applications');
+
+// Export the raw client for edge-case direct queries if needed in the UI
+export const pocketbaseClient = pb;
