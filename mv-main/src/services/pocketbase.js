@@ -1,9 +1,13 @@
 /**
- * Movyra PocketBase Integration Client
- * Centralized service for handling external media uploads and real-time dashboard data synchronization.
+ * Movyra Unified Database Integration Client (PocketBase + Firestore Bridge)
+ * Centralized service for handling external media uploads, real-time dashboard data synchronization,
+ * and cross-platform fetching across both PocketBase and Firebase.
  */
 
 import PocketBase from 'pocketbase';
+// NEW: Import Firestore bridge capabilities
+import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../mv-main/src/firebaseConfig'; // Ensure this path correctly points to your initialized Firebase app
 
 const POCKETBASE_URL = 'https://movyra-mv-main-db-gradio.hf.space';
 const pb = new PocketBase(POCKETBASE_URL);
@@ -221,14 +225,12 @@ export const createNgoUserAccount = async (payload, langCode = 'en') => {
 };
 
 // ============================================================================
-// NEW: MASSIVE CROSS-PLATFORM DATA FETCHING & REAL-TIME SSE SUBSCRIPTIONS
+// MASSIVE CROSS-PLATFORM DATA FETCHING & REAL-TIME SSE SUBSCRIPTIONS
 // Purpose: To feed the SevaSetu Master Organization Dashboard
 // ============================================================================
 
 /**
- * Generic Fetcher for Initial Data Load
- * STRICT FIX: Added { requestKey: null } to disable auto-cancellation (Error 0 fix).
- * Wrapped in a strict catch block that always returns an empty array on 403/404 errors.
+ * Generic Fetcher for Initial Data Load (PocketBase)
  */
 export const fetchCollectionData = async (collectionName) => {
     try {
@@ -238,38 +240,100 @@ export const fetchCollectionData = async (collectionName) => {
         });
         return records.items;
     } catch (error) {
-        console.error(`Failed to fetch ${collectionName}:`, error);
+        console.error(`Failed to fetch PB ${collectionName}:`, error);
         return [];
     }
 };
 
 /**
- * Live Server-Sent Events (SSE) Subscription Engine.
- * Attaches a listener to a specific PocketBase collection and fires the callback on any Create/Update/Delete.
- * @param {string} collectionName - Target PB collection (e.g., 'civic_reports')
- * @param {function} callback - Function to execute when data changes
- * @returns {function} Unsubscribe function to prevent memory leaks
+ * Live Server-Sent Events (SSE) Subscription Engine (PocketBase).
  */
 export const subscribeToCollection = (collectionName, callback) => {
     try {
         pb.collection(collectionName).subscribe('*', function (e) {
             callback(e);
         });
-        
-        // Return cleanup function
         return () => {
             pb.collection(collectionName).unsubscribe('*');
         };
     } catch (error) {
-        console.error(`Subscription failed for ${collectionName}:`, error);
-        return () => {}; // Return empty function on fail
+        console.error(`PB Subscription failed for ${collectionName}:`, error);
+        return () => {};
     }
 };
 
 // ============================================================================
+// NEW: DUAL-BACKEND FETCHERS FOR NAGRIKSETU PUBLIC REPORTS
+// Integrates both PocketBase and Firestore dynamically
+// ============================================================================
+
+/**
+ * Fetches public reports directly from Firebase Firestore's nagrik_reports collection.
+ */
+export const fetchFirestoreNagrikReports = async () => {
+    try {
+        const q = query(collection(db, 'nagrik_reports'), orderBy('timestamp', 'desc'), limit(50));
+        const querySnapshot = await getDocs(q);
+        const reports = [];
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            reports.push({
+                id: doc.id,
+                source: 'firestore', // Identify source for status mutations later
+                ack_number: doc.id.substring(0, 8),
+                title: data.category ? `${data.category} Report` : 'Public Submission',
+                category: data.category || 'General',
+                location: data.location?.address || 'Location Hidden',
+                status: data.status || 'Pending',
+                created: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString(),
+                mediaUrl: data.mediaUrl || null,
+                raw_data: data
+            });
+        });
+        return reports;
+    } catch (error) {
+        console.error("Failed to fetch Firestore nagrik_reports:", error);
+        return [];
+    }
+};
+
+/**
+ * Real-time listener for Firestore nagrik_reports.
+ */
+export const subscribeToFirestoreNagrikReports = (callback) => {
+    try {
+        const q = query(collection(db, 'nagrik_reports'), orderBy('timestamp', 'desc'), limit(50));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+             // We fire the callback to trigger a UI refetch, mirroring the PocketBase SSE pattern
+             callback({ action: 'firestore_update' });
+        });
+        return unsubscribe;
+    } catch (error) {
+        console.error("Firestore Subscription failed:", error);
+        return () => {};
+    }
+};
+
+/**
+ * Updates a record status dynamically targeting either PocketBase or Firestore based on origin.
+ */
+export const updateCrossPlatformStatus = async (collectionName, recordId, newStatus, source = 'pocketbase') => {
+    try {
+        if (source === 'firestore') {
+             const reportRef = doc(db, 'nagrik_reports', recordId);
+             await updateDoc(reportRef, { status: newStatus });
+        } else {
+             await pb.collection(collectionName).update(recordId, { status: newStatus });
+        }
+        return true;
+    } catch (error) {
+        console.error(`Failed to update status in ${source}:`, error);
+        throw error;
+    }
+}
+
+// ============================================================================
 // DEDICATED FETCHERS FOR ALL TARGET COLLECTIONS
-// STRICT FIX: Remapped 'sahay_cases' -> 'volunteer_verifications'
-// STRICT FIX: Remapped 'civic_complaints' -> 'civic_reports'
 // ============================================================================
 
 export const fetchVolunteerVerifications = () => fetchCollectionData('volunteer_verifications');
@@ -278,8 +342,12 @@ export const fetchSevaSetuAdminRequests = () => fetchCollectionData('sevasetu_ad
 export const fetchSahayMedia = () => fetchCollectionData('sahay_media');
 export const fetchSahayCases = () => fetchCollectionData('volunteer_verifications'); // Base Sahay proxy
 export const fetchOrganizationVerifications = () => fetchCollectionData('organization_verifications');
+
+// STRICT FIX: Added PocketBase fetchers for the newly identified collections
 export const fetchNagrikEvidence = () => fetchCollectionData('nagrik_evidence');
-export const fetchCivicReports = () => fetchCollectionData('civic_reports'); // Standard Civic Schema
+export const fetchNagrikReportsPB = () => fetchCollectionData('nagrik_reports');
+
+export const fetchCivicReports = () => fetchCollectionData('civic_reports'); 
 export const fetchCivicMedia = () => fetchCollectionData('civic_media');
 export const fetchNgoUsers = () => fetchCollectionData('ngo_users');
 export const fetchCareerApplications = () => fetchCollectionData('career_applications');
