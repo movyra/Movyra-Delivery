@@ -6,7 +6,7 @@
  * Features: Super Admin Testing Override & Dedicated Transaction Receipt UI.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, X, Building, Mail, Phone, Lock, ArrowRight, ShieldCheck, AlertCircle, RefreshCw, Home, ArrowLeft } from 'lucide-react';
 import PocketBase from 'pocketbase';
@@ -17,200 +17,200 @@ const pb = new PocketBase(PB_URL);
 
 const TRANSLATIONS = {
     en: {
-        lang: "English", onboarding: "Organization Onboarding", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Professional Plan",
-        org_name: "Organization Name", email: "Email Address", contact: "Contact Number", password: "Secure Password",
-        proceed: "Proceed to Checkout", complete_reg: "Complete Registration", select_plan: "Select Your Plan",
-        fill_details: "Organization Details", success: "Registration Successful", processing: "Processing Payment...",
-        back: "Go Back", login_now: "Proceed to Dashboard", 
+        lang: "English", onboarding: "Organization Registration", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Pro Plan",
+        org_name: "Organization Name", email: "Email", contact: "Phone Number", password: "Password",
+        proceed: "Pay Now", complete_reg: "Complete Registration", select_plan: "Choose Plan",
+        fill_details: "Fill Details", success: "Success", processing: "Please Wait...",
+        back: "Back", login_now: "Go to Dashboard", 
         price_free: "₹0 / month", price_support: "₹29 / month", price_pro: "₹99 / month",
-        desc_free: "Basic access to civic reports and verification tools.", 
-        desc_support: "Verified profile, case management, and team tools.", 
-        desc_pro: "Multiple branches, advanced analytics, and priority support.",
-        pay_failed: "Payment validation failed.", recommended: "Recommended",
-        txn_status: "Transaction Status", txn_success: "Payment Successful", txn_fail: "Payment Failed",
-        txn_id: "Transaction Reference", retry: "Retry Payment", go_home: "Go to Homepage"
+        desc_free: "Basic access.", 
+        desc_support: "Verified profile and tools.", 
+        desc_pro: "All tools and priority support.",
+        pay_failed: "Payment failed.", recommended: "Recommended",
+        txn_status: "Payment Status", txn_success: "Payment Success", txn_fail: "Payment Failed",
+        txn_id: "Transaction ID", retry: "Retry", go_home: "Home"
     },
     hi: {
-        lang: "हिन्दी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
-        org_name: "संगठन का नाम", email: "ईमेल पता", contact: "संपर्क नंबर", password: "सुरक्षित पासवर्ड",
-        proceed: "चेकआउट के लिए आगे बढ़ें", complete_reg: "पंजीकरण पूरा करें", select_plan: "अपनी योजना चुनें",
-        fill_details: "संगठन विवरण", success: "पंजीकरण सफल", processing: "भुगतान संसाधित हो रहा है...",
+        lang: "हिन्दी", onboarding: "संगठन पंजीकरण", free_plan: "मुफ्त प्लान", support_plan: "सहायता प्लान", pro_plan: "प्रो प्लान",
+        org_name: "संगठन का नाम", email: "ईमेल", contact: "फोन नंबर", password: "पासवर्ड",
+        proceed: "भुगतान करें", complete_reg: "पंजीकरण पूरा करें", select_plan: "प्लान चुनें",
+        fill_details: "विवरण भरें", success: "सफल", processing: "कृपया प्रतीक्षा करें...",
         back: "वापस जाएं", login_now: "डैशबोर्ड पर जाएं", 
         price_free: "₹0 / माह", price_support: "₹29 / माह", price_pro: "₹99 / माह",
-        desc_free: "नागरिक रिपोर्ट और सत्यापन उपकरणों तक बुनियादी पहुंच।", 
-        desc_support: "सत्यापित प्रोफ़ाइल, केस प्रबंधन और टीम टूल।", 
-        desc_pro: "कई शाखाएं, उन्नत एनालिटिक्स और प्राथमिकता समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल रहा।", recommended: "अनुशंसित",
-        txn_status: "लेनदेन की स्थिति", txn_success: "भुगतान सफल रहा", txn_fail: "भुगतान विफल रहा",
-        txn_id: "लेनदेन संदर्भ", retry: "पुनः प्रयास करें", go_home: "होमपेज पर जाएं"
+        desc_free: "बुनियादी पहुंच।", 
+        desc_support: "सत्यापित प्रोफाइल और उपकरण।", 
+        desc_pro: "सभी उपकरण और प्राथमिकता समर्थन।",
+        pay_failed: "भुगतान विफल।", recommended: "अनुशंसित",
+        txn_status: "भुगतान की स्थिति", txn_success: "भुगतान सफल", txn_fail: "भुगतान विफल",
+        txn_id: "लेनदेन आईडी", retry: "पुनः प्रयास करें", go_home: "होम"
     },
     hinglish: {
-        lang: "Hinglish", onboarding: "Organization Onboarding", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Professional Plan",
-        org_name: "Organization Name", email: "Email Address", contact: "Contact Number", password: "Secure Password",
-        proceed: "Checkout Karein", complete_reg: "Registration Poora Karein", select_plan: "Plan Select Karein",
-        fill_details: "Organization Details", success: "Registration Successful", processing: "Payment Process Ho Raha Hai...",
-        back: "Peechhe Jayein", login_now: "Dashboard Par Jayein", 
+        lang: "Hinglish", onboarding: "Organization Registration", free_plan: "Free Plan", support_plan: "Support Plan", pro_plan: "Pro Plan",
+        org_name: "Organization Name", email: "Email", contact: "Phone Number", password: "Password",
+        proceed: "Pay Karein", complete_reg: "Registration Poora Karein", select_plan: "Plan Chunein",
+        fill_details: "Details Bharein", success: "Success", processing: "Wait Karein...",
+        back: "Peechhe", login_now: "Dashboard Par Jayein", 
         price_free: "₹0 / month", price_support: "₹29 / month", price_pro: "₹99 / month",
-        desc_free: "Civic reports aur verification tools ka basic access.", 
-        desc_support: "Verified profile, case management, aur team tools.", 
-        desc_pro: "Multiple branches, advanced analytics, aur priority support.",
-        pay_failed: "Payment validation fail ho gaya.", recommended: "Recommended",
-        txn_status: "Transaction Status", txn_success: "Payment Successful", txn_fail: "Payment Fail Ho Gaya",
-        txn_id: "Transaction ID", retry: "Phirse Try Karein", go_home: "Homepage Par Jayein"
+        desc_free: "Basic access.", 
+        desc_support: "Verified profile aur tools.", 
+        desc_pro: "Sabhi tools aur priority support.",
+        pay_failed: "Payment fail ho gaya.", recommended: "Recommended",
+        txn_status: "Payment Status", txn_success: "Payment Success", txn_fail: "Payment Failed",
+        txn_id: "Transaction ID", retry: "Retry Karein", go_home: "Home"
     },
     mr: {
-        lang: "मराठी", onboarding: "संस्था ऑनबोर्डिंग", free_plan: "मोफत योजना", support_plan: "आधार योजना", pro_plan: "व्यावसायिक योजना",
-        org_name: "संस्थेचे नाव", email: "ईमेल पत्ता", contact: "संपर्क क्रमांक", password: "सुरक्षित पासवर्ड",
-        proceed: "चेकआउट करण्यासाठी पुढे जा", complete_reg: "नोंदणी पूर्ण करा", select_plan: "तुमची योजना निवडा",
-        fill_details: "संस्थेचे तपशील", success: "नोंदणी यशस्वी", processing: "पेमेंट प्रक्रियेत आहे...",
-        back: "मागे जा", login_now: "डॅशबोर्डवर जा", 
+        lang: "मराठी", onboarding: "संस्था नोंदणी", free_plan: "मोफत प्लान", support_plan: "आधार प्लान", pro_plan: "प्रो प्लान",
+        org_name: "संस्थेचे नाव", email: "ईमेल", contact: "फोन नंबर", password: "पासवर्ड",
+        proceed: "पेमेंट करा", complete_reg: "नोंदणी पूर्ण करा", select_plan: "प्लान निवडा",
+        fill_details: "तपशील भरा", success: "यशस्वी", processing: "कृपया थांबा...",
+        back: "मागे", login_now: "डॅशबोर्डवर जा", 
         price_free: "₹0 / महिना", price_support: "₹29 / महिना", price_pro: "₹99 / महिना",
-        desc_free: "नागरी अहवाल आणि पडताळणी साधनांमध्ये मूलभूत प्रवेश.", 
-        desc_support: "सत्यापित प्रोफाइल, केस व्यवस्थापन आणि टीम साधने.", 
-        desc_pro: "अनेक शाखा, प्रगत विश्लेषण आणि प्राधान्य समर्थन.",
-        pay_failed: "पेमेंट प्रमाणीकरण अयशस्वी.", recommended: "शिफारस केलेले",
-        txn_status: "व्यवहार स्थिती", txn_success: "पेमेंट यशस्वी", txn_fail: "पेमेंट अयशस्वी",
-        txn_id: "व्यवहार संदर्भ", retry: "पुन्हा प्रयत्न करा", go_home: "होमपेजवर जा"
+        desc_free: "मूलभूत प्रवेश.", 
+        desc_support: "सत्यापित प्रोफाइल आणि साधने.", 
+        desc_pro: "सर्व साधने आणि प्राधान्य समर्थन.",
+        pay_failed: "पेमेंट अयशस्वी.", recommended: "शिफारस केलेले",
+        txn_status: "पेमेंट स्थिती", txn_success: "पेमेंट यशस्वी", txn_fail: "पेमेंट अयशस्वी",
+        txn_id: "व्यवहार आयडी", retry: "पुन्हा प्रयत्न करा", go_home: "होम"
     },
     gu: {
-        lang: "ગુજરાતી", onboarding: "સંસ્થા ઓનબોર્ડિંગ", free_plan: "મફત યોજના", support_plan: "આધાર યોજના", pro_plan: "વ્યવસાયિક યોજના",
-        org_name: "સંસ્થાનું નામ", email: "ઇમેઇલ સરનામું", contact: "સંપર્ક નંબર", password: "સુરક્ષિત પાસવર્ડ",
-        proceed: "ચેકઆઉટ માટે આગળ વધો", complete_reg: "નોંધણી પૂર્ણ કરો", select_plan: "તમારી યોજના પસંદ કરો",
-        fill_details: "સંસ્થાની વિગતો", success: "નોંધણી સફળ", processing: "ચુકવણી પ્રક્રિયામાં છે...",
-        back: "પાછા જાઓ", login_now: "ડેશબોર્ડ પર જાઓ", 
+        lang: "ગુજરાતી", onboarding: "સંસ્થા નોંધણી", free_plan: "મફત પ્લાન", support_plan: "આધાર પ્લાન", pro_plan: "પ્રો પ્લાન",
+        org_name: "સંસ્થાનું નામ", email: "ઇમેઇલ", contact: "ફોન નંબર", password: "પાસવર્ડ",
+        proceed: "ચુકવણી કરો", complete_reg: "નોંધણી પૂર્ણ કરો", select_plan: "પ્લાન પસંદ કરો",
+        fill_details: "વિગતો ભરો", success: "સફળ", processing: "કૃપા કરીને રાહ જુઓ...",
+        back: "પાછળ", login_now: "ડેશબોર્ડ પર જાઓ", 
         price_free: "₹0 / મહિનો", price_support: "₹29 / મહિનો", price_pro: "₹99 / મહિનો",
-        desc_free: "નાગરિક અહેવાલો અને ચકાસણી સાધનોની મૂળભૂત ઍક્સેસ.", 
-        desc_support: "ચકાસાયેલ પ્રોફાઇલ, કેસ મેનેજમેન્ટ અને ટીમ સાધનો.", 
-        desc_pro: "બહુવિધ શાખાઓ, અદ્યતન વિશ્લેષણ અને પ્રાધાન્યતા સપોર્ટ.",
-        pay_failed: "ચુકવણી માન્યતા નિષ્ફળ.", recommended: "ભલામણ કરેલ",
-        txn_status: "વ્યવહાર સ્થિતિ", txn_success: "ચુકવણી સફળ", txn_fail: "ચુકવણી નિષ્ફળ",
-        txn_id: "વ્યવહાર સંદર્ભ", retry: "ફરી પ્રયાસ કરો", go_home: "હોમપેજ પર જાઓ"
+        desc_free: "મૂળભૂત ઍક્સેસ.", 
+        desc_support: "ચકાસાયેલ પ્રોફાઇલ અને સાધનો.", 
+        desc_pro: "બધા સાધનો અને પ્રાધાન્યતા સપોર્ટ.",
+        pay_failed: "ચુકવણી નિષ્ફળ.", recommended: "ભલામણ કરેલ",
+        txn_status: "ચુકવણીની સ્થિતિ", txn_success: "ચુકવણી સફળ", txn_fail: "ચુકવણી નિષ્ફળ",
+        txn_id: "વ્યવહાર આઈડી", retry: "ફરી પ્રયાસ કરો", go_home: "હોમ"
     },
     te: {
-        lang: "తెలుగు", onboarding: "సంస్థ ఆన్‌బోర్డింగ్", free_plan: "ఉచిత ప్రణాళిక", support_plan: "మద్దతు ప్రణాళిక", pro_plan: "వృత్తిపరమైన ప్రణాళిక",
-        org_name: "సంస్థ పేరు", email: "ఈమెయిల్", contact: "సంప్రదింపు నంబర్", password: "సురక్షిత పాస్‌వర్డ్",
-        proceed: "చెల్లింపుకు కొనసాగండి", complete_reg: "నమోదును పూర్తి చేయండి", select_plan: "మీ ప్రణాళికను ఎంచుకోండి",
-        fill_details: "సంస్థ వివరాలు", success: "నమోదు విజయవంతమైంది", processing: "చెల్లింపు ప్రాసెస్ చేయబడుతోంది...",
-        back: "వెనక్కి వెళ్ళు", login_now: "డాష్‌బోర్డ్‌కు వెళ్లండి", 
+        lang: "తెలుగు", onboarding: "సంస్థ నమోదు", free_plan: "ఉచిత ప్లాన్", support_plan: "మద్దతు ప్లాన్", pro_plan: "ప్రో ప్లాన్",
+        org_name: "సంస్థ పేరు", email: "ఈమెయిల్", contact: "ఫోన్ నంబర్", password: "పాస్‌వర్డ్",
+        proceed: "చెల్లించండి", complete_reg: "నమోదును పూర్తి చేయండి", select_plan: "ప్లాన్ ఎంచుకోండి",
+        fill_details: "వివరాలు నింపండి", success: "విజయవంతమైంది", processing: "దయచేసి వేచి ఉండండి...",
+        back: "వెనుకకు", login_now: "డాష్‌బోర్డ్‌కు వెళ్లండి", 
         price_free: "₹0 / నెల", price_support: "₹29 / నెల", price_pro: "₹99 / నెల",
-        desc_free: "పౌర నివేదికలు మరియు ధృవీకరణ సాధనాలకు ప్రాథమిక ప్రాప్యత.", 
-        desc_support: "ధృవీకరించబడిన ప్రొఫైల్, కేస్ నిర్వహణ మరియు జట్టు సాధనాలు.", 
-        desc_pro: "బహుళ శాఖలు, అధునాతన విశ్లేషణలు మరియు ప్రాధాన్యత మద్దతు.",
-        pay_failed: "చెల్లింపు ధృవీకరణ విఫలమైంది.", recommended: "సిఫార్సు చేయబడింది",
-        txn_status: "లావాదేవీ స్థితి", txn_success: "చెల్లింపు విజయవంతమైంది", txn_fail: "చెల్లింపు విఫలమైంది",
-        txn_id: "లావాదేవీ సూచన", retry: "మళ్లీ ప్రయత్నించండి", go_home: "హోమ్‌పేజీకి వెళ్లండి"
+        desc_free: "ప్రాథమిక ప్రాప్యత.", 
+        desc_support: "ధృవీకరించబడిన ప్రొఫైల్ మరియు సాధనాలు.", 
+        desc_pro: "అన్ని సాధనాలు మరియు ప్రాధాన్యత మద్దతు.",
+        pay_failed: "చెల్లింపు విఫలమైంది.", recommended: "సిఫార్సు చేయబడింది",
+        txn_status: "చెల్లింపు స్థితి", txn_success: "చెల్లింపు విజయవంతమైంది", txn_fail: "చెల్లింపు విఫలమైంది",
+        txn_id: "లావాదేవీ ID", retry: "మళ్లీ ప్రయత్నించండి", go_home: "హోమ్"
     },
     ta: {
-        lang: "தமிழ்", onboarding: "நிறுவன ஆன்போர்டிங்", free_plan: "இலவச திட்டம்", support_plan: "ஆதரவு திட்டம்", pro_plan: "தொழில்முறை திட்டம்",
-        org_name: "நிறுவனத்தின் பெயர்", email: "மின்னஞ்சல்", contact: "தொடர்பு எண்", password: "பாதுகாப்பான கடவுச்சொல்",
-        proceed: "பணம் செலுத்த தொடரவும்", complete_reg: "பதிவை முடிக்கவும்", select_plan: "உங்கள் திட்டத்தை தேர்ந்தெடுக்கவும்",
-        fill_details: "நிறுவனத்தின் விவரங்கள்", success: "பதிவு வெற்றிகரமானது", processing: "கட்டணம் செயலாக்கப்படுகிறது...",
-        back: "திரும்பிச் செல்", login_now: "டாஷ்போர்டுக்குச் செல்லவும்", 
+        lang: "தமிழ்", onboarding: "நிறுவன பதிவு", free_plan: "இலவச திட்டம்", support_plan: "ஆதரவு திட்டம்", pro_plan: "ப்ரோ திட்டம்",
+        org_name: "நிறுவனத்தின் பெயர்", email: "மின்னஞ்சல்", contact: "தொலைபேசி எண்", password: "கடவுச்சொல்",
+        proceed: "செலுத்தவும்", complete_reg: "பதிவை முடிக்கவும்", select_plan: "திட்டத்தை தேர்ந்தெடுக்கவும்",
+        fill_details: "விவரங்களை நிரப்பவும்", success: "வெற்றி", processing: "காத்திருக்கவும்...",
+        back: "பின்னால்", login_now: "டாஷ்போர்டுக்குச் செல்லவும்", 
         price_free: "₹0 / மாதம்", price_support: "₹29 / மாதம்", price_pro: "₹99 / மாதம்",
-        desc_free: "குடிமக்கள் அறிக்கைகள் மற்றும் சரிபார்ப்பு கருவிகளுக்கான அடிப்படை அணுகல்.", 
-        desc_support: "சரிபார்க்கப்பட்ட சுயவிவரம், வழக்கு மேலாண்மை மற்றும் குழு கருவிகள்.", 
-        desc_pro: "பல கிளைகள், மேம்பட்ட பகுப்பாய்வு மற்றும் முன்னுரிமை ஆதரவு.",
-        pay_failed: "கட்டண சரிபார்ப்பு தோல்வியடைந்தது.", recommended: "பரிந்துரைக்கப்படுகிறது",
-        txn_status: "பரிவர்த்தனை நிலை", txn_success: "கட்டணம் வெற்றிகரமானது", txn_fail: "கட்டணம் தோல்வியடைந்தது",
-        txn_id: "பரிவர்த்தனை குறிப்பு", retry: "மீண்டும் முயற்சிக்கவும்", go_home: "முகப்புப்பக்கத்திற்குச் செல்லவும்"
+        desc_free: "அடிப்படை அணுகல்.", 
+        desc_support: "சரிபார்க்கப்பட்ட சுயவிவரம் மற்றும் கருவிகள்.", 
+        desc_pro: "அனைத்து கருவிகள் மற்றும் முன்னுரிமை ஆதரவு.",
+        pay_failed: "கட்டணம் தோல்வியடைந்தது.", recommended: "பரிந்துரைக்கப்படுகிறது",
+        txn_status: "கட்டண நிலை", txn_success: "கட்டணம் வெற்றி", txn_fail: "கட்டணம் தோல்வி",
+        txn_id: "பரிவர்த்தனை ஐடி", retry: "மீண்டும் முயற்சிக்கவும்", go_home: "முகப்பு"
     },
     pa: {
-        lang: "ਪੰਜਾਬੀ", onboarding: "ਸੰਗਠਨ ਆਨਬੋਰਡਿੰਗ", free_plan: "ਮੁਫਤ ਯੋਜਨਾ", support_plan: "ਸਹਾਇਤਾ ਯੋਜਨਾ", pro_plan: "ਪੇਸ਼ੇਵਰ ਯੋਜਨਾ",
-        org_name: "ਸੰਗਠਨ ਦਾ ਨਾਮ", email: "ਈਮੇਲ", contact: "ਸੰਪਰਕ ਨੰਬਰ", password: "ਸੁਰੱਖਿਅਤ ਪਾਸਵਰਡ",
-        proceed: "ਭੁਗਤਾਨ ਲਈ ਅੱਗੇ ਵਧੋ", complete_reg: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ", select_plan: "ਆਪਣੀ ਯੋਜਨਾ ਚੁਣੋ",
-        fill_details: "ਸੰਗਠਨ ਦੇ ਵੇਰਵੇ", success: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਸਫਲ", processing: "ਭੁਗਤਾਨ ਪ੍ਰਕਿਰਿਆ ਵਿੱਚ ਹੈ...",
-        back: "ਵਾਪਸ ਜਾਓ", login_now: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਜਾਓ", 
+        lang: "ਪੰਜਾਬੀ", onboarding: "ਸੰਗਠਨ ਰਜਿਸਟ੍ਰੇਸ਼ਨ", free_plan: "ਮੁਫਤ ਪਲਾਨ", support_plan: "ਸਹਾਇਤਾ ਪਲਾਨ", pro_plan: "ਪ੍ਰੋ ਪਲਾਨ",
+        org_name: "ਸੰਗਠਨ ਦਾ ਨਾਮ", email: "ਈਮੇਲ", contact: "ਫੋਨ ਨੰਬਰ", password: "ਪਾਸਵਰਡ",
+        proceed: "ਭੁਗਤਾਨ ਕਰੋ", complete_reg: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ", select_plan: "ਪਲਾਨ ਚੁਣੋ",
+        fill_details: "ਵੇਰਵੇ ਭਰੋ", success: "ਸਫਲ", processing: "ਕਿਰਪਾ ਕਰਕੇ ਉਡੀਕ ਕਰੋ...",
+        back: "ਪਿੱਛੇ", login_now: "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਜਾਓ", 
         price_free: "₹0 / ਮਹੀਨਾ", price_support: "₹29 / ਮਹੀਨਾ", price_pro: "₹99 / ਮਹੀਨਾ",
-        desc_free: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ ਅਤੇ ਤਸਦੀਕ ਸਾਧਨਾਂ ਤੱਕ ਬੁਨਿਆਦੀ ਪਹੁੰਚ।", 
-        desc_support: "ਪ੍ਰਮਾਣਿਤ ਪ੍ਰੋਫਾਈਲ, ਕੇਸ ਪ੍ਰਬੰਧਨ, ਅਤੇ ਟੀਮ ਟੂਲ।", 
-        desc_pro: "ਕਈ ਸ਼ਾਖਾਵਾਂ, ਉੱਨਤ ਵਿਸ਼ਲੇਸ਼ਣ, ਅਤੇ ਤਰਜੀਹੀ ਸਹਾਇਤਾ।",
-        pay_failed: "ਭੁਗਤਾਨ ਪ੍ਰਮਾਣਿਕਤਾ ਅਸਫਲ।", recommended: "ਸਿਫਾਰਸ਼ੀ",
-        txn_status: "ਲੈਣ-ਦੇਣ ਦੀ ਸਥਿਤੀ", txn_success: "ਭੁਗਤਾਨ ਸਫਲ", txn_fail: "ਭੁਗਤਾਨ ਅਸਫਲ",
-        txn_id: "ਲੈਣ-ਦੇਣ ਦਾ ਹਵਾਲਾ", retry: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ", go_home: "ਹੋਮਪੇਜ 'ਤੇ ਜਾਓ"
+        desc_free: "ਬੁਨਿਆਦੀ ਪਹੁੰਚ।", 
+        desc_support: "ਪ੍ਰਮਾਣਿਤ ਪ੍ਰੋਫਾਈਲ ਅਤੇ ਟੂਲ।", 
+        desc_pro: "ਸਾਰੇ ਟੂਲ ਅਤੇ ਤਰਜੀਹੀ ਸਹਾਇਤਾ।",
+        pay_failed: "ਭੁਗਤਾਨ ਅਸਫਲ।", recommended: "ਸਿਫਾਰਸ਼ੀ",
+        txn_status: "ਭੁਗਤਾਨ ਦੀ ਸਥਿਤੀ", txn_success: "ਭੁਗਤਾਨ ਸਫਲ", txn_fail: "ਭੁਗਤਾਨ ਅਸਫਲ",
+        txn_id: "ਲੈਣ-ਦੇਣ ਆਈਡੀ", retry: "ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ", go_home: "ਹੋਮ"
     },
     bho: {
-        lang: "भोजपुरी", onboarding: "संगठन ऑनबोर्डिंग", free_plan: "मुफ्त योजना", support_plan: "सहायता योजना", pro_plan: "पेशेवर योजना",
-        org_name: "संगठन के नाम", email: "ईमेल", contact: "संपर्क नंबर", password: "सुरक्षित पासवर्ड",
-        proceed: "भुगतान खातिर आगे बढ़ीं", complete_reg: "पंजीकरण पूरा करीं", select_plan: "आपन योजना चुनीं",
-        fill_details: "संगठन के विवरण", success: "पंजीकरण सफल", processing: "भुगतान के प्रक्रिया चल रहल बा...",
-        back: "वापस जाईं", login_now: "डैशबोर्ड पर जाईं", 
+        lang: "भोजपुरी", onboarding: "संगठन पंजीकरण", free_plan: "मुफ्त प्लान", support_plan: "मदद प्लान", pro_plan: "प्रो प्लान",
+        org_name: "संगठन के नाम", email: "ईमेल", contact: "फोन नंबर", password: "पासवर्ड",
+        proceed: "भुगतान करीं", complete_reg: "पंजीकरण पूरा करीं", select_plan: "प्लान चुनीं",
+        fill_details: "विवरण भरीं", success: "सफल", processing: "इंतजार करीं...",
+        back: "पाछे", login_now: "डैशबोर्ड पर जाईं", 
         price_free: "₹0 / महिना", price_support: "₹29 / महिना", price_pro: "₹99 / महिना",
-        desc_free: "नागरिक रिपोर्ट अउर सत्यापन उपकरण तक बुनियादी पहुंच।", 
-        desc_support: "सत्यापित प्रोफाइल, केस प्रबंधन, अउर टीम टूल।", 
-        desc_pro: "कई गो शाखा, उन्नत एनालिटिक्स, अउर प्राथमिकता समर्थन।",
-        pay_failed: "भुगतान सत्यापन विफल हो गइल।", recommended: "अनुशंसित",
-        txn_status: "लेनदेन के स्थिति", txn_success: "भुगतान सफल", txn_fail: "भुगतान विफल",
-        txn_id: "लेनदेन संदर्भ", retry: "फेर से कोशिश करीं", go_home: "होमपेज पर जाईं"
+        desc_free: "बुनियादी पहुंच।", 
+        desc_support: "सत्यापित प्रोफाइल आ टूल।", 
+        desc_pro: "सब टूल आ प्राथमिकता समर्थन।",
+        pay_failed: "भुगतान विफल।", recommended: "अनुशंसित",
+        txn_status: "भुगतान के स्थिति", txn_success: "भुगतान सफल", txn_fail: "भुगतान विफल",
+        txn_id: "लेनदेन आईडी", retry: "फेर से कोशिश करीं", go_home: "होम"
     },
     bn: {
-        lang: "বাংলা", onboarding: "প্রতিষ্ঠান অনবোর্ডিং", free_plan: "বিনামূল্যে পরিকল্পনা", support_plan: "সহায়তা পরিকল্পনা", pro_plan: "পেশাদার পরিকল্পনা",
-        org_name: "প্রতিষ্ঠানের নাম", email: "ইমেইল", contact: "যোগাযোগ নম্বর", password: "নিরাপদ পাসওয়ার্ড",
-        proceed: "চেকআউটে এগিয়ে যান", complete_reg: "নিবন্ধন সম্পূর্ণ করুন", select_plan: "আপনার পরিকল্পনা নির্বাচন করুন",
-        fill_details: "প্রতিষ্ঠানের বিবরণ", success: "নিবন্ধন সফল", processing: "পেমেন্ট প্রক্রিয়াধীন...",
+        lang: "বাংলা", onboarding: "প্রতিষ্ঠান নিবন্ধন", free_plan: "ফ্রি প্ল্যান", support_plan: "সাপোর্ট প্ল্যান", pro_plan: "প্রো প্ল্যান",
+        org_name: "প্রতিষ্ঠানের নাম", email: "ইমেইল", contact: "ফোন নম্বর", password: "পাসওয়ার্ড",
+        proceed: "পেমেন্ট করুন", complete_reg: "নিবন্ধন সম্পূর্ণ করুন", select_plan: "প্ল্যান নির্বাচন করুন",
+        fill_details: "বিবরণ পূরণ করুন", success: "সফল", processing: "অপেক্ষা করুন...",
         back: "ফিরে যান", login_now: "ড্যাশবোর্ডে যান", 
         price_free: "₹0 / মাস", price_support: "₹29 / মাস", price_pro: "₹99 / মাস",
-        desc_free: "নাগরিক প্রতিবেদন এবং যাচাইকরণ সরঞ্জামগুলিতে প্রাথমিক অ্যাক্সেস।", 
-        desc_support: "যাচাইকৃত প্রোফাইল, কেস পরিচালনা এবং দলীয় সরঞ্জাম।", 
-        desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ এবং অগ্রাধিকার সমর্থন।",
-        pay_failed: "পেমেন্ট বৈধতা ব্যর্থ হয়েছে।", recommended: "প্রস্তাবিত",
-        txn_status: "লেনদেনের অবস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট ব্যর্থ হয়েছে",
-        txn_id: "লেনদেন রেফারেন্স", retry: "আবার চেষ্টা করুন", go_home: "হোমপেজে যান"
+        desc_free: "প্রাথমিক অ্যাক্সেস।", 
+        desc_support: "যাচাইকৃত প্রোফাইল এবং টুল।", 
+        desc_pro: "সমস্ত টুল এবং অগ্রাধিকার সমর্থন।",
+        pay_failed: "পেমেন্ট ব্যর্থ হয়েছে।", recommended: "প্রস্তাবিত",
+        txn_status: "পেমেন্ট অবস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট ব্যর্থ",
+        txn_id: "লেনদেন আইডি", retry: "আবার চেষ্টা করুন", go_home: "হোম"
     },
     kn: {
-        lang: "ಕನ್ನಡ", onboarding: "ಸಂಸ್ಥೆ ಆನ್‌ಬೋರ್ಡಿಂಗ್", free_plan: "ಉಚಿತ ಯೋಜನೆ", support_plan: "ಬೆಂಬಲ ಯೋಜನೆ", pro_plan: "ವೃತ್ತಿಪರ ಯೋಜನೆ",
-        org_name: "ಸಂಸ್ಥೆಯ ಹೆಸರು", email: "ಇಮೇಲ್", contact: "ಸಂಪರ್ಕ ಸಂಖ್ಯೆ", password: "ಸುರಕ್ಷಿತ ಪಾಸ್ವರ್ಡ್",
-        proceed: "ಪಾವತಿಗೆ ಮುಂದುವರಿಯಿರಿ", complete_reg: "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ", select_plan: "ನಿಮ್ಮ ಯೋಜನೆ ಆಯ್ಕೆಮಾಡಿ",
-        fill_details: "ಸಂಸ್ಥೆಯ ವಿವರಗಳು", success: "ನೋಂದಣಿ ಯಶಸ್ವಿಯಾಗಿದೆ", processing: "ಪಾವತಿ ಪ್ರಕ್ರಿಯೆಯಲ್ಲಿದೆ...",
+        lang: "ಕನ್ನಡ", onboarding: "ಸಂಸ್ಥೆ ನೋಂದಣಿ", free_plan: "ಉಚಿತ ಪ್ಲಾನ್", support_plan: "ಬೆಂಬಲ ಪ್ಲಾನ್", pro_plan: "ಪ್ರೊ ಪ್ಲಾನ್",
+        org_name: "ಸಂಸ್ಥೆಯ ಹೆಸರು", email: "ಇಮೇಲ್", contact: "ಫೋನ್ ಸಂಖ್ಯೆ", password: "ಪಾಸ್ವರ್ಡ್",
+        proceed: "ಪಾವತಿಸಿ", complete_reg: "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ", select_plan: "ಪ್ಲಾನ್ ಆಯ್ಕೆಮಾಡಿ",
+        fill_details: "ವಿವರಗಳನ್ನು ಭರ್ತಿ ಮಾಡಿ", success: "ಯಶಸ್ವಿ", processing: "ದಯವಿಟ್ಟು ಕಾಯಿರಿ...",
         back: "ಹಿಂದಕ್ಕೆ", login_now: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್‌ಗೆ ಹೋಗಿ", 
         price_free: "₹0 / ತಿಂಗಳು", price_support: "₹29 / ತಿಂಗಳು", price_pro: "₹99 / ತಿಂಗಳು",
-        desc_free: "ನಾಗರಿಕ ವರದಿಗಳು ಮತ್ತು ಪರಿಶೀಲನಾ ಸಾಧನಗಳಿಗೆ ಮೂಲ ಪ್ರವೇಶ.", 
-        desc_support: "ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್, ಪ್ರಕರಣ ನಿರ್ವಹಣೆ ಮತ್ತು ತಂಡದ ಪರಿಕರಗಳು.", 
-        desc_pro: "ಬಹು ಶಾಖೆಗಳು, ಸುಧಾರಿತ ವಿಶ್ಲೇಷಣೆ ಮತ್ತು ಆದ್ಯತೆಯ ಬೆಂಬಲ.",
-        pay_failed: "ಪಾವತಿ ಮೌಲ್ಯೀಕರಣ ವಿಫಲವಾಗಿದೆ.", recommended: "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ",
-        txn_status: "ವಹಿವಾಟು ಸ್ಥಿತಿ", txn_success: "ಪಾವತಿ ಯಶಸ್ವಿ", txn_fail: "ಪಾವತಿ ವಿಫಲವಾಗಿದೆ",
-        txn_id: "ವಹಿವಾಟು ಉಲ್ಲೇಖ", retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ", go_home: "ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ"
+        desc_free: "ಮೂಲ ಪ್ರವೇಶ.", 
+        desc_support: "ಪರಿಶೀಲಿಸಿದ ಪ್ರೊಫೈಲ್ ಮತ್ತು ಪರಿಕರಗಳು.", 
+        desc_pro: "ಎಲ್ಲಾ ಪರಿಕರಗಳು ಮತ್ತು ಆದ್ಯತೆಯ ಬೆಂಬಲ.",
+        pay_failed: "ಪಾವತಿ ವಿಫಲವಾಗಿದೆ.", recommended: "ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ",
+        txn_status: "ಪಾವತಿ ಸ್ಥಿತಿ", txn_success: "ಪಾವತಿ ಯಶಸ್ವಿ", txn_fail: "ಪಾವತಿ ವಿಫಲವಾಗಿದೆ",
+        txn_id: "ವಹಿವಾಟು ಐಡಿ", retry: "ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ", go_home: "ಮುಖಪುಟ"
     },
     ml: {
-        lang: "മലയാളം", onboarding: "സ്ഥാപന ഓൺബോർഡിംഗ്", free_plan: "സൗജന്യ പ്ലാൻ", support_plan: "പിന്തുണ പ്ലാൻ", pro_plan: "പ്രൊഫഷണൽ പ്ലാൻ",
-        org_name: "സ്ഥാപനത്തിന്റെ പേര്", email: "ഇമെയിൽ", contact: "ബന്ധപ്പെടേണ്ട നമ്പർ", password: "സുരക്ഷിത പാസ്‌വേഡ്",
-        proceed: "പേയ്‌മെന്റിലേക്ക് തുടരുക", complete_reg: "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക", select_plan: "നിങ്ങളുടെ പ്ലാൻ തിരഞ്ഞെടുക്കുക",
-        fill_details: "സ്ഥാപനത്തിന്റെ വിവരങ്ങൾ", success: "രജിസ്ട്രേഷൻ വിജയകരം", processing: "പേയ്‌മെന്റ് പ്രോസസ്സ് ചെയ്യുന്നു...",
+        lang: "മലയാളം", onboarding: "സ്ഥാപന രജിസ്ട്രേഷൻ", free_plan: "സൗജന്യ പ്ലാൻ", support_plan: "പിന്തുണ പ്ലാൻ", pro_plan: "പ്രോ പ്ലാൻ",
+        org_name: "സ്ഥാപനത്തിന്റെ പേര്", email: "ഇമെയിൽ", contact: "ഫോൺ നമ്പർ", password: "പാസ്‌വേഡ്",
+        proceed: "പണമടയ്ക്കുക", complete_reg: "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കുക", select_plan: "പ്ലാൻ തിരഞ്ഞെടുക്കുക",
+        fill_details: "വിവരങ്ങൾ പൂരിപ്പിക്കുക", success: "വിജയകരം", processing: "കാത്തിരിക്കുക...",
         back: "പുറകോട്ട്", login_now: "ഡാഷ്‌ബോർഡിലേക്ക് പോകുക", 
         price_free: "₹0 / മാസം", price_support: "₹29 / മാസം", price_pro: "₹99 / മാസം",
-        desc_free: "സിവിക് റിപ്പോർട്ടുകളിലേക്കും സ്ഥിരീകരണ ഉപകരണങ്ങളിലേക്കുമുള്ള അടിസ്ഥാന ആക്സസ്.", 
-        desc_support: "പരിശോധിച്ചുറപ്പിച്ച പ്രൊഫൈൽ, കേസ് മാനേജ്മെന്റ്, ടീം ടൂളുകൾ.", 
-        desc_pro: "ഒന്നിലധികം ശാഖകൾ, വിപുലമായ വിശകലനം, മുൻഗണനാ പിന്തുണ.",
-        pay_failed: "പേയ്‌മെന്റ് സാധൂകരണം പരാജയപ്പെട്ടു.", recommended: "ശുപാർശ ചെയ്യുന്നത്",
-        txn_status: "ഇടപാട് നില", txn_success: "പേയ്‌മെന്റ് വിജയകരം", txn_fail: "പേയ്‌മെന്റ് പരാജയപ്പെട്ടു",
-        txn_id: "ഇടപാട് റഫറൻസ്", retry: "വീണ്ടും ശ്രമിക്കുക", go_home: "ഹോംപേജിലേക്ക് പോകുക"
+        desc_free: "അടിസ്ഥാന ആക്സസ്.", 
+        desc_support: "സ്ഥിരീകരിച്ച പ്രൊഫൈലും ടൂളുകളും.", 
+        desc_pro: "എല്ലാ ടൂളുകളും മുൻഗണനാ പിന്തുണയും.",
+        pay_failed: "പേയ്‌മെന്റ് പരാജയപ്പെട്ടു.", recommended: "ശുപാർശ ചെയ്യുന്നത്",
+        txn_status: "പേയ്‌മെന്റ് നില", txn_success: "പേയ്‌മെന്റ് വിജയകരം", txn_fail: "പേയ്‌മെന്റ് പരാജയപ്പെട്ടു",
+        txn_id: "ഇടപാട് ഐഡി", retry: "വീണ്ടും ശ്രമിക്കുക", go_home: "ഹോം"
     },
     or: {
-        lang: "ଓଡ଼ିଆ", onboarding: "ସଂସ୍ଥା ଅନବୋର୍ଡିଂ", free_plan: "ମାଗଣା ଯୋଜନା", support_plan: "ସମର୍ଥନ ଯୋଜନା", pro_plan: "ପେସାଦାର ଯୋଜନା",
-        org_name: "ସଂସ୍ଥାର ନାମ", email: "ଇମେଲ୍", contact: "ସମ୍ପର୍କ ନମ୍ବର", password: "ସୁରକ୍ଷିତ ପାସୱାର୍ଡ",
-        proceed: "ପେମେଣ୍ଟକୁ ଆଗକୁ ବଢନ୍ତୁ", complete_reg: "ପଞ୍ଜିକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ", select_plan: "ଆପଣଙ୍କର ଯୋଜନା ବାଛନ୍ତୁ",
-        fill_details: "ସଂସ୍ଥାର ବିବରଣୀ", success: "ପଞ୍ଜିକରଣ ସଫଳ", processing: "ପେମେଣ୍ଟ ପ୍ରକ୍ରିୟାକରଣ ହେଉଛି...",
-        back: "ପଛକୁ ଯାଆନ୍ତୁ", login_now: "ଡ୍ୟାସବୋର୍ଡକୁ ଯାଆନ୍ତୁ", 
+        lang: "ଓଡ଼ିଆ", onboarding: "ସଂସ୍ଥା ପଞ୍ଜିକରଣ", free_plan: "ମାଗଣା ପ୍ଲାନ୍", support_plan: "ସମର୍ଥନ ପ୍ଲାନ୍", pro_plan: "ପ୍ରୋ ପ୍ଲାନ୍",
+        org_name: "ସଂସ୍ଥାର ନାମ", email: "ଇମେଲ୍", contact: "ଫୋନ୍ ନମ୍ବର", password: "ପାସୱାର୍ଡ",
+        proceed: "ପେମେଣ୍ଟ କରନ୍ତୁ", complete_reg: "ପଞ୍ଜିକରଣ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ", select_plan: "ପ୍ଲାନ୍ ବାଛନ୍ତୁ",
+        fill_details: "ବିବରଣୀ ପୂରଣ କରନ୍ତୁ", success: "ସଫଳ", processing: "ଦୟାକରି ଅପେକ୍ଷା କରନ୍ତୁ...",
+        back: "ପଛକୁ", login_now: "ଡ୍ୟାସବୋର୍ଡକୁ ଯାଆନ୍ତୁ", 
         price_free: "₹0 / ମାସ", price_support: "₹29 / ମାସ", price_pro: "₹99 / ମାସ",
-        desc_free: "ନାଗରିକ ରିପୋର୍ଟ ଏବଂ ଯାଞ୍ଚ ଉପକରଣଗୁଡ଼ିକ ପାଇଁ ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", 
-        desc_support: "ଯାଞ୍ଚ ହୋଇଥିବା ପ୍ରୋଫାଇଲ୍, କେସ୍ ପରିଚାଳନା ଏବଂ ଟିମ୍ ଉପକରଣ।", 
-        desc_pro: "ଏକାଧିକ ଶାଖା, ଉନ୍ନତ ବିଶ୍ଳେଷଣ ଏବଂ ପ୍ରାଥମିକତା ସମର୍ଥନ।",
-        pay_failed: "ପେମେଣ୍ଟ ବୈଧତା ବିଫଳ ହୋଇଛି.", recommended: "ସୁପାରିଶ କରାଯାଇଛି",
-        txn_status: "କାରବାର ସ୍ଥିତି", txn_success: "ପେମେଣ୍ଟ ସଫଳ", txn_fail: "ପେମେଣ୍ଟ ବିଫଳ",
-        txn_id: "କାରବାର ସନ୍ଦର୍ଭ", retry: "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ", go_home: "ହୋମପେଜକୁ ଯାଆନ୍ତୁ"
+        desc_free: "ପ୍ରାଥମିକ ଆକ୍ସେସ୍।", 
+        desc_support: "ଯାଞ୍ଚ ହୋଇଥିବା ପ୍ରୋଫାଇଲ୍ ଏବଂ ଟୁଲ୍।", 
+        desc_pro: "ସମସ୍ତ ଟୁଲ୍ ଏବଂ ପ୍ରାଥମିକତା ସମର୍ଥନ।",
+        pay_failed: "ପେମେଣ୍ଟ ବିଫଳ ହୋଇଛି।", recommended: "ସୁପାରିଶ କରାଯାଇଛି",
+        txn_status: "ପେମେଣ୍ଟ ସ୍ଥିତି", txn_success: "ପେମେଣ୍ଟ ସଫଳ", txn_fail: "ପେମେଣ୍ଟ ବିଫଳ",
+        txn_id: "କାରବାର ଆଇଡି", retry: "ପୁନର୍ବାର ଚେଷ୍ଟା କରନ୍ତୁ", go_home: "ହୋମ"
     },
     as: {
-        lang: "অসমীয়া", onboarding: "সংস্থা অনবৰ্ডিং", free_plan: "বিনামূলীয়া পৰিকল্পনা", support_plan: "সহায় পৰিকল্পনা", pro_plan: "পেছাদাৰী পৰিকল্পনা",
-        org_name: "সংস্থাৰ নাম", email: "ইমেইল", contact: "যোগাযোগ নম্বৰ", password: "সুৰক্ষিত পাছৱৰ্ড",
-        proceed: "চেকআউটলৈ আগবাঢ়ক", complete_reg: "পঞ্জীয়ন সম্পূৰ্ণ কৰক", select_plan: "আপোনাৰ পৰিকল্পনা নিৰ্বাচন কৰক",
-        fill_details: "সংস্থাৰ বিৱৰণ", success: "পঞ্জীয়ন সফল", processing: "পেমেন্ট প্ৰক্ৰিয়া চলি আছে...",
+        lang: "অসমীয়া", onboarding: "সংস্থা পঞ্জীয়ন", free_plan: "বিনামূলীয়া প্লেন", support_plan: "সহায় প্লেন", pro_plan: "প্ৰ' প্লেন",
+        org_name: "সংস্থাৰ নাম", email: "ইমেইল", contact: "ফোন নম্বৰ", password: "পাছৱৰ্ড",
+        proceed: "পেমেন্ট কৰক", complete_reg: "পঞ্জীয়ন সম্পূৰ্ণ কৰক", select_plan: "প্লেন নিৰ্বাচন কৰক",
+        fill_details: "বিৱৰণ পূৰণ কৰক", success: "সফল", processing: "অনুগ্ৰহ কৰি অপেক্ষা কৰক...",
         back: "উভতি যাওক", login_now: "ডেচবৰ্ডলৈ যাওক", 
         price_free: "₹0 / মাহ", price_support: "₹29 / মাহ", price_pro: "₹99 / মাহ",
-        desc_free: "নাগৰিক প্ৰতিবেদন আৰু সত্যাগ্ৰহ সঁজুলিলৈ প্ৰাথমিক প্ৰৱেশাধিকাৰ।", 
-        desc_support: "প্ৰমাণিত প্ৰফাইল, কেছ পৰিচালনা, আৰু দলীয় সঁজুলি।", 
-        desc_pro: "একাধিক শাখা, উন্নত বিশ্লেষণ, আৰু অগ্ৰাধিকাৰ সমৰ্থন।",
-        pay_failed: "পেমেন্ট বৈধতা বিফল হৈছে।", recommended: "পৰামৰ্শ দিয়া হৈছে",
-        txn_status: "লেনদেনৰ অৱস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট বিফল",
-        txn_id: "লেনদেনৰ প্ৰসংগ", retry: "পুনৰ চেষ্টা কৰক", go_home: "হোমপেজলৈ যাওক"
+        desc_free: "প্ৰাথমিক প্ৰৱেশাধিকাৰ।", 
+        desc_support: "প্ৰমাণিত প্ৰফাইল আৰু সঁজুলি।", 
+        desc_pro: "সকলো সঁজুলি আৰু অগ্ৰাধিকাৰ সমৰ্থন।",
+        pay_failed: "পেমেন্ট বিফল হৈছে।", recommended: "পৰামৰ্শ দিয়া হৈছে",
+        txn_status: "পেমেন্টৰ অৱস্থা", txn_success: "পেমেন্ট সফল", txn_fail: "পেমেন্ট বিফল",
+        txn_id: "লেনদেনৰ আইডী", retry: "পুনৰ চেষ্টা কৰক", go_home: "হোম"
     }
 };
 
@@ -218,6 +218,7 @@ export default function SevaSetuOnboarding() {
     const navigate = useNavigate();
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
+    const langDropdownRef = useRef(null);
     
     // Application States: 1=Plan, 2=Details, 3=Success (Free), 4=Transaction Receipt
     const [step, setStep] = useState(1); 
@@ -295,7 +296,10 @@ export default function SevaSetuOnboarding() {
                 setSelectedPlan(storedData.selectedPlan || 'Support Plan');
                 
                 if (payuStatus === 'success') {
-                    createPocketBaseUserFromRedirect(storedData, returnedTxnId || storedData.txnid);
+                    createPocketBaseUserFromRedirect(storedData, returnedTxnId || storedData.txnid).catch(err => {
+                        console.error("Post-Payment PB Error:", err);
+                        setReceiptData({ status: 'failure', txnid: returnedTxnId, error: err.message });
+                    });
                 }
             }
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -303,6 +307,7 @@ export default function SevaSetuOnboarding() {
         }
     }, []);
 
+    // STRICT UPDATE: Extracts the exact database validation error to prevent silent 400 Bad Requests
     const createPocketBaseUserFromRedirect = async (data, txnId) => {
         try {
             await pb.collection('ngo_users').create({
@@ -311,12 +316,23 @@ export default function SevaSetuOnboarding() {
                 passwordConfirm: data.password,
                 org_name: data.org_name,
                 contact: data.contact,
-                plan_type: data.selectedPlan,
-                payu_txn_id: txnId,
+                plan_type: data.selectedPlan || 'Free Plan',
+                payu_txn_id: txnId || 'FREE_TXN',
                 status: 'Active'
             });
+            return true;
         } catch (error) {
             console.error("PocketBase Creation Error:", error);
+            let extractedMsg = "Database validation failed. Please check your details.";
+            if (error.response && error.response.data) {
+                const invalidFields = Object.keys(error.response.data);
+                if (invalidFields.length > 0) {
+                    const firstField = invalidFields[0];
+                    const detail = error.response.data[firstField].message;
+                    extractedMsg = `Error in ${firstField}: ${detail}`;
+                }
+            }
+            throw new Error(extractedMsg);
         }
     };
 
@@ -343,10 +359,15 @@ export default function SevaSetuOnboarding() {
 
         const txnid = "SEVA" + new Date().getTime();
 
+        // STRICT UPDATE: Capture database errors for Free Plan immediately
         if (amount === '0.00') {
-            await createPocketBaseUserFromRedirect({ ...formData, selectedPlan }, txnid);
-            setStep(3); // Route to standard Free Success
-            setIsProcessing(false);
+            try {
+                await createPocketBaseUserFromRedirect({ ...formData, selectedPlan }, txnid);
+                setStep(3); // Route to standard Free Success
+            } catch (err) {
+                setErrorMessage(err.message);
+                setIsProcessing(false);
+            }
             return;
         }
 
@@ -370,7 +391,6 @@ export default function SevaSetuOnboarding() {
                 throw new Error(currentT.pay_failed);
             }
 
-            // STRICT UPDATE: Pointing surl and furl to the backend serverless callback endpoint
             const surlUrl = `https://msevasetupay.vercel.app/api/payu-callback`;
             const furlUrl = `https://msevasetupay.vercel.app/api/payu-callback`;
 
@@ -561,6 +581,10 @@ export default function SevaSetuOnboarding() {
                             <p className={`text-xl font-black mb-6 ${receiptData.status === 'success' ? 'text-[#16A34A]' : 'text-[#DC2626]'}`}>
                                 {receiptData.status === 'success' ? currentT.txn_success : currentT.txn_fail}
                             </p>
+                            
+                            {receiptData.error && (
+                                <p className="text-[0.85rem] font-bold text-center text-[#DC2626] mb-4">{receiptData.error}</p>
+                            )}
 
                             <div className="bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-6 w-full max-w-sm mb-8">
                                 <p className="text-[#6B7280] font-bold text-sm uppercase tracking-wider mb-1">{currentT.txn_id}</p>

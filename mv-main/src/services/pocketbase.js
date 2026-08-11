@@ -165,3 +165,71 @@ export const uploadCivicMedia = async (file, complaintId, category) => {
         throw error;
     }
 };
+
+/**
+ * NEW: Centralized creation of NGO user records.
+ * Resolves the 400 Bad Request by strictly mapping required Auth Collection fields.
+ * Includes 14-language error translation support.
+ */
+export const createNgoUserAccount = async (payload, langCode = 'en') => {
+    try {
+        const requestBody = {
+            email: payload.email,
+            password: payload.password,
+            passwordConfirm: payload.password,
+            org_name: payload.org_name || payload.orgName,
+            contact: payload.contact,
+            plan_type: payload.selectedPlan || 'Free Plan',
+            payu_txn_id: payload.txnId || 'FREE_TXN',
+            status: 'Active'
+        };
+
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/ngo_users/records`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            
+            const TRANSLATIONS = {
+                en: "Registration failed. Please check your details.",
+                hi: "पंजीकरण विफल रहा। कृपया अपना विवरण जांचें।",
+                hinglish: "Registration fail ho gaya. Details check karein.",
+                mr: "नोंदणी अयशस्वी. कृपया तुमचे तपशील तपासा.",
+                gu: "નોંધણી નિષ્ફળ. કૃપા કરીને તમારી વિગતો તપાસો.",
+                te: "నమోదు విఫలమైంది. దయచేసి మీ వివరాలను తనిఖీ చేయండి.",
+                ta: "பதிவு தோல்வியடைந்தது. உங்கள் விவரங்களை சரிபார்க்கவும்.",
+                pa: "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਆਪਣੇ ਵੇਰਵਿਆਂ ਦੀ ਜਾਂਚ ਕਰੋ।",
+                bho: "पंजीकरण विफल हो गइल। कृपया आपन विवरण जांचीं।",
+                bn: "নিবন্ধন ব্যর্থ হয়েছে। আপনার বিবরণ চেক করুন।",
+                kn: "ನೋಂದಣಿ ವಿಫಲವಾಗಿದೆ. ದಯವಿಟ್ಟು ನಿಮ್ಮ ವಿವರಗಳನ್ನು ಪರಿಶೀಲಿಸಿ.",
+                ml: "രജിസ്ട്രേഷൻ പരാജയപ്പെട്ടു. നിങ്ങളുടെ വിവരങ്ങൾ പരിശോധിക്കുക.",
+                or: "ପଞ୍ଜିକରଣ ବିଫଳ ହୋଇଛି। ଦୟାକରି ଆପଣଙ୍କର ବିବରଣୀ ଯାଞ୍ଚ କରନ୍ତୁ।",
+                as: "পঞ্জীয়ন বিফল হৈছে। অনুগ্ৰহ কৰি আপোনাৰ বিৱৰণ পৰীক্ষা কৰক।"
+            };
+
+            let exactMessage = TRANSLATIONS[langCode] || TRANSLATIONS['en'];
+
+            // Extract the exact database validation error reason if provided
+            if (errorData.data) {
+                const invalidFields = Object.keys(errorData.data);
+                if (invalidFields.length > 0) {
+                    const firstField = invalidFields[0];
+                    const detail = errorData.data[firstField].message;
+                    exactMessage = `Database Error (${firstField}): ${detail}`;
+                }
+            }
+            
+            throw new Error(exactMessage);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('PocketBase NGO User Creation Error:', error);
+        throw error;
+    }
+};
