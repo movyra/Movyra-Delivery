@@ -5,10 +5,8 @@
  */
 
 import PocketBase from 'pocketbase';
-// NEW: Import Firestore bridge capabilities
-import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-
-// STRICT FIX: Corrected the broken relative import path for Vite resolution
+// Import Firestore bridge capabilities
+import { collection, getDocs, query, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig'; 
 
 const POCKETBASE_URL = 'https://movyra-mv-main-db-gradio.hf.space';
@@ -231,9 +229,6 @@ export const createNgoUserAccount = async (payload, langCode = 'en') => {
 // Purpose: To feed the SevaSetu Master Organization Dashboard
 // ============================================================================
 
-/**
- * Generic Fetcher for Initial Data Load (PocketBase)
- */
 export const fetchCollectionData = async (collectionName) => {
     try {
         const records = await pb.collection(collectionName).getList(1, 50, {
@@ -247,9 +242,6 @@ export const fetchCollectionData = async (collectionName) => {
     }
 };
 
-/**
- * Live Server-Sent Events (SSE) Subscription Engine (PocketBase).
- */
 export const subscribeToCollection = (collectionName, callback) => {
     try {
         pb.collection(collectionName).subscribe('*', function (e) {
@@ -265,64 +257,68 @@ export const subscribeToCollection = (collectionName, callback) => {
 };
 
 // ============================================================================
-// NEW: DUAL-BACKEND FETCHERS FOR NAGRIKSETU PUBLIC REPORTS
-// Integrates both PocketBase and Firestore dynamically
+// NEW: DUAL-BACKEND FETCHERS FOR ALL PUBLIC REPORTS (NAGRIK, CIVIC, SAHAY)
+// Integrates both PocketBase and Firestore dynamically. OrderBy removed for safety.
 // ============================================================================
 
 /**
- * Fetches public reports directly from Firebase Firestore's nagrik_reports collection.
+ * Universal safe Firestore fetcher. 
+ * STRICT FIX: Removed fragile orderBy() constraint to prevent index crashes.
  */
-export const fetchFirestoreNagrikReports = async () => {
+const safeFirestoreFetch = async (collectionName) => {
     try {
-        const q = query(collection(db, 'nagrik_reports'), orderBy('timestamp', 'desc'), limit(50));
+        const q = query(collection(db, collectionName), limit(50));
         const querySnapshot = await getDocs(q);
         const reports = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             reports.push({
                 id: doc.id,
-                source: 'firestore', // Identify source for status mutations later
+                source: 'firestore', 
+                db_collection: collectionName, // track exact collection for updates
                 ack_number: doc.id.substring(0, 8),
-                title: data.category ? `${data.category} Report` : 'Public Submission',
-                category: data.category || 'General',
-                location: data.location?.address || 'Location Hidden',
+                title: data.category || data.needyName || 'Public Submission',
+                category: data.category || data.condition || 'General',
+                location: data.location?.address || data.location || 'Location Hidden',
                 status: data.status || 'Pending',
                 created: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : new Date().toISOString(),
-                mediaUrl: data.mediaUrl || null,
+                mediaUrl: data.mediaUrl || data.photoUrl || null,
                 raw_data: data
             });
         });
         return reports;
     } catch (error) {
-        console.error("Failed to fetch Firestore nagrik_reports:", error);
+        console.error(`Failed to fetch Firestore ${collectionName}:`, error);
         return [];
     }
 };
 
+export const fetchFirestoreNagrikReports = () => safeFirestoreFetch('nagrik_reports');
+export const fetchFirestoreCivicReports = () => safeFirestoreFetch('civic_complaints');
+export const fetchFirestoreSahayCases = () => safeFirestoreFetch('sahay_cases');
+
 /**
- * Real-time listener for Firestore nagrik_reports.
+ * Universal real-time listener for Firestore collections.
  */
-export const subscribeToFirestoreNagrikReports = (callback) => {
+export const subscribeToFirestoreCollection = (collectionName, callback) => {
     try {
-        const q = query(collection(db, 'nagrik_reports'), orderBy('timestamp', 'desc'), limit(50));
+        const q = query(collection(db, collectionName), limit(50));
         const unsubscribe = onSnapshot(q, (snapshot) => {
-             // We fire the callback to trigger a UI refetch, mirroring the PocketBase SSE pattern
              callback({ action: 'firestore_update' });
         });
         return unsubscribe;
     } catch (error) {
-        console.error("Firestore Subscription failed:", error);
+        console.error(`Firestore Subscription failed for ${collectionName}:`, error);
         return () => {};
     }
 };
 
-/**
- * Updates a record status dynamically targeting either PocketBase or Firestore based on origin.
- */
-export const updateCrossPlatformStatus = async (collectionName, recordId, newStatus, source = 'pocketbase') => {
+export const updateCrossPlatformStatus = async (collectionName, recordId, newStatus, source = 'pocketbase', firestoreCollectionOverride = null) => {
     try {
         if (source === 'firestore') {
-             const reportRef = doc(db, 'nagrik_reports', recordId);
+             // Use override if provided (since PB names differ from Firestore names)
+             const targetCollection = firestoreCollectionOverride || collectionName;
+             const reportRef = doc(db, targetCollection, recordId);
              await updateDoc(reportRef, { status: newStatus });
         } else {
              await pb.collection(collectionName).update(recordId, { status: newStatus });
@@ -335,24 +331,19 @@ export const updateCrossPlatformStatus = async (collectionName, recordId, newSta
 }
 
 // ============================================================================
-// DEDICATED FETCHERS FOR ALL TARGET COLLECTIONS
+// DEDICATED FETCHERS FOR POCKETBASE COLLECTIONS
 // ============================================================================
 
 export const fetchVolunteerVerifications = () => fetchCollectionData('volunteer_verifications');
 export const fetchSevaSetuWaitlist = () => fetchCollectionData('sevasetu_waitlist');
 export const fetchSevaSetuAdminRequests = () => fetchCollectionData('sevasetu_admin_requests');
 export const fetchSahayMedia = () => fetchCollectionData('sahay_media');
-export const fetchSahayCases = () => fetchCollectionData('volunteer_verifications'); // Base Sahay proxy
+export const fetchSahayCasesPB = () => fetchCollectionData('volunteer_verifications'); // PB Sahay proxy
 export const fetchOrganizationVerifications = () => fetchCollectionData('organization_verifications');
-
-// STRICT FIX: Added PocketBase fetchers for the newly identified collections
 export const fetchNagrikEvidence = () => fetchCollectionData('nagrik_evidence');
-// STRICT FIX: REMOVED fetchNagrikReportsPB to prevent 404 crashes as this collection is Firestore-only
-
-export const fetchCivicReports = () => fetchCollectionData('civic_reports'); 
+export const fetchCivicReportsPB = () => fetchCollectionData('civic_reports'); 
 export const fetchCivicMedia = () => fetchCollectionData('civic_media');
 export const fetchNgoUsers = () => fetchCollectionData('ngo_users');
 export const fetchCareerApplications = () => fetchCollectionData('career_applications');
 
-// Export the raw client for edge-case direct queries if needed in the UI
 export const pocketbaseClient = pb;

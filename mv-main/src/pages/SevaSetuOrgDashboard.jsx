@@ -8,8 +8,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LogOut, Search, X, Globe, Image as ImageIcon, Filter, CheckCircle, IndianRupee, ShieldCheck, MapPin, Moon, Sun, Download, LayoutDashboard, LifeBuoy, Lock, Megaphone } from 'lucide-react';
-// STRICT FIX: Removed fetchNagrikReportsPB to prevent 404 errors. Nagrik reports are now fetched exclusively from Firestore.
-import { pocketbaseClient, fetchCivicReports, fetchSahayCases, fetchSevaSetuAdminRequests, fetchFirestoreNagrikReports, subscribeToCollection, subscribeToFirestoreNagrikReports, updateCrossPlatformStatus } from '../services/pocketbase';
+// STRICT FIX: Imported universal dual-backend fetchers and listeners
+import { pocketbaseClient, fetchCivicReportsPB, fetchSahayCasesPB, fetchSevaSetuAdminRequests, fetchFirestoreNagrikReports, fetchFirestoreCivicReports, fetchFirestoreSahayCases, subscribeToCollection, subscribeToFirestoreCollection, updateCrossPlatformStatus } from '../services/pocketbase';
 import { useLocation } from 'react-router-dom';
 
 const TRANSLATIONS = {
@@ -163,7 +163,7 @@ export default function SevaSetuOrgDashboard() {
     // Multi-Platform Data State
     const [civicData, setCivicData] = useState([]);
     const [sahayData, setSahayData] = useState([]);
-    const [nagrikData, setNagrikData] = useState([]); // State for public reports
+    const [nagrikData, setNagrikData] = useState([]); 
     const [adminData, setAdminData] = useState([]);
     
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -192,7 +192,7 @@ export default function SevaSetuOrgDashboard() {
 
     // Initialize Theme and URL Parameters
     useEffect(() => {
-        // Parse URL parameters for direct category routing (e.g. ?category=traffic)
+        // Parse URL parameters for direct category routing
         const params = new URLSearchParams(location.search);
         const categoryParam = params.get('category');
         if (categoryParam) {
@@ -213,31 +213,36 @@ export default function SevaSetuOrgDashboard() {
         }
     }, [location.search]);
 
-    // STRICT FIX: Removed PocketBase nagrik listener. Now exclusively relies on Firestore for public reports.
+    // STRICT FIX: Bind dual-backend listeners to safely poll Firestore & PB dynamically
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        let unsubCivic, unsubSahay, unsubAdmin, unsubFirestore;
+        let unsubCivicPB, unsubCivicFS, unsubSahayPB, unsubSahayFS, unsubAdminPB, unsubNagrikFS;
 
         const setupSubscriptions = async () => {
-            unsubCivic = subscribeToCollection('civic_reports', () => { fetchAllPlatformData(false); });
-            unsubSahay = subscribeToCollection('volunteer_verifications', () => { fetchAllPlatformData(false); });
+            unsubCivicPB = subscribeToCollection('civic_reports', () => { fetchAllPlatformData(false); });
+            unsubCivicFS = subscribeToFirestoreCollection('civic_complaints', () => { fetchAllPlatformData(false); });
+            
+            unsubSahayPB = subscribeToCollection('volunteer_verifications', () => { fetchAllPlatformData(false); });
+            unsubSahayFS = subscribeToFirestoreCollection('sahay_cases', () => { fetchAllPlatformData(false); });
             
             // Firestore Listener for public reports
-            unsubFirestore = subscribeToFirestoreNagrikReports(() => { fetchAllPlatformData(false); });
+            unsubNagrikFS = subscribeToFirestoreCollection('nagrik_reports', () => { fetchAllPlatformData(false); });
 
             if (isSuperAdmin) {
-                unsubAdmin = subscribeToCollection('sevasetu_admin_requests', () => { fetchAllPlatformData(false); });
+                unsubAdminPB = subscribeToCollection('sevasetu_admin_requests', () => { fetchAllPlatformData(false); });
             }
         };
 
         setupSubscriptions();
 
         return () => {
-            if (unsubCivic) unsubCivic();
-            if (unsubSahay) unsubSahay();
-            if (unsubFirestore) unsubFirestore();
-            if (unsubAdmin) unsubAdmin();
+            if (unsubCivicPB) unsubCivicPB();
+            if (unsubCivicFS) unsubCivicFS();
+            if (unsubSahayPB) unsubSahayPB();
+            if (unsubSahayFS) unsubSahayFS();
+            if (unsubNagrikFS) unsubNagrikFS();
+            if (unsubAdminPB) unsubAdminPB();
         };
     }, [isAuthenticated, isSuperAdmin]);
 
@@ -273,21 +278,25 @@ export default function SevaSetuOrgDashboard() {
         setAdminData([]);
     };
 
-    // STRICT FIX: Removed fetchNagrikReportsPB(). Public reports are now fetched solely from Firestore.
+    // STRICT FIX: Master Fetcher merges PocketBase AND Firestore arrays correctly for all tabs.
     const fetchAllPlatformData = async (showLoader = true) => {
         if (showLoader) setIsLoadingData(true);
         try {
-            const [civicRes, sahayRes, firestoreNagrikRes] = await Promise.all([
-                fetchCivicReports(),
-                fetchSahayCases(),
-                fetchFirestoreNagrikReports() // Exclusively from Firebase
+            const [pbCivicRes, pbSahayRes, firestoreNagrikRes, firestoreCivicRes, firestoreSahayRes] = await Promise.all([
+                fetchCivicReportsPB(),
+                fetchSahayCasesPB(),
+                fetchFirestoreNagrikReports(),
+                fetchFirestoreCivicReports(),
+                fetchFirestoreSahayCases()
             ]);
             
-            setCivicData(civicRes);
-            setSahayData(sahayRes);
-            
-            // Use exclusively Firestore public reports, sort by newest
+            // Merge arrays to guarantee no platform data is missed, then chronologically sort
+            const mergedCivic = [...firestoreCivicRes, ...pbCivicRes].sort((a, b) => new Date(b.created) - new Date(a.created));
+            const mergedSahay = [...firestoreSahayRes, ...pbSahayRes].sort((a, b) => new Date(b.created) - new Date(a.created));
             const mergedNagrik = [...firestoreNagrikRes].sort((a, b) => new Date(b.created) - new Date(a.created));
+            
+            setCivicData(mergedCivic);
+            setSahayData(mergedSahay);
             setNagrikData(mergedNagrik);
 
             if (pocketbaseClient.authStore.model?.email === 'testcodecfg@gmail.com') {
@@ -305,7 +314,8 @@ export default function SevaSetuOrgDashboard() {
     const updateRecordStatus = async (record, newStatus) => {
         try {
             const source = record.source || 'pocketbase';
-            await updateCrossPlatformStatus(currentCollectionName, record.id, newStatus, source);
+            // Pass the exact db_collection override parameter safely to target accurate Firebase endpoints
+            await updateCrossPlatformStatus(currentCollectionName, record.id, newStatus, source, record.db_collection);
             
             // Optimistic UI updates
             if (activeTab === 'civic') setCivicData(civicData.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
@@ -354,7 +364,7 @@ export default function SevaSetuOrgDashboard() {
     
     if (activeTab === 'civic') { currentDataSet = civicData; currentCollectionName = 'civic_reports'; }
     if (activeTab === 'sahay') { currentDataSet = sahayData; currentCollectionName = 'volunteer_verifications'; }
-    if (activeTab === 'nagrik') { currentDataSet = nagrikData; currentCollectionName = 'nagrik_reports'; } // Dual backend
+    if (activeTab === 'nagrik') { currentDataSet = nagrikData; currentCollectionName = 'nagrik_reports'; } 
     if (activeTab === 'admin') { currentDataSet = adminData; currentCollectionName = 'sevasetu_admin_requests'; }
 
     const filteredData = currentDataSet.filter(rec => {
