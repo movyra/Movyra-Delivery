@@ -1,14 +1,16 @@
 /**
  * SYSTEM DOCUMENTATION / NGO MASTER ORGANIZATION DASHBOARD
  * Context: Secure multi-platform portal for verified NGOs and Super Admins.
- * Database: PocketBase (Unified queries for civic_reports, volunteer_verifications, sevasetu_admin_requests).
- * Features: Dark Mode, Staggered Slide Animations, Super Admin Gatekeeping, Real-time Sync, CSV Export.
+ * Database: Dual-Backend (PocketBase for Civic/Sahay/Admin, Firestore for NagrikSetu public reports).
+ * Features: Dark Mode, Staggered Slide Animations, URL Query Parsing, Super Admin Gatekeeping, Real-time Sync, CSV Export.
  */
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Search, X, Globe, Image as ImageIcon, Filter, CheckCircle, IndianRupee, ShieldCheck, MapPin, Moon, Sun, Download, LayoutDashboard, LifeBuoy, Lock } from 'lucide-react';
-import { pocketbaseClient, fetchCivicReports, fetchSahayCases, fetchSevaSetuAdminRequests, subscribeToCollection } from '../services/pocketbase';
+import { LogOut, Search, X, Globe, Image as ImageIcon, Filter, CheckCircle, IndianRupee, ShieldCheck, MapPin, Moon, Sun, Download, LayoutDashboard, LifeBuoy, Lock, Megaphone } from 'lucide-react';
+// STRICT FIX: Imported the new dual-backend fetchers and updaters
+import { pocketbaseClient, fetchCivicReports, fetchSahayCases, fetchSevaSetuAdminRequests, fetchFirestoreNagrikReports, fetchNagrikReportsPB, subscribeToCollection, subscribeToFirestoreNagrikReports, updateCrossPlatformStatus } from '../services/pocketbase';
+import { useLocation } from 'react-router-dom';
 
 const TRANSLATIONS = {
     en: {
@@ -19,7 +21,7 @@ const TRANSLATIONS = {
         update: "Update", logout: "Logout", loading: "Processing...", search: "Search Records",
         total: "Total Records", active_plan: "Active Plan", txn_id: "Transaction",
         plan_desc: "Your organization is verified on the network.", tab_civic: "Civic Reports",
-        tab_sahay: "Rescue Operations", tab_admin: "Super Admin", dark_mode: "Dark Mode", light_mode: "Light Mode",
+        tab_sahay: "Rescue Operations", tab_nagrik: "Public Reports", tab_admin: "Super Admin", dark_mode: "Dark Mode", light_mode: "Light Mode",
         export: "Export Data", sync: "Live Sync Active", no_data: "No records found."
     },
     hi: {
@@ -28,7 +30,7 @@ const TRANSLATIONS = {
         status: "स्थिति", action: "कार्रवाई", pending: "लंबित", verified: "सत्यापित", in_progress: "प्रगति पर", resolved: "हल", rejected: "अस्वीकृत",
         update: "अपडेट", logout: "लॉगआउट", loading: "प्रसंस्करण...", search: "रिकॉर्ड खोजें",
         total: "कुल रिकॉर्ड", active_plan: "सक्रिय प्लान", txn_id: "लेनदेन", plan_desc: "आपका संगठन नेटवर्क पर सत्यापित है।",
-        tab_civic: "नागरिक रिपोर्ट", tab_sahay: "बचाव कार्य", tab_admin: "सुपर एडमिन", dark_mode: "डार्क मोड", light_mode: "लाइट मोड",
+        tab_civic: "नागरिक रिपोर्ट", tab_sahay: "बचाव कार्य", tab_nagrik: "सार्वजनिक रिपोर्ट", tab_admin: "सुपर एडमिन", dark_mode: "डार्क मोड", light_mode: "लाइट मोड",
         export: "डाउनलोड", sync: "लाइव सिंक चालू", no_data: "कोई रिकॉर्ड नहीं मिला।"
     },
     hinglish: {
@@ -37,7 +39,7 @@ const TRANSLATIONS = {
         status: "Status", action: "Action", pending: "Pending", verified: "Verified", in_progress: "In Progress", resolved: "Resolved", rejected: "Rejected",
         update: "Update Karein", logout: "Logout", loading: "Processing...", search: "Search Karein",
         total: "Total Records", active_plan: "Active Plan", txn_id: "Transaction", plan_desc: "Aapka organization network par verified hai.",
-        tab_civic: "Civic Reports", tab_sahay: "Rescue Ops", tab_admin: "Super Admin", dark_mode: "Dark Mode", light_mode: "Light Mode",
+        tab_civic: "Civic Reports", tab_sahay: "Rescue Ops", tab_nagrik: "Public Reports", tab_admin: "Super Admin", dark_mode: "Dark Mode", light_mode: "Light Mode",
         export: "Download Data", sync: "Live Sync On", no_data: "Koi data nahi mila."
     },
     mr: {
@@ -46,7 +48,7 @@ const TRANSLATIONS = {
         status: "स्थिती", action: "कृती", pending: "प्रलंबित", verified: "सत्यापित", in_progress: "प्रगतीपथावर", resolved: "सोडवले", rejected: "नाकारले",
         update: "अपडेट", logout: "लॉगआउट", loading: "प्रक्रिया...", search: "रेकॉर्ड शोधा",
         total: "एकूण रेकॉर्ड", active_plan: "सक्रिय प्लान", txn_id: "व्यवहार", plan_desc: "तुमची संस्था नेटवर्कवर सत्यापित आहे.",
-        tab_civic: "नागरी अहवाल", tab_sahay: "बचाव कार्य", tab_admin: "सुपर ॲडमिन", dark_mode: "डार्क मोड", light_mode: "लाईट मोड",
+        tab_civic: "नागरी अहवाल", tab_sahay: "बचाव कार्य", tab_nagrik: "सार्वजनिक अहवाल", tab_admin: "सुपर ॲडमिन", dark_mode: "डार्क मोड", light_mode: "लाईट मोड",
         export: "डाउनलोड", sync: "लाइव्ह सिंक चालू", no_data: "कोणताही डेटा आढळला नाही."
     },
     gu: {
@@ -55,7 +57,7 @@ const TRANSLATIONS = {
         status: "સ્થિતિ", action: "ક્રિયા", pending: "બાકી", verified: "ચકાસાયેલ", in_progress: "પ્રગતિમાં છે", resolved: "ઉકેલાઈ ગયું", rejected: "નકારવામાં આવેલ",
         update: "અપડેટ", logout: "લોગઆઉટ", loading: "પ્રક્રિયા...", search: "રેકોર્ડ શોધો",
         total: "કુલ રેકોર્ડ", active_plan: "સક્રિય પ્લાન", txn_id: "વ્યવહાર", plan_desc: "તમારી સંસ્થા નેટવર્ક પર ચકાસાયેલ છે.",
-        tab_civic: "નાગરિક અહેવાલો", tab_sahay: "બચાવ કામગીરી", tab_admin: "સુપર એડમિન", dark_mode: "ડાર્ક મોડ", light_mode: "લાઇટ મોડ",
+        tab_civic: "નાગરિક અહેવાલો", tab_sahay: "બચાવ કામગીરી", tab_nagrik: "જાહેર અહેવાલો", tab_admin: "સુપર એડમિન", dark_mode: "ડાર્ક મોડ", light_mode: "લાઇટ મોડ",
         export: "ડાઉનલોડ", sync: "લાઇવ સિંક ચાલુ", no_data: "કોઈ રેકોર્ડ મળ્યો નથી."
     },
     te: {
@@ -64,7 +66,7 @@ const TRANSLATIONS = {
         status: "స్థితి", action: "చర్య", pending: "పెండింగ్", verified: "ధృవీకరించబడింది", in_progress: "పురోగతిలో ఉంది", resolved: "పరిష్కరించబడింది", rejected: "తిరస్కరించబడింది",
         update: "నవీకరించండి", logout: "లాగౌట్", loading: "ప్రాసెస్...", search: "రికార్డులను శోధించండి",
         total: "మొత్తం రికార్డులు", active_plan: "క్రియాశీల ప్లాన్", txn_id: "లావాదేవీ", plan_desc: "మీ సంస్థ నెట్‌వర్క్‌లో ధృవీకరించబడింది.",
-        tab_civic: "పౌర నివేదికలు", tab_sahay: "రెస్క్యూ ఆపరేషన్స్", tab_admin: "సూపర్ అడ్మిన్", dark_mode: "డార్క్ మోడ్", light_mode: "లైట్ మోడ్",
+        tab_civic: "పౌర నివేదికలు", tab_sahay: "రెస్క్యూ ఆపరేషన్స్", tab_nagrik: "ప్రజా నివేదికలు", tab_admin: "సూపర్ అడ్మిన్", dark_mode: "డార్క్ మోడ్", light_mode: "లైట్ మోడ్",
         export: "డౌన్‌లోడ్ చేయండి", sync: "లైవ్ సింక్ ఆన్‌లో ఉంది", no_data: "ఎలాంటి డేటా లేదు."
     },
     ta: {
@@ -73,7 +75,7 @@ const TRANSLATIONS = {
         status: "நிலை", action: "செயல்", pending: "நிலுவையில்", verified: "சரிபார்க்கப்பட்டது", in_progress: "செயலில்", resolved: "தீர்க்கப்பட்டது", rejected: "நிராகரிக்கப்பட்டது",
         update: "புதுப்பி", logout: "வெளியேறு", loading: "செயலாக்கம்...", search: "தேடல்",
         total: "மொத்த பதிவுகள்", active_plan: "செயலில் உள்ள திட்டம்", txn_id: "பரிவர்த்தனை", plan_desc: "நிறுவனம் நெட்வொர்க்கில் சரிபார்க்கப்பட்டது.",
-        tab_civic: "குடிமக்கள் அறிக்கைகள்", tab_sahay: "மீட்பு பணிகள்", tab_admin: "சூப்பர் நிர்வாகி", dark_mode: "இருண்ட பயன்முறை", light_mode: "ஒளி பயன்முறை",
+        tab_civic: "குடிமக்கள் அறிக்கைகள்", tab_sahay: "மீட்பு பணிகள்", tab_nagrik: "பொது அறிக்கைகள்", tab_admin: "சூப்பர் நிர்வாகி", dark_mode: "இருண்ட பயன்முறை", light_mode: "ஒளி பயன்முறை",
         export: "தரவிறக்கம்", sync: "நேரலை ஒத்திசைவு", no_data: "தரவு எதுவும் கிடைக்கவில்லை."
     },
     pa: {
@@ -82,7 +84,7 @@ const TRANSLATIONS = {
         status: "ਸਥਿਤੀ", action: "ਕਾਰਵਾਈ", pending: "ਬਕਾਇਆ", verified: "ਪ੍ਰਮਾਣਿਤ", in_progress: "ਪ੍ਰਗਤੀ ਵਿੱਚ", resolved: "ਹੱਲ", rejected: "ਰੱਦ",
         update: "ਅੱਪਡੇਟ ਕਰੋ", logout: "ਲਾਗਆਊਟ", loading: "ਪ੍ਰਕਿਰਿਆ...", search: "ਖੋਜ ਕਰੋ",
         total: "ਕੁੱਲ ਰਿਕਾਰਡ", active_plan: "ਸਰਗਰਮ ਪਲਾਨ", txn_id: "ਲੈਣ-ਦੇਣ", plan_desc: "ਤੁਹਾਡਾ ਸੰਗਠਨ ਨੈੱਟਵਰਕ 'ਤੇ ਪ੍ਰਮਾਣਿਤ ਹੈ।",
-        tab_civic: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ", tab_sahay: "ਬਚਾਅ ਕਾਰਜ", tab_admin: "ਸੁਪਰ ਐਡਮਿਨ", dark_mode: "ਡਾਰਕ ਮੋਡ", light_mode: "ਲਾਈਟ ਮੋਡ",
+        tab_civic: "ਨਾਗਰਿਕ ਰਿਪੋਰਟਾਂ", tab_sahay: "ਬਚਾਅ ਕਾਰਜ", tab_nagrik: "ਜਨਤਕ ਰਿਪੋਰਟਾਂ", tab_admin: "ਸੁਪਰ ਐਡਮਿਨ", dark_mode: "ਡਾਰਕ ਮੋਡ", light_mode: "ਲਾਈਟ ਮੋਡ",
         export: "ਡਾਊਨਲੋਡ ਕਰੋ", sync: "ਲਾਈਵ ਸਿੰਕ ਚਾਲੂ", no_data: "ਕੋਈ ਡਾਟਾ ਨਹੀਂ ਮਿਲਿਆ।"
     },
     bho: {
@@ -91,7 +93,7 @@ const TRANSLATIONS = {
         status: "स्थिति", action: "कार्रवाई", pending: "लंबित", verified: "सत्यापित", in_progress: "प्रगति पर", resolved: "हल", rejected: "अस्वीकृत",
         update: "अपडेट करीं", logout: "लॉगआउट", loading: "प्रक्रिया...", search: "खोजीं",
         total: "कुल रिकॉर्ड", active_plan: "सक्रिय प्लान", txn_id: "लेनदेन", plan_desc: "रउआँ के संगठन नेटवर्क पर सत्यापित बा।",
-        tab_civic: "नागरिक रिपोर्ट", tab_sahay: "बचाव कार्य", tab_admin: "सुपर एडमिन", dark_mode: "डार्क मोड", light_mode: "लाइट मोड",
+        tab_civic: "नागरिक रिपोर्ट", tab_sahay: "बचाव कार्य", tab_nagrik: "सार्वजनिक रिपोर्ट", tab_admin: "सुपर एडमिन", dark_mode: "डार्क मोड", light_mode: "लाइट मोड",
         export: "डाउनलोड", sync: "लाइव सिंक चालू", no_data: "कौनो डेटा ना मिलल।"
     },
     bn: {
@@ -100,7 +102,7 @@ const TRANSLATIONS = {
         status: "অবস্থা", action: "পদক্ষেপ", pending: "অপেক্ষমান", verified: "যাচাইকৃত", in_progress: "প্রক্রিয়াধীন", resolved: "সমাধান", rejected: "বাতিল",
         update: "আপডেট", logout: "লগআউট", loading: "প্রক্রিয়া চলছে...", search: "অনুসন্ধান করুন",
         total: "মোট রেকর্ড", active_plan: "সক্রিয় প্ল্যান", txn_id: "লেনদেন", plan_desc: "আপনার প্রতিষ্ঠান নেটওয়ার্কে যাচাইকৃত।",
-        tab_civic: "নাগরিক প্রতিবেদন", tab_sahay: "উদ্ধার কাজ", tab_admin: "সুপার অ্যাডমিন", dark_mode: "ডার্ক মোড", light_mode: "লাইট মোড",
+        tab_civic: "নাগরিক প্রতিবেদন", tab_sahay: "উদ্ধার কাজ", tab_nagrik: "জনসাধারণের প্রতিবেদন", tab_admin: "সুপার অ্যাডমিন", dark_mode: "ডার্ক মোড", light_mode: "লাইট মোড",
         export: "ডাউনলোড", sync: "লাইভ সিঙ্ক চালু", no_data: "কোন তথ্য পাওয়া যায়নি।"
     },
     kn: {
@@ -109,7 +111,7 @@ const TRANSLATIONS = {
         status: "ಸ್ಥಿತಿ", action: "ಕ್ರಮ", pending: "ಬಾಕಿಯಿದೆ", verified: "ಪರಿಶೀಲಿಸಲಾಗಿದೆ", in_progress: "ಪ್ರಗತಿಯಲ್ಲಿದೆ", resolved: "ಪರಿಹರಿಸಲಾಗಿದೆ", rejected: "ತಿರಸ್ಕರಿಸಲಾಗಿದೆ",
         update: "ನವೀಕರಿಸಿ", logout: "ಲಾಗ್ಔಟ್", loading: "ಪ್ರಕ್ರಿಯೆ...", search: "ಹುಡುಕಿ",
         total: "ಒಟ್ಟು ದಾಖಲೆಗಳು", active_plan: "ಸಕ್ರಿಯ ಪ್ಲಾನ್", txn_id: "ವಹಿವಾಟು", plan_desc: "ನಿಮ್ಮ ಸಂಸ್ಥೆಯನ್ನು ನೆಟ್‌ವರ್ಕ್‌ನಲ್ಲಿ ಪರಿಶೀಲಿಸಲಾಗಿದೆ.",
-        tab_civic: "ನಾಗರಿಕ ವರದಿಗಳು", tab_sahay: "ರಕ್ಷಣಾ ಕಾರ್ಯಾಚರಣೆಗಳು", tab_admin: "ಸೂಪರ್ ಅಡ್ಮಿನ್", dark_mode: "ಡಾರ್ಕ್ ಮೋಡ್", light_mode: "ಲೈಟ್ ಮೋಡ್",
+        tab_civic: "ನಾಗರಿಕ ವರದಿಗಳು", tab_sahay: "ರಕ್ಷಣಾ ಕಾರ್ಯಾಚರಣೆಗಳು", tab_nagrik: "ಸಾರ್ವಜನಿಕ ವರದಿಗಳು", tab_admin: "ಸೂಪರ್ ಅಡ್ಮಿನ್", dark_mode: "ಡಾರ್ಕ್ ಮೋಡ್", light_mode: "ಲೈಟ್ ಮೋಡ್",
         export: "ಡೌನ್‌ಲೋಡ್", sync: "ಲೈವ್ ಸಿಂಕ್ ಆನ್", no_data: "ಯಾವುದೇ ಡೇಟಾ ಕಂಡುಬಂದಿಲ್ಲ."
     },
     ml: {
@@ -118,7 +120,7 @@ const TRANSLATIONS = {
         status: "അവസ്ഥ", action: "നടപടി", pending: "തീരുമാനിച്ചിട്ടില്ല", verified: "ഉറപ്പാക്കി", in_progress: "പുരോഗമിക്കുന്നു", resolved: "പരിഹരിച്ചു", rejected: "നിരസിച്ചു",
         update: "അപ്ഡേറ്റ്", logout: "ലോഗൗട്ട്", loading: "പ്രവർത്തിക്കുന്നു...", search: "തിരയുക",
         total: "ആകെ റെക്കോർഡുകൾ", active_plan: "സജീവ പ്ലാൻ", txn_id: "ഇടപാട്", plan_desc: "നിങ്ങളുടെ സ്ഥാപനം നെറ്റ്‌വർക്കിൽ പരിശോധിച്ചുറപ്പിച്ചു.",
-        tab_civic: "സിവിക് റിപ്പോർട്ടുകൾ", tab_sahay: "രക്ഷാപ്രവർത്തനങ്ങൾ", tab_admin: "സൂപ്പർ അഡ്മിൻ", dark_mode: "ഡാർക്ക് മോഡ്", light_mode: "ലൈറ്റ് മോഡ്",
+        tab_civic: "സിവിക് റിപ്പോർട്ടുകൾ", tab_sahay: "രക്ഷാപ്രവർത്തനങ്ങൾ", tab_nagrik: "പൊതു റിപ്പോർട്ടുകൾ", tab_admin: "സൂപ്പർ അഡ്മിൻ", dark_mode: "ഡാർക്ക് മോഡ്", light_mode: "ലൈറ്റ് മോഡ്",
         export: "ഡൗൺലോഡ്", sync: "ലൈവ് സിങ്ക് ഓൺ", no_data: "വിവരങ്ങളൊന്നും ലഭ്യമല്ല."
     },
     or: {
@@ -127,7 +129,7 @@ const TRANSLATIONS = {
         status: "ସ୍ଥିତି", action: "କାର୍ଯ୍ୟ", pending: "ବାକି ଅଛି", verified: "ଯାଞ୍ଚ ହୋଇଛି", in_progress: "ପ୍ରଗତିରେ ଅଛି", resolved: "ସମାଧାନ ହୋଇଛି", rejected: "ପ୍ରତ୍ୟାଖ୍ୟାନ ହୋଇଛି",
         update: "ଅପଡେଟ୍", logout: "ଲଗଆଉଟ୍", loading: "ପ୍ରକ୍ରିୟାକରଣ...", search: "ସନ୍ଧାନ କରନ୍ତୁ",
         total: "ମୋଟ ରେକର୍ଡ", active_plan: "ସକ୍ରିୟ ପ୍ଲାନ୍", txn_id: "କାରବାର", plan_desc: "ଆପଣଙ୍କର ସଂସ୍ଥା ନେଟୱାର୍କରେ ଯାଞ୍ଚ ହୋଇଛି।",
-        tab_civic: "ନାଗରିକ ରିପୋର୍ଟ", tab_sahay: "ଉଦ୍ଧାର କାର୍ଯ୍ୟ", tab_admin: "ସୁପର ଆଡମିନ", dark_mode: "ଡାର୍କ ମୋଡ୍", light_mode: "ଲାଇଟ୍ ମୋଡ୍",
+        tab_civic: "ନାଗରିକ ରିପୋର୍ଟ", tab_sahay: "ଉଦ୍ଧାର କାର୍ଯ୍ୟ", tab_nagrik: "ସାର୍ବଜନୀନ ରିପୋର୍ଟ", tab_admin: "ସୁପର ଆଡମିନ", dark_mode: "ଡାର୍କ ମୋଡ୍", light_mode: "ଲାଇଟ୍ ମୋଡ୍",
         export: "ଡାଉନଲୋଡ୍", sync: "ଲାଇଭ୍ ସିଙ୍କ୍ ଚାଲୁ ଅଛି", no_data: "କୌଣସି ତଥ୍ୟ ମିଳିଲା ନାହିଁ।"
     },
     as: {
@@ -136,18 +138,19 @@ const TRANSLATIONS = {
         status: "অৱস্থা", action: "পদক্ষেপ", pending: "বাকি আছে", verified: "পৰীক্ষা কৰা হ'ল", in_progress: "প্ৰগতিশীল", resolved: "সমাধান হ'ল", rejected: "বাতিল হ'ল",
         update: "আপডেট", logout: "লগআউট", loading: "প্ৰক্ৰিয়া...", search: "সন্ধান কৰক",
         total: "মুঠ ৰেকৰ্ড", active_plan: "সক্ৰিয় প্লেন", txn_id: "লেনদেন", plan_desc: "আপোনাৰ সংস্থা নেটৱৰ্কত প্ৰমাণিত।",
-        tab_civic: "নাগৰিক প্ৰতিবেদন", tab_sahay: "উদ্ধাৰ কাৰ্য্য", tab_admin: "ছুপাৰ এডমিন", dark_mode: "ডাৰ্ক মোড", light_mode: "লাইট মোড",
+        tab_civic: "নাগৰিক প্ৰতিবেদন", tab_sahay: "উদ্ধাৰ কাৰ্য্য", tab_nagrik: "ৰাজহুৱা প্ৰতিবেদন", tab_admin: "ছুপাৰ এডমিন", dark_mode: "ডাৰ্ক মোড", light_mode: "লাইট মোড",
         export: "ডাউনল'ড", sync: "লাইভ চিংক অন", no_data: "কোনো তথ্য পোৱা নগ'ল।"
     }
 };
 
 export default function SevaSetuOrgDashboard() {
+    const location = useLocation();
     const [lang, setLang] = useState('en');
     const [showLangPrompt, setShowLangPrompt] = useState(false);
     
-    // NEW: 6+ Dashboard Features State
+    // Dashboard Features State
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [activeTab, setActiveTab] = useState('civic'); // civic, sahay, admin
+    const [activeTab, setActiveTab] = useState('nagrik'); // Defaulting to NagrikSetu Public Reports
     
     // Auth State
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -160,6 +163,7 @@ export default function SevaSetuOrgDashboard() {
     // Multi-Platform Data State
     const [civicData, setCivicData] = useState([]);
     const [sahayData, setSahayData] = useState([]);
+    const [nagrikData, setNagrikData] = useState([]); // NEW: State for public reports
     const [adminData, setAdminData] = useState([]);
     
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -172,7 +176,7 @@ export default function SevaSetuOrgDashboard() {
 
     const isSuperAdmin = organizationData?.email === 'testcodecfg@gmail.com';
 
-    // Slide Animation Variants (Strictly Staggered)
+    // Slide Animation Variants
     const tableContainerVariants = {
         hidden: { opacity: 0 },
         show: {
@@ -186,8 +190,19 @@ export default function SevaSetuOrgDashboard() {
         show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
     };
 
-    // Load User and Apply Theme
+    // Initialize Theme and URL Parameters
     useEffect(() => {
+        // Parse URL parameters for direct category routing (e.g. ?category=traffic)
+        const params = new URLSearchParams(location.search);
+        const categoryParam = params.get('category');
+        if (categoryParam) {
+            setSearchQuery(categoryParam);
+            setActiveTab('nagrik');
+        }
+
+        const savedTheme = localStorage.getItem('sevasetu_theme');
+        if (savedTheme === 'dark') setIsDarkMode(true);
+        
         if (pocketbaseClient.authStore.isValid && pocketbaseClient.authStore.model?.collectionName === 'ngo_users') {
             setIsAuthenticated(true);
             setOrganizationData(pocketbaseClient.authStore.model);
@@ -196,22 +211,22 @@ export default function SevaSetuOrgDashboard() {
             pocketbaseClient.authStore.clear();
             setIsAuthenticated(false);
         }
-        
-        // Theme init
-        const savedTheme = localStorage.getItem('sevasetu_theme');
-        if (savedTheme === 'dark') setIsDarkMode(true);
-    }, []);
+    }, [location.search]);
 
-    // NEW: Real-time SSE Subscriptions
-    // STRICT UPDATE: Adjusted to target the exact database collections
+    // Dual-Backend Real-time Subscriptions
     useEffect(() => {
         if (!isAuthenticated) return;
 
-        let unsubCivic, unsubSahay, unsubAdmin;
+        let unsubCivic, unsubSahay, unsubNagrikPB, unsubAdmin, unsubFirestore;
 
         const setupSubscriptions = async () => {
             unsubCivic = subscribeToCollection('civic_reports', () => { fetchAllPlatformData(false); });
             unsubSahay = subscribeToCollection('volunteer_verifications', () => { fetchAllPlatformData(false); });
+            unsubNagrikPB = subscribeToCollection('nagrik_reports', () => { fetchAllPlatformData(false); }); // PB listener
+            
+            // NEW: Firestore Listener
+            unsubFirestore = subscribeToFirestoreNagrikReports(() => { fetchAllPlatformData(false); });
+
             if (isSuperAdmin) {
                 unsubAdmin = subscribeToCollection('sevasetu_admin_requests', () => { fetchAllPlatformData(false); });
             }
@@ -222,6 +237,8 @@ export default function SevaSetuOrgDashboard() {
         return () => {
             if (unsubCivic) unsubCivic();
             if (unsubSahay) unsubSahay();
+            if (unsubNagrikPB) unsubNagrikPB();
+            if (unsubFirestore) unsubFirestore();
             if (unsubAdmin) unsubAdmin();
         };
     }, [isAuthenticated, isSuperAdmin]);
@@ -254,20 +271,28 @@ export default function SevaSetuOrgDashboard() {
         setOrganizationData(null);
         setCivicData([]);
         setSahayData([]);
+        setNagrikData([]);
         setAdminData([]);
     };
 
+    // Master Fetcher for all platforms (Firestore + PocketBase)
     const fetchAllPlatformData = async (showLoader = true) => {
         if (showLoader) setIsLoadingData(true);
         try {
-            const [civicRes, sahayRes] = await Promise.all([
+            const [civicRes, sahayRes, pbNagrikRes, firestoreNagrikRes] = await Promise.all([
                 fetchCivicReports(),
-                fetchSahayCases()
+                fetchSahayCases(),
+                fetchNagrikReportsPB(),
+                fetchFirestoreNagrikReports() // From Firebase
             ]);
+            
             setCivicData(civicRes);
             setSahayData(sahayRes);
+            
+            // Merge Firestore and PocketBase public reports, sort by newest
+            const mergedNagrik = [...firestoreNagrikRes, ...pbNagrikRes].sort((a, b) => new Date(b.created) - new Date(a.created));
+            setNagrikData(mergedNagrik);
 
-            // Strict Role-Based Fetching
             if (pocketbaseClient.authStore.model?.email === 'testcodecfg@gmail.com') {
                 const adminRes = await fetchSevaSetuAdminRequests();
                 setAdminData(adminRes);
@@ -279,27 +304,31 @@ export default function SevaSetuOrgDashboard() {
         }
     };
 
-    // STRICT UPDATE: Adjusted to target the exact database collections for status mutations
-    const updateStatus = async (collection, recordId, newStatus) => {
+    // Dual-Backend Status Updater
+    const updateRecordStatus = async (record, newStatus) => {
         try {
-            await pocketbaseClient.collection(collection).update(recordId, { status: newStatus });
-            // Optimistic update
-            if (collection === 'civic_reports') setCivicData(civicData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
-            if (collection === 'volunteer_verifications') setSahayData(sahayData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
-            if (collection === 'sevasetu_admin_requests') setAdminData(adminData.map(r => r.id === recordId ? { ...r, status: newStatus } : r));
+            const source = record.source || 'pocketbase';
+            await updateCrossPlatformStatus(currentCollectionName, record.id, newStatus, source);
+            
+            // Optimistic UI updates
+            if (activeTab === 'civic') setCivicData(civicData.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
+            if (activeTab === 'sahay') setSahayData(sahayData.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
+            if (activeTab === 'nagrik') setNagrikData(nagrikData.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
+            if (activeTab === 'admin') setAdminData(adminData.map(r => r.id === record.id ? { ...r, status: newStatus } : r));
         } catch (error) {
             alert("Error updating status. Ensure you have the required permissions.");
         }
     };
 
     const exportToCSV = () => {
-        const dataToExport = activeTab === 'civic' ? civicData : activeTab === 'sahay' ? sahayData : adminData;
+        const dataToExport = currentDataSet;
         if (dataToExport.length === 0) return;
         
-        const headers = ["ID", "Title", "Status", "Created At"];
+        const headers = ["ID", "Title", "Category", "Status", "Created At"];
         const rows = dataToExport.map(row => [
             row.ack_number || row.id, 
             `"${(row.title || row.needyName || row.request_type || '').replace(/"/g, '""')}"`, 
+            `"${(row.category || row.condition || '').replace(/"/g, '""')}"`,
             row.status, 
             row.created
         ]);
@@ -317,17 +346,22 @@ export default function SevaSetuOrgDashboard() {
     };
 
     const getFileUrl = (record, filename) => {
+        if (record.source === 'firestore') return record.mediaUrl; // Use raw URL if from Firebase Storage
         if (!filename) return null;
-        return pocketbaseClient.files.getUrl(record, filename);
+        return pocketbaseClient.files.getUrl(record, filename); // Construct PB URL
     };
 
-    // Active Data Selection based on Tab
-    // STRICT UPDATE: Adjusted to map the UI tabs to the exact correct collections
-    const currentDataSet = activeTab === 'civic' ? civicData : activeTab === 'sahay' ? sahayData : adminData;
-    const currentCollectionName = activeTab === 'civic' ? 'civic_reports' : activeTab === 'sahay' ? 'volunteer_verifications' : 'sevasetu_admin_requests';
+    // Tab Mapping
+    let currentDataSet = [];
+    let currentCollectionName = '';
+    
+    if (activeTab === 'civic') { currentDataSet = civicData; currentCollectionName = 'civic_reports'; }
+    if (activeTab === 'sahay') { currentDataSet = sahayData; currentCollectionName = 'volunteer_verifications'; }
+    if (activeTab === 'nagrik') { currentDataSet = nagrikData; currentCollectionName = 'nagrik_reports'; } // Dual backend
+    if (activeTab === 'admin') { currentDataSet = adminData; currentCollectionName = 'sevasetu_admin_requests'; }
 
     const filteredData = currentDataSet.filter(rec => {
-        const rawString = `${rec.ack_number || ''} ${rec.title || ''} ${rec.location || ''} ${rec.needyName || ''} ${rec.request_type || ''}`.toLowerCase();
+        const rawString = `${rec.ack_number || ''} ${rec.title || ''} ${rec.category || ''} ${rec.location || ''} ${rec.needyName || ''} ${rec.request_type || ''}`.toLowerCase();
         const matchesSearch = rawString.includes(searchQuery.toLowerCase());
         const matchesStatus = statusFilter === 'All' || rec.status === statusFilter;
         return matchesSearch && matchesStatus;
@@ -426,7 +460,6 @@ export default function SevaSetuOrgDashboard() {
                         <input type="text" placeholder={currentT.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={`pl-9 pr-4 py-2 ${bgInput} border ${borderCol} rounded-lg ${textMain} font-medium outline-none focus:border-[#2563EB] w-48 sm:w-64 transition-colors`} />
                     </div>
                     
-                    {/* Export Button */}
                     <button onClick={exportToCSV} className={`flex items-center gap-2 px-3 py-2 border ${borderCol} rounded-lg ${textMain} font-bold text-[0.85rem] ${bgInput} outline-none hover:border-[#2563EB] transition-colors`} title={currentT.export}>
                         <Download size={16} /> <span className="hidden sm:inline">{currentT.export}</span>
                     </button>
@@ -449,6 +482,10 @@ export default function SevaSetuOrgDashboard() {
                 
                 {/* Tab Navigation */}
                 <div className="flex items-center gap-2 border-b border-[#E5E7EB] dark:border-[#222222] pb-2 overflow-x-auto hide-scrollbar">
+                    {/* NEW: NagrikSetu Public Reports Tab */}
+                    <button onClick={() => setActiveTab('nagrik')} className={`px-4 py-2 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 outline-none whitespace-nowrap transition-colors ${activeTab === 'nagrik' ? activeBlue : inactiveBlue}`}>
+                        <Megaphone size={16}/> {currentT.tab_nagrik}
+                    </button>
                     <button onClick={() => setActiveTab('civic')} className={`px-4 py-2 rounded-xl font-bold text-[0.9rem] flex items-center gap-2 outline-none whitespace-nowrap transition-colors ${activeTab === 'civic' ? activeBlue : inactiveBlue}`}>
                         <LayoutDashboard size={16}/> {currentT.tab_civic}
                     </button>
@@ -562,14 +599,14 @@ export default function SevaSetuOrgDashboard() {
                                             <td className={`p-4 font-medium ${textMuted}`}>{record.category || record.condition || record.email || "N/A"}</td>
                                             <td className={`p-4 font-medium ${textMuted} truncate max-w-[150px]`} title={record.location}>{record.location || "N/A"}</td>
                                             <td className="p-4">
-                                                {record.photo || record.mediaUrl ? (
-                                                    <button onClick={() => setSelectedImage(record.mediaUrl || getFileUrl(record, record.photo))} className={`w-8 h-8 ${bgInput} rounded flex items-center justify-center border ${borderCol} ${textMain} outline-none`} title="View Image">
+                                                {(record.photo || record.mediaUrl) ? (
+                                                    <button onClick={() => setSelectedImage(getFileUrl(record, record.photo))} className={`w-8 h-8 ${bgInput} rounded flex items-center justify-center border ${borderCol} ${textMain} outline-none`} title="View Image">
                                                         <ImageIcon size={14} />
                                                     </button>
                                                 ) : <span className={`text-xs ${textMuted} italic`}>None</span>}
                                             </td>
                                             <td className="p-4 text-right">
-                                                <select value={record.status || 'Pending'} onChange={(e) => updateStatus(currentCollectionName, record.id, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none cursor-pointer ${record.status === 'Resolved' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#16A34A] dark:bg-[#064e3b]' : record.status === 'In Progress' ? 'bg-[#EFF6FF] text-[#2563EB] border-[#2563EB] dark:bg-[#1e3a8a]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#DC2626] dark:bg-[#7f1d1d]' : 'bg-[#FFFBEB] text-[#D97706] border-[#D97706] dark:bg-[#78350f]'}`}>
+                                                <select value={record.status || 'Pending'} onChange={(e) => updateRecordStatus(record, e.target.value)} className={`p-1.5 rounded-lg font-bold text-[0.8rem] border outline-none cursor-pointer ${record.status === 'Resolved' ? 'bg-[#ECFDF5] text-[#16A34A] border-[#16A34A] dark:bg-[#064e3b]' : record.status === 'In Progress' ? 'bg-[#EFF6FF] text-[#2563EB] border-[#2563EB] dark:bg-[#1e3a8a]' : record.status === 'Rejected' ? 'bg-[#FEF2F2] text-[#DC2626] border-[#DC2626] dark:bg-[#7f1d1d]' : 'bg-[#FFFBEB] text-[#D97706] border-[#D97706] dark:bg-[#78350f]'}`}>
                                                     <option value="Pending">{currentT.pending}</option>
                                                     <option value="Verified">{currentT.verified}</option>
                                                     <option value="In Progress">{currentT.in_progress}</option>
