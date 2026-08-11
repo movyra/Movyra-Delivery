@@ -7,7 +7,9 @@
 import PocketBase from 'pocketbase';
 // NEW: Import Firestore bridge capabilities
 import { collection, getDocs, query, orderBy, limit, onSnapshot, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../mv-main/src/firebaseConfig'; // Ensure this path correctly points to your initialized Firebase app
+
+// STRICT FIX: Corrected the broken relative import path for Vite resolution
+import { db } from '../firebaseConfig'; 
 
 const POCKETBASE_URL = 'https://movyra-mv-main-db-gradio.hf.space';
 const pb = new PocketBase(POCKETBASE_URL);
@@ -345,7 +347,7 @@ export const fetchOrganizationVerifications = () => fetchCollectionData('organiz
 
 // STRICT FIX: Added PocketBase fetchers for the newly identified collections
 export const fetchNagrikEvidence = () => fetchCollectionData('nagrik_evidence');
-export const fetchNagrikReportsPB = () => fetchCollectionData('nagrik_reports');
+// STRICT FIX: REMOVED fetchNagrikReportsPB to prevent 404 crashes as this collection is Firestore-only
 
 export const fetchCivicReports = () => fetchCollectionData('civic_reports'); 
 export const fetchCivicMedia = () => fetchCollectionData('civic_media');
