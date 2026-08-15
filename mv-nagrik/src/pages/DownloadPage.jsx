@@ -162,7 +162,7 @@ export default function DownloadPage() {
     const APP_VERSION = "1.0.0";
     const APP_SIZE = "1.94 MB";
     const GITHUB_APK_LINK = "https://github.com/movyra/movyra/releases/download/v1.0.0/NagrikSetu-v1.0.0.apk";
-    const SHA_256_HASH = "26:FF:38:91:93:D8:6A:2D:21:1D:77:10:17:C4:60:4D:4B:3F:C9:2F:10:C2:2A:D0:09:60:8B:05:CC:C7:A3:4D";
+    const SHA_256_HASH = "F2:24:B7:20:1C:41:FF:E8:74:D8:C2:C2:17:53:66:98:DA:4F:66:85:0F:EA:14:B5:34:3C:FF:22:D3:25:D5:75";
 
     // STRICT COLOR VARIABLES (NagrikSetu Brand)
     const theme = {
