@@ -1,1 +1,5 @@
 mv-backend/target/
+**/.gradle/
+**/app/build/
+*.apk
+*.aab
