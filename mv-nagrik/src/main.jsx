@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Import the background update system
+import { registerSW } from 'virtual:pwa-register'
+
 // 15-Language Translation Dictionary for Background Update Status
 const t = {
     en: "Updating application to the latest version...",
@@ -41,6 +44,18 @@ if ('serviceWorker' in navigator) {
         });
     });
 }
+
+// Initialize the new silent auto-update system
+const updateApp = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    // Automatically apply the new update without requiring user action
+    updateApp(true);
+  },
+  onOfflineReady() {
+    console.log('[System Notice]: Application assets are cached for immediate loading.');
+  },
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
