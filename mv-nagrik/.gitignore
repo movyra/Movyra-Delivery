@@ -6,11 +6,28 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
 
+# Dependencies and Build Outputs
 node_modules
 dist
 dist-ssr
 *.local
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Firebase Cache
+.firebase/
+
+# Android & Bubblewrap Build Artifacts (Strict Security & Size Limits)
+android-app/**/*.apk
+android-app/**/*.aab
+android-app/android.keystore
+android-app/build/
+android-app/.gradle/
 
 # Editor directories and files
 .vscode/*
