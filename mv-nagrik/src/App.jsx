@@ -36,6 +36,14 @@ const DownloadPage = React.lazy(() => import('./pages/DownloadPage'));
 // New Marketing Showcase Page
 const MarketingLanding = React.lazy(() => import('./pages/MarketingLanding'));
 
+// New Civic Expansion Modules
+const CivicDirectory = React.lazy(() => import('./pages/CivicDirectory'));
+const CivicPolls = React.lazy(() => import('./pages/CivicPolls'));
+const LostFound = React.lazy(() => import('./pages/LostFound'));
+const VolunteerNetwork = React.lazy(() => import('./pages/VolunteerNetwork'));
+const PublicAmenities = React.lazy(() => import('./pages/PublicAmenities'));
+const CivicRights = React.lazy(() => import('./pages/CivicRights'));
+
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
     <div className="min-h-screen bg-[#FFFFFF] flex items-center justify-center w-full">
@@ -116,6 +124,14 @@ const AppLayout = () => {
 
                             {/* Live Panic Broadcast Engine */}
                             <Route path="/sos" element={<SOS />} />
+
+                            {/* New Civic Expansion Routes */}
+                            <Route path="/directory" element={<CivicDirectory />} />
+                            <Route path="/polls" element={<CivicPolls />} />
+                            <Route path="/lost-found" element={<LostFound />} />
+                            <Route path="/volunteer" element={<VolunteerNetwork />} />
+                            <Route path="/amenities" element={<PublicAmenities />} />
+                            <Route path="/rights" element={<CivicRights />} />
 
                             {/* Civic Gamification */}
                             <Route path="/leaderboard" element={<Leaderboard />} />
