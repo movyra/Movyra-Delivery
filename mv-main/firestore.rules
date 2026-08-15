@@ -520,5 +520,55 @@ service cloud.firestore {
       allow delete: if isAdmin() || isSuperAdmin();
     }
 
+    // ========================================================================
+    // NEW CIVIC EXPANSION MODULES (6+ FEATURES ADDED)
+    // ========================================================================
+    
+    // 1. SOS Emergency Alerts System
+    match /sos_alerts/{alertId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() || isAdmin() || isSuperAdmin();
+      allow update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 2. Civic Authorities Directory
+    match /civic_directory/{contactId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 3. Community Polling System
+    match /civic_polls/{pollId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 4. Lost and Found Registry
+    match /lost_found/{itemId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 5. Volunteer Network Registration
+    match /volunteer_network/{registrationId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 6. Public Amenities Locator
+    match /public_amenities/{amenityId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 7. Civic Rights Knowledge Base
+    match /civic_rights_kb/{articleId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
   }
 }

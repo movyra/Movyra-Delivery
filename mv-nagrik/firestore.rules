@@ -277,7 +277,6 @@ service cloud.firestore {
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
     
-    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
     }
@@ -322,7 +321,7 @@ service cloud.firestore {
         !request.resource.data.get('description', '').matches('(?i).*test.*')
       );
       allow read: if true;   // Public viewing permitted for the map and transparency features
-      allow update: if true; // Explicitly allow public update operations for upvotes/appends
+      allow update: if true; // Explicitly allow public update operations for cross-platform status updates
       allow delete: if isAdmin(); // Administration strictly protected
     }
 
@@ -380,7 +379,7 @@ service cloud.firestore {
       allow read: if true;
       // Allow public creation with strict schema validation preventing empty spam
       allow create: if request.resource.data.keys().hasAll(['needyName', 'condition', 'mediaUrl', 'status']);
-      // Allow public updates to support unauthenticated task acceptances and confirmations
+      // Allow public updates to support unauthenticated cross-platform status updates
       allow update: if true;
       // Only system administrators can permanently delete records
       allow delete: if isAdmin();
@@ -427,7 +426,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // New Sahay Admin Collections
     match /sahay_audit_logs/{logId} {
       allow read, write: if isAdmin();
     }
@@ -455,14 +453,13 @@ service cloud.firestore {
     // ========================================================================
     
     // Core Reporting Feed
-    // STRICT FIX: Updated permissions to allow authenticated NGOs to update status while retaining Super Admin deletion control
     match /nagrik_reports/{reportId} {
       // Allow authenticated users. Allow unauthenticated guests strictly if they provide personal details.
       allow create: if isAuthenticated() || (request.resource.data.keys().hasAll(['guestName', 'guestContact']));
       // Public read enabled for civic transparency and dashboard retrieval
       allow read: if true;
-      // Allow authenticated NGO organizations and Super Admins to update report statuses
-      allow update: if isAuthenticated() || isSuperAdmin() || isAdmin();
+      // STRICT FIX: Allow public update so PocketBase-authenticated users can modify the status
+      allow update: if true;
       // Only the designated testcodecfg@gmail.com account is granted deletion override permissions.
       allow delete: if isSuperAdmin();
     }
@@ -474,7 +471,7 @@ service cloud.firestore {
       allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin(); // Strict SuperAdmin moderation
     }
 
-    // NEW: Community Engagement (Likes)
+    // Community Engagement (Likes)
     match /nagrik_likes/{likeId} {
       allow read: if true; // Public can see like counts
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid; // Only logged in users can like
@@ -482,7 +479,7 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId) || isSuperAdmin(); // SuperAdmin can purge artificial likes
     }
 
-    // NEW: Direct Messaging Gateway
+    // Direct Messaging Gateway
     match /nagrik_messages/{messageId} {
       allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid; // Only authenticated senders
       allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) || isSuperAdmin(); // Strict private reading + Admin Audit
@@ -506,6 +503,69 @@ service cloud.firestore {
 
     // Official Local Announcements Feed
     match /nagrik_announcements/{announcementId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // ========================================================================
+    // CROSS-PLATFORM VERIFICATION & EVIDENCE (NEW)
+    // ========================================================================
+    match /nagrik_evidence/{evidenceId} {
+      allow read, update, create: if true;
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    match /volunteer_verifications/{verificationId} {
+      allow read, update, create: if true;
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ========================================================================
+    // NEW CIVIC EXPANSION MODULES (6+ FEATURES ADDED)
+    // ========================================================================
+    
+    // 1. SOS Emergency Alerts System
+    match /sos_alerts/{alertId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() || isAdmin() || isSuperAdmin();
+      allow update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 2. Civic Authorities Directory
+    match /civic_directory/{contactId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 3. Community Polling System
+    match /civic_polls/{pollId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 4. Lost and Found Registry
+    match /lost_found/{itemId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 5. Volunteer Network Registration
+    match /volunteer_network/{registrationId} {
+      allow create: if isAuthenticated();
+      allow read, update: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 6. Public Amenities Locator
+    match /public_amenities/{amenityId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 7. Civic Rights Knowledge Base
+    match /civic_rights_kb/{articleId} {
       allow read: if true;
       allow write: if isAdmin() || isSuperAdmin();
     }
