@@ -31,18 +31,25 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const SOS = React.lazy(() => import('./pages/SOS'));
 const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-// New Official Download Page
+
+// New Official Marketing Pages
 const DownloadPage = React.lazy(() => import('./pages/DownloadPage'));
-// New Marketing Showcase Page
 const MarketingLanding = React.lazy(() => import('./pages/MarketingLanding'));
 
-// New Civic Expansion Modules
+// Civic Expansion Modules
 const CivicDirectory = React.lazy(() => import('./pages/CivicDirectory'));
 const CivicPolls = React.lazy(() => import('./pages/CivicPolls'));
 const LostFound = React.lazy(() => import('./pages/LostFound'));
 const VolunteerNetwork = React.lazy(() => import('./pages/VolunteerNetwork'));
 const PublicAmenities = React.lazy(() => import('./pages/PublicAmenities'));
 const CivicRights = React.lazy(() => import('./pages/CivicRights'));
+
+// Advanced Social Network Modules (NEW)
+const UserProfile = React.lazy(() => import('./pages/UserProfile'));
+const CreatePost = React.lazy(() => import('./pages/CreatePost'));
+const StoryViewer = React.lazy(() => import('./pages/StoryViewer'));
+const Comments = React.lazy(() => import('./pages/Comments'));
+const Messages = React.lazy(() => import('./pages/Messages'));
 
 // Minimalist loader utilizing the strictly requested 4-color palette
 const PageLoader = () => (
@@ -92,8 +99,8 @@ const AppLayout = () => {
         return () => unsubscribe();
     }, [location.pathname, navigate]);
     
-    // Conditionally hide navigation components for immersive screens
-    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing'].includes(location.pathname);
+    // Conditionally hide navigation components for immersive screens (including dynamic story routes)
+    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing'].includes(location.pathname) || location.pathname.startsWith('/story');
     
     // Strictly remove relative container restraints for marketing routes to force edge-to-edge widescreen rendering
     const isWidescreenRoute = ['/landing', '/download'].includes(location.pathname);
@@ -135,6 +142,13 @@ const AppLayout = () => {
 
                             {/* Civic Gamification */}
                             <Route path="/leaderboard" element={<Leaderboard />} />
+
+                            {/* Advanced Social Network Routes (NEW) */}
+                            <Route path="/create" element={<CreatePost />} />
+                            <Route path="/story/:id" element={<StoryViewer />} />
+                            <Route path="/comments/:id" element={<Comments />} />
+                            <Route path="/profile/:id" element={<UserProfile />} />
+                            <Route path="/messages" element={<Messages />} />
 
                             {/* Official Download Landing Page */}
                             <Route path="/download" element={<DownloadPage />} />
