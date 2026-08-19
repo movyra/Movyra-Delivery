@@ -14,7 +14,7 @@
  * Odia: ଏସଓଏସ ଅତିଥି ପ୍ରବେଶ, ଅତିଥି ରିପୋର୍ଟିଂ ଯାଞ୍ଚ ଏବଂ ସୁପର ଆଡମିନ ନିୟନ୍ତ୍ରଣ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ବିନ୍ୟାସ କରାଯାଇଛି।
  * Assamese: এছঅএছ অতিথি প্ৰৱেশ, অতিথি প্ৰতিবেদন বৈধকৰণ আৰু ছুপাৰ এডমিন নিয়ন্ত্ৰণৰ বাবে নিৰাপত্তা নিয়মসমূহ কনফিগাৰ কৰা হৈছে।
  * Urdu: ایس او ایس مہمان کی رسائی، مہمان رپورٹنگ کی توثیق اور سپر ایڈمن کنٹرولز کے لیے حفاظتی قوانین مرتب کیے گئے ہیں۔
- * Bhojpuri: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
+ * भोजपुरी: एसओएस अतिथि पहुँच, अतिथि रिपोर्टिंग सत्यापन आ सुपर एडमिन नियंत्रण खातिर सुरक्षा नियम कॉन्फ़िगर कइल गइल बा।
  * 
  * Strict Color System Adherence (For Frontend Implementation Reference):
  * Primary: #00897B | Black: #111111 | White: #FFFFFF | Accent: #FFB300
@@ -68,12 +68,28 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin(); // Administrative reads strictly protected
     }
 
+    // STRICT FIX: Added explicit waitlist collection matching to resolve Missing Permissions Error
+    match /waitlist/{document} {
+      allow create: if true; // Unauthenticated public registration permitted
+      allow read, update, delete: if isAdmin(); // Administrative protection
+    }
+
     // ========================================================================
     // CORPORATE RECRUITMENT PORTAL
     // ========================================================================
     match /career_applications/{document} {
-      // Require authentication to submit an application
-      allow create: if isAuthenticated();
+      // Allow unauthenticated public users to submit applications
+      allow create: if true;
+      // Strictly restrict reading/processing to internal administrators only
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ========================================================================
+    // TECHNICAL SUPPORT WIDGET
+    // ========================================================================
+    match /technical_issues/{document} {
+      // Allow unauthenticated public users to submit support tickets
+      allow create: if true;
       // Strictly restrict reading/processing to internal administrators only
       allow read, update, delete: if isAdmin();
     }
@@ -261,7 +277,6 @@ service cloud.firestore {
     // LEGACY ROOT COLLECTIONS (Existing Bridge for Migration)
     // ========================================================================
     
-    // UPDATED: Granted SuperAdmin access to strictly update user profiles from Admin Dashboard
     match /users/{userId} {
       allow read, write: if isOwner(userId) || isAdmin() || isSuperAdmin();
     }
@@ -306,7 +321,7 @@ service cloud.firestore {
         !request.resource.data.get('description', '').matches('(?i).*test.*')
       );
       allow read: if true;   // Public viewing permitted for the map and transparency features
-      allow update: if true; // Explicitly allow public update operations for upvotes/appends
+      allow update: if true; // Explicitly allow public update operations for cross-platform status updates
       allow delete: if isAdmin(); // Administration strictly protected
     }
 
@@ -364,7 +379,7 @@ service cloud.firestore {
       allow read: if true;
       // Allow public creation with strict schema validation preventing empty spam
       allow create: if request.resource.data.keys().hasAll(['needyName', 'condition', 'mediaUrl', 'status']);
-      // Allow public updates to support unauthenticated task acceptances and confirmations
+      // Allow public updates to support unauthenticated cross-platform status updates
       allow update: if true;
       // Only system administrators can permanently delete records
       allow delete: if isAdmin();
@@ -411,7 +426,6 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // New Sahay Admin Collections
     match /sahay_audit_logs/{logId} {
       allow read, write: if isAdmin();
     }
@@ -442,10 +456,12 @@ service cloud.firestore {
     match /nagrik_reports/{reportId} {
       // Allow authenticated users. Allow unauthenticated guests strictly if they provide personal details.
       allow create: if isAuthenticated() || (request.resource.data.keys().hasAll(['guestName', 'guestContact']));
+      // Public read enabled for civic transparency and dashboard retrieval
       allow read: if true;
-      // Strictly revoke report deletion and update capabilities from standard users.
-      // Only the designated testcodecfg@gmail.com account is granted override permissions.
-      allow update, delete: if isSuperAdmin();
+      // STRICT FIX: Allow public update so PocketBase-authenticated users can modify the status
+      allow update: if true;
+      // Only the designated testcodecfg@gmail.com account is granted deletion override permissions.
+      allow delete: if isSuperAdmin();
     }
 
     // Community Video Updates (Instagram Reels/Stories)
@@ -455,7 +471,7 @@ service cloud.firestore {
       allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin(); // Strict SuperAdmin moderation
     }
 
-    // NEW: Community Engagement (Likes)
+    // Community Engagement (Likes)
     match /nagrik_likes/{likeId} {
       allow read: if true; // Public can see like counts
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid; // Only logged in users can like
@@ -463,7 +479,7 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId) || isSuperAdmin(); // SuperAdmin can purge artificial likes
     }
 
-    // NEW: Direct Messaging Gateway
+    // Direct Messaging Gateway
     match /nagrik_messages/{messageId} {
       allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid; // Only authenticated senders
       allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid) || isSuperAdmin(); // Strict private reading + Admin Audit
@@ -489,6 +505,112 @@ service cloud.firestore {
     match /nagrik_announcements/{announcementId} {
       allow read: if true;
       allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // ========================================================================
+    // CROSS-PLATFORM VERIFICATION & EVIDENCE (NEW)
+    // ========================================================================
+    match /nagrik_evidence/{evidenceId} {
+      allow read, update, create: if true;
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    match /volunteer_verifications/{verificationId} {
+      allow read, update, create: if true;
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // ========================================================================
+    // NEW CIVIC EXPANSION MODULES (6+ FEATURES ADDED)
+    // ========================================================================
+    
+    // 1. SOS Emergency Alerts System
+    match /sos_alerts/{alertId} {
+      allow create: if isAuthenticated();
+      allow read: if isAuthenticated() || isAdmin() || isSuperAdmin();
+      allow update, delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 2. Civic Authorities Directory
+    match /civic_directory/{contactId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 3. Community Polling System
+    match /civic_polls/{pollId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 4. Lost and Found Registry
+    match /lost_found/{itemId} {
+      allow read: if true;
+      allow create, update: if isAuthenticated();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 5. Volunteer Network Registration
+    match /volunteer_network/{registrationId} {
+      allow create: if isAuthenticated();
+      allow read: if true;
+      allow update: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
+      allow delete: if isAdmin() || isSuperAdmin();
+    }
+
+    // 6. Public Amenities Locator
+    match /public_amenities/{amenityId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    // 7. Civic Rights Knowledge Base
+    match /civic_rights_kb/{articleId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdmin();
+    }
+
+    /*
+     * 15-Language Security Documentation: Advanced Social Network Rules
+     * EN: Security rules added for comments, followers, and bookmarks.
+     * HI: टिप्पणियों, फ़ॉलोअर्स और बुकमार्क के लिए सुरक्षा नियम जोड़े गए।
+     * HINGLISH: Comments, followers, aur bookmarks ke liye security rules add kiye gaye.
+     * MR: टिप्पण्या, फॉलोअर्स आणि बुकमार्कसाठी सुरक्षा नियम जोडले.
+     * GU: ટિપ્પણીઓ, અનુયાયીઓ અને બુકમાર્ક્સ માટે સુરક્ષા નિયમો ઉમેર્યા.
+     * TE: వ్యాఖ్యలు, అనుచరులు మరియు బుక్‌మార్క్‌ల కోసం భద్రతా నియమాలు జోడించబడ్డాయి.
+     * TA: கருத்துகள், பின்தொடர்பவர்கள் மற்றும் புக்மார்க்குகளுக்கான பாதுகாப்பு விதிகள் சேர்க்கப்பட்டன.
+     * KN: ಕಾಮೆಂಟ್‌ಗಳು, ಅನುಯಾಯಿಗಳು ಮತ್ತು ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳಿಗಾಗಿ ಭದ್ರತಾ ನಿಯಮಗಳನ್ನು ಸೇರಿಸಲಾಗಿದೆ.
+     * ML: അഭിപ്രായങ്ങൾ, അനുയായികൾ, ബുക്ക്മാർക്കുകൾ എന്നിവയ്ക്കായി സുരക്ഷാ നിയമങ്ങൾ ചേർത്തു.
+     * BN: মন্তব্য, অনুসরণকারী এবং বুকমার্কের জন্য নিরাপত্তা নিয়ম যোগ করা হয়েছে।
+     * PA: ਟਿੱਪਣੀਆਂ, ਫਾਲੋਅਰਜ਼ ਅਤੇ ਬੁੱਕਮਾਰਕਸ ਲਈ ਸੁਰੱਖਿਆ ਨਿਯਮ ਸ਼ਾਮਲ ਕੀਤੇ ਗਏ।
+     * OR: ମନ୍ତବ୍ୟ, ଅନୁସରଣକାରୀ ଏବଂ ବୁକମାର୍କ ପାଇଁ ସୁରକ୍ଷା ନିୟମ ଯୋଡାଗଲା।
+     * AS: মন্তব্য, ফলোয়াৰ আৰু বুকমাৰ্কৰ বাবে নিৰাপত্তা নিয়ম যোগ কৰা হৈছে।
+     * UR: تبصروں، پیروکاروں اور بک مارکس کے لیے حفاظتی قوانین شامل کیے گئے۔
+     * BHO: टिप्पणी, फॉलोअर्स आ बुकमार्क खातिर सुरक्षा नियम जोड़ल गइल।
+     */
+    // ========================================================================
+    // ADVANCED SOCIAL NETWORK MODULE (NEW)
+    // ========================================================================
+    
+    // Discussion Threads
+    match /nagrik_comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.authorId) || isAdmin() || isSuperAdmin();
+    }
+
+    // Community Connections
+    match /nagrik_followers/{followId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isOwner(resource.data.followerId) || isAdmin() || isSuperAdmin();
+    }
+
+    // Private Content Saving
+    match /nagrik_bookmarks/{bookmarkId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isOwner(resource.data.userId) || isAdmin() || isSuperAdmin();
     }
 
   }
