@@ -47,6 +47,7 @@ const CivicRights = React.lazy(() => import('./pages/CivicRights'));
 // Advanced Social Network Modules (NEW)
 const UserProfile = React.lazy(() => import('./pages/UserProfile'));
 const CreatePost = React.lazy(() => import('./pages/CreatePost'));
+const CreateStory = React.lazy(() => import('./pages/CreateStory'));
 const StoryViewer = React.lazy(() => import('./pages/StoryViewer'));
 const Comments = React.lazy(() => import('./pages/Comments'));
 const Messages = React.lazy(() => import('./pages/Messages'));
@@ -100,7 +101,7 @@ const AppLayout = () => {
     }, [location.pathname, navigate]);
     
     // Conditionally hide navigation components for immersive screens (including dynamic story routes)
-    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing'].includes(location.pathname) || location.pathname.startsWith('/story');
+    const isExcludedRoute = ['/onboarding', '/sos', '/admin', '/download', '/landing', '/create-story'].includes(location.pathname) || location.pathname.startsWith('/story');
     
     // Strictly remove relative container restraints for marketing routes to force edge-to-edge widescreen rendering
     const isWidescreenRoute = ['/landing', '/download'].includes(location.pathname);
@@ -145,6 +146,7 @@ const AppLayout = () => {
 
                             {/* Advanced Social Network Routes (NEW) */}
                             <Route path="/create" element={<CreatePost />} />
+                            <Route path="/create-story" element={<CreateStory />} />
                             <Route path="/story/:id" element={<StoryViewer />} />
                             <Route path="/comments/:id" element={<Comments />} />
                             <Route path="/profile/:id" element={<UserProfile />} />
